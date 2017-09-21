@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#include <vtkh.hpp>
+#include <vtkh/vtkh.hpp>
 #include <vtkm/cont/DataSet.h>
 
 namespace vtkh

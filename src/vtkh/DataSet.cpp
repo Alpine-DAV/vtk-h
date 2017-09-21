@@ -1,5 +1,8 @@
-#include <vtkh_error.hpp>
-#include <vtkh_data_set.hpp>
+#include "DataSet.hpp"
+
+#include <vtkh/Error.hpp>
+
+// FIXME:UDA: vtkm_dataset_info depends on vtkm::rendering
 #include <utils/vtkm_dataset_info.hpp>
 // std includes
 #include <sstream>

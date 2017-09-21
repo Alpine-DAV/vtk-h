@@ -1,5 +1,5 @@
 #include "vtkh.hpp"
-#include "vtkh_error.hpp"
+#include "Error.hpp"
 
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
