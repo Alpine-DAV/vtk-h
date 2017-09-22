@@ -17,24 +17,23 @@ set(Sources
 
 
 blt_add_library(
-  NAME vtkh
+  NAME vtkh_core
   SOURCES ${Sources}
   HEADERS ${Headers}
-  DEPENDS_ON vtkm_cont vtkh_utils
+  DEPENDS_ON vtkm_cont vtkh_utils diy
   )
 
-target_include_directories(vtkh
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(vtkh_core
+  PUBLIC
+    $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
 
-  # not convinced these should be exposed, but leaving them for now.
-  INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:vtkh>  # <prefix>/vtkh
+    $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>  # <prefix>/include
   )
 
 
 # Install libraries
-install(TARGETS vtkh
+install(TARGETS vtkh_core
   EXPORT ${VTKh_EXPORT_NAME}
   ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
   LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}

@@ -50,7 +50,7 @@
 
 #include "gtest/gtest.h"
 
-#include <vtkh.hpp>
+#include <vtkh/vtkh.hpp>
 
 #include <iostream>
 

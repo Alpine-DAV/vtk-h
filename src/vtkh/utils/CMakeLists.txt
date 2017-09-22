@@ -11,9 +11,16 @@ set(Sources
   PNGEncoder.cpp
   )
 
-add_library(vtkh_utils ${Sources})
+add_library(vtkh_utils ${Sources} ${Headers})
 target_link_libraries(vtkh_utils PRIVATE lodepng)
-
+target_include_directories(vtkh_utils
+  PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  INTERFACE
+    $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
+    $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>  # <prefix>/include
+  )
 
 # Install libraries
 install(TARGETS vtkh_utils

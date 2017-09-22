@@ -99,9 +99,18 @@ extract_version_components("${version_txt}" "VTKh")
 determine_version(${VTKh_SOURCE_DIR} "${GIT_EXECUTABLE}" "VTKh")
 #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-include_directories(${VTKh_SOURCE_DIR} ${VTKh_BINARY_DIR})
 add_subdirectory(vtkh)
+
+#------------------------------------------------------------------------------
+# Add a interface target that makes it easier to depend on VTKh
+add_library(vtkh INTERFACE)
+target_link_libraries(vtkh INTERFACE vtkh_core)
+
+if (ENABLE_MPI)
+  add_library(vtkh_par INTERFACE)
+endif()
+
+
 #------------------------------------------------------------------------------
 
 if(ENABLE_TESTS)

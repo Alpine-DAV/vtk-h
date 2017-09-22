@@ -12,7 +12,7 @@ set(Sources
 add_library(lodepng ${Sources})
 target_include_directories(lodepng INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:vtkh/thirdparty_builtin/lodepng>  # <prefix>/vtkh/thirdparty_builtin/lodepng
+  $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}/vtkh/thirdparty_builtin/lodepng>
   )
 
 # install target for serial ascent lib

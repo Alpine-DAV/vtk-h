@@ -3,7 +3,7 @@
 #include <vtkh/Error.hpp>
 
 // FIXME:UDA: vtkm_dataset_info depends on vtkm::rendering
-#include <utils/vtkm_dataset_info.hpp>
+#include <vtkh/utils/vtkm_dataset_info.hpp>
 // std includes
 #include <sstream>
 //vtkm includes

@@ -4,7 +4,7 @@
 add_library(diy INTERFACE)
 target_include_directories(diy INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:vtkh/thirdparty_builtin>  # <prefix>/vtkh/thirdparty_builtin/
+  $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}/vtkh/thirdparty_builtin>  # <prefix>/vtkh/thirdparty_builtin/
   )
 
 install(TARGETS diy
