@@ -79,18 +79,11 @@ foreach(TEST ${VTKM_TESTS})
     add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
     target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
   endif()
+  if (ENABLE_CUDA)
+    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
+    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  endif()
 endforeach()
-
-# if(CUDA_FOUND)
-#     ################################
-#     # Add our CUDA-based Unit Tests
-#     ################################
-#     message(STATUS "Adding thirdparty lib cuda-based unit tests")
-#     foreach(TEST ${CUDA_TESTS})
-#         add_cuda_test(TEST ${TEST})
-#     endforeach()
-# endif()
-#
 
 ################################
 # Add our Optional Unit Tests
