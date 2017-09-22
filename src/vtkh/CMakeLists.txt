@@ -45,5 +45,4 @@ install(FILES ${Headers}
   DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh)
 
 add_subdirectory(filters)
-
-#add_subdirectory(rendering)
+add_subdirectory(rendering)

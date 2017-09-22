@@ -104,7 +104,7 @@ add_subdirectory(vtkh)
 #------------------------------------------------------------------------------
 # Add a interface target that makes it easier to depend on VTKh
 add_library(vtkh INTERFACE)
-target_link_libraries(vtkh INTERFACE vtkh_core vtkh_filters)
+target_link_libraries(vtkh INTERFACE vtkh_core vtkh_filters vtkh_rendering)
 
 if (ENABLE_MPI)
   add_library(vtkh_par INTERFACE)

@@ -4,7 +4,6 @@
 #include <sstream>
 #include <vector>
 #include <vtkm/Bounds.h>
-#include <utils/vtkh_png_encoder.hpp>
 
 namespace vtkh 
 {
@@ -323,14 +322,7 @@ struct Image
       return ss.str();
     }
 
-    void Save(std::string name)
-    {
-      PNGEncoder encoder;
-      encoder.Encode(&m_pixels[0],
-                     m_bounds.X.Max - m_bounds.X.Min + 1,
-                     m_bounds.Y.Max - m_bounds.Y.Min + 1);
-      encoder.Save(name);
-    }
+    void Save(std::string name);
 };
 
 struct CompositeOrderSort

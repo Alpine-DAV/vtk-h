@@ -1,5 +1,5 @@
-#include "vtkh_compositor.hpp"
-#include <rendering/vtkh_image_compositor.hpp>
+#include "Compositor.hpp"
+#include <vtkh/rendering/ImageCompositor.hpp>
 
 #include <assert.h>
 #include <algorithm>

@@ -1,12 +1,13 @@
-#include <vtkh_error.hpp>
-#include <rendering/vtkh_renderer.hpp>
-#include <rendering/vtkh_image.hpp>
-#include <utils/vtkm_array_utils.hpp>
-#include <utils/vtkm_dataset_info.hpp>
-#include <utils/vtkh_png_encoder.hpp>
+#include "Renderer.hpp"
+#include "Image.hpp"
+#include "compositing/Compositor.hpp"
+
+#include <vtkh/utils/vtkm_array_utils.hpp>
+#include <vtkh/utils/vtkm_dataset_info.hpp>
+#include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
 #ifdef PARALLEL
-#include <rendering/compositing/vtkh_diy_compositor.hpp>
+#include "compositing/DIYCompositor.hpp"
 #endif
 
 #include <assert.h>

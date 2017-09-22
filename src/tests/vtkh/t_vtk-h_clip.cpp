@@ -9,7 +9,7 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/Clip.hpp>
-#include <vtkh/rendering/RendererRayTracer.hpp>
+#include <vtkh/rendering/RayTracer.hpp>
 
 #include "t_test_utils.hpp"
 

@@ -1,4 +1,5 @@
-#include <rendering/vtkh_renderer_ray_tracer.hpp>
+#include "RayTracer.hpp"
+
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <memory>

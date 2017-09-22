@@ -1,7 +1,7 @@
 #ifndef VTK_H_RENDERER_MESH_HPP
 #define VTK_H_RENDERER_MESH_HPP
 
-#include <rendering/vtkh_renderer.hpp>
+#include <vtkh/rendering/Renderer.hpp>
 
 namespace vtkh {
 

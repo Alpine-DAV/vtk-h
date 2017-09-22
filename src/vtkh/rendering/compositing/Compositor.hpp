@@ -2,7 +2,7 @@
 #define VTKH_COMPOSITOR_BASE_HPP
 
 #include <sstream>
-#include <rendering/vtkh_image.hpp>
+#include <vtkh/rendering/Image.hpp>
 
 namespace vtkh 
 {

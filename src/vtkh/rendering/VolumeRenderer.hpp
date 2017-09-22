@@ -1,8 +1,7 @@
 #ifndef VTK_H_RENDERER_VOLUME_HPP
 #define VTK_H_RENDERER_VOLUME_HPP
 
-#include <rendering/vtkh_renderer.hpp>
-
+#include <vtkh/rendering/Renderer.hpp>
 #include <vtkm/rendering/MapperVolume.h>
 
 namespace vtkh {

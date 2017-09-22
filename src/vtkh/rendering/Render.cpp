@@ -1,4 +1,4 @@
-#include <rendering/vtkh_render.hpp>
+#include "Render.hpp"
 
 namespace vtkh 
 {

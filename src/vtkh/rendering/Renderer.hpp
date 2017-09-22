@@ -2,16 +2,17 @@
 #define VTK_H_RENDERER_HPP
 
 #include <vector>
-#include <vtkh_error.hpp>
-#include <vtkh_filter.hpp>
-#include <rendering/vtkh_render.hpp>
-#include <rendering/compositing/vtkh_compositor.hpp>
+#include <vtkh/Error.hpp>
+#include <vtkh/filters/Filter.hpp>
+#include <vtkh/rendering/Render.hpp>
 
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
 
 namespace vtkh {
+
+class Compositor;
 
 class Renderer : public Filter
 {

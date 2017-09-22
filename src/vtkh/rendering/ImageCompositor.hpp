@@ -1,8 +1,7 @@
 #ifndef VTKH_DIY_IMAGE_COMPOSITOR_HPP
 #define VTKH_DIY_IMAGE_COMPOSITOR_HPP
 
-#include <rendering/vtkh_image.hpp>
-
+#include <vtkh/rendering/Image.hpp>
 #include <algorithm>
 
 namespace vtkh

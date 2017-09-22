@@ -2,8 +2,8 @@
 #define VTK_H_RENDER_HPP
 
 #include <vector>
-#include <vtkh_data_set.hpp>
-#include <vtkh_error.hpp>
+#include <vtkh/DataSet.hpp>
+#include <vtkh/Error.hpp>
 
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>

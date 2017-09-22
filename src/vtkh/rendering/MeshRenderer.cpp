@@ -1,4 +1,5 @@
-#include <rendering/vtkh_renderer_mesh.hpp>
+#include "MeshRenderer.hpp"
+
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
 #include <memory>
