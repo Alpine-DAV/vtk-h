@@ -98,11 +98,11 @@ add_subdirectory(vtkh)
 # Create CMake importable
 # exports for all of our targets
 ################################
-#export(EXPORT ${VTKh_EXPORT_NAME}
-#  FILE ${CMAKE_BINARY_DIR}/${VTKh_INSTALL_CONFIG_DIR}/VTKhTargets.cmake
-#  )
-#
-#install(EXPORT ${VTKh_EXPORT_NAME}
-#  DESTINATION ${VTKh_INSTALL_LIB_DIR}
-#  FILE VTKhTargets.cmake
-#  )
+export(EXPORT ${VTKh_EXPORT_NAME}
+  FILE ${CMAKE_BINARY_DIR}/${VTKh_INSTALL_CONFIG_DIR}/VTKhTargets.cmake
+  )
+
+install(EXPORT ${VTKh_EXPORT_NAME}
+  DESTINATION ${VTKh_INSTALL_LIB_DIR}
+  FILE VTKhTargets.cmake
+  )
