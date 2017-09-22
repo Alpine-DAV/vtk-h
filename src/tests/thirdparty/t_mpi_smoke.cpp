@@ -55,7 +55,7 @@
 //-----------------------------------------------------------------------------
 TEST(mpi_smoke, mpi_init)
 {
-    // simple mpi test 
+    // simple mpi test
     int size;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     EXPECT_EQ(size, 2);

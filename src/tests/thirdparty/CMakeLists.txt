@@ -57,8 +57,8 @@ list(APPEND VTKM_TESTS t_vtkm_smoke)
 # set(FORTRAN_TESTS t_fortran_smoke
 #                   t_fruit_smoke)
 #
-# set(MPI_TESTS t_mpi_smoke
-#               t_diy_smoke)
+set(MPI_TESTS t_mpi_smoke
+              t_diy_smoke)
 
 ################################
 # Add our Main Unit Tests
@@ -91,19 +91,20 @@ endforeach()
 #     endforeach()
 # endif()
 #
-#
-# ################################
-# # Add our Optional Unit Tests
-# ################################
-# if(MPI_FOUND)
-#     message(STATUS "MPI enabled: Adding related unit tests")
-#     foreach(TEST ${MPI_TESTS})
-#         # this uses 2 procs
-#         add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-#     endforeach()
-# else()
-#     message(STATUS "MPI disabled: Skipping related tests")
-# endif()
+
+################################
+# Add our Optional Unit Tests
+################################
+if(MPI_FOUND)
+  message(STATUS "MPI enabled: Adding related unit tests")
+  foreach(TEST ${MPI_TESTS})
+    # this uses 2 procs
+    add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
+    target_link_libraries(${TEST} PRIVATE diy)
+  endforeach()
+else()
+  message(STATUS "MPI disabled: Skipping related tests")
+endif()
 #
 #
 # if(FORTRAN_FOUND)

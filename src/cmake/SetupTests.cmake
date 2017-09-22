@@ -126,16 +126,16 @@ function(add_cpp_mpi_test)
                          "${multiValueArgs}" ${ARGN} )
 
     message(STATUS " [*] Adding Unit Test: ${arg_TEST}")
-    
-    
+
+
     blt_add_executable( NAME ${arg_TEST}
                         SOURCES ${arg_TEST}.cpp ${fortran_driver_source}
                         OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
                         DEPENDS_ON "${arg_DEPENDS_ON}" gtest mpi)
-                        
+
     blt_add_test( NAME ${arg_TEST}
                   COMMAND ${arg_TEST}
-                  NUM_PROCS ${arg_NUM_PROCS})
+                  NUM_MPI_TASKS ${arg_NUM_PROCS})
 
 endfunction()
 
