@@ -1,4 +1,4 @@
-#include "vtkh_png_encoder.hpp"
+#include "PNGEncoder.hpp"
 
 // standard includes
 #include <stdlib.h>
