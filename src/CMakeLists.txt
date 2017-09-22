@@ -85,6 +85,11 @@ include(blt/SetupBLT.cmake)
 ################################
 include(cmake/CMakeBasics.cmake)
 
+################################
+# Setup tests helpers
+################################
+include(cmake/SetupTests.cmake)
+
 #------------------------------------------------------------------------------
 # Determine source version.
 include(VTKhDetermineVersion)
@@ -94,8 +99,15 @@ extract_version_components("${version_txt}" "VTKh")
 determine_version(${VTKh_SOURCE_DIR} "${GIT_EXECUTABLE}" "VTKh")
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
 include_directories(${VTKh_SOURCE_DIR} ${VTKh_BINARY_DIR})
 add_subdirectory(vtkh)
+#------------------------------------------------------------------------------
+
+if(ENABLE_TESTS)
+  add_subdirectory(tests)
+endif()
+
 
 ################################
 # Create CMake importable

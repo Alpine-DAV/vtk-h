@@ -45,24 +45,28 @@
 ##------------------------------------------------------------------------------
 ## - Builds and adds a test that uses gtest
 ##
-## add_cpp_test( TEST test DEPENDS_ON dep1 dep2... )
+## add_cpp_test( TEST test [SOURCE filename] DEPENDS_ON dep1 dep2... )
 ##------------------------------------------------------------------------------
 function(add_cpp_test)
 
     set(options)
-    set(singleValueArgs TEST)
+    set(singleValueArgs TEST SOURCE)
     set(multiValueArgs DEPENDS_ON)
 
     # parse our arguments
     cmake_parse_arguments(arg
-                         "${options}" 
-                         "${singleValueArgs}" 
+                         "${options}"
+                         "${singleValueArgs}"
                          "${multiValueArgs}" ${ARGN} )
 
     message(STATUS " [*] Adding Unit Test: ${arg_TEST}")
 
+    if (NOT arg_SOURCE)
+      set(arg_SOURCE ${arg_TEST})
+    endif()
+
     blt_add_executable( NAME ${arg_TEST}
-                        SOURCES ${arg_TEST}.cpp ${fortran_driver_source}
+                        SOURCES ${arg_SOURCE}.cpp ${fortran_driver_source}
                         OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
                         DEPENDS_ON "${arg_DEPENDS_ON}" gtest)
 

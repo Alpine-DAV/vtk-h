@@ -47,8 +47,6 @@
 /// file: vtkm_smoke.cpp
 ///
 //-----------------------------------------------------------------------------
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-
 #include <iostream>
 #include "gtest/gtest.h"
 
@@ -69,6 +67,8 @@ TEST(vtkm_smoke, headers_work)
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, basic_use)
 {
+    using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::cont::DataSet data = maker.Make3DExplicitDataSet2();
     //

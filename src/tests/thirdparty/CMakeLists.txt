@@ -52,11 +52,7 @@
 
 set(TBB_TESTS)
 
-IF(VTKM_FOUND)
-    list(APPEND VTKM_TESTS t_vtkm_smoke )
-    list(APPEND CUDA_TESTS t_vtkm_cuda_smoke)
-    list(APPEND TBB_TESTS  t_vtkm_tbb_smoke)
-endif()
+list(APPEND VTKM_TESTS t_vtkm_smoke)
 #
 # set(FORTRAN_TESTS t_fortran_smoke
 #                   t_fruit_smoke)
@@ -75,14 +71,14 @@ endforeach()
 ################################
 # Add our VTKm Unit Tests
 ################################
-set(vtkm_dependencies ${VTKm_LIBRARIES})
-
-if(TBB_FOUND)
-  list(APPEND vtkm_dependencies ${TBB_LIBRARIES})
-endif()
 
 foreach(TEST ${VTKM_TESTS})
-    add_cpp_test(TEST ${TEST} DEPENDS_ON ${vtkm_dependencies})
+  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
+  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+  if (ENABLE_TBB)
+    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
+    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  endif()
 endforeach()
 
 # if(CUDA_FOUND)
@@ -118,6 +114,3 @@ endforeach()
 # else()
 #     message(STATUS "Fortran disabled: Skipping related tests")
 # endif()
-
-
-

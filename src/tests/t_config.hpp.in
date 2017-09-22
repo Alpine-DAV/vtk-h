@@ -49,8 +49,8 @@
 ///
 //-----------------------------------------------------------------------------
 
-#ifndef ASCENT_T_CONFIG_HPP
-#define ASCENT_T_CONFIG_HPP
+#ifndef VTKH_T_CONFIG_HPP
+#define VTKH_T_CONFIG_HPP
 
 //-----------------------------------------------------------------------------
 //
@@ -58,10 +58,7 @@
 //
 //-----------------------------------------------------------------------------
 
-#define ASCENT_T_SRC_DIR  "@CMAKE_CURRENT_SOURCE_DIR@"
-#define ASCENT_T_BIN_DIR  "@CMAKE_CURRENT_BINARY_DIR@"
+#define VTKH_T_SRC_DIR  "@CMAKE_CURRENT_SOURCE_DIR@"
+#define VTKH_T_BIN_DIR  "@CMAKE_CURRENT_BINARY_DIR@"
 
 #endif
-
-
-

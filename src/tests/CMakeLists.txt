@@ -57,17 +57,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # Unit Tests
 ################################
 # add tpl smoke tests, so they run before we run the ascent tests
-add_subdirectory("thirdparty")
+add_subdirectory(thirdparty)
 
-# add flow tests
-add_subdirectory("flow")
-
-# add ascent tests
-add_subdirectory("ascent")
-
-# add vtk-h tests
-if(VTKM_FOUND)
-    add_subdirectory("vtk-h")
-endif()
-
-
+## add vtk-h tests
+#if(VTKM_FOUND)
+#    add_subdirectory("vtk-h")
+#endif()
