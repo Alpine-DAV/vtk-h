@@ -1,6 +1,5 @@
-#include <vtkh_clip.hpp>
+#include "Clip.hpp"
 
-#include <vtkm/filter/ClipWithImplicitFunction.h>
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 
 namespace vtkh 

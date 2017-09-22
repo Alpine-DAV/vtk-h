@@ -1,8 +1,8 @@
 #ifndef VTK_H_FILTER_HPP
 #define VTK_H_FILTER_HPP
 
-#include "vtkh.hpp"
-#include "vtkh_data_set.hpp"
+#include <vtkh/vtkh.hpp>
+#include <vtkh/DataSet.hpp>
 
 namespace vtkh
 {

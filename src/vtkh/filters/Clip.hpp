@@ -1,10 +1,7 @@
 #ifndef VTK_H_CLIP_HPP
 #define VTK_H_CLIP_HPP
 
-#include "vtkh.hpp"
-#include "vtkh_filter.hpp"
-#include "vtkh_data_set.hpp"
-
+#include <vtkh/filters/Filter.hpp>
 #include <memory>
 
 namespace vtkh

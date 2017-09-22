@@ -1,39 +1,29 @@
 #==============================================================================
 # See License.txt
 #==============================================================================
-add_subdirectory(utils)
-add_subdirectory(thirdparty_builtin)
 
 set(Headers
-  DataSet.hpp
-  Error.hpp
-  vtkh.hpp
+  Filter.hpp
+  Clip.hpp
   )
 
 set(Sources
-  DataSet.cpp
-  vtkh.cpp
+  Clip.cpp
   )
 
+add_library(vtkh_filters ${Sources} ${Headers})
 
-blt_add_library(
-  NAME vtkh_core
-  SOURCES ${Sources}
-  HEADERS ${Headers}
-  DEPENDS_ON vtkm_cont vtkh_utils diy
-  )
-
-target_include_directories(vtkh_core
+target_include_directories(vtkh_filters
   PUBLIC
     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
     $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
-
-    $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>  # <prefix>/include
+    $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
   )
 
+target_link_libraries(vtkh_filters PUBLIC vtkh_core)
 
 # Install libraries
-install(TARGETS vtkh_core
+install(TARGETS vtkh_filters
   EXPORT ${VTKh_EXPORT_NAME}
   ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
   LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
@@ -42,8 +32,4 @@ install(TARGETS vtkh_core
 
 # Install headers
 install(FILES ${Headers}
-  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh)
-
-add_subdirectory(filters)
-
-#add_subdirectory(rendering)
+  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
