@@ -6,10 +6,11 @@
 
 #include "gtest/gtest.h"
 
-#include <vtkh.hpp>
-#include <vtkh_data_set.hpp>
-#include <vtkh_clip.hpp>
-#include <rendering/vtkh_renderer_ray_tracer.hpp>
+#include <vtkh/vtkh.hpp>
+#include <vtkh/DataSet.hpp>
+#include <vtkh/filters/Clip.hpp>
+#include <vtkh/rendering/RendererRayTracer.hpp>
+
 #include "t_test_utils.hpp"
 
 #include <iostream>

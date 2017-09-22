@@ -53,13 +53,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # for t_utils.hpp
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-################################
-# Unit Tests
-################################
 # add tpl smoke tests, so they run before we run the ascent tests
 add_subdirectory(thirdparty)
 
-## add vtk-h tests
-#if(VTKM_FOUND)
-#    add_subdirectory("vtk-h")
-#endif()
+# add VTKh tests.
+add_subdirectory(vtkh)

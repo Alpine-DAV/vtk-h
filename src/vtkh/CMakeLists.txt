@@ -20,7 +20,7 @@ blt_add_library(
   NAME vtkh
   SOURCES ${Sources}
   HEADERS ${Headers}
-  DEPENDS_ON vtkm vtkh_utils
+  DEPENDS_ON vtkm_cont vtkh_utils
   )
 
 target_include_directories(vtkh
