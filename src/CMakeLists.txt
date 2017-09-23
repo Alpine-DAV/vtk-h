@@ -106,8 +106,19 @@ add_subdirectory(vtkh)
 add_library(vtkh INTERFACE)
 target_link_libraries(vtkh INTERFACE vtkh_core vtkh_filters vtkh_rendering)
 
+# Install libraries
+install(TARGETS vtkh EXPORT ${VTKh_EXPORT_NAME})
+
 if (ENABLE_MPI)
   add_library(vtkh_par INTERFACE)
+  target_link_libraries(vtkh_par INTERFACE vtkh_core_par vtkh_filters_par
+    vtkh_rendering_par)
+  target_compile_definitions(vtkh_par
+    INTERFACE PARALLEL # rename to VTKh_IS_PARALLEL or something like that.
+    )
+
+  # Install libraries
+  install(TARGETS vtkh_par EXPORT ${VTKh_EXPORT_NAME})
 endif()
 
 

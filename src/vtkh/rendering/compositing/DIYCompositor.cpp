@@ -1,9 +1,10 @@
-#include "vtkh_diy_compositor.hpp"
+#include "DIYCompositor.hpp"
+
 //#include "alpine_config.h"
-#include "ascent_logging.hpp"
-#include <vtkh.hpp>
-#include <rendering/compositing/vtkh_diy_direct_send.hpp>
-#include <rendering/compositing/vtkh_diy_radix_k.hpp>
+//#include "ascent_logging.hpp"
+#include <vtkh/vtkh.hpp>
+#include <vtkh/rendering/compositing/DirectSendCompositor.hpp>
+#include <vtkh/rendering/compositing/RadixKCompositor.hpp>
 #include <diy/mpi.hpp>
 
 #include <assert.h>

@@ -1,7 +1,7 @@
 #ifndef VTKH_DIY_DIRECT_SEND_HPP
 #define VTKH_DIY_DIRECT_SEND_HPP
 
-#include <rendering/vtkh_image.hpp>
+#include <vtkh/rendering/Image.hpp>
 #include <diy/mpi.hpp>
 #include <sstream>
 

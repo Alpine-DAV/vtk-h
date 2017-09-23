@@ -1,5 +1,5 @@
-#include <rendering/vtkh_image_compositor.hpp>
-#include "vtkh_diy_radix_k.hpp"
+#include <vtkh/rendering/ImageCompositor.hpp>
+#include "RadixKCompositor.hpp"
 #include "vtkh_diy_collect.hpp"
 #include "vtkh_diy_utils.hpp"
 

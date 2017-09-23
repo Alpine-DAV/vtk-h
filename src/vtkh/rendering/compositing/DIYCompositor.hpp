@@ -1,8 +1,8 @@
 #ifndef VTKH_DIY_COMPOSITOR_HPP
 #define VTKH_DIY_COMPOSITOR_HPP
 
-#include <rendering/vtkh_image.hpp>
-#include <rendering/compositing/vtkh_compositor.hpp>
+#include <vtkh/rendering/Image.hpp>
+#include <vtkh/rendering/compositing/Compositor.hpp>
 #include <diy/mpi.hpp>
 #include <iostream>
 
