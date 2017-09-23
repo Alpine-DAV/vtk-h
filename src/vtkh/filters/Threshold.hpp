@@ -1,9 +1,9 @@
 #ifndef VTK_H_THRESHOLD_HPP
 #define VTK_H_THRESHOLD_HPP
 
-#include "vtkh.hpp"
-#include "vtkh_filter.hpp"
-#include "vtkh_data_set.hpp"
+#include <vtkh/vtkh.hpp>
+#include <vtkh/filters/Filter.hpp>
+#include <vtkh/DataSet.hpp>
 #include <vtkm/Range.h>
 
 #include <memory>

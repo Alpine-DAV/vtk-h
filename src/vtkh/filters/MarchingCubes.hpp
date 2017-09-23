@@ -1,9 +1,9 @@
 #ifndef VTK_H_MARCHING_CUBES_HPP
 #define VTK_H_MARCHING_CUBES_HPP
 
-#include "vtkh.hpp"
-#include "vtkh_filter.hpp"
-#include "vtkh_data_set.hpp"
+#include <vtkh/vtkh.hpp>
+#include <vtkh/filters/Filter.hpp>
+#include <vtkh/DataSet.hpp>
 
 namespace vtkh
 {

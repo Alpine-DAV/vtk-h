@@ -7,9 +7,9 @@
 #include "gtest/gtest.h"
 
 #include <mpi.h>
-#include <vtkh.hpp>
-#include <vtkh_data_set.hpp>
-#include <rendering/vtkh_renderer_ray_tracer.hpp>
+#include <vtkh/vtkh.hpp>
+#include <vtkh/DataSet.hpp>
+#include <vtkh/rendering/RayTracer.hpp>
 #include "t_test_utils.hpp"
 
 #include <iostream>

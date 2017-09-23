@@ -6,9 +6,9 @@
 
 #include "gtest/gtest.h"
 
-#include <vtkh.hpp>
-#include <vtkh_data_set.hpp>
-#include <rendering/vtkh_renderer_volume.hpp>
+#include <vtkh/vtkh.hpp>
+#include <vtkh/DataSet.hpp>
+#include <vtkh/rendering/VolumeRenderer.hpp>
 #include "t_test_utils.hpp"
 
 #include <iostream>

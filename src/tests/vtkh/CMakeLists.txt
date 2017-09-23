@@ -53,22 +53,22 @@
 set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
-#               t_vtk-h_marching_cubes
-#               t_vtk-h_threshold
-#               t_vtk-h_mesh_renderer
-#               t_vtk-h_multi_render
-#               t_vtk-h_raytracer
-#               t_vtk-h_volume_renderer
-#               t_vtk-h_wavelet_compressor
+                t_vtk-h_marching_cubes
+                t_vtk-h_threshold
+                t_vtk-h_mesh_renderer
+                t_vtk-h_multi_render
+                t_vtk-h_raytracer
+                t_vtk-h_volume_renderer
+                t_vtk-h_wavelet_compressor
                 )
 
 
 set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_dataset_par
-#             t_vtk-h_marching_cubes_par
-#             t_vtk-h_multi_render_par
-#             t_vtk-h_raytracer_par
-#             t_vtk-h_volume_renderer_par
+              t_vtk-h_marching_cubes_par
+              t_vtk-h_multi_render_par
+              t_vtk-h_raytracer_par
+              t_vtk-h_volume_renderer_par
               )
 
 
@@ -84,14 +84,12 @@ endforeach()
 ################################
 # Add optional tests
 ################################
-
-#if(MPI_FOUND AND ENABLE_MPI)
-#    message(STATUS "MPI enabled: Adding related unit tests")
-#    foreach(TEST ${MPI_TESTS})
-#        # this uses 2 procs
-#        add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_par) 
-#        blt_add_target_compile_flags(TO ${TEST} FLAGS "-D PARALLEL")
-#    endforeach()
-#else()
-#    message(STATUS "MPI disabled: Skipping related tests")
-#endif()
+if(MPI_FOUND AND ENABLE_MPI)
+    message(STATUS "MPI enabled: Adding related unit tests")
+    foreach(TEST ${MPI_TESTS})
+        # this uses 2 procs
+        add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_par)
+    endforeach()
+else()
+    message(STATUS "MPI disabled: Skipping related tests")
+endif()

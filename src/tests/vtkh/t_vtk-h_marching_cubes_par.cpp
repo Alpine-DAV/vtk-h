@@ -6,11 +6,10 @@
 
 #include "gtest/gtest.h"
 
-#include <mpi.h>
-#include <vtkh.hpp>
-#include <vtkh_data_set.hpp>
-#include <vtkh_marching_cubes.hpp>
-#include <rendering/vtkh_renderer_ray_tracer.hpp>
+#include <vtkh/vtkh.hpp>
+#include <vtkh/DataSet.hpp>
+#include <vtkh/filters/MarchingCubes.hpp>
+#include <vtkh/rendering/RayTracer.hpp>
 #include "t_test_utils.hpp"
 
 #include <iostream>

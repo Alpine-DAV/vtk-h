@@ -5,10 +5,16 @@
 set(Headers
   Filter.hpp
   Clip.hpp
+  MarchingCubes.hpp
+  Threshold.hpp
+  WaveletCompressor.hpp
   )
 
 set(Sources
   Clip.cpp
+  MarchingCubes.cpp
+  Threshold.cpp
+  WaveletCompressor.cpp
   )
 
 add_library(vtkh_filters ${Sources} ${Headers})

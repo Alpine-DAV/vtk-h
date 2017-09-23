@@ -1,5 +1,5 @@
-#include <vtkh_threshold.hpp>
-#include <vtkh_error.hpp>
+#include "Threshold.hpp"
+#include <vtkh/Error.hpp>
 
 #include <vtkm/filter/Threshold.h>
 

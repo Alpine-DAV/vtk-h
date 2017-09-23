@@ -1,5 +1,4 @@
-#include <vtkh_marching_cubes.hpp>
-
+#include "MarchingCubes.hpp"
 #include <vtkm/filter/MarchingCubes.h>
 
 namespace vtkh 

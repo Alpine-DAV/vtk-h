@@ -1,6 +1,6 @@
-#include <vtkh_wavelet_compressor.hpp>
+#include "WaveletCompressor.hpp"
 
-#include <vtkh_error.hpp>
+#include <vtkh/Error.hpp>
 #include <vtkm/worklet/WaveletCompressor.h>
 
 namespace vtkh

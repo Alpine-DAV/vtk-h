@@ -7,8 +7,8 @@
 #include "gtest/gtest.h"
 
 #include <mpi.h>
-#include <vtkh.hpp>
-#include <vtkh_data_set.hpp>
+#include <vtkh/vtkh.hpp>
+#include <vtkh/DataSet.hpp>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include "t_test_utils.hpp"
 
