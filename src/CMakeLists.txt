@@ -141,3 +141,28 @@ install(EXPORT ${VTKh_EXPORT_NAME}
   DESTINATION ${VTKh_INSTALL_LIB_DIR}
   FILE VTKhTargets.cmake
   )
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  ${VTKh_SOURCE_DIR}/cmake/VTKhConfig.cmake.in
+  ${VTKh_BINARY_DIR}/${VTKh_INSTALL_CONFIG_DIR}/VTKhConfig.cmake
+  INSTALL_DESTINATION ${VTKh_INSTALL_CONFIG_DIR}
+  PATH_VARS
+    VTKh_INSTALL_INCLUDE_DIR
+    VTKh_INSTALL_CONFIG_DIR
+    VTKh_INSTALL_LIB_DIR
+    VTKh_INSTALL_BIN_DIR
+    VTKh_INSTALL_CMAKE_MODULE_DIR
+    VTKh_INSTALL_SHARED_RESOURCES_DIR
+    )
+write_basic_package_version_file(
+  ${VTKh_BINARY_DIR}/${VTKh_INSTALL_CONFIG_DIR}/VTKhConfigVersion.cmake
+  VERSION ${VTKh_VERSION}
+  COMPATIBILITY ExactVersion)
+
+install(
+  FILES
+    ${VTKh_BINARY_DIR}/${VTKh_INSTALL_CONFIG_DIR}/VTKhConfig.cmake
+    ${VTKh_BINARY_DIR}/${VTKh_INSTALL_CONFIG_DIR}/VTKhConfigVersion.cmake
+  DESTINATION ${VTKh_INSTALL_CONFIG_DIR}
+  )
