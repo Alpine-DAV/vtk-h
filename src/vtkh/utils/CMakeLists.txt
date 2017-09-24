@@ -12,7 +12,7 @@ set(Sources
   )
 
 add_library(vtkh_utils ${Sources} ${Headers})
-target_link_libraries(vtkh_utils PRIVATE lodepng)
+target_link_libraries(vtkh_utils PRIVATE vtkh_lodepng)
 target_include_directories(vtkh_utils
   PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>

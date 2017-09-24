@@ -9,14 +9,14 @@ set(Sources
   lodepng.cpp
   )
 
-add_library(lodepng ${Sources})
-target_include_directories(lodepng INTERFACE
+add_library(vtkh_lodepng ${Sources})
+target_include_directories(vtkh_lodepng INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}/vtkh/thirdparty_builtin/lodepng>
   )
 
 # install target for serial ascent lib
-install(TARGETS lodepng
+install(TARGETS vtkh_lodepng
   EXPORT ${VTKh_EXPORT_NAME}
   ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
   LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
