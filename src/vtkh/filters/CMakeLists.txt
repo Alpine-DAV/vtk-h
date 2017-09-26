@@ -26,7 +26,9 @@ target_include_directories(vtkh_filters
     $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
   )
 
-target_link_libraries(vtkh_filters PUBLIC vtkh_core)
+target_link_libraries(vtkh_filters
+  PUBLIC vtkh_core
+  PRIVATE vtkh_dependencies_private)
 
 # Install libraries
 install(TARGETS vtkh_filters
@@ -49,7 +51,10 @@ if (ENABLE_MPI)
       $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
       $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
     )
-  target_link_libraries(vtkh_filters_par PUBLIC vtkh_core_par)
+  target_link_libraries(vtkh_filters_par
+    PUBLIC vtkh_core_par
+    PRIVATE vtkh_dependencies_private)
+
 
   # Install libraries
   install(TARGETS vtkh_filters_par

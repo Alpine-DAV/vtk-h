@@ -29,6 +29,9 @@ blt_add_library(
   DEPENDS_ON vtkh_core vtkm_rendering
   )
 
+target_link_libraries(vtkh_rendering
+  PRIVATE vtkh_dependencies_private)
+
 target_include_directories(vtkh_rendering
   PUBLIC
     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
@@ -76,6 +79,8 @@ if (ENABLE_MPI)
     DEPENDS_ON vtkh_core_par vtkm_rendering
     )
 
+  target_link_libraries(vtkh_rendering_par
+    PRIVATE vtkh_dependencies_private)
   target_include_directories(vtkh_rendering_par
     PUBLIC
       $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>

@@ -15,6 +15,11 @@ set(Sources
   vtkh.cpp
   )
 
+add_library(vtkh_dependencies_private INTERFACE)
+if (ENABLE_TBB)
+  target_link_libraries(vtkh_dependencies_private INTERFACE tbb)
+endif()
+
 
 blt_add_library(
   NAME vtkh_core
@@ -22,6 +27,8 @@ blt_add_library(
   HEADERS ${Headers}
   DEPENDS_ON vtkm_cont vtkh_utils diy
   )
+
+target_link_libraries(vtkh_core PRIVATE vtkh_dependencies_private)
 
 target_include_directories(vtkh_core
   PUBLIC
@@ -50,6 +57,7 @@ if(ENABLE_MPI)
     HEADERS ${Headers}
     DEPENDS_ON vtkm_cont vtkh_utils diy mpi
     )
+  target_link_libraries(vtkh_core_par PRIVATE vtkh_dependencies_private)
 
   target_compile_definitions(vtkh_core_par
     PUBLIC PARALLEL # rename to VTKh_IS_PARALLEL or something like that.
