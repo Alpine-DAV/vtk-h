@@ -78,7 +78,7 @@ if(VTKM_DIR)
     ################################
     include(cmake/thirdparty/SetupVTKm.cmake)
 else()
-    status(FATAL_ERROR "VTK-h requries VTK-m")
+    message(FATAL_ERROR "VTK-h requries VTK-m")
 endif()
 
 
