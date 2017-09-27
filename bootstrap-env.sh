@@ -1,3 +1,4 @@
+#!/bin/bash
 ###############################################################################
 # Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
 # 
@@ -42,53 +43,44 @@
 # 
 ###############################################################################
 
-################################
-# Ascent 3rd Party Dependencies
-################################
 
 ###############################################################################
-# gtest, fruit, mpi,cuda, openmp, sphinx and doxygen are handled by blt
+#
+# file: bootstrap-env.sh
+#
 ###############################################################################
-################################################################
-################################################################
+
 #
-# 3rd Party Libs that underpin VTKh
+# Takes you from zero to an env  with TPLS needed to develop conduit on OSX
+# and linux.
 #
-################################################################
-################################################################
+export ALL_ARGS="$@"
 
+function info
+{
+    echo "$@"
+}
 
-################################
-# VTKm and supporting libs
-################################
-if(VTKM_DIR)
-    # explicitly setting this avoids a bug with VTKm's cuda
-    # arch detection logic
-    set(VTKm_CUDA_Architecture "kepler" CACHE PATH "" FORCE)
+function uberenv
+{
+    python scripts/uberenv/uberenv.py "$ALL_ARGS"
+}
 
-    ################################
-    # TBB (for VTK-M)
-    ################################
-    if(TBB_DIR) # optional
-        include(cmake/thirdparty/SetupTBB.cmake)
-    endif()
+function main
+{
+    uberenv
 
-    ################################
-    # VTKm
-    ################################
-    include(cmake/thirdparty/SetupVTKm.cmake)
-else()
-    status(FATAL_ERROR "VTK-h requries VTK-m")
-endif()
+    BOOSTRAP_CWD=`pwd`
+    SPACK_CMAKE_PREFIX=`ls -d $BOOSTRAP_CWD/uberenv_libs/spack/opt/spack/*/*/cmake*`
+    SPACK_CMAKE=`ls $SPACK_CMAKE_PREFIX/bin/cmake`
 
+    # Only add to PATH if `which cmake` isn't our CMake
+    CMAKE_CURRENT=`which cmake`
+    if [[ "$CMAKE_CURRENT" != "$SPACK_CMAKE" ]] ; then
+        export PATH=$SPACK_CMAKE_PREFIX/bin:$PATH
+    fi
+    
+    info "[Active CMake:" `which cmake` "]"
+}
 
-################################
-# Optional Features
-################################
-
-################################
-# IceT
-################################
-if(ENABLE_MPI)
-    include(cmake/thirdparty/SetupIceT.cmake)
-endif()
+main

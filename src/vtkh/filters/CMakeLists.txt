@@ -16,19 +16,32 @@ set(Sources
   Threshold.cpp
   WaveletCompressor.cpp
   )
+#
+# add_library(vtkh_filters ${Sources} ${Headers})
+#
+# target_include_directories(vtkh_filters
+#   PUBLIC
+#     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
+#     $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
+#     $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
+#   )
+#
+# target_link_libraries(vtkh_filters
+#   PUBLIC vtkh_core
+#   PRIVATE vtkh_dependencies_private)
 
-add_library(vtkh_filters ${Sources} ${Headers})
 
-target_include_directories(vtkh_filters
-  PUBLIC
-    $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
-    $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
-    $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
+blt_add_library(
+  NAME vtkh_filters
+  SOURCES ${Sources}
+  HEADERS ${Headers}
+  DEPENDS_ON vtkh_core
   )
 
-target_link_libraries(vtkh_filters
-  PUBLIC vtkh_core
-  PRIVATE vtkh_dependencies_private)
+  ########
+  # TODO: We should have a macro for install targets + headers
+  ########
+
 
 # Install libraries
 install(TARGETS vtkh_filters
@@ -43,17 +56,42 @@ install(FILES ${Headers}
   DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
 
 if (ENABLE_MPI)
-  add_library(vtkh_filters_par ${Sources} ${Headers})
 
-  target_include_directories(vtkh_filters_par
-    PUBLIC
-      $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
-      $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
-      $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
-    )
-  target_link_libraries(vtkh_filters_par
-    PUBLIC vtkh_core_par
-    PRIVATE vtkh_dependencies_private)
+    # necessary b/c of how find_cuda works
+    if(VTKm_CUDA_FOUND)
+         set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
+         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D PARALLEL")
+    endif()
+    
+    blt_add_library(
+      NAME vtkh_filters_par
+      SOURCES ${Sources}
+      HEADERS ${Headers}
+      DEPENDS_ON vtkh_core_par # also brings in mpi ..
+      )
+
+    if(VTKm_CUDA_FOUND)
+         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREVIOUS})
+    else()
+         blt_add_target_compile_flags(TO vtkh_filters_par FLAGS "-D PARALLEL")
+    endif()
+    
+
+
+  # target_include_directories(vtkh_filters_par
+  #   PUBLIC
+  #     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
+  #     $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
+  #     $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
+  #   )
+  # target_link_libraries(vtkh_filters_par
+  #   PUBLIC vtkh_core_par
+  #   PRIVATE vtkh_dependencies_private)
+
+
+  ########
+  # TODO: We should have a macro for install targets + headers
+  ########
 
 
   # Install libraries

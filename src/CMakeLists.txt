@@ -59,7 +59,7 @@ option(ENABLE_MPI         "Build MPI Support"         ON)
 ################################
 # Find VTKm and setup vars based on VTKm's capabilities.
 ################################
-find_package(VTKm REQUIRED OPTIONAL_COMPONENTS Rendering Serial CUDA TBB)
+#find_package(VTKm REQUIRED OPTIONAL_COMPONENTS Rendering Serial CUDA TBB)
 
 # These options that affect BLT. We set them up based on what
 # capabilities were found in VTKm
@@ -85,10 +85,21 @@ include(blt/SetupBLT.cmake)
 ################################
 include(cmake/CMakeBasics.cmake)
 
+
+################################
+# Setup 3rd Party Libs
+################################
+include(cmake/Setup3rdParty.cmake)
+
 ################################
 # Setup tests helpers
 ################################
 include(cmake/SetupTests.cmake)
+
+################################
+# Setup project wide includes
+################################
+include(cmake/SetupIncludes.cmake)
 
 #------------------------------------------------------------------------------
 # Determine source version.

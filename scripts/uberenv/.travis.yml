@@ -1,3 +1,4 @@
+#!/bin/bash
 ###############################################################################
 # Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
 # 
@@ -7,7 +8,7 @@
 # 
 # All rights reserved.
 # 
-# This file is part of Ascent. 
+# This file is part of Alpine. 
 # 
 # For details, see: http://software.llnl.gov/ascent/.
 # 
@@ -41,54 +42,72 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # 
 ###############################################################################
+sudo: false
 
-################################
-# Ascent 3rd Party Dependencies
-################################
+language: cpp
+compiler:
+  - gcc
+env:
+  global:
+  - COMPILER_CC=gcc-4.8
+  - COMPILER_CXX=g++-4.8
+  - COMPILER_FC=gfortran-4.8
+  matrix:
+    # we want to test both static and shared
+    - BUILD_SHARED_LIBS=ON
+    - BUILD_SHARED_LIBS=OFF
 
-###############################################################################
-# gtest, fruit, mpi,cuda, openmp, sphinx and doxygen are handled by blt
-###############################################################################
-################################################################
-################################################################
-#
-# 3rd Party Libs that underpin VTKh
-#
-################################################################
-################################################################
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+       - binutils
+       - gcc-4.8
+       - g++-4.8
+       - gfortran-4.8
+install:
+  # none
+script:
+  - which g++
+  - g++ --version
+  - export CC=${COMPILER_CC}
+  - export CXX=${COMPILER_CXX}
+  - export FC=${COMPILER_FC}
+  - ${CC} --version
+  - cd $TRAVIS_BUILD_DIR
+  # setup spack spec based on our travis options
+  - export SPACK_SPEC="%gcc@4.8+mpich"
+  - echo $SPACK_SPEC
+  # build deps using uberenv
+  - python scripts/uberenv/uberenv.py --spec ${SPACK_SPEC}
+  # create out-of-source build dir
+  - mkdir build-debug
+  - cd    build-debug
+  # cmake options
+  # build type
+  - CMAKE_OPTS="-DCMAKE_BUILD_TYPE=Debug"
+  # shared or static libs
+  - CMAKE_OPTS="${CMAKE_OPTS} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}"
+  # install path
+  - CMAKE_OPTS="${CMAKE_OPTS} -DCMAKE_INSTALL_PREFIX=../install-debug"
+  # make sure cmake is in our path
+  - export CMAKE_BIN_DIR=`ls -d ${TRAVIS_BUILD_DIR}/uberenv_libs/spack/opt/spack/*/*/cmake*/bin`
+  - export PATH=${CMAKE_BIN_DIR}:$PATH
+  - echo $PATH
+  - which cmake
+  - cmake --version
+  - export HOST_CONFIG=`ls ../uberenv_libs/*.cmake`
+  - cmake ${CMAKE_OPTS} -C ${HOST_CONFIG} ../src
+  # build, test, and install
+  - make VERBOSE=1
+  - env CTEST_OUTPUT_ON_FAILURE=1 make test
+  - make install
 
-
-################################
-# VTKm and supporting libs
-################################
-if(VTKM_DIR)
-    # explicitly setting this avoids a bug with VTKm's cuda
-    # arch detection logic
-    set(VTKm_CUDA_Architecture "kepler" CACHE PATH "" FORCE)
-
-    ################################
-    # TBB (for VTK-M)
-    ################################
-    if(TBB_DIR) # optional
-        include(cmake/thirdparty/SetupTBB.cmake)
-    endif()
-
-    ################################
-    # VTKm
-    ################################
-    include(cmake/thirdparty/SetupVTKm.cmake)
-else()
-    status(FATAL_ERROR "VTK-h requries VTK-m")
-endif()
-
-
-################################
-# Optional Features
-################################
-
-################################
-# IceT
-################################
-if(ENABLE_MPI)
-    include(cmake/thirdparty/SetupIceT.cmake)
-endif()
+notifications:
+  email:
+    recipients:
+      - cyrush@llnl.gov
+      - larsen30@llnl.gov
+    on_success: always
+    on_failure: always

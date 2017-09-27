@@ -7,11 +7,11 @@
 # 
 # All rights reserved.
 # 
-# This file is part of Ascent. 
+# This file is part of Alpine. 
 # 
-# For details, see: http://software.llnl.gov/ascent/.
+# For details, see: http://software.llnl.gov/alpine/.
 # 
-# Please also read ascent/LICENSE
+# Please also read alpine/LICENSE
 # 
 # Redistribution and use in source and binary forms, with or without 
 # modification, are permitted provided that the following conditions are met:
@@ -42,53 +42,45 @@
 # 
 ###############################################################################
 
-################################
-# Ascent 3rd Party Dependencies
-################################
+from spack import *
+import os
 
-###############################################################################
-# gtest, fruit, mpi,cuda, openmp, sphinx and doxygen are handled by blt
-###############################################################################
-################################################################
-################################################################
-#
-# 3rd Party Libs that underpin VTKh
-#
-################################################################
-################################################################
+class Vtkm(Package):
+    homepage = "https://m.vtk.org/"
+    url      = "http://m.vtk.org/images/8/87/Vtk-m-1.0.0.tar.gz"
+
+    version('kitware-gitlab',
+            git='https://gitlab.kitware.com/vtk/vtk-m.git',
+            branch='master')
+
+    #version('1.0.0',  '9d9d45e675d5b0628b19b32f5542ed9c')
+
+    depends_on("cmake")
+    depends_on("tbb")
+    #depends_on("boost-headers")
+    #patch('vtkm_patch.patch')
+    def install(self, spec, prefix):
+        os.environ["TBB_ROOT"] = spec["tbb"].prefix
+        with working_dir('spack-build', create=True):
+            cmake_args = ["../",
+                          "-DVTKm_ENABLE_TBB=ON",
+                          "-DVTKm_ENABLE_TESTING=OFF",
+                          "-DVTKm_BUILD_RENDERING=ON",
+                          "-DVTKm_USE_64BIT_IDS=OFF",
+                          "-DVTKm_USE_DOUBLE_PRECISION=ON"]
+            # check for cuda support
+            nvcc = which("nvcc")
+            if not nvcc  is None:
+                cmake_args.append("-DVTKm_ENABLE_CUDA=ON")
+                # this fix is necessary if compiling platform has cuda, but no devices
+                # (this common for front end nodes on hpc clusters)
+                # we choose kepler for llnl surface and ornl titan
+                cmake_args.append("-DVTKm_CUDA_Architecture=kepler")
+            cmake_args.extend(std_cmake_args)
+            print cmake_args
+            cmake(*cmake_args)
+            make(parallel=False)
+            make("install",parallel=False)
 
 
-################################
-# VTKm and supporting libs
-################################
-if(VTKM_DIR)
-    # explicitly setting this avoids a bug with VTKm's cuda
-    # arch detection logic
-    set(VTKm_CUDA_Architecture "kepler" CACHE PATH "" FORCE)
 
-    ################################
-    # TBB (for VTK-M)
-    ################################
-    if(TBB_DIR) # optional
-        include(cmake/thirdparty/SetupTBB.cmake)
-    endif()
-
-    ################################
-    # VTKm
-    ################################
-    include(cmake/thirdparty/SetupVTKm.cmake)
-else()
-    status(FATAL_ERROR "VTK-h requries VTK-m")
-endif()
-
-
-################################
-# Optional Features
-################################
-
-################################
-# IceT
-################################
-if(ENABLE_MPI)
-    include(cmake/thirdparty/SetupIceT.cmake)
-endif()
