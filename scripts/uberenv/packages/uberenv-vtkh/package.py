@@ -69,8 +69,7 @@ class UberenvVtkh(Package):
     variant("mpich",default=False,description="build mpich as MPI lib for Alpine")
     
     depends_on("cmake@3.8.2")
-    
-    depends_on("icet")
+
     depends_on("vtkm")
     
 
@@ -180,14 +179,6 @@ class UberenvVtkh(Package):
         cfg.write(cmake_cache_entry('ENABLE_CUDA',enable_cuda));
         if not nvcc is None:
             cfg.write(cmake_cache_entry('CUDA_BIN_DIR',os.path.dirname(nvcc.command)))
-
-        #######################
-        # icet
-        #######################
-        cfg.write("# icet from uberenv\n")
-        cfg.write(cmake_cache_entry("ICET_DIR", spec['icet'].prefix))
-        cfg.write("\n")
-   
    
         #######################
         # vtkm + tpls

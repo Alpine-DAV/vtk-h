@@ -80,15 +80,3 @@ if(VTKM_DIR)
 else()
     message(FATAL_ERROR "VTK-h requries VTK-m")
 endif()
-
-
-################################
-# Optional Features
-################################
-
-################################
-# IceT
-################################
-if(ENABLE_MPI)
-    include(cmake/thirdparty/SetupIceT.cmake)
-endif()
