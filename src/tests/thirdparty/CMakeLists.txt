@@ -42,23 +42,12 @@
 # 
 ###############################################################################
 
-
 ################################
 # Basic TPL Tests
 ################################
-# set(TPL_TESTS t_gtest_smoke)
-#
-# set(CUDA_TESTS t_cuda_smoke)
-
-set(TBB_TESTS)
 
 list(APPEND VTKM_TESTS t_vtkm_smoke)
-#
-# set(FORTRAN_TESTS t_fortran_smoke
-#                   t_fruit_smoke)
-#
-set(MPI_TESTS t_mpi_smoke
-              t_diy_smoke)
+set(MPI_TESTS t_diy_smoke)
 
 ################################
 # Add our Main Unit Tests
@@ -98,13 +87,4 @@ if(MPI_FOUND)
 else()
   message(STATUS "MPI disabled: Skipping related tests")
 endif()
-#
-#
-# if(FORTRAN_FOUND)
-#     message(STATUS "Fortran enabled: Adding related unit tests")
-#     foreach(TEST ${FORTRAN_TESTS})
-#       add_fortran_test(TEST ${TEST} DEPENDS_ON ascent)
-#     endforeach()
-# else()
-#     message(STATUS "Fortran disabled: Skipping related tests")
-# endif()
+
