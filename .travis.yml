@@ -99,6 +99,18 @@ script:
   - make VERBOSE=1
   - env CTEST_OUTPUT_ON_FAILURE=1 make test
   - make install
+  # test examples that demo using an installed vtkh
+  - export VTKM_DIR=`ls -d ${TRAVIS_BUILD_DIR}/uberenv_libs/spack/opt/spack/*/*/vtkm*`
+  - export VTKH_DIR=${TRAVIS_BUILD_DIR}/install-debug
+  # using with cmake example
+  - cd ${TRAVIS_BUILD_DIR}/src/examples/using-with-cmake
+  - mkdir build
+  - cd build
+  - export EXAMPLE_CFG="-VTKM_DIR=${VTKM_DIR} -DVTKH_DIR=${VTKH_DIR}"
+  - echo $EXAMPLE_CFG
+  - cmake  ${EXAMPLE_CFG} ../
+  - make VERBOSE=1
+  - ./example
 
 notifications:
   email:
