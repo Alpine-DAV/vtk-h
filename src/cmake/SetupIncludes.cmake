@@ -47,7 +47,7 @@
 #  Project Wide Includes
 ################################
 
-# so we can see use "vtk/zzz.hxx"
+# so we can see use "vtkh/zzz.hxx"
 include_directories(${PROJECT_SOURCE_DIR})
 # add lodepng include dir
 include_directories(${PROJECT_SOURCE_DIR}/vtkh/thirdparty_builtin/lodepng)
