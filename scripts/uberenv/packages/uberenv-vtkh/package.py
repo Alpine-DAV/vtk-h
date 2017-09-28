@@ -78,7 +78,6 @@ class UberenvVtkh(Package):
         depends_on("mpich")
     else: # else, defer to the variant
         depends_on("mpich",when="+mpich")
-        depends_on("icet+mpich", when="+mpich")
 
     def url_for_version(self, version):
         dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
