@@ -106,7 +106,7 @@ script:
   - cd ${TRAVIS_BUILD_DIR}/src/examples/using-with-cmake
   - mkdir build
   - cd build
-  - export EXAMPLE_CFG="-VTKM_DIR=${VTKM_DIR} -DVTKH_DIR=${VTKH_DIR}"
+  - export EXAMPLE_CFG="-DVTKM_DIR=${VTKM_DIR} -DVTKH_DIR=${VTKH_DIR}"
   - echo $EXAMPLE_CFG
   - cmake  ${EXAMPLE_CFG} ../
   - make VERBOSE=1
