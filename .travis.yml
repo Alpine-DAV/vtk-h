@@ -101,7 +101,7 @@ script:
   - make install
   # test examples that demo using an installed vtkh
   - export VTKM_DIR=`ls -d ${TRAVIS_BUILD_DIR}/uberenv_libs/spack/opt/spack/*/*/vtkm*`
-  - export VTKH_DIR=${TRAVIS_BUILD_DIR}/install-debug
+  - export VTKH_DIR=${TRAVIS_BUILD_DIR}/travis-debug-install
   # using with cmake example
   - cd ${TRAVIS_BUILD_DIR}/src/examples/using-with-cmake
   - mkdir build
