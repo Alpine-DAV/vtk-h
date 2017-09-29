@@ -22,11 +22,19 @@ set(Sources
   compositing/Compositor.cpp
   )
 
+
+set(vtkh_rendering_deps vtkh_core vtkh_utils )
+
+if(VTKm_CUDA_FOUND)
+    # triggers cuda compile
+    list(APPEND vtkh_rendering_deps cuda)
+endif()
+
 blt_add_library(
   NAME vtkh_rendering
   SOURCES ${Sources}
   HEADERS ${Headers}
-  DEPENDS_ON vtkh_core vtkh_utils
+  DEPENDS_ON ${vtkh_rendering_deps}
   )
 
 # target_link_libraries(vtkh_rendering
@@ -78,17 +86,21 @@ set(ParallelSources
 
 if (ENABLE_MPI)
     
+    set(vtkh_rendering_par_deps vtkh_core_par vtkh_utils )
+
     # necessary b/c of how find_cuda works
     if(VTKm_CUDA_FOUND)
          set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
          set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D PARALLEL")
+         # triggers cuda compile
+         list(APPEND vtkh_rendering_par_deps cuda)
     endif()
     
     blt_add_library(
         NAME vtkh_rendering_par
         SOURCES ${Sources} ${ParallelSources}
         HEADERS ${Headers} ${ParallelHeaders}
-        DEPENDS_ON vtkh_core_par vtkh_utils
+        DEPENDS_ON ${vtkh_rendering_par_deps}
     )
 
     if(VTKm_CUDA_FOUND)

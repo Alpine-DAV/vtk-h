@@ -30,12 +30,19 @@ set(Sources
 #   PUBLIC vtkh_core
 #   PRIVATE vtkh_dependencies_private)
 
+set(vtkh_filters_deps vtkh_core  )
+
+if(VTKm_CUDA_FOUND)
+    # triggers cuda compile
+    list(APPEND vtkh_filters_deps cuda)
+endif()
+
 
 blt_add_library(
   NAME vtkh_filters
   SOURCES ${Sources}
   HEADERS ${Headers}
-  DEPENDS_ON vtkh_core
+  DEPENDS_ON ${vtkh_filters_deps}
   )
 
   ########
@@ -57,17 +64,21 @@ install(FILES ${Headers}
 
 if (ENABLE_MPI)
 
+    set(vtkh_filters_par_deps vtkh_core_par vtkh_utils )
+
     # necessary b/c of how find_cuda works
     if(VTKm_CUDA_FOUND)
          set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
          set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D PARALLEL")
+         # triggers cuda compile
+         list(APPEND vtkh_filters_par_deps cuda)
     endif()
     
     blt_add_library(
       NAME vtkh_filters_par
       SOURCES ${Sources}
       HEADERS ${Headers}
-      DEPENDS_ON vtkh_core_par # also brings in mpi ..
+      DEPENDS_ON ${vtkh_filters_par_deps}
       )
 
     if(VTKm_CUDA_FOUND)
