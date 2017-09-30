@@ -84,12 +84,12 @@ set(ParallelSources
   compositing/RadixKCompositor.cpp
   )
 
-if (ENABLE_MPI)
+if (MPI_FOUND)
     
     set(vtkh_rendering_par_deps vtkh_core_par vtkh_utils )
 
     # necessary b/c of how find_cuda works
-    if(VTKm_CUDA_FOUND)
+    if(CUDA_FOUND)
          set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
          set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D PARALLEL")
          # triggers cuda compile
@@ -103,8 +103,8 @@ if (ENABLE_MPI)
         DEPENDS_ON ${vtkh_rendering_par_deps}
     )
 
-    if(VTKm_CUDA_FOUND)
-         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREVIOUS})
+    if(CUDA_FOUND)
+         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREV})
     else()
          blt_add_target_compile_flags(TO vtkh_rendering_par FLAGS "-D PARALLEL")
     endif()

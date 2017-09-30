@@ -73,14 +73,14 @@ install(TARGETS vtkh_core
 install(FILES ${Headers}
   DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh)
 
-if(ENABLE_MPI)
+if(MPI_FOUND)
     
-    # necessary b/c of how find_cuda works
-    if(VTKm_CUDA_FOUND)
+    # # necessary b/c of how find_cuda works
+    if(CUDA_FOUND)
          set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
          set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D PARALLEL")
     endif()
-    
+
     blt_add_library(
       NAME vtkh_core_par
       SOURCES ${Sources}
@@ -88,8 +88,8 @@ if(ENABLE_MPI)
       DEPENDS_ON ${vtkh_thirdparty_libs} mpi
       )
 
-    if(VTKm_CUDA_FOUND)
-         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREVIOUS})
+    if(CUDA_FOUND)
+         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREV})
     else()
          blt_add_target_compile_flags(TO vtkh_core_par FLAGS "-D PARALLEL")
     endif()
