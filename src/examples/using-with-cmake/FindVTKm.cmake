@@ -42,67 +42,50 @@
 # 
 ###############################################################################
 
+###############################################################################
+#
+# Setup VTKm 
+#
+###############################################################################
+#
+#  Expects VTKM_DIR to point to a VTKm installations.
+#
+# This file defines the following CMake variables:
+#  VTKM_FOUND - If VTKm was found
+#  VTKM_INCLUDE_DIRS - The VTKm include directories
+#
+#  If found, the vtkm CMake targets will also be imported.
+#  The main vtkm library targets are:
+#   vtkm 
+#   vtkm_cont
+#   vtkm_rendering
+#
+###############################################################################
 
 ###############################################################################
-# Setup IceT
-# This file defines:
-#  ICET_FOUND - If IceT was found
-#  ICET_INCLUDE_DIRS - The IceT include directories
-#  ICET_LIBRARIES - The libraries needed to use IceT
+# Check for VTKM_DIR
 ###############################################################################
-
-# first Check for ICET_DIR
-
-if(NOT ICET_DIR)
-    MESSAGE(FATAL_ERROR "IceT support needs explicit ICET_DIR")
+if(NOT VTKM_DIR)
+  MESSAGE(FATAL_ERROR "Could not find VTKM_DIR. Conduit requires explicit VTKM_DIR.")
 endif()
 
-MESSAGE(STATUS "Looking for IceT using ICET_DIR = ${ICET_DIR}")
-
-#find includes
-find_path(ICET_INCLUDE_DIRS IceT.h
-          PATHS ${ICET_DIR}/include
-          NO_DEFAULT_PATH
-          NO_CMAKE_ENVIRONMENT_PATH
-          NO_CMAKE_PATH
-          NO_SYSTEM_ENVIRONMENT_PATH
-          NO_CMAKE_SYSTEM_PATH)
-
-#find libs
-find_library(ICET_CORE_LIB LIBRARIES NAMES IceTCore
-             PATHS ${ICET_DIR}/lib
-             NO_DEFAULT_PATH
-             NO_CMAKE_ENVIRONMENT_PATH
-             NO_CMAKE_PATH
-             NO_SYSTEM_ENVIRONMENT_PATH
-             NO_CMAKE_SYSTEM_PATH)
-
-
-find_library(ICET_MPI_LIB LIBRARIES NAMES IceTMPI
-             PATHS ${ICET_DIR}/lib
-             NO_DEFAULT_PATH
-             NO_CMAKE_ENVIRONMENT_PATH
-             NO_CMAKE_PATH
-             NO_SYSTEM_ENVIRONMENT_PATH
-             NO_CMAKE_SYSTEM_PATH)
-
-
-set(ICET_LIBRARIES ${ICET_CORE_LIB} ${ICET_MPI_LIB})
-
-include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set ICET_FOUND to TRUE
-# if all listed variables are TRUE
-find_package_handle_standard_args(IceT  DEFAULT_MSG
-                                  ICET_LIBRARIES ICET_INCLUDE_DIRS)
-
-mark_as_advanced(ICET_CORE_LIB
-                 ICET_MPI_LIB)
-
-if(NOT ICET_FOUND)
-    message(FATAL_ERROR "ICET_DIR is not a path to a valid icet install")
+if(NOT EXISTS ${VTKM_DIR}/lib/VTKmConfig.cmake)
+  MESSAGE(FATAL_ERROR "Could not find VTKm CMake include file (${VTKM_DIR}/lib/VTKmConfig.cmake)")
 endif()
 
-blt_register_library(NAME icet
-                     INCLUDES ${ICET_INCLUDE_DIRS}
-                     LIBRARIES ${ICET_LIBRARIES} )
+###############################################################################
+# Import VTKm CMake targets
+###############################################################################
+include(${VTKM_DIR}/lib/VTKmConfig.cmake)
+
+###############################################################################
+# Set remaning CMake variables 
+###############################################################################
+# we found VTKm
+set(VTKM_FOUND TRUE)
+# provide location of the headers in VTKM_INCLUDE_DIRS
+set(VTKM_INCLUDE_DIRS ${VTKM_DIR}/include/vtkm)
+
+
+
 

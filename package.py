@@ -1,17 +1,18 @@
+#!/bin/env python
 ###############################################################################
-# Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2014-2017, Lawrence Livermore National Security, LLC.
 # 
 # Produced at the Lawrence Livermore National Laboratory
 # 
-# LLNL-CODE-716457
+# LLNL-CODE-666778
 # 
 # All rights reserved.
 # 
-# This file is part of Ascent. 
+# This file is part of Conduit. 
 # 
-# For details, see: http://software.llnl.gov/ascent/.
+# For details, see: http://software.llnl.gov/conduit/.
 # 
-# Please also read ascent/LICENSE
+# Please also read conduit/LICENSE
 # 
 # Redistribution and use in source and binary forms, with or without 
 # modification, are permitted provided that the following conditions are met:
@@ -42,49 +43,43 @@
 # 
 ###############################################################################
 
-################################
-# Basic TPL Tests
-################################
 
-list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+###############################################################################
+#
+# file: package.py
+#
+###############################################################################
 
-################################
-# Add our Main Unit Tests
-################################
-message(STATUS "Adding thirdparty lib unit tests")
-foreach(TEST ${TPL_TESTS})
-    add_cpp_test(TEST ${TEST})
-endforeach()
+import subprocess
+import sys
+import datetime
+import os
 
-################################
-# Add our VTKm Unit Tests
-################################
+from os.path import join as pjoin
 
-foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
-  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-  if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  endif()
-endforeach()
+def create_package(output_file,version):
+    scripts_dir = pjoin(os.path.abspath(os.path.split(__file__)[0]),"scripts")
+    pkg_script = pjoin(scripts_dir,"git_archive_all.py");
+    repo_name = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
+    if output_file is None:
+         suffix = "tar"
+         t = datetime.datetime.now()
+         output_file = "%s.%04d.%02d.%02d.%s" % (repo_name,t.year,t.month,t.day,suffix)
+    cmd = "python " + pkg_script + " --prefix=vtkh" 
+    if not version is None:
+        cmd += "-" + version
+    cmd +=  " " + output_file
+    print "[exe: %s]" % cmd
+    subprocess.call(cmd,shell=True)
 
-################################
-# Add our Optional Unit Tests
-################################
-if(MPI_FOUND)
-  message(STATUS "MPI enabled: Adding related unit tests")
-  foreach(TEST ${MPI_TESTS})
-    # this uses 2 procs
-    add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
-  endforeach()
-else()
-  message(STATUS "MPI disabled: Skipping related tests")
-endif()
+
+if __name__ == "__main__":
+    ofile   = None
+    version = None
+    if len(sys.argv) > 1:
+        ofile = sys.argv[1]
+    if len(sys.argv) > 2:
+        version = sys.argv[2]
+    create_package(ofile,version)
+
 

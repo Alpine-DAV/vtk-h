@@ -49,20 +49,6 @@
 ###############################################################################
 # gtest, fruit, mpi,cuda, openmp, sphinx and doxygen are handled by blt
 ###############################################################################
-
-################################
-# Setup Python if requested
-################################
-if(ENABLE_PYTHON)
-    include(cmake/thirdparty/SetupPython.cmake)
-    message(STATUS "Using Python Include: ${PYTHON_INCLUDE_DIRS}")
-    include_directories(${PYTHON_INCLUDE_DIRS})
-    # if we don't find python, throw a fatal error
-    if(NOT PYTHON_FOUND)
-        message(FATAL_ERROR "ENABLE_PYTHON is true, but Python wasn't found.")
-    endif()
-endif()
-
 ################################################################
 ################################################################
 #
@@ -91,16 +77,6 @@ if(VTKM_DIR)
     # VTKm
     ################################
     include(cmake/thirdparty/SetupVTKm.cmake)
-endif()
-
-
-################################
-# Optional Features
-################################
-
-################################
-# IceT
-################################
-if(ENABLE_MPI AND VTKM_FOUND)
-    include(cmake/thirdparty/SetupIceT.cmake)
+else()
+    message(FATAL_ERROR "VTK-h requries VTK-m")
 endif()

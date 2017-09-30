@@ -1,3 +1,4 @@
+#!/bin/bash
 ###############################################################################
 # Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
 # 
@@ -42,49 +43,18 @@
 # 
 ###############################################################################
 
-################################
-# Basic TPL Tests
-################################
+# remove old source tarball if it exists
+echo "rm -f vtkh.docker.src.tar.gz"
+rm -f ascent.docker.src.tar.gz
 
-list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+# get current copy of the conduit source
+echo "cd ../../../../ && python package.py src/examples/docker/ubuntu/vtkh.docker.src.tar.gz"
+cd ../../../../ && python package.py src/examples/docker/ubuntu/vtkh.docker.src.tar.gz
 
-################################
-# Add our Main Unit Tests
-################################
-message(STATUS "Adding thirdparty lib unit tests")
-foreach(TEST ${TPL_TESTS})
-    add_cpp_test(TEST ${TEST})
-endforeach()
+# change back to the dir with our Dockerfile
+echo "cd src/examples/docker/ubuntu/"
+cd src/examples/docker/ubuntu/
 
-################################
-# Add our VTKm Unit Tests
-################################
-
-foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
-  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-  if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  endif()
-endforeach()
-
-################################
-# Add our Optional Unit Tests
-################################
-if(MPI_FOUND)
-  message(STATUS "MPI enabled: Adding related unit tests")
-  foreach(TEST ${MPI_TESTS})
-    # this uses 2 procs
-    add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
-  endforeach()
-else()
-  message(STATUS "MPI disabled: Skipping related tests")
-endif()
-
+# exec docker build to create image
+echo "docker build -t vtkh-ubuntu:current ."
+docker build -t vtkh-ubuntu:current .

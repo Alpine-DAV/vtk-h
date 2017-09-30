@@ -1,3 +1,4 @@
+#!/bin/bash
 ###############################################################################
 # Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
 # 
@@ -7,7 +8,7 @@
 # 
 # All rights reserved.
 # 
-# This file is part of Ascent. 
+# This file is part of Alpine. 
 # 
 # For details, see: http://software.llnl.gov/ascent/.
 # 
@@ -41,50 +42,72 @@
 # POSSIBILITY OF SUCH DAMAGE.
 # 
 ###############################################################################
+sudo: false
 
-################################
-# Basic TPL Tests
-################################
+language: cpp
+compiler:
+  - gcc
+env:
+  global:
+  - COMPILER_CC=gcc-4.8
+  - COMPILER_CXX=g++-4.8
+  - COMPILER_FC=gfortran-4.8
+  matrix:
+    # we want to test both static and shared
+    - BUILD_SHARED_LIBS=ON
+    - BUILD_SHARED_LIBS=OFF
 
-list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+       - binutils
+       - gcc-4.8
+       - g++-4.8
+       - gfortran-4.8
+install:
+  # none
+script:
+  - which g++
+  - g++ --version
+  - export CC=${COMPILER_CC}
+  - export CXX=${COMPILER_CXX}
+  - export FC=${COMPILER_FC}
+  - ${CC} --version
+  - cd $TRAVIS_BUILD_DIR
+  # setup spack spec based on our travis options
+  - export SPACK_SPEC="%gcc@4.8+mpich"
+  - echo $SPACK_SPEC
+  # build deps using uberenv
+  - python scripts/uberenv/uberenv.py --spec ${SPACK_SPEC}
+  # create out-of-source build dir
+  - mkdir build-debug
+  - cd    build-debug
+  # cmake options
+  # build type
+  - CMAKE_OPTS="-DCMAKE_BUILD_TYPE=Debug"
+  # shared or static libs
+  - CMAKE_OPTS="${CMAKE_OPTS} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}"
+  # install path
+  - CMAKE_OPTS="${CMAKE_OPTS} -DCMAKE_INSTALL_PREFIX=../install-debug"
+  # make sure cmake is in our path
+  - export CMAKE_BIN_DIR=`ls -d ${TRAVIS_BUILD_DIR}/uberenv_libs/spack/opt/spack/*/*/cmake*/bin`
+  - export PATH=${CMAKE_BIN_DIR}:$PATH
+  - echo $PATH
+  - which cmake
+  - cmake --version
+  - export HOST_CONFIG=`ls ../uberenv_libs/*.cmake`
+  - cmake ${CMAKE_OPTS} -C ${HOST_CONFIG} ../src
+  # build, test, and install
+  - make VERBOSE=1
+  - env CTEST_OUTPUT_ON_FAILURE=1 make test
+  - make install
 
-################################
-# Add our Main Unit Tests
-################################
-message(STATUS "Adding thirdparty lib unit tests")
-foreach(TEST ${TPL_TESTS})
-    add_cpp_test(TEST ${TEST})
-endforeach()
-
-################################
-# Add our VTKm Unit Tests
-################################
-
-foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
-  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-  if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  endif()
-endforeach()
-
-################################
-# Add our Optional Unit Tests
-################################
-if(MPI_FOUND)
-  message(STATUS "MPI enabled: Adding related unit tests")
-  foreach(TEST ${MPI_TESTS})
-    # this uses 2 procs
-    add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
-  endforeach()
-else()
-  message(STATUS "MPI disabled: Skipping related tests")
-endif()
-
+notifications:
+  email:
+    recipients:
+      - cyrush@llnl.gov
+      - larsen30@llnl.gov
+    on_success: always
+    on_failure: always

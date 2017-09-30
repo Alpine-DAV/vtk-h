@@ -22,23 +22,36 @@ set(Sources
   compositing/Compositor.cpp
   )
 
+
+set(vtkh_rendering_deps vtkh_core vtkh_utils )
+
+if(VTKm_CUDA_FOUND)
+    # triggers cuda compile
+    list(APPEND vtkh_rendering_deps cuda)
+endif()
+
 blt_add_library(
   NAME vtkh_rendering
   SOURCES ${Sources}
   HEADERS ${Headers}
-  DEPENDS_ON vtkh_core vtkm_rendering
+  DEPENDS_ON ${vtkh_rendering_deps}
   )
 
-target_link_libraries(vtkh_rendering
-  PRIVATE vtkh_dependencies_private)
+# target_link_libraries(vtkh_rendering
+#   PRIVATE vtkh_dependencies_private)
+#
+# target_include_directories(vtkh_rendering
+#   PUBLIC
+#     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
+#     $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
+#
+#     $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>  # <prefix>/include
+#   )
 
-target_include_directories(vtkh_rendering
-  PUBLIC
-    $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
-    $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
+########
+# TODO: We should have a macro for install targets + headers
+########
 
-    $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>  # <prefix>/include
-  )
 
 # Install libraries
 install(TARGETS vtkh_rendering
@@ -71,23 +84,46 @@ set(ParallelSources
   compositing/RadixKCompositor.cpp
   )
 
-if (ENABLE_MPI)
-  blt_add_library(
-    NAME vtkh_rendering_par
-    SOURCES ${Sources} ${ParallelSources}
-    HEADERS ${Headers} ${ParallelHeaders}
-    DEPENDS_ON vtkh_core_par vtkm_rendering
+if (MPI_FOUND)
+    
+    set(vtkh_rendering_par_deps vtkh_core_par vtkh_utils )
+
+    # necessary b/c of how find_cuda works
+    if(CUDA_FOUND)
+         set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
+         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D PARALLEL")
+         # triggers cuda compile
+         list(APPEND vtkh_rendering_par_deps cuda)
+    endif()
+    
+    blt_add_library(
+        NAME vtkh_rendering_par
+        SOURCES ${Sources} ${ParallelSources}
+        HEADERS ${Headers} ${ParallelHeaders}
+        DEPENDS_ON ${vtkh_rendering_par_deps}
     )
 
-  target_link_libraries(vtkh_rendering_par
-    PRIVATE vtkh_dependencies_private)
-  target_include_directories(vtkh_rendering_par
-    PUBLIC
-      $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
-      $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
+    if(CUDA_FOUND)
+         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREV})
+    else()
+         blt_add_target_compile_flags(TO vtkh_rendering_par FLAGS "-D PARALLEL")
+    endif()
 
-      $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>  # <prefix>/include
-    )
+
+  # target_link_libraries(vtkh_rendering_par
+  #   PRIVATE vtkh_dependencies_private)
+  # target_include_directories(vtkh_rendering_par
+  #   PUBLIC
+  #     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
+  #     $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
+  #
+  #     $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>  # <prefix>/include
+  #   )
+
+  ########
+  # TODO: We should have a macro for install targets + headers
+  ########
+
 
   # Install libraries
   install(TARGETS vtkh_rendering_par

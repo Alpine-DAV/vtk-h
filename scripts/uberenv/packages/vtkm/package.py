@@ -7,11 +7,11 @@
 # 
 # All rights reserved.
 # 
-# This file is part of Ascent. 
+# This file is part of Alpine. 
 # 
-# For details, see: http://software.llnl.gov/ascent/.
+# For details, see: http://software.llnl.gov/alpine/.
 # 
-# Please also read ascent/LICENSE
+# Please also read alpine/LICENSE
 # 
 # Redistribution and use in source and binary forms, with or without 
 # modification, are permitted provided that the following conditions are met:
@@ -42,49 +42,45 @@
 # 
 ###############################################################################
 
-################################
-# Basic TPL Tests
-################################
+from spack import *
+import os
 
-list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+class Vtkm(Package):
+    homepage = "https://m.vtk.org/"
+    url      = "http://m.vtk.org/images/8/87/Vtk-m-1.0.0.tar.gz"
 
-################################
-# Add our Main Unit Tests
-################################
-message(STATUS "Adding thirdparty lib unit tests")
-foreach(TEST ${TPL_TESTS})
-    add_cpp_test(TEST ${TEST})
-endforeach()
+    version('kitware-gitlab',
+            git='https://gitlab.kitware.com/vtk/vtk-m.git',
+            branch='master')
 
-################################
-# Add our VTKm Unit Tests
-################################
+    #version('1.0.0',  '9d9d45e675d5b0628b19b32f5542ed9c')
 
-foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
-  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-  if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  endif()
-endforeach()
+    depends_on("cmake")
+    depends_on("tbb")
+    #depends_on("boost-headers")
+    #patch('vtkm_patch.patch')
+    def install(self, spec, prefix):
+        os.environ["TBB_ROOT"] = spec["tbb"].prefix
+        with working_dir('spack-build', create=True):
+            cmake_args = ["../",
+                          "-DVTKm_ENABLE_TBB=ON",
+                          "-DVTKm_ENABLE_TESTING=OFF",
+                          "-DVTKm_BUILD_RENDERING=ON",
+                          "-DVTKm_USE_64BIT_IDS=OFF",
+                          "-DVTKm_USE_DOUBLE_PRECISION=ON"]
+            # check for cuda support
+            nvcc = which("nvcc")
+            if not nvcc  is None:
+                cmake_args.append("-DVTKm_ENABLE_CUDA=ON")
+                # this fix is necessary if compiling platform has cuda, but no devices
+                # (this common for front end nodes on hpc clusters)
+                # we choose kepler for llnl surface and ornl titan
+                cmake_args.append("-DVTKm_CUDA_Architecture=kepler")
+            cmake_args.extend(std_cmake_args)
+            print cmake_args
+            cmake(*cmake_args)
+            make(parallel=False)
+            make("install",parallel=False)
 
-################################
-# Add our Optional Unit Tests
-################################
-if(MPI_FOUND)
-  message(STATUS "MPI enabled: Adding related unit tests")
-  foreach(TEST ${MPI_TESTS})
-    # this uses 2 procs
-    add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
-  endforeach()
-else()
-  message(STATUS "MPI disabled: Skipping related tests")
-endif()
+
 

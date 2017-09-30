@@ -1,3 +1,4 @@
+#!/bin/bash
 ###############################################################################
 # Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
 # 
@@ -42,49 +43,44 @@
 # 
 ###############################################################################
 
-################################
-# Basic TPL Tests
-################################
 
-list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+###############################################################################
+#
+# file: bootstrap-env.sh
+#
+###############################################################################
 
-################################
-# Add our Main Unit Tests
-################################
-message(STATUS "Adding thirdparty lib unit tests")
-foreach(TEST ${TPL_TESTS})
-    add_cpp_test(TEST ${TEST})
-endforeach()
+#
+# Takes you from zero to an env  with TPLS needed to develop conduit on OSX
+# and linux.
+#
+export ALL_ARGS="$@"
 
-################################
-# Add our VTKm Unit Tests
-################################
+function info
+{
+    echo "$@"
+}
 
-foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
-  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-  if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  endif()
-endforeach()
+function uberenv
+{
+    python scripts/uberenv/uberenv.py "$ALL_ARGS"
+}
 
-################################
-# Add our Optional Unit Tests
-################################
-if(MPI_FOUND)
-  message(STATUS "MPI enabled: Adding related unit tests")
-  foreach(TEST ${MPI_TESTS})
-    # this uses 2 procs
-    add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
-  endforeach()
-else()
-  message(STATUS "MPI disabled: Skipping related tests")
-endif()
+function main
+{
+    uberenv
 
+    BOOSTRAP_CWD=`pwd`
+    SPACK_CMAKE_PREFIX=`ls -d $BOOSTRAP_CWD/uberenv_libs/spack/opt/spack/*/*/cmake*`
+    SPACK_CMAKE=`ls $SPACK_CMAKE_PREFIX/bin/cmake`
+
+    # Only add to PATH if `which cmake` isn't our CMake
+    CMAKE_CURRENT=`which cmake`
+    if [[ "$CMAKE_CURRENT" != "$SPACK_CMAKE" ]] ; then
+        export PATH=$SPACK_CMAKE_PREFIX/bin:$PATH
+    fi
+    
+    info "[Active CMake:" `which cmake` "]"
+}
+
+main

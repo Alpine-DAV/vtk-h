@@ -42,49 +42,36 @@
 # 
 ###############################################################################
 
-################################
-# Basic TPL Tests
-################################
+###############################################################################
+#
+# Example that shows how to use an installed instance of vtkh in another
+# CMake-based build system.
+#
+# To build:
+#  mkdir build
+#  cd build
+#  cmake \
+#   -DVTKM_DIR={vtkm install path} \
+#   -DVTKH_DIR={vtkh install path} 
+#   ../
+# make
+# ./example
+#
+###############################################################################
 
-list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+cmake_minimum_required(VERSION 3.0)
 
-################################
-# Add our Main Unit Tests
-################################
-message(STATUS "Adding thirdparty lib unit tests")
-foreach(TEST ${TPL_TESTS})
-    add_cpp_test(TEST ${TEST})
-endforeach()
+project(using_with_cmake)
 
-################################
-# Add our VTKm Unit Tests
-################################
+include("FindVTKm.cmake")
+include("FindVTKh.cmake")
 
-foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
-  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
-  if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  endif()
-endforeach()
+# setup vtkh include paths
+include_directories(${VTKH_INCLUDE_DIRS})
 
-################################
-# Add our Optional Unit Tests
-################################
-if(MPI_FOUND)
-  message(STATUS "MPI enabled: Adding related unit tests")
-  foreach(TEST ${MPI_TESTS})
-    # this uses 2 procs
-    add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
-  endforeach()
-else()
-  message(STATUS "MPI disabled: Skipping related tests")
-endif()
+# create our example 
+add_executable(example example.cpp)
+
+# link to vtkh
+target_link_libraries(example vtkh)
 
