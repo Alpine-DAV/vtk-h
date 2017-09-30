@@ -43,7 +43,6 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
   thresher.AddMapField("cell_data");
   thresher.Update();
   vtkh::DataSet *output = thresher.GetOutput();
-#if 0 
   vtkm::Bounds bounds = output->GetGlobalBounds();
 
   vtkm::rendering::Camera camera;
@@ -54,15 +53,10 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
                                                           camera, 
                                                           *output, 
                                                           "threshold");  
-  // this is outputing a cell set type the 
-  // rendering infrastructure has not seen b
-  // before
-  output->PrintSummary(std::cout);
   vtkh::RayTracer tracer;
   tracer.SetInput(output);
   tracer.AddRender(render);
   tracer.SetField("cell_data"); 
   tracer.Update();
-#endif 
   delete output; 
 }
