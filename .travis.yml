@@ -65,6 +65,9 @@ addons:
        - gcc-4.9
        - g++-4.9
        - gfortran-4.9
+cache:
+  directories:
+    - /home/travis/build/Alpine-DAV/uberenv_libs
 install:
   # none
 script:
@@ -76,7 +79,12 @@ script:
   - ${CC} --version
   - cd $TRAVIS_BUILD_DIR
   # build deps using uberenv
-  - python scripts/uberenv/uberenv.py --spec %gcc@4.9+mpich
+  - cd ..
+  - export CACHE_ROOT=`pwd`
+  # uninstall vtkm if it exists to force a rebuild
+  - for f in ${CACHE_ROOT}/uberenv_libs/spack/opt/spack/*/*/vtkm*; do if [ -d $f ]; then echo "y" | ${CACHE_ROOT}/uberenv_libs/spack/bin/spack uninstall --dependents vtkm; fi; done;
+  - python vtk-h/scripts/uberenv/uberenv.py --spec %gcc@4.9+mpich
+  - cd $TRAVIS_BUILD_DIR
   # create out-of-source build dir
   - mkdir travis-debug-build
   - cd    travis-debug-build
@@ -88,19 +96,19 @@ script:
   # install path
   - CMAKE_OPTS="${CMAKE_OPTS} -DCMAKE_INSTALL_PREFIX=../travis-debug-install"
   # make sure cmake is in our path
-  - export CMAKE_BIN_DIR=`ls -d ${TRAVIS_BUILD_DIR}/uberenv_libs/spack/opt/spack/*/*/cmake*/bin`
+  - export CMAKE_BIN_DIR=`ls -d ${CACHE_ROOT}/uberenv_libs/spack/opt/spack/*/*/cmake*/bin`
   - export PATH=${CMAKE_BIN_DIR}:$PATH
   - echo $PATH
   - which cmake
   - cmake --version
-  - export HOST_CONFIG=`ls ../uberenv_libs/*.cmake`
+  - export HOST_CONFIG=`ls ${CACHE_ROOT}/uberenv_libs/*.cmake`
   - cmake ${CMAKE_OPTS} -C ${HOST_CONFIG} ../src
   # build, test, and install
   - make VERBOSE=1
   - env CTEST_OUTPUT_ON_FAILURE=1 make test
   - make install
   # test examples that demo using an installed vtkh
-  - export VTKM_DIR=`ls -d ${TRAVIS_BUILD_DIR}/uberenv_libs/spack/opt/spack/*/*/vtkm*`
+  - export VTKM_DIR=`ls -d ${CACHE_ROOT}/uberenv_libs/spack/opt/spack/*/*/vtkm*`
   - export VTKH_DIR=${TRAVIS_BUILD_DIR}/travis-debug-install
   # using with cmake example
   - cd ${TRAVIS_BUILD_DIR}/src/examples/using-with-cmake
