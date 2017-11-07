@@ -16,12 +16,17 @@ class DataSet
 protected:
   std::vector<vtkm::cont::DataSet> m_domains;
   std::vector<vtkm::Id>            m_domain_ids;
+  vtkm::UInt64                     m_cycle;
 public:
+  DataSet();
+  ~DataSet();
+
   void AddDomain(vtkm::cont::DataSet data_set, vtkm::Id domain_id); 
   void GetDomain(const vtkm::Id index, 
                  vtkm::cont::DataSet &data_set, 
                  vtkm::Id &domain_id); 
-
+  void SetCycle(const vtkm::UInt64 cycle); 
+  vtkm::UInt64 GetCycle() const; 
   vtkm::cont::DataSet GetDomain(const vtkm::Id index); 
   
   vtkm::cont::Field GetField(const std::string &field_name, 

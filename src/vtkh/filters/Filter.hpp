@@ -60,6 +60,11 @@ protected:
       }
     }
   }
+
+  void PropagateMetadata()
+  {
+    m_output->SetCycle(m_input->GetCycle());
+  }
 };
 
 } //namespace vtkh
