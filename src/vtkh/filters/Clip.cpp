@@ -121,6 +121,7 @@ void Clip::DoExecute()
     {
       m_internals->m_clipper.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
+    this->PropagateMetadata();
     this->m_output->AddDomain(res.GetDataSet(), domain_id);
     
   }

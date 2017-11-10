@@ -428,4 +428,26 @@ DataSet::IsStructured(int &topological_dims, const vtkm::Id cell_set_index) cons
 #endif
   return is_structured;
 }
+
+void
+DataSet::SetCycle(const vtkm::UInt64 cycle)
+{
+  m_cycle = cycle;
+}
+
+vtkm::UInt64
+DataSet::GetCycle() const
+{
+  return m_cycle; 
+}
+
+DataSet::DataSet()
+  : m_cycle(0)
+{
+}
+
+DataSet::~DataSet()
+{
+}
+
 } // namspace vtkh

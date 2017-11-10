@@ -194,8 +194,8 @@ VolumeRenderer::Composite(const int &num_images)
 }
 
 void 
-VolumeRenderer::DepthSort(const int &num_domains, 
-                          const std::vector<float> &min_depths,
+VolumeRenderer::DepthSort(int num_domains, 
+                          std::vector<float> &min_depths,
                           std::vector<int> &local_vis_order)
 {
   assert(min_depths.size() == num_domains);
