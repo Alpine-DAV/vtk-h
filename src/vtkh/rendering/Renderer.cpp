@@ -141,6 +141,7 @@ Renderer::PreExecute()
   assert(num_components == 1);
   m_range = ranges.GetPortalControl().Get(0);
   m_bounds = m_input->GetGlobalBounds();
+  
 }
 
 void 
@@ -180,7 +181,7 @@ Renderer::DoExecute()
       {
         m_mapper->SetActiveColorTable(m_color_table);
       }
-
+      
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera(); 
       m_mapper->SetCanvas(&(*p_canvas));
@@ -190,6 +191,9 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
+
+      // Set scalar range for screen space annotations
+      m_renders[i].SetScalarRange(m_range); 
     }
   }
 

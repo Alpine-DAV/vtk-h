@@ -46,20 +46,22 @@ TEST(vtkh_marching_cubes, vtkh_serial_marching_cubes)
   vtkh::DataSet *iso_output = marcher.GetOutput();
 
   vtkm::Bounds bounds = iso_output->GetGlobalBounds();
-
+  float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
   vtkm::rendering::Camera camera;
   camera.ResetToBounds(bounds);
   vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
                                                           512, 
                                                           camera, 
                                                           *iso_output, 
-                                                          "iso");  
-
+                                                          "iso",
+                                                           bg_color);  
+  render.RenderWorldAnnotations();
+  render.RenderScreenAnnotations();
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
   tracer.AddRender(render);
   tracer.SetField("cell_data"); 
   tracer.Update();
-
+   
   delete iso_output; 
 }
