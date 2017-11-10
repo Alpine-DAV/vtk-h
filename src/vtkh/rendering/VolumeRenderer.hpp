@@ -19,8 +19,8 @@ protected:
 
   std::vector<std::vector<int>> m_visibility_orders;
   void FindVisibilityOrdering();
-  void DepthSort(const int &num_domains, 
-                 const std::vector<float> &min_depths,
+  void DepthSort(int num_domains, 
+                 std::vector<float> &min_depths,
                  std::vector<int> &local_vis_order);
   float FindMinDepth(const vtkm::rendering::Camera &camera, 
                      const vtkm::Bounds &bounds) const;
