@@ -32,12 +32,14 @@ Clip::SetCellSet(const std::string &cell_set)
 void 
 Clip::SetBoxClip(const vtkm::Bounds &clipping_bounds)
 {
-  auto box = std::make_shared<vtkm::cont::Box>(clipping_bounds.X.Min,
-                                               clipping_bounds.X.Max,
-                                               clipping_bounds.Y.Min,
-                                               clipping_bounds.Y.Max,
-                                               clipping_bounds.Z.Min,
-                                               clipping_bounds.Z.Max);
+   auto box =  vtkm::cont::make_ImplicitFunctionHandle(
+                 vtkm::Box({ clipping_bounds.X.Min, 
+                             clipping_bounds.Y.Min, 
+                             clipping_bounds.Z.Min}, 
+                           { clipping_bounds.X.Max, 
+                             clipping_bounds.Y.Max,
+                             clipping_bounds.Z.Max}));
+
 
   m_internals->m_clipper.SetImplicitFunction(box);
 }
@@ -51,7 +53,7 @@ Clip::SetSphereClip(const double center[3], const double radius)
   vec_center[2] = center[2];
   vtkm::FloatDefault r = radius;
 
-  auto sphere = std::make_shared<vtkm::cont::Sphere>(vec_center, r);
+  auto sphere = vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(vec_center, r));
   m_internals->m_clipper.SetImplicitFunction(sphere);
 }
 
@@ -68,7 +70,7 @@ Clip::SetPlaneClip(const double origin[3], const double normal[3])
   vec_normal[1] = normal[1];
   vec_normal[2] = normal[2];
 
-  auto plane = std::make_shared<vtkm::cont::Plane>(vec_origin, vec_normal);
+  auto plane = vtkm::cont::make_ImplicitFunctionHandle(vtkm::Plane(vec_origin, vec_normal));
   m_internals->m_clipper.SetImplicitFunction(plane);
 }
 
