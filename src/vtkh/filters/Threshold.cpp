@@ -184,6 +184,7 @@ void Threshold::DoExecute()
 
     vtkm::cont::DataSet data_set = res.GetDataSet();
     detail::StripPermutation(data_set);
+    this->PropagateMetadata();
     this->m_output->AddDomain(data_set, domain_id);
     
   }
