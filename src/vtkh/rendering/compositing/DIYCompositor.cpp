@@ -30,7 +30,10 @@ DIYCompositor::CompositeZBufferSurface()
   RadixKCompositor compositor;
 
   compositor.CompositeSurface(m_diy_comm, this->m_images[0]);
-
+  if(m_rank == 0)
+  {
+    this->m_images[0].CompositeBackground(this->m_background_color);
+  }
   m_log_stream<<compositor.GetTimingString();
 
 }
