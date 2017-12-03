@@ -2,22 +2,26 @@
 # See License.txt
 #==============================================================================
 set(Headers
+  Annotator.hpp
   Image.hpp
   ImageCompositor.hpp
   MeshRenderer.hpp
   RayTracer.hpp
   Render.hpp
   Renderer.hpp
+  Scene.hpp
   VolumeRenderer.hpp
   compositing/Compositor.hpp
   )
 
 set(Sources
+  Annotator.cpp
   Image.cpp
   MeshRenderer.cpp
   RayTracer.cpp
   Render.cpp
   Renderer.cpp
+  Scene.cpp
   VolumeRenderer.cpp
   compositing/Compositor.cpp
   )

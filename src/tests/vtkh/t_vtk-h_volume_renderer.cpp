@@ -8,6 +8,7 @@
 
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
+#include <vtkh/rendering/Scene.hpp>
 #include <vtkh/rendering/VolumeRenderer.hpp>
 #include "t_test_utils.hpp"
 
@@ -47,9 +48,10 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
 
   vtkh::VolumeRenderer tracer;
   tracer.SetColorTable(color_map);
-  tracer.AddRender(render);
   tracer.SetInput(&data_set);
   tracer.SetField("point_data"); 
 
-  tracer.Update();
+  vtkh::Scene scene;
+  scene.AddRender(render);
+  scene.AddRenderer(&tracer);
 }

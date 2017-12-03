@@ -5,6 +5,7 @@
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/rendering/Render.hpp>
+#include <vtkh/rendering/Image.hpp>
 
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
@@ -32,6 +33,8 @@ public:
   int  GetNumberOfRenders() const; 
   std::vector<Render> GetRenders(); 
   void SetRenders(const std::vector<Render> &renders);
+  std::vector<Render> GetRenders() const;
+  virtual void Update();
 protected:
   
   // image related data with cinema support
@@ -39,21 +42,19 @@ protected:
   int                                      m_field_index;
   Compositor                              *m_compositor;
   std::string                              m_field_name;
-  // draw annoations?? 
-  bool                                     m_world_annotations;   
-  bool                                     m_screen_annotations;   
   bool                                     m_do_composite;   
   vtkmMapperPtr                            m_mapper;
   vtkm::Bounds                             m_bounds;
   vtkm::Range                              m_range;
   vtkm::rendering::ColorTable              m_color_table;
-  
+    
   // methods
-  void PreExecute() override;
-  void PostExecute() override;
-  void DoExecute();
-  //void CreateCanvases();
+  virtual void PreExecute() override;
+  virtual void PostExecute() override;
+  virtual void DoExecute() override;
+
   virtual void Composite(const int &num_images);
+  void ImageToCanvas(Image &image, vtkm::rendering::Canvas &canvas, bool get_depth);
 };
 
 } // namespace vtkh

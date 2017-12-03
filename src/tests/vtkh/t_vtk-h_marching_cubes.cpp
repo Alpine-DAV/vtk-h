@@ -10,6 +10,7 @@
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/MarchingCubes.hpp>
 #include <vtkh/rendering/RayTracer.hpp>
+#include <vtkh/rendering/Scene.hpp>
 #include "t_test_utils.hpp"
 
 #include <iostream>
@@ -55,13 +56,14 @@ TEST(vtkh_marching_cubes, vtkh_serial_marching_cubes)
                                                           *iso_output, 
                                                           "iso",
                                                            bg_color);  
-  render.RenderWorldAnnotations();
-  render.RenderScreenAnnotations();
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.AddRender(render);
   tracer.SetField("cell_data"); 
-  tracer.Update();
-   
+
+  vtkh::Scene scene;
+  scene.AddRenderer(&tracer);
+  scene.AddRender(render);
+  scene.Render();
+
   delete iso_output; 
 }

@@ -30,10 +30,6 @@ DIYCompositor::CompositeZBufferSurface()
   RadixKCompositor compositor;
 
   compositor.CompositeSurface(m_diy_comm, this->m_images[0]);
-  if(m_rank == 0)
-  {
-    this->m_images[0].CompositeBackground(this->m_background_color);
-  }
   m_log_stream<<compositor.GetTimingString();
 
 }
@@ -49,7 +45,7 @@ DIYCompositor::CompositeVisOrder()
 {
   assert(m_images.size() != 0);
   DirectSendCompositor compositor;
-  compositor.CompositeVolume(m_diy_comm, this->m_images, m_background_color);
+  compositor.CompositeVolume(m_diy_comm, this->m_images);
 }
 
 void

@@ -44,6 +44,7 @@ public:
   bool                            HasColorTable() const;
   void                            RenderWorldAnnotations();
   void                            RenderScreenAnnotations();
+  void                            Save();
 protected:
   std::vector<vtkmCanvasPtr>   m_canvases;
   std::vector<vtkm::Id>        m_domain_ids;
@@ -51,11 +52,11 @@ protected:
   std::string                  m_image_name;
   vtkm::rendering::ColorTable  m_color_table;
   vtkm::Bounds                 m_scene_bounds;
-  vtkm::Range                  m_scalar_range;
+  vtkm::Range                  m_scalar_range;  // this contains the scalar range of the last field rendered
   bool                         m_has_color_table;
 }; 
 
-static float vtkh_default_bg_color[4] = {1.f, 1.f, 1.f, 1.f};
+static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};
 
 template<typename RendererType>
 vtkh::Render 

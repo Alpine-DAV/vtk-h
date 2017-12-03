@@ -10,6 +10,7 @@
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/Threshold.hpp>
 #include <vtkh/rendering/RayTracer.hpp>
+#include <vtkh/rendering/Scene.hpp>
 #include "t_test_utils.hpp"
 
 #include <iostream>
@@ -29,7 +30,6 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
   }
 
-  data_set.PrintSummary(std::cout);
   vtkh::Threshold thresher;
   thresher.SetInput(&data_set);
   thresher.SetField("point_data"); 
@@ -55,8 +55,12 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
                                                           "threshold");  
   vtkh::RayTracer tracer;
   tracer.SetInput(output);
-  tracer.AddRender(render);
   tracer.SetField("cell_data"); 
-  tracer.Update();
+
+  vtkh::Scene scene;
+  scene.AddRender(render);
+  scene.AddRenderer(&tracer);
+  scene.Render();
+
   delete output; 
 }

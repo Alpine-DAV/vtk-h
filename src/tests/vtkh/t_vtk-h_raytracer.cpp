@@ -9,6 +9,7 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
 #include <vtkh/rendering/RayTracer.hpp>
+#include <vtkh/rendering/Scene.hpp>
 #include "t_test_utils.hpp"
 
 #include <iostream>
@@ -41,8 +42,10 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   vtkh::RayTracer tracer;
    
   tracer.SetInput(&data_set);
-  tracer.AddRender(render);
   tracer.SetField("point_data"); 
-  tracer.Update();
- 
+
+  vtkh::Scene scene;
+  scene.AddRender(render);
+  scene.AddRenderer(&tracer);
+  scene.Render();
 }

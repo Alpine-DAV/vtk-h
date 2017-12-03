@@ -45,8 +45,6 @@ public:
     
     Image Composite();
 
-    void SetBackgroundColor(float *background_color);
-
     virtual void         Cleanup();
     
     std::string          GetLogString(); 
@@ -74,7 +72,6 @@ protected:
     std::stringstream   m_log_stream;    
     CompositeMode       m_composite_mode;
     std::vector<Image>  m_images;
-    float               m_background_color[4];
 };
 
 };

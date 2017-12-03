@@ -10,6 +10,7 @@
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/Clip.hpp>
 #include <vtkh/rendering/RayTracer.hpp>
+#include <vtkh/rendering/Scene.hpp>
 
 #include "t_test_utils.hpp"
 
@@ -18,7 +19,6 @@
 
 
 //----------------------------------------------------------------------------
-#if 0
 TEST(vtkh_clip, vtkh_box_clip)
 {
   vtkh::DataSet data_set;
@@ -30,7 +30,7 @@ TEST(vtkh_clip, vtkh_box_clip)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
   }
-  data_set.PrintSummary(std::cout);
+  
   //
   // chop the data set at the center
   //
@@ -49,36 +49,33 @@ TEST(vtkh_clip, vtkh_box_clip)
   clipper.Update();
 
   vtkh::DataSet *clip_output = clipper.GetOutput();
-  
-  vtkm::Bounds result_bounds = clip_output->GetGlobalBounds();
-  std::cout<<"clip_bounds "<<clip_bounds<<" res bounds "<<result_bounds<<"\n";
-  clip_output->PrintSummary(std::cout);
-  vtkm::cont::DataSet ds = clip_output->GetDomain(0);
-  vtkm::cont::CoordinateSystem coord = ds.GetCoordinateSystem();
-   
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> raw;
-  //if(coord.GetData().IsSameType(raw))
-  //{
-  //  std::cout<<"!!!!!\n";
-  //  coord.GetData().CopyTo(raw);
-  //  auto portal = raw.GetPortalControl();
-  //  for(int i = 0; i <raw.GetNumberOfValues(); ++i)
-  //  {
-  //    std::cout<<portal.Get(i)<<"\n";
-  //  }
-  //}
 
-  //EXPECT_EQ(, vec_range.GetPortalControl().GetNumberOfValues());
-  
-  vtkh::vtkhRayTracer tracer;
+  vtkm::Bounds bounds = clip_output->GetGlobalBounds();
+
+  vtkm::rendering::Camera camera;
+  camera.ResetToBounds(bounds);
+  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
+  float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
+  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
+                                                          512, 
+                                                          camera, 
+                                                          *clip_output, 
+                                                          "box_clip",
+                                                          bg_color);  
+   
+  vtkh::Scene scene;
+  scene.AddRender(render);
+
+  vtkh::RayTracer tracer;
   tracer.SetInput(clip_output);
   tracer.SetField("point_data"); 
-  tracer.Update();
-  
 
+  scene.AddRenderer(&tracer);  
+  scene.Render();
+ 
   delete clip_output; 
 }
-#else 
+
 TEST(vtkh_clip, vtkh_sphere_clip)
 {
   vtkh::DataSet data_set;
@@ -90,7 +87,7 @@ TEST(vtkh_clip, vtkh_sphere_clip)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
   }
-  data_set.PrintSummary(std::cout);
+  
   //
   // chop the data set at the center
   //
@@ -115,20 +112,24 @@ TEST(vtkh_clip, vtkh_sphere_clip)
   vtkm::Bounds bounds = clip_output->GetGlobalBounds();
 
   vtkm::rendering::Camera camera;
-  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
+  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(32,32,-80));
+  float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
   vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
                                                           512, 
                                                           camera, 
                                                           *clip_output, 
-                                                          "clip");  
+                                                          "sphere_clip",
+                                                          bg_color);  
+  vtkh::Scene scene;
+  scene.AddRender(render);
+
   vtkh::RayTracer tracer;
-  tracer.AddRender(render);
   tracer.SetInput(clip_output);
   tracer.SetField("point_data"); 
-  tracer.Update();
-  
+
+  scene.AddRenderer(&tracer);  
+  scene.Render();
 
   delete clip_output; 
 }
-#endif

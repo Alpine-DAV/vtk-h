@@ -9,6 +9,7 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
 #include <vtkh/rendering/MeshRenderer.hpp>
+#include <vtkh/rendering/Scene.hpp>
 #include "t_test_utils.hpp"
 
 #include <iostream>
@@ -20,7 +21,7 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 {
   vtkh::DataSet data_set;
  
-  const int base_size = 32;
+  const int base_size = 16;
   const int num_blocks = 2; 
   
   for(int i = 0; i < num_blocks; ++i)
@@ -31,18 +32,20 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   vtkm::Bounds bounds = data_set.GetGlobalBounds();
 
   vtkm::rendering::Camera camera;
-  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
+  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16, 36, -36));
   vtkh::Render render = vtkh::MakeRender<vtkh::MeshRenderer>(512, 
                                                              512, 
                                                              camera, 
                                                              data_set, 
                                                              "mesh_render");  
   vtkh::MeshRenderer renderer;
-   
   renderer.SetInput(&data_set);
-  renderer.AddRender(render);
   renderer.SetField("point_data"); 
-  renderer.Update();
+
+  vtkh::Scene scene; 
+  scene.AddRenderer(&renderer);
+  scene.AddRender(render);
+  scene.Render();
  
 }
