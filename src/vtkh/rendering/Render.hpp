@@ -83,11 +83,15 @@ MakeRender(int width,
   if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
   camera.SetModeTo3D(); 
   bool is_2d = (total_extent[min_dim] == 0.f);
-  if(!is_2d)
+
+  if(is_2d)
   {
     camera.SetModeTo2D(); 
-    //camera.Azimuth(30.f);
-    //camera.Elevation(25.f);
+  }
+  else
+  {
+    camera.Azimuth(10.f);
+    camera.Elevation(30.f);
   }
 
   render.SetCamera(camera);
@@ -136,11 +140,15 @@ MakeRender(int width,
   if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
   camera.SetModeTo3D(); 
   bool is_2d = (total_extent[min_dim] == 0.f);
-  if(!is_2d)
+
+  if(is_2d)
   {
     camera.SetModeTo2D(); 
-    //camera.Azimuth(30.f);
-    //camera.Elevation(25.f);
+  }
+  else
+  {
+    camera.Azimuth(10.f);
+    camera.Elevation(30.f);
   }
 
   vtkm::rendering::Color color;
