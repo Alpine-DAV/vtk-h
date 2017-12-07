@@ -243,4 +243,10 @@ Renderer::GetRenders() const
   return m_renders;
 }
 
+vtkh::DataSet *
+Renderer::GetInput() 
+{
+  return m_input;
+}
+
 } // namespace vtkh

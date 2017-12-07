@@ -35,6 +35,7 @@ public:
   void SetRenders(const std::vector<Render> &renders);
   std::vector<Render> GetRenders() const;
   virtual void Update();
+  vtkh::DataSet *GetInput();
 protected:
   
   // image related data with cinema support
