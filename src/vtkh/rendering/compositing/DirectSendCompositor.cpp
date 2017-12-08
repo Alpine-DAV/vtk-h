@@ -16,11 +16,8 @@ struct Redistribute
 {
   typedef diy::RegularDecomposer<diy::DiscreteBounds> Decomposer;
   const diy::RegularDecomposer<diy::DiscreteBounds> &m_decomposer;
-  const float * m_bg_color;
-  Redistribute(const Decomposer &decomposer,
-               const float *     bg_color = NULL)
-    : m_decomposer(decomposer),
-      m_bg_color(bg_color)
+  Redistribute(const Decomposer &decomposer)
+    : m_decomposer(decomposer)
   {}
 
   void operator()(void *v_block, const diy::ReduceProxy &proxy) const
@@ -61,7 +58,6 @@ struct Redistribute
     else if(!block->m_images.at(0).m_z_buffer_mode)
     {
       // blend images according to vis order
-      assert(m_bg_color != NULL);
       std::vector<Image> images;
       for(int i = 0; i < proxy.in_link().size(); ++i)
       {
@@ -81,12 +77,10 @@ struct Redistribute
       compositor.OrderedComposite(images);
 
       block->m_output.Swap(images[0]);
-      block->m_output.CompositeBackground(m_bg_color);
     } // else if
     else if(block->m_images.at(0).m_z_buffer_mode &&
             block->m_images.at(0).HasTransparency())
     {
-      assert(m_bg_color != NULL);
       std::vector<Image> images;
       for(int i = 0; i < proxy.in_link().size(); ++i)
       {
@@ -124,8 +118,7 @@ DirectSendCompositor::~DirectSendCompositor()
 
 void
 DirectSendCompositor::CompositeVolume(diy::mpi::communicator &diy_comm, 
-                                      std::vector<Image>     &images, 
-                                      const float *           bg_color)
+                                      std::vector<Image>     &images)
 {
   diy::DiscreteBounds global_bounds = VTKMBoundsToDIY(images.at(0).m_orig_bounds);
   
@@ -150,7 +143,7 @@ DirectSendCompositor::CompositeVolume(diy::mpi::communicator &diy_comm,
     
     diy::all_to_all(master, 
                     assigner, 
-                    Redistribute(decomposer, bg_color), 
+                    Redistribute(decomposer), 
                     magic_k);
   }  
 

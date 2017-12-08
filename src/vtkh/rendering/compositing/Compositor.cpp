@@ -8,8 +8,7 @@ namespace vtkh
 {
 
 Compositor::Compositor() 
-  : m_composite_mode(Z_BUFFER_SURFACE),
-    m_background_color{1.f, 1.f, 1.f, 1.f}
+  : m_composite_mode(Z_BUFFER_SURFACE)
 { 
 
 }
@@ -17,15 +16,6 @@ Compositor::Compositor()
 Compositor::~Compositor() 
 {
 
-}
-
-void 
-Compositor::SetBackgroundColor(float background_color[4])
-{
-  m_background_color[0] = background_color[0];
-  m_background_color[1] = background_color[1];
-  m_background_color[2] = background_color[2];
-  m_background_color[3] = background_color[3];
 }
 
 void 
@@ -201,7 +191,6 @@ Compositor::CompositeZBufferSurface()
 {
   // nothing to do here. Images were composited as 
   // they were added to the compositor
-  m_images[0].CompositeBackground(m_background_color);
 }
 
 void 

@@ -10,6 +10,7 @@
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/MarchingCubes.hpp>
 #include <vtkh/rendering/RayTracer.hpp>
+#include <vtkh/rendering/Scene.hpp>
 #include <vtkh/rendering/VolumeRenderer.hpp>
 #include "t_test_utils.hpp"
 
@@ -58,11 +59,7 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.AddRender(render);
   tracer.SetField("cell_data"); 
-  // composite only on the last renderer 
-  tracer.SetDoComposite(false); 
-  tracer.Update();
 
   vtkm::rendering::ColorTable color_map("cool2warm"); 
   color_map.AddAlphaControlPoint(0.0, .01);
@@ -70,11 +67,14 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 
   vtkh::VolumeRenderer v_tracer;
   v_tracer.SetColorTable(color_map);
-  v_tracer.AddRender(render);
   v_tracer.SetInput(&data_set);
   v_tracer.SetField("point_data"); 
 
-  v_tracer.Update();
+  vtkh::Scene scene;
+  scene.AddRender(render);
+  scene.AddRenderer(&v_tracer);
+  scene.AddRenderer(&tracer);
+  scene.Render();
 
   delete iso_output; 
 }

@@ -13,9 +13,12 @@ public:
   virtual ~VolumeRenderer();
   void SetNumberOfSamples(const int num_samples);
   static Renderer::vtkmCanvasPtr GetNewCanvas(int width = 1024, int height = 1024);
+
+  void Update() override;
 protected:  
   virtual void Composite(const int &num_images) override;
-  void PreExecute() override;
+  virtual void PreExecute() override;
+  virtual void PostExecute() override;
 
   std::vector<std::vector<int>> m_visibility_orders;
   void FindVisibilityOrdering();

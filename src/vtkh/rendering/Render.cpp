@@ -1,4 +1,10 @@
 #include "Render.hpp"
+#include <vtkh/rendering/Annotator.hpp>
+#include <vtkh/utils/PNGEncoder.hpp>
+#include <vtkh/utils/vtkm_array_utils.hpp>
+#include <vtkm/rendering/MapperRayTracer.h>
+#include <vtkm/rendering/View2D.h>
+#include <vtkm/rendering/View3D.h>
 
 namespace vtkh 
 {
@@ -40,6 +46,30 @@ Render::GetCanvas(const vtkm::Id index)
 {
   assert(index >= 0 && index < m_canvases.size());
   return m_canvases[index];
+}
+
+vtkm::Bounds
+Render::GetSceneBounds() const
+{
+  return m_scene_bounds;
+}
+
+void
+Render::SetSceneBounds(const vtkm::Bounds &bounds) 
+{
+  m_scene_bounds = bounds;
+}
+
+vtkm::Range
+Render::GetScalarRange() const
+{
+  return m_scalar_range;
+}
+
+void
+Render::SetScalarRange(const vtkm::Range &range) 
+{
+  m_scalar_range = range;
 }
 
 void 
@@ -112,6 +142,50 @@ vtkm::rendering::ColorTable
 Render::GetColorTable() const
 {
   return m_color_table;
+}
+
+void 
+Render::RenderWorldAnnotations()
+{
+  int size = m_canvases.size(); 
+  if(size < 1) return;
+
+  for(int i = 0; i < size; ++i)
+  {
+
+    Annotator annotator(*m_canvases[i], m_camera, m_scene_bounds);
+    annotator.RenderWorldAnnotations();
+  }
+    
+}
+
+void 
+Render::RenderScreenAnnotations()
+{
+  int size = m_canvases.size(); 
+  if(size < 1) return;
+  
+  Annotator annotator(*m_canvases[0], m_camera, m_scene_bounds);
+  annotator.RenderScreenAnnotations("field_name", m_scalar_range, m_color_table);
+}
+
+void
+Render::Save()
+{
+  // After rendering and compositing 
+  // Rank 0 domain 0 contains the complete image.
+  int size = m_canvases.size(); 
+  if(size < 1) return;
+#ifdef PARALLEL
+  if(vtkh::GetMPIRank() != 0) return;
+#endif
+  
+  float* color_buffer = &GetVTKMPointer(m_canvases[0]->GetColorBuffer())[0][0]; 
+  int height = m_canvases[0]->GetHeight(); 
+  int width = m_canvases[0]->GetWidth(); 
+  PNGEncoder encoder;
+  encoder.Encode(color_buffer, width, height);
+  encoder.Save(m_image_name + ".png");
 }
 
 } // namespace vtkh

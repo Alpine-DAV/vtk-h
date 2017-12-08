@@ -63,6 +63,14 @@ VolumeRenderer::~VolumeRenderer()
 }
 
 void 
+VolumeRenderer::Update() 
+{
+  PreExecute();
+  Renderer::DoExecute();
+  PostExecute();
+}
+
+void 
 VolumeRenderer::PreExecute() 
 {
   Renderer::PreExecute();
@@ -82,6 +90,16 @@ VolumeRenderer::PreExecute()
   extent[2] = static_cast<vtkm::Float32>(this->m_bounds.Z.Length());
   vtkm::Float32 dist = vtkm::Magnitude(extent) / samples; 
   m_tracer->SetSampleDistance(dist);
+}
+
+void 
+VolumeRenderer::PostExecute() 
+{
+  int total_renders = static_cast<int>(m_renders.size());
+  if(m_do_composite)
+  {
+    this->Composite(total_renders);
+  }
 }
 
 void
@@ -170,6 +188,7 @@ VolumeRenderer::Composite(const int &num_images)
 #ifdef PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
+#endif
       float bg_color[4];
       bg_color[0] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[0];
       bg_color[1] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[1];
@@ -177,17 +196,9 @@ VolumeRenderer::Composite(const int &num_images)
       bg_color[3] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[3];
 
       result.CompositeBackground(bg_color);
-      result.Save(image_name);
+      ImageToCanvas(result, *m_renders[i].GetCanvas(0), false); 
+#ifdef PARALLEL
     }
-#else
-      float bg_color[4];
-      bg_color[0] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[0];
-      bg_color[1] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[1];
-      bg_color[2] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[2];
-      bg_color[3] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[3];
-
-      result.CompositeBackground(bg_color);
-      result.Save(image_name);
 #endif
     m_compositor->ClearImages();
   } // for image

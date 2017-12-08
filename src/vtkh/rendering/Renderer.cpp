@@ -94,14 +94,6 @@ Renderer::Composite(const int &num_images)
   {
     const int num_canvases = m_renders[i].GetNumberOfCanvases();
 
-    float bg_color[4];
-    vtkm::rendering::Color color = m_renders[i].GetCanvas(0)->GetBackgroundColor();
-    bg_color[0] = color.Components[0];
-    bg_color[1] = color.Components[1];
-    bg_color[2] = color.Components[2];
-    bg_color[3] = color.Components[3];
-    m_compositor->SetBackgroundColor(bg_color);
-
     for(int dom = 0; dom < num_canvases; ++dom)
     {
       float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0]; 
@@ -117,14 +109,21 @@ Renderer::Composite(const int &num_images)
     } //for dom
 
     Image result = m_compositor->Composite();
-    const std::string image_name = m_renders[i].GetImageName() + ".png";
+
+    float bg_color[4];
+    vtkm::rendering::Color color = m_renders[i].GetCanvas(0)->GetBackgroundColor();
+    bg_color[0] = color.Components[0];
+    bg_color[1] = color.Components[1];
+    bg_color[2] = color.Components[2];
+    bg_color[3] = color.Components[3];
+    result.CompositeBackground(bg_color);
 #ifdef PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
-      result.Save(image_name);
+      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
     }
 #else
-    result.Save(image_name);
+    ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
 #endif
     m_compositor->ClearImages();
   } // for image
@@ -141,11 +140,31 @@ Renderer::PreExecute()
   assert(num_components == 1);
   m_range = ranges.GetPortalControl().Get(0);
   m_bounds = m_input->GetGlobalBounds();
+  int total_renders = static_cast<int>(m_renders.size());
+  for(int i = 0; i < total_renders; ++i)
+  {
+    m_renders[i].SetScalarRange(m_range);
+    m_renders[i].RenderWorldAnnotations();
+  }
+
+}
+
+void 
+Renderer::Update() 
+{
+  PreExecute();
+  DoExecute();
+  PostExecute();
 }
 
 void 
 Renderer::PostExecute() 
 {
+  int total_renders = static_cast<int>(m_renders.size());
+  if(m_do_composite)
+  {
+    this->Composite(total_renders);
+  }
 }
 
 void 
@@ -180,7 +199,7 @@ Renderer::DoExecute()
       {
         m_mapper->SetActiveColorTable(m_color_table);
       }
-
+      
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera(); 
       m_mapper->SetCanvas(&(*p_canvas));
@@ -190,14 +209,44 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
+
     }
   }
 
-  if(m_do_composite)
+
+}
+
+void 
+Renderer::ImageToCanvas(Image &image, vtkm::rendering::Canvas &canvas, bool get_depth) 
+{
+  const int width = canvas.GetWidth(); 
+  const int height = canvas.GetHeight(); 
+  const int size = width * height;
+  const int color_size = size * 4;
+  float* color_buffer = &GetVTKMPointer(canvas.GetColorBuffer())[0][0]; 
+  float one_over_255 = 1.f / 255.f;
+#ifdef VTKH_USE_OPENMP
+  #pragma omp parallel for 
+#endif
+  for(int i = 0; i < color_size; ++i)
   {
-    this->Composite(total_renders);
+    color_buffer[i] = static_cast<float>(image.m_pixels[i]) * one_over_255;
   }
 
+  float* depth_buffer = GetVTKMPointer(canvas.GetDepthBuffer()); 
+  if(get_depth) memcpy(depth_buffer, &image.m_depths[0], sizeof(float) * size);
+}
+
+std::vector<Render> 
+Renderer::GetRenders() const
+{
+  return m_renders;
+}
+
+vtkh::DataSet *
+Renderer::GetInput() 
+{
+  return m_input;
 }
 
 } // namespace vtkh

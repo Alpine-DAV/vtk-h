@@ -31,6 +31,10 @@ public:
   int                             GetNumberOfCanvases() const;
   const vtkm::rendering::Camera&  GetCamera() const;
   std::string                     GetImageName() const;
+  vtkm::Bounds                    GetSceneBounds() const;
+  vtkm::Range                     GetScalarRange() const;
+  void                            SetSceneBounds(const vtkm::Bounds &bounds);
+  void                            SetScalarRange(const vtkm::Range &range);
   void                            SetCamera(const vtkm::rendering::Camera &camera);
   void                            SetImageName(const std::string &name);
   bool                            HasCanvas(const vtkm::Id &domain_id) const;
@@ -38,17 +42,21 @@ public:
   void                            SetColorTable(const vtkm::rendering::ColorTable &color_table);
   vtkm::rendering::ColorTable     GetColorTable() const;
   bool                            HasColorTable() const;
-
+  void                            RenderWorldAnnotations();
+  void                            RenderScreenAnnotations();
+  void                            Save();
 protected:
   std::vector<vtkmCanvasPtr>   m_canvases;
   std::vector<vtkm::Id>        m_domain_ids;
   vtkm::rendering::Camera      m_camera; 
   std::string                  m_image_name;
   vtkm::rendering::ColorTable  m_color_table;
+  vtkm::Bounds                 m_scene_bounds;
+  vtkm::Range                  m_scalar_range;  // this contains the scalar range of the last field rendered
   bool                         m_has_color_table;
 }; 
 
-static float vtkh_default_bg_color[4] = {1.f, 1.f, 1.f, 1.f};
+static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};
 
 template<typename RendererType>
 vtkh::Render 
@@ -62,6 +70,7 @@ MakeRender(int width,
   vtkh::Render render;
   vtkm::rendering::Camera camera;
   camera.ResetToBounds(scene_bounds);
+  render.SetSceneBounds(scene_bounds);
   //
   // detect a 2d data set
   //
@@ -72,12 +81,17 @@ MakeRender(int width,
   int min_dim = 0;
   if(total_extent[1] < total_extent[min_dim]) min_dim = 1;
   if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
-  
+  camera.SetModeTo3D(); 
   bool is_2d = (total_extent[min_dim] == 0.f);
-  if(!is_2d)
+
+  if(is_2d)
   {
-    camera.Azimuth(30.f);
-    camera.Elevation(25.f);
+    camera.SetModeTo2D(); 
+  }
+  else
+  {
+    camera.Azimuth(10.f);
+    camera.Elevation(30.f);
   }
 
   render.SetCamera(camera);
@@ -111,6 +125,31 @@ MakeRender(int width,
   vtkh::Render render;
   render.SetCamera(camera);
   render.SetImageName(image_name);
+
+  vtkm::Bounds bounds = data_set.GetGlobalBounds();
+  render.SetSceneBounds(bounds);
+  //
+  // detect a 2d data set
+  //
+  float total_extent[3];
+  total_extent[0] = bounds.X.Length();
+  total_extent[1] = bounds.Y.Length();
+  total_extent[2] = bounds.Z.Length();
+  int min_dim = 0;
+  if(total_extent[1] < total_extent[min_dim]) min_dim = 1;
+  if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
+  camera.SetModeTo3D(); 
+  bool is_2d = (total_extent[min_dim] == 0.f);
+
+  if(is_2d)
+  {
+    camera.SetModeTo2D(); 
+  }
+  else
+  {
+    camera.Azimuth(10.f);
+    camera.Elevation(30.f);
+  }
 
   vtkm::rendering::Color color;
   color.Components[0] = bg_color[0];
