@@ -7,14 +7,14 @@ set(Headers
   Clip.hpp
   MarchingCubes.hpp
   Threshold.hpp
-  WaveletCompressor.hpp
+  Slice.hpp
   )
 
 set(Sources
   Clip.cpp
   MarchingCubes.cpp
   Threshold.cpp
-  WaveletCompressor.cpp
+  Slice.cpp
   )
 #
 # add_library(vtkh_filters ${Sources} ${Headers})
