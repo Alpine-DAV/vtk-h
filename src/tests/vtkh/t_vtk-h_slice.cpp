@@ -29,7 +29,10 @@ TEST(vtkh_slice, vtkh_slice)
   }
 
   vtkh::Slice slicer;
-  
+
+  vtkm::Vec<vtkm::Float32,3> normal(.5f,.5f,.5f);
+  vtkm::Vec<vtkm::Float32,3> point(16.f,16.f,16.f);
+  slicer.SetPlane(point, normal);
   slicer.SetInput(&data_set);
   slicer.Update();
   vtkh::DataSet *slice  = slicer.GetOutput();
