@@ -36,7 +36,7 @@ DataSet::GetField(const std::string &field_name, const vtkm::Id domain_index)
   return m_domains[domain_index].GetField(field_name);
 }
 
-vtkm::cont::DataSet
+vtkm::cont::DataSet&
 DataSet::GetDomain(const vtkm::Id index) 
 {
   const size_t num_domains = m_domains.size();

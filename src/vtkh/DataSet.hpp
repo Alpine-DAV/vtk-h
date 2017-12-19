@@ -27,7 +27,7 @@ public:
                  vtkm::Id &domain_id); 
   void SetCycle(const vtkm::UInt64 cycle); 
   vtkm::UInt64 GetCycle() const; 
-  vtkm::cont::DataSet GetDomain(const vtkm::Id index); 
+  vtkm::cont::DataSet& GetDomain(const vtkm::Id index); 
   
   vtkm::cont::Field GetField(const std::string &field_name, 
                              const vtkm::Id domain_index); 
