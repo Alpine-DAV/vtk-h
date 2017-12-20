@@ -1,4 +1,5 @@
-#include "MarchingCubes.hpp"
+#include <vtkh/filters/MarchingCubes.hpp>
+#include <vtkh/filters/CleanGrid.hpp>
 #include <vtkm/filter/MarchingCubes.h>
 
 namespace vtkh 
@@ -78,7 +79,7 @@ void MarchingCubes::DoExecute()
   vtkm::filter::MarchingCubes marcher;
 
   marcher.SetIsoValues(m_iso_values);
- 
+  marcher.SetMergeDuplicatePoints(true); 
   const int num_domains = this->m_input->GetNumberOfDomains(); 
   int valid = 0;
   for(int i = 0; i < num_domains; ++i)
@@ -100,10 +101,11 @@ void MarchingCubes::DoExecute()
     {
       marcher.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
-    this->PropagateMetadata();
-    this->m_output->AddDomain(res.GetDataSet(), domain_id);
-    
+    m_output->AddDomain(res.GetDataSet(), domain_id);
   }
+
+  this->PropagateMetadata();
+  
 }
 
 } //  namespace vtkh

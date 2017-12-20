@@ -4,6 +4,7 @@
 
 set(Headers
   Filter.hpp
+  CleanGrid.hpp
   Clip.hpp
   MarchingCubes.hpp
   Threshold.hpp
@@ -11,6 +12,7 @@ set(Headers
   )
 
 set(Sources
+  CleanGrid.cpp
   Clip.cpp
   MarchingCubes.cpp
   Threshold.cpp

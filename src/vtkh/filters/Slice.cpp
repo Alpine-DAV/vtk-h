@@ -82,6 +82,20 @@ Slice::PreExecute()
 
 }
 
+struct print_f
+{
+  template<typename T, typename S>
+  void operator()(const vtkm::cont::ArrayHandle<T,S> &a) const
+  {
+    vtkm::Id s = a.GetNumberOfValues();
+    auto p = a.GetPortalConstControl();
+    for(int i = 0; i < s; ++i)
+    {
+      std::cout<<p.Get(i)<<"\n";
+    }
+  }
+};
+
 void
 Slice::DoExecute()
 {
@@ -99,7 +113,7 @@ Slice::DoExecute()
                                     vtkm::cont::Field::ASSOC_POINTS,
                                     slice_field));
   }
-
+  
   vtkh::MarchingCubes marcher;
   marcher.SetInput(this->m_input);
   marcher.SetIsoValue(0.);
