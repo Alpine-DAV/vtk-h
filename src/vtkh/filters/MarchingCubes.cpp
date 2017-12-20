@@ -1,4 +1,5 @@
-#include "MarchingCubes.hpp"
+#include <vtkh/filters/MarchingCubes.hpp>
+#include <vtkh/filters/CleanGrid.hpp>
 #include <vtkm/filter/MarchingCubes.h>
 
 namespace vtkh 
@@ -100,10 +101,11 @@ void MarchingCubes::DoExecute()
     {
       marcher.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
-    this->PropagateMetadata();
-    this->m_output->AddDomain(res.GetDataSet(), domain_id);
-    
+    m_output->AddDomain(res.GetDataSet(), domain_id);
   }
+
+  this->PropagateMetadata();
+  
 }
 
 } //  namespace vtkh
