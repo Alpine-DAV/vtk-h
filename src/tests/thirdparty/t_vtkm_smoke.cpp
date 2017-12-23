@@ -78,10 +78,10 @@ TEST(vtkm_smoke, basic_use)
     std::vector<vtkm::Float32> scalars;
     scalars.push_back(0);
     scalars.push_back(1);
-    vtkm::cont::Field scalarField("some_field",
-                                  vtkm::cont::Field::ASSOC_CELL_SET,
-                                  "cell_set",
-                                  scalars);
+    vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
+                                                           vtkm::cont::Field::ASSOC_CELL_SET,
+                                                           "cell_set",
+                                                           scalars);
 
     const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
     vtkm::rendering::Actor actor(data.GetCellSet(),
