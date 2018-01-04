@@ -82,7 +82,7 @@ MakeRender(int width,
   if(total_extent[1] < total_extent[min_dim]) min_dim = 1;
   if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
   camera.SetModeTo3D(); 
-  bool is_2d = (total_extent[min_dim] == 0.f);
+  bool is_2d = (vtkm::Abs(total_extent[min_dim]) < 1e-9f);
 
   if(is_2d)
   {
@@ -139,7 +139,7 @@ MakeRender(int width,
   if(total_extent[1] < total_extent[min_dim]) min_dim = 1;
   if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
   camera.SetModeTo3D(); 
-  bool is_2d = (total_extent[min_dim] == 0.f);
+  bool is_2d = (vtkm::Abs(total_extent[min_dim]) < 1e-9f);
 
   if(is_2d)
   {

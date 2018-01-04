@@ -101,21 +101,24 @@ Slice::DoExecute()
 {
   const std::string fname = "slice_field";
   const int num_domains = this->m_input->GetNumberOfDomains(); 
+  // shallow copy the input so we don't propagate the slice field
+  // to the input data set, since it might be used in other places
+  vtkh::DataSet temp_ds = *(this->m_input);
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
-    vtkm::cont::DataSet &dom = this->m_input->GetDomain(i);
+    vtkm::cont::DataSet &dom = temp_ds.GetDomain(i);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> slice_field;
     vtkm::cont::TryExecute(detail::SliceCaller(), dom.GetCoordinateSystem(), slice_field, m_point, m_normal);
-     
+    
     dom.AddField(vtkm::cont::Field(fname,
                                     vtkm::cont::Field::ASSOC_POINTS,
                                     slice_field));
   }
   
   vtkh::MarchingCubes marcher;
-  marcher.SetInput(this->m_input);
+  marcher.SetInput(&temp_ds);
   marcher.SetIsoValue(0.);
   marcher.SetField(fname);
   marcher.Update();
