@@ -450,4 +450,16 @@ DataSet::~DataSet()
 {
 }
 
+bool DataSet::HasDomainId(const vtkm::Id &domain_id) const
+{
+  const size_t size = m_domain_ids.size();
+
+  for(size_t i = 0; i < size; ++i)
+  {
+    if(m_domain_ids[i] == domain_id) return true;
+  }
+  
+  return false;
+}
+
 } // namspace vtkh

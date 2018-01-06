@@ -40,7 +40,7 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string &field_name) const;
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const vtkm::Id index) const;
   std::vector<vtkm::Id> GetDomainIds() const;
-
+  bool HasDomainId(const vtkm::Id &domain_id) const;
   /*! \brief IsStructured returns true if all domains, globally,
    *         are stuctured data sets of the same topological dimension. 
    *  \param topological_dims set to the dimensions of the cell set (1,2, or 3)

@@ -14,13 +14,13 @@ class Slice : public Filter
 public:
   Slice(); 
   virtual ~Slice(); 
-  void SetPlane(vtkm::Vec<vtkm::Float32,3> point, vtkm::Vec<vtkm::Float32,3> normal);
+  void AddPlane(vtkm::Vec<vtkm::Float32,3> point, vtkm::Vec<vtkm::Float32,3> normal);
 protected:
   void PreExecute() override;
   void PostExecute() override;
   void DoExecute() override;
-  vtkm::Vec<vtkm::Float32,3> m_point;
-  vtkm::Vec<vtkm::Float32,3> m_normal;
+  std::vector<vtkm::Vec<vtkm::Float32,3>> m_points;
+  std::vector<vtkm::Vec<vtkm::Float32,3>> m_normals;
 };
 
 } //namespace vtkh
