@@ -354,7 +354,7 @@ public:
       {
         if(m_data_sets[i]->HasDomainId(domain_id))
         {
-          doms.push_back(m_data_sets[i]->GetDomain(domain_id));
+          doms.push_back(m_data_sets[i]->GetDomainById(domain_id));
         }
         
       } // for each data set

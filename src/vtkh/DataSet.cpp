@@ -450,6 +450,21 @@ DataSet::~DataSet()
 {
 }
 
+vtkm::cont::DataSet& 
+DataSet::GetDomainById(const vtkm::Id domain_id) 
+{
+  const size_t size = m_domain_ids.size();
+
+  for(size_t i = 0; i < size; ++i)
+  {
+    if(m_domain_ids[i] == domain_id) return m_domains[i];
+  }
+
+  std::stringstream msg;
+  msg<<"GetDomainById call failed. Invalid domain_id "<<domain_id;
+  throw Error(msg.str());
+}
+
 bool DataSet::HasDomainId(const vtkm::Id &domain_id) const
 {
   const size_t size = m_domain_ids.size();
