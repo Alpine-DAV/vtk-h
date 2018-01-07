@@ -54,7 +54,7 @@ VolumeRenderer::VolumeRenderer()
   // add some default opacity to the color table
   //
   m_color_table.AddAlphaControlPoint(0.0f, .02);
-  m_color_table.AddAlphaControlPoint(1.0f, .02);
+  m_color_table.AddAlphaControlPoint(1.0f, .5);
   m_num_samples = -1;
 }
 

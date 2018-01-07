@@ -28,6 +28,7 @@ public:
   void SetCycle(const vtkm::UInt64 cycle); 
   vtkm::UInt64 GetCycle() const; 
   vtkm::cont::DataSet& GetDomain(const vtkm::Id index); 
+  vtkm::cont::DataSet& GetDomainById(const vtkm::Id domain_id); 
   
   vtkm::cont::Field GetField(const std::string &field_name, 
                              const vtkm::Id domain_index); 
@@ -40,7 +41,7 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string &field_name) const;
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const vtkm::Id index) const;
   std::vector<vtkm::Id> GetDomainIds() const;
-
+  bool HasDomainId(const vtkm::Id &domain_id) const;
   /*! \brief IsStructured returns true if all domains, globally,
    *         are stuctured data sets of the same topological dimension. 
    *  \param topological_dims set to the dimensions of the cell set (1,2, or 3)

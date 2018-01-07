@@ -15,7 +15,7 @@
 
 #include <iostream>
 
-
+#if 0 
 TEST(vtkh_slice, vtkh_slice)
 {
   vtkh::DataSet data_set;
@@ -32,7 +32,7 @@ TEST(vtkh_slice, vtkh_slice)
 
   vtkm::Vec<vtkm::Float32,3> normal(.5f,.5f,.5f);
   vtkm::Vec<vtkm::Float32,3> point(16.f,16.f,16.f);
-  slicer.SetPlane(point, normal);
+  slicer.AddPlane(point, normal);
   slicer.SetInput(&data_set);
   slicer.Update();
   vtkh::DataSet *slice  = slicer.GetOutput();
@@ -58,7 +58,7 @@ TEST(vtkh_slice, vtkh_slice)
 
   delete slice; 
 }
-
+#endif
 TEST(vtkh_slice, vtkh_mulit_slice)
 {
   vtkh::DataSet data_set;
@@ -80,7 +80,10 @@ TEST(vtkh_slice, vtkh_mulit_slice)
 
   vtkm::Vec<vtkm::Float32,3> normal1(1.0f,1.f,.0f);
   vtkm::Vec<vtkm::Float32,3> point1(16.f,16.f,16.f);
-  slicer1.SetPlane(point1, normal1);
+  vtkm::Vec<vtkm::Float32,3> normal2(1.f,.0f,.0f);
+  vtkm::Vec<vtkm::Float32,3> point2(16.f,16.f,16.f);
+  slicer1.AddPlane(point1, normal1);
+  slicer1.AddPlane(point2, normal2);
   slicer1.SetInput(&data_set);
   slicer1.Update();
   vtkh::DataSet *slice1  = slicer1.GetOutput();
@@ -92,24 +95,7 @@ TEST(vtkh_slice, vtkh_mulit_slice)
   tracer1.SetField("cell_data"); 
   scene.AddRenderer(&tracer1);
 
-  // add the second slice
-  vtkh::Slice slicer2;
-
-  vtkm::Vec<vtkm::Float32,3> normal2(1.f,.0f,.0f);
-  vtkm::Vec<vtkm::Float32,3> point2(16.f,16.f,16.f);
-  slicer2.SetPlane(point2, normal2);
-  slicer2.SetInput(&data_set);
-  slicer2.Update();
-  vtkh::DataSet *slice2  = slicer2.GetOutput();
-  domain_ids = slice2->GetDomainIds();
-  bounds.Include(slice2->GetGlobalBounds());
-
-  vtkh::RayTracer tracer2;
-  tracer2.SetInput(slice2);
-  tracer2.SetField("cell_data"); 
-
-  scene.AddRenderer(&tracer2);
-
+  
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
 
   vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
@@ -123,5 +109,4 @@ TEST(vtkh_slice, vtkh_mulit_slice)
   scene.Render();
   
   delete slice1; 
-  delete slice2; 
 }
