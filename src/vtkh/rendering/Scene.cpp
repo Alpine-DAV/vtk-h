@@ -1,4 +1,5 @@
 #include <vtkh/rendering/Scene.hpp>
+#include <vtkh/rendering/MeshRenderer.hpp>
 #include <vtkh/rendering/VolumeRenderer.hpp>
 
 
@@ -22,8 +23,20 @@ Scene::AddRender(vtkh::Render &render)
   m_renders.push_back(render);
 }
 
-void 
-Scene::AddRenderer(vtkh::Renderer *renderer)
+bool
+Scene::IsMesh(vtkh::Renderer *renderer)
+{
+  bool is_mesh = false;
+
+  if(dynamic_cast<vtkh::MeshRenderer*>(renderer) != nullptr)
+  {
+    is_mesh = true;
+  }
+  return is_mesh;
+}
+
+bool
+Scene::IsVolume(vtkh::Renderer *renderer)
 {
   bool is_volume = false;
 
@@ -31,6 +44,14 @@ Scene::AddRenderer(vtkh::Renderer *renderer)
   {
     is_volume = true;
   }
+  return is_volume;
+}
+
+void 
+Scene::AddRenderer(vtkh::Renderer *renderer)
+{
+  bool is_volume = IsVolume(renderer);
+  bool is_mesh = IsMesh(renderer);
 
   if(is_volume)
   {
@@ -43,6 +64,29 @@ Scene::AddRenderer(vtkh::Renderer *renderer)
     // make sure that the volume render is last
     m_renderers.push_back(renderer);
   }
+  else if(is_mesh)
+  {
+    // make sure that the mesh plot is last
+    // and before the volume pl0t
+    if(m_has_volume)
+    {
+      if(m_renderers.size() == 1)
+      {
+        m_renderers.push_front(renderer);
+      }
+      else
+      {
+        auto it = m_renderers.end();
+        it--;
+        it--;
+        m_renderers.insert(it,renderer);
+      }
+    }
+    else
+    {
+      m_renderers.push_back(renderer);
+    }
+  }
   else
   {
     m_renderers.push_front(renderer);
@@ -53,12 +97,6 @@ void
 Scene::Render()
 {
   const int render_size = m_renders.size();
-
-  // Always render world annotations first
-  for(int i = 0; i < render_size; ++i)
-  {
-    //m_renders[i].RenderWorldAnnotations();
-  }
 
   std::vector<vtkm::Range> ranges; 
   std::vector<std::string> field_names; 
