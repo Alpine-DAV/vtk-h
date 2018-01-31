@@ -34,11 +34,13 @@ public:
                   const int    height);
     
     void AddImage(const unsigned char *color_buffer,
+                  const float *        depth_buffer,
                   const int            width,
                   const int            height,
                   const int            vis_order);
 
     void AddImage(const float *color_buffer,
+                  const float *depth_buffer,
                   const int    width,
                   const int    height,
                   const int    vis_order);

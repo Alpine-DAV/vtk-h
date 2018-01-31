@@ -30,11 +30,11 @@ MeshRenderer::PreExecute()
 
   mesh_mapper->SetShowInternalZones(m_show_internal);
   mesh_mapper->SetIsOverlay(m_is_overlay); 
-
+  
   vtkm::rendering::ColorTable single_color;
   single_color.AddControlPoint(0.f, vtkm::rendering::Color::black); 
   single_color.AddControlPoint(1.f, vtkm::rendering::Color::black); 
-  this->m_mapper->SetActiveColorTable(single_color);
+  m_corrected_color_table = single_color;
 }
 
 void

@@ -20,9 +20,9 @@ public:
   ~Annotator();
 
   void RenderWorldAnnotations();
-  void RenderScreenAnnotations(const std::string &fieldname, 
-                               vtkm::Range range,
-                               vtkm::rendering::ColorTable color_table);
+  void RenderScreenAnnotations(const std::vector<std::string> &field_names, 
+                               const std::vector<vtkm::Range> &ranges,
+                               const std::vector<vtkm::rendering::ColorTable> &color_tables);
 
 protected:
   Annotator();
@@ -36,6 +36,7 @@ protected:
   vtkm::rendering::AxisAnnotation3D       m_z_axis_annotation;
   vtkm::rendering::ColorBarAnnotation     m_color_bar_annotation;
   vtkm::rendering::WorldAnnotator        *m_world_annotator; 
+  std::vector<vtkm::Bounds>               m_color_bar_pos;
   //std::vector<vtkm::rendering::TextAnnotation*> m_text_annotations;
   //void RenderScreen2DAnnotations(vtkm::Range range, const  std::string &field_name);
   //void RenderScreen3DAnnotations(vtkm::Range range, const std::string &field_name);

@@ -55,7 +55,7 @@ struct Redistribute
         proxy.enqueue(it->first, it->second);
       }
     } // if
-    else if(!block->m_images.at(0).m_z_buffer_mode)
+    else if(block->m_images.at(0).m_composite_order != -1)
     {
       // blend images according to vis order
       std::vector<Image> images;
@@ -78,7 +78,7 @@ struct Redistribute
 
       block->m_output.Swap(images[0]);
     } // else if
-    else if(block->m_images.at(0).m_z_buffer_mode &&
+    else if(block->m_images.at(0).m_composite_order == -1 &&
             block->m_images.at(0).HasTransparency())
     {
       std::vector<Image> images;

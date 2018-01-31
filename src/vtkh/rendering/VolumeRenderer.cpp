@@ -7,6 +7,8 @@
 
 #include <memory>
 
+#define VTKH_OPACITY_CORRECTION 10.f
+
 namespace vtkh {
 
 namespace detail
@@ -55,7 +57,7 @@ VolumeRenderer::VolumeRenderer()
   //
   m_color_table.AddAlphaControlPoint(0.0f, .02);
   m_color_table.AddAlphaControlPoint(1.0f, .5);
-  m_num_samples = -1;
+  m_num_samples = 100.f;
 }
 
 VolumeRenderer::~VolumeRenderer()
@@ -74,16 +76,16 @@ void
 VolumeRenderer::PreExecute() 
 {
   Renderer::PreExecute();
-  const float default_samples = 200.f;
-  float samples = default_samples;
-  if(m_num_samples != -1)
-  {
-    samples = m_num_samples;
-    float ratio = default_samples / samples;
-    vtkm::rendering::ColorTable corrected;
-    corrected = this->m_color_table.CorrectOpacity(ratio);
-    m_tracer->SetActiveColorTable(corrected);
-  }
+  // we need to scale down the opacity to allow finer control
+  // transfer_functions
+  const float correction_scalar = VTKH_OPACITY_CORRECTION;
+  float samples = m_num_samples;
+
+  float ratio = correction_scalar / samples;
+  vtkm::rendering::ColorTable corrected;
+  corrected = this->m_color_table.CorrectOpacity(ratio);
+  this->m_corrected_color_table = corrected;
+
   vtkm::Vec<vtkm::Float32,3> extent; 
   extent[0] = static_cast<vtkm::Float32>(this->m_bounds.X.Length());
   extent[1] = static_cast<vtkm::Float32>(this->m_bounds.Y.Length());
@@ -173,11 +175,11 @@ VolumeRenderer::Composite(const int &num_images)
     {
       float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0]; 
       float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer()); 
-
       int height = m_renders[i].GetCanvas(dom)->GetHeight();
       int width = m_renders[i].GetCanvas(dom)->GetWidth();
 
       m_compositor->AddImage(color_buffer,
+                             depth_buffer,
                              width,
                              height,
                              m_visibility_orders[i][dom]);
@@ -189,14 +191,7 @@ VolumeRenderer::Composite(const int &num_images)
     if(vtkh::GetMPIRank() == 0)
     {
 #endif
-      float bg_color[4];
-      bg_color[0] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[0];
-      bg_color[1] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[1];
-      bg_color[2] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[2];
-      bg_color[3] = m_renders[i].GetCanvas(0)->GetBackgroundColor().Components[3];
-
-      result.CompositeBackground(bg_color);
-      ImageToCanvas(result, *m_renders[i].GetCanvas(0), false); 
+      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
 #ifdef PARALLEL
     }
 #endif
@@ -233,7 +228,7 @@ VolumeRenderer::DepthSort(int num_domains,
              domain_counts,
              1,
              MPI_INT,
-             root,
+            root,
              comm);
 
   int depths_size = 0;

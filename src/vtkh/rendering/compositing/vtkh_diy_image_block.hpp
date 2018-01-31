@@ -104,7 +104,6 @@ struct Serialization<vtkh::Image>
     diy::save(bb, image.m_pixels);
     diy::save(bb, image.m_depths);
     diy::save(bb, image.m_orig_rank);
-    diy::save(bb, image.m_z_buffer_mode);
     diy::save(bb, image.m_composite_order);
   }
 
@@ -127,7 +126,6 @@ struct Serialization<vtkh::Image>
     diy::load(bb, image.m_pixels);
     diy::load(bb, image.m_depths);
     diy::load(bb, image.m_orig_rank);
-    diy::load(bb, image.m_z_buffer_mode);
     diy::load(bb, image.m_composite_order);
   }
 };

@@ -39,6 +39,12 @@ Renderer::SetField(const std::string field_name)
   m_field_name = field_name; 
 }
 
+std::string
+Renderer::GetFieldName() const
+{
+  return m_field_name;
+}
+
 void 
 Renderer::SetDoComposite(bool do_composite)
 {
@@ -49,12 +55,6 @@ void
 Renderer::AddRender(vtkh::Render &render)
 {
   m_renders.push_back(render); 
-}
-
-std::vector<vtkh::Render>
-Renderer::GetRenders()
-{
-  return m_renders; 
 }
 
 void
@@ -110,13 +110,6 @@ Renderer::Composite(const int &num_images)
 
     Image result = m_compositor->Composite();
 
-    float bg_color[4];
-    vtkm::rendering::Color color = m_renders[i].GetCanvas(0)->GetBackgroundColor();
-    bg_color[0] = color.Components[0];
-    bg_color[1] = color.Components[1];
-    bg_color[2] = color.Components[2];
-    bg_color[3] = color.Components[3];
-    result.CompositeBackground(bg_color);
 #ifdef PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
@@ -132,21 +125,38 @@ Renderer::Composite(const int &num_images)
 void 
 Renderer::PreExecute() 
 {
-  vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
-  int num_components = ranges.GetPortalControl().GetNumberOfValues();
-  //
-  // current vtkm renderers only supports single component scalar fields
-  //
-  assert(num_components == 1);
-  m_range = ranges.GetPortalControl().Get(0);
-  m_bounds = m_input->GetGlobalBounds();
-  int total_renders = static_cast<int>(m_renders.size());
-  for(int i = 0; i < total_renders; ++i)
+  if(!m_range.IsNonEmpty())
   {
-    m_renders[i].SetScalarRange(m_range);
-    m_renders[i].RenderWorldAnnotations();
+    // we have not been given a range, so ask the data set
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
+    int num_components = ranges.GetPortalControl().GetNumberOfValues();
+    //
+    // current vtkm renderers only supports single component scalar fields
+    //
+    assert(num_components == 1);
+
+    vtkm::Range global_range = ranges.GetPortalControl().Get(0);
+    // a min or max may be been set by the user, check to see
+    if(m_range.Min == vtkm::Infinity64())
+    {
+      m_range.Min = global_range.Min;
+    }
+
+    if(m_range.Max == vtkm::NegativeInfinity64())
+    {
+      m_range.Max = global_range.Max;
+    }
   }
 
+  m_bounds = m_input->GetGlobalBounds();
+  
+  // we may have to correct opacity to stay consistent 
+  // if the number of samples in a volume rendering 
+  // increased, but we still want annotations to reflect
+  // the original color table values. If there is a 
+  // correction, a derived class will set a new corrected
+  // color table
+  m_corrected_color_table = m_color_table;
 }
 
 void 
@@ -190,15 +200,8 @@ Renderer::DoExecute()
 
     for(int i = 0; i < total_renders; ++i)
     {
-      // paint
-      if(m_renders[i].HasColorTable())
-      {
-        m_mapper->SetActiveColorTable(m_renders[i].GetColorTable());
-      }
-      else
-      {
-        m_mapper->SetActiveColorTable(m_color_table);
-      }
+
+      m_mapper->SetActiveColorTable(m_corrected_color_table);
       
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera(); 
@@ -247,6 +250,18 @@ vtkh::DataSet *
 Renderer::GetInput() 
 {
   return m_input;
+}
+
+vtkm::Range
+Renderer::GetRange() const
+{
+  return m_range;
+}
+
+void
+Renderer::SetRange(const vtkm::Range &range) 
+{
+  m_range = range;
 }
 
 } // namespace vtkh

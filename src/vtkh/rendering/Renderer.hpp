@@ -24,18 +24,23 @@ public:
 
   Renderer(); 
   virtual ~Renderer(); 
+  virtual void Update();
+
   void AddRender(vtkh::Render &render); 
   void ClearRenders(); 
+
   void SetField(const std::string field_name);
   void SetColorTable(const vtkm::rendering::ColorTable &color_table);
   void SetDoComposite(bool do_composite);
-  vtkm::rendering::ColorTable GetColorTable() const;
-  int  GetNumberOfRenders() const; 
-  std::vector<Render> GetRenders(); 
   void SetRenders(const std::vector<Render> &renders);
-  std::vector<Render> GetRenders() const;
-  virtual void Update();
-  vtkh::DataSet *GetInput();
+  void SetRange(const vtkm::Range &range);
+
+  vtkm::rendering::ColorTable GetColorTable() const;
+  std::string                 GetFieldName() const;
+  int                         GetNumberOfRenders() const; 
+  std::vector<Render>         GetRenders() const;
+  vtkh::DataSet              *GetInput();
+  vtkm::Range                 GetRange() const;
 protected:
   
   // image related data with cinema support
@@ -48,6 +53,7 @@ protected:
   vtkm::Bounds                             m_bounds;
   vtkm::Range                              m_range;
   vtkm::rendering::ColorTable              m_color_table;
+  vtkm::rendering::ColorTable              m_corrected_color_table;
     
   // methods
   virtual void PreExecute() override;
