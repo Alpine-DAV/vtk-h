@@ -121,12 +121,10 @@ Scene::Render()
 
     if((*renderer)->GetHasColorTable())
     {
-      std::cout<<"has color table\n";
       ranges.push_back((*renderer)->GetRange());
       field_names.push_back((*renderer)->GetFieldName());
       color_tables.push_back((*renderer)->GetColorTable());
     }
-    else std::cout<<"NO has color table\n";
 
     m_renders = (*renderer)->GetRenders();
     renderer++;
