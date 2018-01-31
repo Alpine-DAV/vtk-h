@@ -23,6 +23,9 @@ public:
   void AddRenderer(vtkh::Renderer *render);
   void Render();
   void Save();
+protected:
+  bool IsMesh(vtkh::Renderer *renderer);
+  bool IsVolume(vtkh::Renderer *renderer);
 }; // class scene
 
 } //namespace  vtkh
