@@ -57,9 +57,13 @@ Scene::Render()
   // Always render world annotations first
   for(int i = 0; i < render_size; ++i)
   {
-    m_renders[i].RenderWorldAnnotations();
+    //m_renders[i].RenderWorldAnnotations();
   }
-  
+
+  std::vector<vtkm::Range> ranges; 
+  std::vector<std::string> field_names; 
+  std::vector<vtkm::rendering::ColorTable> color_tables; 
+
   const int plot_size = m_renderers.size(); 
   auto renderer = m_renderers.begin(); 
   
@@ -77,6 +81,13 @@ Scene::Render()
     (*renderer)->SetRenders(m_renders);
     (*renderer)->Update();
 
+    if((*renderer)->GetHasColorTable())
+    {
+      ranges.push_back((*renderer)->GetRange());
+      field_names.push_back((*renderer)->GetFieldName());
+      color_tables.push_back((*renderer)->GetColorTable());
+    }
+
     m_renders = (*renderer)->GetRenders();
     renderer++;
   }
@@ -84,7 +95,8 @@ Scene::Render()
   // render screen annotations last and save
   for(int i = 0; i < render_size; ++i)
   {
-    m_renders[i].RenderScreenAnnotations();
+    m_renders[i].RenderWorldAnnotations();
+    m_renders[i].RenderScreenAnnotations(field_names, ranges, color_tables);
     m_renders[i].Save();
   }
 }

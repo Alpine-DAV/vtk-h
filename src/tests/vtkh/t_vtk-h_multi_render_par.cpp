@@ -69,8 +69,8 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   tracer.SetField("cell_data"); 
 
   vtkm::rendering::ColorTable color_map("cool2warm"); 
-  color_map.AddAlphaControlPoint(0.0, .01);
-  color_map.AddAlphaControlPoint(1.0, .01);
+  color_map.AddAlphaControlPoint(0.0, .1);
+  color_map.AddAlphaControlPoint(1.0, .3);
 
   vtkh::VolumeRenderer v_tracer;
   v_tracer.SetColorTable(color_map);

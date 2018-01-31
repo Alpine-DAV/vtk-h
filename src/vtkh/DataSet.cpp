@@ -8,10 +8,61 @@
 #include <sstream>
 //vtkm includes
 #include <vtkm/cont/Error.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/TryExecute.h>
 #ifdef PARALLEL
   #include <mpi.h>
 #endif
 namespace vtkh {
+namespace detail
+{
+
+template<typename T>
+class MemSetWorklet : public vtkm::worklet::WorkletMapField
+{
+protected:
+  T Value;
+public:
+  VTKM_CONT
+  MemSetWorklet(const T value)
+    : Value(value)
+  {
+  }
+
+  typedef void ControlSignature(FieldOut<>);
+  typedef void ExecutionSignature(_1);
+  
+  VTKM_EXEC
+  void operator()(T &value) const
+  {
+    value = Value;
+  }
+}; //class MemSetWorklet 
+
+struct MemSetCaller 
+{
+
+  template <typename Device, typename T>
+  VTKM_CONT bool operator()(Device, 
+                            vtkm::cont::ArrayHandle<T> &array,
+                            const T value,
+                            const vtkm::Id num_values) const
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    array.PrepareForOutput(num_values, Device());
+    vtkm::worklet::DispatcherMapField<MemSetWorklet<T>, Device>(MemSetWorklet<T>(value))
+      .Invoke(array);
+    return true;
+  }
+};
+
+template<typename T>
+void MemSet(vtkm::cont::ArrayHandle<T> &array, const T value, const vtkm::Id num_values)
+{
+  vtkm::cont::TryExecute(MemSetCaller(), array, value, num_values);
+}
+
+} // namespace detail
 
 void 
 DataSet::AddDomain(vtkm::cont::DataSet data_set, vtkm::Id domain_id) 
@@ -475,6 +526,21 @@ bool DataSet::HasDomainId(const vtkm::Id &domain_id) const
   }
   
   return false;
+}
+
+void 
+DataSet::AddConstantPointField(const vtkm::Float32 value, const std::string fieldname)
+{
+  const size_t size = m_domain_ids.size();
+
+  for(size_t i = 0; i < size; ++i)
+  {
+    vtkm::Id num_points = m_domains[i].GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::cont::ArrayHandle<vtkm::Float32> array;
+    detail::MemSet(array, value, num_points);
+    vtkm::cont::Field field(fieldname, vtkm::cont::Field::ASSOC_POINTS, array);
+    m_domains[i].AddField(field);
+  }
 }
 
 } // namspace vtkh

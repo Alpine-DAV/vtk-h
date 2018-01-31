@@ -19,18 +19,16 @@ struct Image
     std::vector<unsigned char>   m_pixels;
     std::vector<float>           m_depths; 
     int                          m_orig_rank;
-    bool                         m_z_buffer_mode;
     bool                         m_has_transparency;
     int                          m_composite_order;
 
     Image()
     {}
 
-    Image(const vtkm::Bounds &bounds, bool z_buffer_mode = true)
+    Image(const vtkm::Bounds &bounds)
       : m_orig_bounds(bounds),
         m_bounds(bounds),
         m_orig_rank(-1),
-        m_z_buffer_mode(z_buffer_mode),
         m_has_transparency(false),
         m_composite_order(-1)
 
@@ -38,10 +36,7 @@ struct Image
         const int dx  = bounds.X.Max - bounds.X.Min + 1;
         const int dy  = bounds.Y.Max - bounds.Y.Min + 1;
         m_pixels.resize(dx * dy * 4);
-        if(m_z_buffer_mode)
-        {
-          m_depths.resize(dx * dy);
-        }
+        m_depths.resize(dx * dy);
     }
 
     int GetNumberOfPixels() const 
@@ -71,13 +66,10 @@ struct Image
       m_bounds.X.Max = width;
       m_bounds.Y.Max = height;
       m_orig_bounds = m_bounds; 
-      m_z_buffer_mode = depth_buffer != NULL; 
       const int size = width * height;
       m_pixels.resize(size * 4);
-      if(m_z_buffer_mode)
-      {
-        m_depths.resize(size);
-      }
+      m_depths.resize(size);
+      
 #ifdef VTKH_USE_OPENMP
       #pragma omp parallel for 
 #endif
@@ -88,13 +80,10 @@ struct Image
         m_pixels[offset + 1] = static_cast<unsigned char>(color_buffer[offset + 1] * 255.f);
         m_pixels[offset + 2] = static_cast<unsigned char>(color_buffer[offset + 2] * 255.f);
         m_pixels[offset + 3] = static_cast<unsigned char>(color_buffer[offset + 3] * 255.f);
-        if(m_z_buffer_mode)
-        {
-          float depth = depth_buffer[i];
-          //make sure we can do a single comparison on depth
-          depth = depth < 0 ? 2.f : depth;
-          m_depths[i] =  depth;
-        }
+        float depth = depth_buffer[i];
+        //make sure we can do a single comparison on depth
+        depth = depth < 0 ? 2.f : depth;
+        m_depths[i] =  depth;
       }
     }
 
@@ -113,29 +102,22 @@ struct Image
 
       const int size = width * height;
       m_pixels.resize(size * 4);
-      m_z_buffer_mode = depth_buffer != NULL;
-      if(m_z_buffer_mode)
-      {
-        m_depths.resize(size);
-      }
+      m_depths.resize(size);
 
       std::copy(color_buffer,
                 color_buffer + size * 4,
                 &m_pixels[0]);
 
-      if(m_z_buffer_mode)
-      {
 #ifdef vtkh_USE_OPENMP
-        #pragma omp parallel for 
+      #pragma omp parallel for 
 #endif
-        for(int i = 0; i < size; ++i)
-        {
-          float depth = depth_buffer[i];
-          //make sure we can do a single comparison on depth
-          depth = depth < 0 ? 2.f : depth;
-          m_depths[i] =  depth;
-        } // for
-      } // if depth
+      for(int i = 0; i < size; ++i)
+      {
+        float depth = depth_buffer[i];
+        //make sure we can do a single comparison on depth
+        depth = depth < 0 ? 2.f : depth;
+        m_depths[i] =  depth;
+      } // for
     }
 
     
@@ -172,7 +154,6 @@ struct Image
       m_orig_bounds = image.m_orig_bounds;
       m_bounds = sub_region;
       m_orig_rank = image.m_orig_rank;
-      m_z_buffer_mode = image.m_z_buffer_mode;
       m_composite_order = image.m_composite_order;
 
       assert(sub_region.X.Min >= image.m_bounds.X.Min);
@@ -191,11 +172,8 @@ struct Image
       const int end_y = start_y + s_dy;
 
       m_pixels.resize(s_dx * s_dy * 4);
-
-      if(m_z_buffer_mode)
-      {
-        m_depths.resize(s_dx * s_dy);
-      }
+      m_depths.resize(s_dx * s_dy);
+      
       
       
 #ifdef VTKH_USE_OPENMP
@@ -209,12 +187,9 @@ struct Image
         std::copy(&image.m_pixels[copy_from * 4],
                   &image.m_pixels[copy_from * 4] + s_dx * 4,
                   &m_pixels[copy_to * 4]);
-        if(m_z_buffer_mode)
-        {
-          std::copy(&image.m_depths[copy_from],
-                    &image.m_depths[copy_from] + s_dx,
-                    &m_depths[copy_to]);
-        }
+        std::copy(&image.m_depths[copy_from],
+                  &image.m_depths[copy_from] + s_dx,
+                  &m_depths[copy_to]);
       }
       
     }
@@ -276,12 +251,9 @@ struct Image
                   &m_pixels[copy_from * 4] + s_dx * 4,
                   &image.m_pixels[copy_to * 4]);
 
-        if(m_z_buffer_mode)
-        {
-          std::copy(&m_depths[copy_from],
-                    &m_depths[copy_from] + s_dx,
-                    &image.m_depths[copy_to]);
-        }
+        std::copy(&m_depths[copy_from],
+                  &m_depths[copy_from] + s_dx,
+                  &image.m_depths[copy_to]);
       }
     }
 
@@ -299,9 +271,6 @@ struct Image
       m_pixels.swap(other.m_pixels);
       m_depths.swap(other.m_depths);
       
-      bool z_buffer_mode = m_z_buffer_mode;
-      m_z_buffer_mode = other.m_z_buffer_mode;
-      other.m_z_buffer_mode = z_buffer_mode;
     }
     
     void Clear()

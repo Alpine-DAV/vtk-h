@@ -10,8 +10,6 @@ namespace vtkh
 {
 
 Render::Render()
-  : m_color_table("cool2warm"),
-    m_has_color_table(false)
 {
 }
 
@@ -58,18 +56,6 @@ void
 Render::SetSceneBounds(const vtkm::Bounds &bounds) 
 {
   m_scene_bounds = bounds;
-}
-
-vtkm::Range
-Render::GetScalarRange() const
-{
-  return m_scalar_range;
-}
-
-void
-Render::SetScalarRange(const vtkm::Range &range) 
-{
-  m_scalar_range = range;
 }
 
 void 
@@ -126,47 +112,31 @@ Render::GetImageName() const
 }
 
 void 
-Render::SetColorTable(const vtkm::rendering::ColorTable &color_table)
-{
-  m_color_table = color_table;
-  m_has_color_table = true;
-}
-
-bool
-Render::HasColorTable() const
-{
-  return m_has_color_table;
-}
-
-vtkm::rendering::ColorTable
-Render::GetColorTable() const
-{
-  return m_color_table;
-}
-
-void 
 Render::RenderWorldAnnotations()
 {
   int size = m_canvases.size(); 
   if(size < 1) return;
 
-  for(int i = 0; i < size; ++i)
-  {
+#ifdef PARALLEL
+  if(vtkh::GetMPIRank() != 0) return;
+#endif
 
-    Annotator annotator(*m_canvases[i], m_camera, m_scene_bounds);
-    annotator.RenderWorldAnnotations();
-  }
+  Annotator annotator(*m_canvases[0], m_camera, m_scene_bounds);
+  annotator.RenderWorldAnnotations();
     
 }
 
 void 
-Render::RenderScreenAnnotations()
+Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
+                                const std::vector<vtkm::Range> &ranges,
+                                const std::vector<vtkm::rendering::ColorTable> &colors)
 {
   int size = m_canvases.size(); 
   if(size < 1) return;
   
+  m_canvases[0]->BlendBackground(); 
   Annotator annotator(*m_canvases[0], m_camera, m_scene_bounds);
-  annotator.RenderScreenAnnotations("field_name", m_scalar_range, m_color_table);
+  annotator.RenderScreenAnnotations(field_names, ranges, colors);
 }
 
 void
@@ -179,7 +149,6 @@ Render::Save()
 #ifdef PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
-  
   float* color_buffer = &GetVTKMPointer(m_canvases[0]->GetColorBuffer())[0][0]; 
   int height = m_canvases[0]->GetHeight(); 
   int width = m_canvases[0]->GetWidth(); 

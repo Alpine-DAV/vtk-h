@@ -118,6 +118,7 @@ Compositor::AddImage(const float *color_buffer,
 
 void 
 Compositor::AddImage(const unsigned char *color_buffer,
+                     const float         *depth_buffer,
                      const int            width,
                      const int            height,
                      const int            vis_order)
@@ -127,7 +128,7 @@ Compositor::AddImage(const unsigned char *color_buffer,
   const size_t image_index = m_images.size();
   m_images.push_back(image);
   m_images[image_index].Init(color_buffer,
-                             NULL,
+                             depth_buffer,
                              width,
                              height,
                              vis_order);
@@ -135,6 +136,7 @@ Compositor::AddImage(const unsigned char *color_buffer,
 
 void 
 Compositor::AddImage(const float *color_buffer,
+                     const float *depth_buffer,
                      const int    width,
                      const int    height,
                      const int    vis_order)
@@ -145,7 +147,7 @@ Compositor::AddImage(const float *color_buffer,
   m_images.push_back(image);
 
   m_images[image_index].Init(color_buffer,
-                             NULL,
+                             depth_buffer,
                              width,
                              height,
                              vis_order);

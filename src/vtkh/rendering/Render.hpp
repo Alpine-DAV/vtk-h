@@ -14,7 +14,7 @@ namespace vtkh {
 // A Render contains the information needed to create a single image.
 // There are 'n' canvases that matches the number of domains in the 
 // data set. It is possible to chain multiple plots together that 
-// is rendering separate data, i.e. the result of different data
+// are rendering separate data, i.e. the result of different data
 // transformations, to handle this we keep track of the domain ids
 // that each canvas is associated with.
 //
@@ -32,28 +32,24 @@ public:
   const vtkm::rendering::Camera&  GetCamera() const;
   std::string                     GetImageName() const;
   vtkm::Bounds                    GetSceneBounds() const;
-  vtkm::Range                     GetScalarRange() const;
+
   void                            SetSceneBounds(const vtkm::Bounds &bounds);
-  void                            SetScalarRange(const vtkm::Range &range);
   void                            SetCamera(const vtkm::rendering::Camera &camera);
   void                            SetImageName(const std::string &name);
+
   bool                            HasCanvas(const vtkm::Id &domain_id) const;
   void                            AddCanvas(vtkmCanvasPtr canvas, vtkm::Id domain_id);
-  void                            SetColorTable(const vtkm::rendering::ColorTable &color_table);
-  vtkm::rendering::ColorTable     GetColorTable() const;
-  bool                            HasColorTable() const;
   void                            RenderWorldAnnotations();
-  void                            RenderScreenAnnotations();
+  void                            RenderScreenAnnotations(const std::vector<std::string> &field_names,
+                                                          const std::vector<vtkm::Range> &ranges,
+                                                          const std::vector<vtkm::rendering::ColorTable> &colors);
   void                            Save();
 protected:
   std::vector<vtkmCanvasPtr>   m_canvases;
   std::vector<vtkm::Id>        m_domain_ids;
   vtkm::rendering::Camera      m_camera; 
   std::string                  m_image_name;
-  vtkm::rendering::ColorTable  m_color_table;
   vtkm::Bounds                 m_scene_bounds;
-  vtkm::Range                  m_scalar_range;  // this contains the scalar range of the last field rendered
-  bool                         m_has_color_table;
 }; 
 
 static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};

@@ -14,11 +14,12 @@ public:
 
   void SetIsOverlay(bool on);
   void SetShowInternal(bool on);
+  void SetUseForegroundColor(bool on);
   bool GetIsOverlay() const;
   bool GetShowInternal() const;
 protected:
   void PreExecute() override;
-
+  bool m_use_foreground_color;
   bool m_is_overlay;
   bool m_show_internal;
 };

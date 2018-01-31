@@ -17,7 +17,6 @@ public:
     assert(front.m_bounds.Y.Min == back.m_bounds.Y.Min); 
     assert(front.m_bounds.X.Max == back.m_bounds.X.Max); 
     assert(front.m_bounds.Y.Max == back.m_bounds.Y.Max); 
-
     const int size = static_cast<int>(front.m_pixels.size() / 4); 
   
 #ifdef VTKH_USE_OPENMP
@@ -26,8 +25,9 @@ public:
     for(int i = 0; i < size; ++i)
     {
       const int offset = i * 4;
-      unsigned int alpha = front.m_pixels[offset + 3];// / 255.f;
-      const unsigned int opacity = 255 - alpha;//(1.f - alpha) * alpha2;
+      unsigned int alpha = front.m_pixels[offset + 3];
+      const unsigned int opacity = 255 - alpha;
+
       front.m_pixels[offset + 0] += 
         static_cast<unsigned char>(opacity * back.m_pixels[offset + 0] / 255); 
       front.m_pixels[offset + 1] += 
@@ -36,6 +36,11 @@ public:
         static_cast<unsigned char>(opacity * back.m_pixels[offset + 2] / 255); 
       front.m_pixels[offset + 3] += 
         static_cast<unsigned char>(opacity * back.m_pixels[offset + 3] / 255); 
+
+      float d1 = std::min(front.m_depths[i], 1.001f); 
+      float d2 = std::min(back.m_depths[i], 1.001f); 
+      float depth = std::min(d1,d2); 
+      front.m_depths[i] = depth;
     }
   }
 

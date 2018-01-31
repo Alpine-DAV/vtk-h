@@ -33,7 +33,10 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
   vtkm::Bounds bounds = data_set.GetGlobalBounds();
 
   vtkm::rendering::Camera camera;
-  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
+  vtkm::Vec<vtkm::Float32,3> pos = camera.GetPosition();
+  pos[0]+=.1;
+  pos[1]+=.1;
+  camera.SetPosition(pos);
   camera.ResetToBounds(bounds);
   vtkh::Render render = vtkh::MakeRender<vtkh::VolumeRenderer>(512, 
                                                                512, 
@@ -44,7 +47,7 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
 
   vtkm::rendering::ColorTable color_map("cool2warm"); 
   color_map.AddAlphaControlPoint(0.0, .05);
-  color_map.AddAlphaControlPoint(1.0, .05);
+  color_map.AddAlphaControlPoint(1.0, .5);
 
   vtkh::VolumeRenderer tracer;
   tracer.SetColorTable(color_map);
@@ -54,4 +57,5 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
   vtkh::Scene scene;
   scene.AddRender(render);
   scene.AddRenderer(&tracer);
+  scene.Render();
 }

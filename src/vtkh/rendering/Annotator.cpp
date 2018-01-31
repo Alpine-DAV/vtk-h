@@ -12,6 +12,16 @@ Annotator::Annotator(vtkm::rendering::Canvas &canvas,
 {
   m_is_3d = m_camera.GetMode() == vtkm::rendering::Camera::MODE_3D;
   m_world_annotator = m_canvas.CreateWorldAnnotator(); 
+  // add defualt color bar positions
+  vtkm::Bounds p1(vtkm::Range(0.84, 0.92), vtkm::Range(+0.1, +0.8), vtkm::Range(0, 0));
+  vtkm::Bounds p2(vtkm::Range(0.84, 0.92), vtkm::Range(-0.8, -0.1), vtkm::Range(0, 0));
+  vtkm::Bounds p3(vtkm::Range(-0.8, -0.72), vtkm::Range(+0.1, +0.8), vtkm::Range(0, 0));
+  vtkm::Bounds p4(vtkm::Range(-0.8, -0.72), vtkm::Range(-0.8, -0.1), vtkm::Range(0, 0));
+
+  m_color_bar_pos.push_back(p1);
+  m_color_bar_pos.push_back(p2);
+  m_color_bar_pos.push_back(p3);
+  m_color_bar_pos.push_back(p4);
 }  
 
 Annotator::~Annotator()
@@ -20,14 +30,21 @@ Annotator::~Annotator()
 }
 
 void 
-Annotator::RenderScreenAnnotations(const std::string &fieldname, 
-                                   vtkm::Range range,
-                                   vtkm::rendering::ColorTable color_table)
+Annotator::RenderScreenAnnotations(const std::vector<std::string> &field_names, 
+                                    const std::vector<vtkm::Range> &ranges,
+                                    const std::vector<vtkm::rendering::ColorTable> &color_tables)
 {
   m_canvas.SetViewToScreenSpace(m_camera, true);
-  this->m_color_bar_annotation.SetRange(range, 5);
-  this->m_color_bar_annotation.SetColorTable(color_table);
-  this->m_color_bar_annotation.Render(m_camera, *m_world_annotator, m_canvas);
+  // currently we only support 4 color bars, so grab the first 4 
+  int num_bars = std::min(int(field_names.size()),4); 
+  for(int i = 0; i < num_bars; ++i)
+  {
+    this->m_color_bar_annotation.SetRange(ranges[i], 5);
+    this->m_color_bar_annotation.SetFieldName(field_names[i]);
+    this->m_color_bar_annotation.SetPosition(m_color_bar_pos[i]);
+    this->m_color_bar_annotation.SetColorTable(color_tables[i]);
+    this->m_color_bar_annotation.Render(m_camera, *m_world_annotator, m_canvas);
+  }
 }
 
 void Annotator::RenderWorldAnnotations()
@@ -40,7 +57,8 @@ void Annotator::RenderWorldAnnotations()
   vtkm::Float64 dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin;
   vtkm::Float64 size = vtkm::Sqrt(dx * dx + dy * dy + dz * dz);
 
-  this->m_box_annotation.SetColor(vtkm::rendering::Color(.5f, .5f, .5f));
+  //TODO: get forground color
+  this->m_box_annotation.SetColor(m_canvas.GetForegroundColor());
   this->m_box_annotation.SetExtents(m_bounds);
   this->m_box_annotation.Render(m_camera, *m_world_annotator);
   vtkm::Vec<vtkm::Float32, 3> lookAt = m_camera.GetLookAt();
