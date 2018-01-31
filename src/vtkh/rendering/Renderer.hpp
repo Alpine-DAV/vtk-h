@@ -41,6 +41,7 @@ public:
   std::vector<Render>         GetRenders() const;
   vtkh::DataSet              *GetInput();
   vtkm::Range                 GetRange() const;
+  bool                        GetHasColorTable() const;
 protected:
   
   // image related data with cinema support
@@ -54,7 +55,7 @@ protected:
   vtkm::Range                              m_range;
   vtkm::rendering::ColorTable              m_color_table;
   vtkm::rendering::ColorTable              m_corrected_color_table;
-    
+  bool                                     m_has_color_table;  
   // methods
   virtual void PreExecute() override;
   virtual void PostExecute() override;

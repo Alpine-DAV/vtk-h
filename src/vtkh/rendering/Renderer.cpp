@@ -17,7 +17,8 @@ namespace vtkh {
 Renderer::Renderer()
   : m_do_composite(true),
     m_color_table("cool2warm"),
-    m_field_index(0)
+    m_field_index(0),
+    m_has_color_table(true)
 {
   m_compositor  = NULL; 
 #ifdef PARALLEL
@@ -43,6 +44,12 @@ std::string
 Renderer::GetFieldName() const
 {
   return m_field_name;
+}
+
+bool
+Renderer::GetHasColorTable() const
+{
+  return m_has_color_table;
 }
 
 void 

@@ -81,9 +81,12 @@ Scene::Render()
     (*renderer)->SetRenders(m_renders);
     (*renderer)->Update();
 
-    ranges.push_back((*renderer)->GetRange());
-    field_names.push_back((*renderer)->GetFieldName());
-    color_tables.push_back((*renderer)->GetColorTable());
+    if((*renderer)->GetHasColorTable())
+    {
+      ranges.push_back((*renderer)->GetRange());
+      field_names.push_back((*renderer)->GetFieldName());
+      color_tables.push_back((*renderer)->GetColorTable());
+    }
 
     m_renders = (*renderer)->GetRenders();
     renderer++;

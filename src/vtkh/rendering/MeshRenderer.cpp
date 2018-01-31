@@ -8,7 +8,8 @@ namespace vtkh {
   
 MeshRenderer::MeshRenderer()
   : m_is_overlay(false),
-    m_show_internal(false)
+    m_show_internal(false),
+    m_use_foreground_color(false)
 {
   typedef vtkm::rendering::MapperWireframer MapperType;
   auto mapper = std::make_shared<MapperType>();
@@ -30,11 +31,16 @@ MeshRenderer::PreExecute()
 
   mesh_mapper->SetShowInternalZones(m_show_internal);
   mesh_mapper->SetIsOverlay(m_is_overlay); 
-  
-  vtkm::rendering::ColorTable single_color;
-  single_color.AddControlPoint(0.f, vtkm::rendering::Color::black); 
-  single_color.AddControlPoint(1.f, vtkm::rendering::Color::black); 
-  m_corrected_color_table = single_color;
+
+  if(m_use_foreground_color)
+  {
+    vtkm::rendering::Color fg = m_renders[0].GetCanvas(0)->GetForegroundColor();
+    vtkm::rendering::ColorTable single_color;
+    single_color.AddControlPoint(0.f, fg); 
+    single_color.AddControlPoint(1.f, fg); 
+    this->m_corrected_color_table = single_color;
+    this->m_has_color_table = false;
+  }
 }
 
 void
@@ -47,6 +53,12 @@ void
 MeshRenderer::SetShowInternal(bool on)
 {
   m_is_overlay = on;
+}
+
+void
+MeshRenderer::SetUseForegroundColor(bool on)
+{
+  m_use_foreground_color = on;
 }
 
 bool
