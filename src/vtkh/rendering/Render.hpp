@@ -99,12 +99,23 @@ MakeRender(int width,
   color.Components[2] = bg_color[2];
   color.Components[3] = bg_color[3];
 
-  for(size_t i = 0; i < domain_ids.size(); ++i)
+  const size_t num_domains = domain_ids.size();
+
+  for(size_t i = 0; i < num_domains; ++i)
   {
     auto canvas = RendererType::GetNewCanvas(width, height);
     canvas->Clear();
     canvas->SetBackgroundColor(color);
     render.AddCanvas(canvas, domain_ids[i]);
+  }
+
+  if(num_domains == 0)
+  {
+    auto canvas = RendererType::GetNewCanvas(width, height);
+    canvas->SetBackgroundColor(color);
+    canvas->Clear();
+    vtkm::Id empty_data_set_id = -1;
+    render.AddCanvas(canvas, empty_data_set_id);
   }
   return render;
 }
@@ -166,6 +177,16 @@ MakeRender(int width,
 
     render.AddCanvas(canvas, domain_id);
   }
+
+  if(num_domains == 0)
+  {
+    auto canvas = RendererType::GetNewCanvas(width, height);
+    canvas->SetBackgroundColor(color);
+    canvas->Clear();
+    vtkm::Id empty_data_set_id = -1;
+    render.AddCanvas(canvas, empty_data_set_id);
+  }
+
   return render;
 }
 
