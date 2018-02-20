@@ -76,6 +76,7 @@ install(FILES ${Headers}
 set(ParallelHeaders
   compositing/DirectSendCompositor.hpp
   compositing/DIYCompositor.hpp
+  compositing/MPICollect.hpp
   compositing/RadixKCompositor.hpp
   compositing/vtkh_diy_collect.hpp
   compositing/vtkh_diy_image_block.hpp

@@ -1,7 +1,8 @@
 #include <vtkh/rendering/ImageCompositor.hpp>
-#include "RadixKCompositor.hpp"
-#include "vtkh_diy_collect.hpp"
-#include "vtkh_diy_utils.hpp"
+#include <vtkh/rendering/compositing/MPICollect.hpp>
+#include <vtkh/rendering/compositing/RadixKCompositor.hpp>
+#include <vtkh/rendering/compositing/vtkh_diy_collect.hpp>
+#include <vtkh/rendering/compositing/vtkh_diy_utils.hpp>
 
 #include <diy/master.hpp>
 #include <diy/mpi.hpp>
@@ -142,10 +143,11 @@ RadixKCompositor::CompositeSurface(diy::mpi::communicator &diy_comm, Image &imag
                 reduce_images);
 
 
-    diy::all_to_all(master,
-                    assigner,
-                    CollectImages(decomposer),
-                    magic_k);
+    MPICollect(image, diy_comm); 
+    //diy::all_to_all(master,
+    //                assigner,
+    //                CollectImages(decomposer),
+    //                magic_k);
   
     if(diy_comm.rank() == 0) 
     {
