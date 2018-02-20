@@ -1,7 +1,8 @@
 #include <vtkh/rendering/ImageCompositor.hpp>
-#include "DirectSendCompositor.hpp"
-#include "vtkh_diy_collect.hpp"
-#include "vtkh_diy_utils.hpp"
+#include <vtkh/rendering/compositing/DirectSendCompositor.hpp>
+#include <vtkh/rendering/compositing/MPICollect.hpp>
+#include <vtkh/rendering/compositing/vtkh_diy_collect.hpp>
+#include <vtkh/rendering/compositing/vtkh_diy_utils.hpp>
 
 #include <diy/master.hpp>
 #include <diy/mpi.hpp>
@@ -155,12 +156,13 @@ DirectSendCompositor::CompositeVolume(diy::mpi::communicator &diy_comm,
     diy::RegularDecomposer<diy::DiscreteBounds> decomposer(dims, global_bounds, num_blocks);
     AddImageBlock all_create(master, sub_image);
     decomposer.decompose(diy_comm.rank(), assigner, all_create);
-    MPI_Barrier(MPI_COMM_WORLD); 
+    MPI_Barrier(diy_comm); 
 
-    diy::all_to_all(master,
-                    assigner,
-                    CollectImages(decomposer),
-                    magic_k);
+    MPICollect(sub_image,diy_comm); 
+    //diy::all_to_all(master,
+    //                assigner,
+    //                CollectImages(decomposer),
+    //                magic_k);
   } 
 
   images.at(0).Swap(sub_image);
