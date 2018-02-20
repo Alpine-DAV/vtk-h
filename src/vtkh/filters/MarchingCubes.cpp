@@ -6,6 +6,7 @@ namespace vtkh
 {
 
 MarchingCubes::MarchingCubes()
+ : m_levels(10)
 {
 
 }
@@ -20,6 +21,14 @@ MarchingCubes::SetIsoValue(const double &iso_value)
 {
   m_iso_values.clear();
   m_iso_values.push_back(iso_value);
+  m_levels = -1;
+}
+
+void 
+MarchingCubes::SetLevels(const int &levels)
+{
+  m_iso_values.clear();
+  m_levels = levels;
 }
 
 void 
@@ -31,6 +40,7 @@ MarchingCubes::SetIsoValues(const double *iso_values, const int &num_values)
   {
     m_iso_values.push_back(iso_values[i]);
   }
+  m_levels = -1;
 }
 
 void 
@@ -40,6 +50,19 @@ MarchingCubes::SetField(const std::string &field_name)
 }
 void MarchingCubes::PreExecute() 
 {
+  if(m_levels != -1) {
+    vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
+    float length = scalar_range.Length();
+    float step = length / (m_levels + 1.f);
+
+    m_iso_values.clear();
+    for(int i = 1; i <= m_levels; ++i)
+    {
+      float iso = scalar_range.Min + float(i) * step;
+      m_iso_values.push_back(iso);
+    }
+  }
+  
   assert(m_iso_values.size() > 0);
   assert(m_field_name != "");
   if(m_map_fields.size() == 0)
