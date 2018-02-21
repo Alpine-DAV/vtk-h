@@ -147,15 +147,12 @@ Threshold::GetField() const
 
 void Threshold::PreExecute() 
 {
-  if(m_map_fields.size() == 0)
-  {
-    this->MapAllFields(); 
-  }
+  Filter::PreExecute();
 }
 
 void Threshold::PostExecute()
 {
-
+  Filter::PostExecute();
 }
 
 void Threshold::DoExecute()
@@ -184,7 +181,6 @@ void Threshold::DoExecute()
 
     vtkm::cont::DataSet data_set = res.GetDataSet();
     detail::StripPermutation(data_set);
-    this->PropagateMetadata();
     this->m_output->AddDomain(data_set, domain_id);
     
   }

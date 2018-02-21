@@ -27,7 +27,7 @@ set(Sources
   )
 
 
-set(vtkh_rendering_deps vtkh_core vtkh_utils )
+set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
 
 if(VTKm_CUDA_FOUND)
     # triggers cuda compile
@@ -91,7 +91,7 @@ set(ParallelSources
 
 if (MPI_FOUND)
     
-    set(vtkh_rendering_par_deps vtkh_core_par vtkh_utils )
+    set(vtkh_rendering_par_deps vtkh_core_par vtkh_utils vtkh_filters_par )
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)

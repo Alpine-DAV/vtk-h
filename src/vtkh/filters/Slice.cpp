@@ -388,7 +388,7 @@ Slice::AddPlane(vtkm::Vec<vtkm::Float32,3> point, vtkm::Vec<vtkm::Float32,3> nor
 void
 Slice::PreExecute()
 {
-
+  Filter::PreExecute();
 }
 
 void
@@ -446,7 +446,7 @@ Slice::DoExecute()
 void
 Slice::PostExecute()
 {
-
+  Filter::PostExecute();
 }
 
 } // namespace vtkh

@@ -21,7 +21,7 @@ CleanGrid::~CleanGrid()
 void
 CleanGrid::PreExecute()
 {
-  this->MapAllFields();
+  Filter::PreExecute(); 
 }
 
 void
@@ -46,13 +46,12 @@ CleanGrid::DoExecute()
     this->m_output->AddDomain(res.GetDataSet(), domain_id);
   }
 
-  this->PropagateMetadata();
 }
 
 void
 CleanGrid::PostExecute()
 {
-
+  Filter::PostExecute();
 }
 
 } // namespace vtkh

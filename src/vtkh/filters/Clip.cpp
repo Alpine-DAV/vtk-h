@@ -76,16 +76,12 @@ Clip::SetPlaneClip(const double origin[3], const double normal[3])
 
 void Clip::PreExecute() 
 {
-
-  if(m_map_fields.size() == 0)
-  {
-    this->MapAllFields(); 
-  }
+  Filter::PreExecute();
 }
 
 void Clip::PostExecute()
 {
-
+  Filter::PostExecute();
 }
 
 void Clip::DoExecute()
@@ -121,9 +117,7 @@ void Clip::DoExecute()
     {
       m_internals->m_clipper.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
-    this->PropagateMetadata();
     this->m_output->AddDomain(res.GetDataSet(), domain_id);
-    
   }
 }
 
