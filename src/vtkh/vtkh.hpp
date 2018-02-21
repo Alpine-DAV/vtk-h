@@ -18,11 +18,11 @@ namespace vtkh
   void ForceTBB();
   void ForceCUDA();
   void ResetDevices();
-#ifdef PARALLEL
-  void   SetMPIComm(MPI_Comm mpi_comm);
-  MPI_Comm GetMPIComm();
   int GetMPIRank();
   int GetMPISize();
+#ifdef PARALLEL
+  void SetMPIComm(MPI_Comm mpi_comm);
+  MPI_Comm GetMPIComm();
 #endif
 
 }

@@ -5,6 +5,7 @@
 // FIXME:UDA: vtkm_dataset_info depends on vtkm::rendering
 #include <vtkh/utils/vtkm_dataset_info.hpp>
 // std includes
+#include <limits>
 #include <sstream>
 //vtkm includes
 #include <vtkm/cont/Error.h>
@@ -270,18 +271,8 @@ DataSet::GetGlobalBounds(vtkm::Id coordinate_system_index) const
 }
 
 vtkm::cont::ArrayHandle<vtkm::Range> 
-DataSet::GetGlobalRange(const vtkm::Id index) const
+DataSet::GetRange(const std::string &field_name) const
 {
-  assert(m_domains.size() > 0); 
-  vtkm::cont::Field field = m_domains.at(0).GetField(index);
-  std::string field_name = field.GetName();
-  return this->GetGlobalRange(field_name);
-}
-
-vtkm::cont::ArrayHandle<vtkm::Range> 
-DataSet::GetGlobalRange(const std::string &field_name) const
-{
-  bool valid_field = true;
   const size_t num_domains = m_domains.size();
 
   vtkm::cont::ArrayHandle<vtkm::Range> range;
@@ -289,31 +280,36 @@ DataSet::GetGlobalRange(const std::string &field_name) const
 
   for(size_t i = 0; i < num_domains; ++i)
   {
-    if(!m_domains[0].HasField(field_name))
+    if(!m_domains[i].HasField(field_name))
     {
-      valid_field = false;
-      break;
+      continue;
     }
 
     const vtkm::cont::Field &field = m_domains[i].GetField(field_name);
     vtkm::cont::ArrayHandle<vtkm::Range> sub_range;
     sub_range = field.GetRange();
      
-    if(i == 0)
+    num_components = sub_range.GetPortalConstControl().GetNumberOfValues();    
+    range = sub_range;
+
+    vtkm::Id components = sub_range.GetPortalConstControl().GetNumberOfValues();    
+ 
+    // first range with data. Set range and keep looking
+    if(num_components == 0)
     {
-      num_components = sub_range.GetPortalConstControl().GetNumberOfValues();    
+      num_components = components;
       range = sub_range;
       continue;
     }
-
-    vtkm::Id components = sub_range.GetPortalConstControl().GetNumberOfValues();    
-
+    
+    // This is not the first valid range encountered.
+    // Validate and expand the current range
     if(components != num_components)
     {
       std::stringstream msg;
       msg<<"GetRange call failed. The number of components ("<<components<<") in field "
          <<field_name<<" from domain "<<i<<" does not match the number of components "
-         <<"("<<num_components<<") in domain 0";
+         <<"("<<num_components<<") in another domain";
       throw Error(msg.str());
     }
 
@@ -324,16 +320,17 @@ DataSet::GetGlobalRange(const std::string &field_name) const
       c_range.Include(s_range);
       range.GetPortalControl().Set(c, c_range);
     }
-   
-
   }
+  
+  return range;
+}
 
-  if(!valid_field)
-  {
-    std::string msg = "GetRange call failed. ";
-    msg += " Field " +  field_name + " did not exist in at least one domain."; 
-    throw Error(msg);
-  }
+vtkm::cont::ArrayHandle<vtkm::Range> 
+DataSet::GetGlobalRange(const std::string &field_name) const
+{
+  vtkm::cont::ArrayHandle<vtkm::Range> range;
+  range = GetRange(field_name);
+  vtkm::Id num_components = range.GetNumberOfValues();
 
 #ifdef PARALLEL
   MPI_Comm mpi_comm = vtkh::GetMPIComm();
@@ -352,74 +349,78 @@ DataSet::GetGlobalRange(const std::string &field_name) const
                 1,
                 MPI_INT,
                 mpi_comm);
-  int max_non_zero = 0;;
+
+  int components = 0;
   //
   // find the largest component
   //
   for(int i = 0; i < vtkh::GetMPISize(); ++i)
   {
-    if(global_components[i] != 0)
+    if(components == 0 && global_components[i] != 0)
     {
-      max_non_zero = std::max(global_components[i], max_non_zero);
+      components = global_components[i];
+      continue;
+    }
+    
+    // verify that this matches are current components
+    if(global_components[i] != 0 && components != global_components[i])
+    {
+      std::stringstream msg;
+      msg<<"GetRange call failed. The number of components ("
+         <<global_components[i]<<") in field "
+         <<field_name<<" from rank"<<i<<" does not match the number of components in"
+         <<" the other ranks "<<components;
+      throw Error(msg.str());
     }
   }
-  //
-  // verify uniform component length
-  //
-  for(int i = 0; i < vtkh::GetMPISize(); ++i)
+
+  // at least one rank has data. Find the global range
+  if(components != 0)
   {
-    if(global_components[i] != 0)
+    range.Allocate(components);
+    for(int i = 0; i < components; ++i)
     {
-      if(max_non_zero != global_components[i])
+
+      vtkm::Range c_range = range.GetPortalControl().Get(i);
+
+      vtkm::Float64 local_min;
+      vtkm::Float64 local_max;
+
+      if(num_components != 0)
       {
-        std::stringstream msg;
-        msg<<"GetRange call failed. The number of components ("
-           <<global_components[i]<<") in field "
-           <<field_name<<" from rank"<<i<<" does not match the number of components in"
-           <<" the other ranks "<<max_non_zero;
-        throw Error(msg.str());
+        local_min = c_range.Min;
+        local_max = c_range.Max;
       }
+      else
+      {
+        local_min = std::numeric_limits<vtkm::Float64>::max();
+        local_max = std::numeric_limits<vtkm::Float64>::min();
+      }
+      
+      vtkm::Float64 global_min = 0;
+      vtkm::Float64 global_max = 0;
+
+      MPI_Allreduce((void *)(&local_min),
+                    (void *)(&global_min), 
+                    1,
+                    MPI_DOUBLE,
+                    MPI_MIN,
+                    mpi_comm);
+
+      MPI_Allreduce((void *)(&local_max),
+                    (void *)(&global_max),
+                    1,
+                    MPI_DOUBLE,
+                    MPI_MAX,
+                    mpi_comm);
+      c_range.Min = global_min;
+      c_range.Max = global_max;
+      range.GetPortalControl().Set(i, c_range);
     }
-  }
-  //
-  // if we do not have any components, then we need to init some
-  // empty ranges to participate in comm
-  //
-  if(num_components == 0)
-  {
-    range.Allocate(max_non_zero);
-    num_components = max_non_zero;
   }
 
   delete[] global_components;
-  for(int i = 0; i < num_components; ++i)
-  {
-    vtkm::Range c_range = range.GetPortalControl().Get(i);
-    vtkm::Float64 local_min = c_range.Min;
-    vtkm::Float64 local_max = c_range.Max;
-    
-    vtkm::Float64 global_min = 0;
-    vtkm::Float64 global_max = 0;
-
-    MPI_Allreduce((void *)(&local_min),
-                  (void *)(&global_min), 
-                  1,
-                  MPI_DOUBLE,
-                  MPI_MIN,
-                  mpi_comm);
-
-    MPI_Allreduce((void *)(&local_max),
-                  (void *)(&global_max),
-                  1,
-                  MPI_DOUBLE,
-                  MPI_MAX,
-                  mpi_comm);
-    c_range.Min = global_min;
-    c_range.Max = global_max;
-    range.GetPortalControl().Set(i, c_range);
-  }
 #endif
-
   return range;
 }
 
@@ -541,6 +542,53 @@ DataSet::AddConstantPointField(const vtkm::Float32 value, const std::string fiel
     vtkm::cont::Field field(fieldname, vtkm::cont::Field::ASSOC_POINTS, array);
     m_domains[i].AddField(field);
   }
+}
+
+bool 
+DataSet::FieldExists(const std::string &field_name) const
+{
+  bool exists = false;
+
+  const size_t size = m_domains.size();
+  for(size_t i = 0; i < size; ++i)
+  {
+    if(m_domains[i].HasField(field_name))
+    {
+      exists = true;
+      break;
+    }
+  }
+  return exists;
+}
+
+bool 
+DataSet::GlobalFieldExists(const std::string &field_name) const
+{
+  bool exists = FieldExists(field_name);
+#ifdef PARALLEL
+  int local_boolean = exists ? 1 : 0; 
+  int global_boolean;
+
+  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+  MPI_Allreduce((void *)(&local_boolean),
+                (void *)(&global_boolean),
+                1,
+                MPI_INT,
+                MPI_SUM,
+                mpi_comm);
+
+
+  if(global_boolean > 0)
+  {
+    exists = true;
+  }
+  else
+  {
+    // this is technically not needed but added for clarity
+    exists = false;
+  }
+#endif
+  return exists;
 }
 
 } // namspace vtkh
