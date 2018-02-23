@@ -104,11 +104,6 @@ void Clip::DoExecute()
         vtkm::Id cell_set_index = dom.GetCellSetIndex(m_cell_set);
         m_internals->m_clipper.SetActiveCellSetIndex(cell_set_index);
       }
-      else
-      {
-        std::cout<<"Clip: cell set "<<m_cell_set<<" not present. Skipping dom\n";
-        continue;
-      }
     }
 
     vtkm::filter::Result res = m_internals->m_clipper.Execute(dom);
