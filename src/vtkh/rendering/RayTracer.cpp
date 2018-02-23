@@ -24,4 +24,10 @@ RayTracer::GetNewCanvas(int width, int height)
   return std::make_shared<vtkm::rendering::CanvasRayTracer>(width, height);
 }
 
+std::string
+RayTracer::GetName() const
+{
+  return "vtkh::RayTracer";
+}
+
 } // namespace vtkh

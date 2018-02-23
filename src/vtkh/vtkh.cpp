@@ -56,7 +56,21 @@ GetMPISize()
   return size;
 }
 
+#else
+
+int 
+GetMPIRank()
+{
+  return 1;
+}
+
+int 
+GetMPISize()
+{
+  return 1;
+}
 #endif
+
 
 bool IsSerialEnabled()
 {

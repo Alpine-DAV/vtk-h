@@ -12,6 +12,7 @@ set(Headers
   )
 
 set(Sources
+  Filter.cpp
   CleanGrid.cpp
   Clip.cpp
   MarchingCubes.cpp

@@ -14,6 +14,7 @@ class Slice : public Filter
 public:
   Slice(); 
   virtual ~Slice(); 
+  std::string GetName() const override; 
   void AddPlane(vtkm::Vec<vtkm::Float32,3> point, vtkm::Vec<vtkm::Float32,3> normal);
 protected:
   void PreExecute() override;

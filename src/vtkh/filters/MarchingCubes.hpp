@@ -13,6 +13,7 @@ class MarchingCubes : public Filter
 public:
   MarchingCubes(); 
   virtual ~MarchingCubes(); 
+  std::string GetName() const override;
   void SetIsoValue(const double &iso_value);
   void SetIsoValues(const double *iso_values, const int &num_values);
   void SetLevels(const int &levels);

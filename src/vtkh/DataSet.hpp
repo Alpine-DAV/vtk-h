@@ -22,26 +22,53 @@ public:
   ~DataSet();
 
   void AddDomain(vtkm::cont::DataSet data_set, vtkm::Id domain_id); 
+
   void GetDomain(const vtkm::Id index, 
                  vtkm::cont::DataSet &data_set, 
                  vtkm::Id &domain_id); 
+
+  // set cycle meta data
   void SetCycle(const vtkm::UInt64 cycle); 
   vtkm::UInt64 GetCycle() const; 
   vtkm::cont::DataSet& GetDomain(const vtkm::Id index); 
   vtkm::cont::DataSet& GetDomainById(const vtkm::Id domain_id); 
+
+  // check to see of field exists in at least one domain on this rank
+  bool FieldExists(const std::string &field_name) const;
+  // check to see if this field exists in at least one domain on any rank
+  bool GlobalFieldExists(const std::string &field_name) const;
     
   vtkm::cont::Field GetField(const std::string &field_name, 
                              const vtkm::Id domain_index); 
+  // returns the number of domains on this rank
   vtkm::Id GetNumberOfDomains() const;
+  // returns the number of domains on all ranks
   vtkm::Id GetGlobalNumberOfDomains() const;
+  // returns the union of all domains bounds on this rank
   vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
+  // returns the unioin of all abounds on all ranks
   vtkm::Bounds GetGlobalBounds(vtkm::Id coordinate_system_index = 0) const;
+  // returns a bounds of a single domain
   vtkm::Bounds GetDomainBounds(const int &domain_index,
                                vtkm::Id coordinate_system_index = 0) const;
+
+  // returns the range of the scalar field across domains in this rank 
+  // If the field does not exist, the call returns an array of 0 
+  // throws an error if the number of components in different domains
+  // do not match
+  vtkm::cont::ArrayHandle<vtkm::Range> GetRange(const std::string &field_name) const;
+  // returns the range of the scalar field across all ranks 
+  // If the field does not exist, the call returns an array of 0 
+  // throws an error if the number of components in different domains
+  // do not match
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string &field_name) const;
-  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const vtkm::Id index) const;
+ 
+  // returns the a list of domain ids on this rank
   std::vector<vtkm::Id> GetDomainIds() const;
+
+  // add a scalar field to this data set with a constant value
   void AddConstantPointField(const vtkm::Float32 value, const std::string fieldname);
+
   bool HasDomainId(const vtkm::Id &domain_id) const;
   /*! \brief IsStructured returns true if all domains, globally,
    *         are stuctured data sets of the same topological dimension. 

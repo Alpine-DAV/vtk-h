@@ -10,6 +10,7 @@ class RayTracer : public Renderer
 public:
   RayTracer();
   virtual ~RayTracer();
+  std::string GetName() const override;
   static Renderer::vtkmCanvasPtr GetNewCanvas(int width = 1024, int height = 1024);
 };
 

@@ -76,16 +76,12 @@ Clip::SetPlaneClip(const double origin[3], const double normal[3])
 
 void Clip::PreExecute() 
 {
-
-  if(m_map_fields.size() == 0)
-  {
-    this->MapAllFields(); 
-  }
+  Filter::PreExecute();
 }
 
 void Clip::PostExecute()
 {
-
+  Filter::PostExecute();
 }
 
 void Clip::DoExecute()
@@ -108,11 +104,6 @@ void Clip::DoExecute()
         vtkm::Id cell_set_index = dom.GetCellSetIndex(m_cell_set);
         m_internals->m_clipper.SetActiveCellSetIndex(cell_set_index);
       }
-      else
-      {
-        std::cout<<"Clip: cell set "<<m_cell_set<<" not present. Skipping dom\n";
-        continue;
-      }
     }
 
     vtkm::filter::Result res = m_internals->m_clipper.Execute(dom);
@@ -121,10 +112,14 @@ void Clip::DoExecute()
     {
       m_internals->m_clipper.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
-    this->PropagateMetadata();
     this->m_output->AddDomain(res.GetDataSet(), domain_id);
-    
   }
+}
+
+std::string
+Clip::GetName() const
+{
+  return "vtkh::Clip";
 }
 
 } //  namespace vtkh

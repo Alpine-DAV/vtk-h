@@ -132,7 +132,7 @@ Renderer::Composite(const int &num_images)
 void 
 Renderer::PreExecute() 
 {
-  if(!m_range.IsNonEmpty())
+  if(!m_range.IsNonEmpty() && m_input->GlobalFieldExists(m_field_name))
   {
     // we have not been given a range, so ask the data set
     vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
@@ -141,6 +141,13 @@ Renderer::PreExecute()
     // current vtkm renderers only supports single component scalar fields
     //
     assert(num_components == 1);
+    if(num_components != 1)
+    {
+      std::stringstream msg;
+      msg<<"Renderer '"<<this->GetName()<<"' cannot render a field with ";
+      msg<<"'"<<num_components<<"' components. Field must be a scalar field.";
+      throw Error(msg.str());
+    }
 
     vtkm::Range global_range = ranges.GetPortalControl().Get(0);
     // a min or max may be been set by the user, check to see
@@ -200,6 +207,12 @@ Renderer::DoExecute()
     vtkm::cont::DataSet data_set; 
     vtkm::Id domain_id;
     m_input->GetDomain(dom, data_set, domain_id);
+
+    if(!data_set.HasField(m_field_name))
+    {
+      continue;
+    }
+
     const vtkm::cont::DynamicCellSet &cellset = data_set.GetCellSet();
     const vtkm::cont::Field &field = data_set.GetField(m_field_name);
     const vtkm::cont::CoordinateSystem &coords = data_set.GetCoordinateSystem();

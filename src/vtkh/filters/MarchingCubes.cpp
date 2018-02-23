@@ -48,8 +48,11 @@ MarchingCubes::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
+
 void MarchingCubes::PreExecute() 
 {
+  Filter::PreExecute();
+
   if(m_levels != -1) {
     vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
     float length = scalar_range.Length();
@@ -65,15 +68,11 @@ void MarchingCubes::PreExecute()
   
   assert(m_iso_values.size() > 0);
   assert(m_field_name != "");
-  if(m_map_fields.size() == 0)
-  {
-    this->MapAllFields(); 
-  }
 }
 
 void MarchingCubes::PostExecute()
 {
-
+  Filter::PostExecute();
 }
 
 bool 
@@ -107,6 +106,7 @@ void MarchingCubes::DoExecute()
   int valid = 0;
   for(int i = 0; i < num_domains; ++i)
   {
+    
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
@@ -127,8 +127,12 @@ void MarchingCubes::DoExecute()
     m_output->AddDomain(res.GetDataSet(), domain_id);
   }
 
-  this->PropagateMetadata();
-  
+}
+
+std::string
+MarchingCubes::GetName() const
+{
+  return "vtkh::MarchingCubes";
 }
 
 } //  namespace vtkh

@@ -10,61 +10,32 @@ namespace vtkh
 class Filter
 {
 public:
-  Filter() 
-  { 
-    m_input = nullptr; 
-    m_output = nullptr; 
-  }
+  Filter();
+  virtual ~Filter();
+  void SetInput(DataSet *input);
+  virtual std::string GetName() const = 0;
 
-  virtual ~Filter() { };
-  void SetInput(DataSet *input) { m_input = input; }
-  DataSet* GetOutput() { return m_output; }
-  DataSet* Update()
-  {
-    PreExecute();
-    DoExecute();
-    PostExecute();
-    return m_output;
-  }
+  DataSet* GetOutput();
+  DataSet* Update();
 
-  void AddMapField(const std::string &field_name)
-  {
-    m_map_fields.push_back(field_name);
-  }
+  void AddMapField(const std::string &field_name);
 
-  void ClearMapFields()
-  {
-    m_map_fields.clear();  
-  }
+  void ClearMapFields();
 
 protected:
   virtual void DoExecute() = 0;
-  virtual void PreExecute() {};
-  virtual void PostExecute() {};
+  virtual void PreExecute();
+
+  virtual void PostExecute();
 
   std::vector<std::string> m_map_fields;
 
   DataSet *m_input;
   DataSet *m_output;
 
-  void MapAllFields()
-  {
-    if(m_input->GetNumberOfDomains() > 0)
-    {
-      vtkm::cont::DataSet dom = m_input->GetDomain(0);
-      vtkm::IdComponent num_fields = dom.GetNumberOfFields();  
-      for(vtkm::IdComponent i = 0; i < num_fields; ++i)
-      {
-        std::string field_name = dom.GetField(i).GetName();
-        m_map_fields.push_back(field_name);
-      }
-    }
-  }
+  void MapAllFields();
 
-  void PropagateMetadata()
-  {
-    m_output->SetCycle(m_input->GetCycle());
-  }
+  void PropagateMetadata();
 };
 
 } //namespace vtkh
