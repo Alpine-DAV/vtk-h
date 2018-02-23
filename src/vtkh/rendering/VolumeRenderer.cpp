@@ -371,4 +371,11 @@ VolumeRenderer::FindVisibilityOrdering()
 
   } // for each camera
 }
+
+std::string
+VolumeRenderer::GetName() const
+{
+  return "vtkh::VolumeRenderer";
+}
+
 } // namespace vtkh

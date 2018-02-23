@@ -121,4 +121,10 @@ void Clip::DoExecute()
   }
 }
 
+std::string
+Clip::GetName() const
+{
+  return "vtkh::Clip";
+}
+
 } //  namespace vtkh

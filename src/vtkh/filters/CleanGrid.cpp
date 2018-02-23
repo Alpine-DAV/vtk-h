@@ -54,4 +54,10 @@ CleanGrid::PostExecute()
   Filter::PostExecute();
 }
 
+std::string 
+CleanGrid::GetName() const
+{
+  return "vtkh::CleanGrid";
+}
+
 } // namespace vtkh

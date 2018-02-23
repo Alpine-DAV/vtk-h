@@ -186,4 +186,10 @@ void Threshold::DoExecute()
   }
 }
 
+std::string
+Threshold::GetName() const
+{
+  return "vtkh::Threshold";
+}
+
 } //  namespace vtkh

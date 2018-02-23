@@ -449,4 +449,10 @@ Slice::PostExecute()
   Filter::PostExecute();
 }
 
+std::string
+Slice::GetName() const 
+{
+  return "vtkh::Slice";
+}
+
 } // namespace vtkh

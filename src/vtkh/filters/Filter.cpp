@@ -1,4 +1,5 @@
 #include <vtkh/filters/Filter.hpp>
+#include <vtkh/Error.hpp>
 
 namespace vtkh
 {
@@ -49,10 +50,18 @@ Filter::ClearMapFields()
 void 
 Filter::PreExecute()
 {
+  if(m_input == nullptr)
+  {
+    std::stringstream msg;
+    msg<<"Input for filter "<<this->GetName()<<" is null.";
+    throw Error(msg.str());
+  }
+
   if(m_map_fields.size() == 0)
   {
     this->MapAllFields(); 
   }
+  
 };
 
 void 

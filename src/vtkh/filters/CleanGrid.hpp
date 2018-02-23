@@ -14,6 +14,7 @@ class CleanGrid : public Filter
 public:
   CleanGrid(); 
   virtual ~CleanGrid(); 
+  std::string GetName() const override;
 protected:
   void PreExecute() override;
   void PostExecute() override;

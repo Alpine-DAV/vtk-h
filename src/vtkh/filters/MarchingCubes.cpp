@@ -129,4 +129,10 @@ void MarchingCubes::DoExecute()
 
 }
 
+std::string
+MarchingCubes::GetName() const
+{
+  return "vtkh::MarchingCubes";
+}
+
 } //  namespace vtkh

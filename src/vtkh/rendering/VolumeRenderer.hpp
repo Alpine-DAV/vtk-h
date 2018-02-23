@@ -11,6 +11,7 @@ class VolumeRenderer : public Renderer
 public:
   VolumeRenderer();
   virtual ~VolumeRenderer();
+  std::string GetName() const override;
   void SetNumberOfSamples(const int num_samples);
   static Renderer::vtkmCanvasPtr GetNewCanvas(int width = 1024, int height = 1024);
 

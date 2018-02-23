@@ -79,4 +79,10 @@ MeshRenderer::GetNewCanvas(int width, int height)
   return std::make_shared<vtkm::rendering::CanvasRayTracer>(width, height);
 }
 
+std::string
+MeshRenderer::GetName() const
+{
+  return "vtkh::MeshRenderer";
+}
+
 } // namespace vtkh
