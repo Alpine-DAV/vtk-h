@@ -1,5 +1,5 @@
-#ifndef VTK_H_MARCHING_CUBES_HPP
-#define VTK_H_MARCHING_CUBES_HPP
+#ifndef VTK_H_POINT_AVERAGE_HPP
+#define VTK_H_POINT_AVERAGE_HPP
 
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
