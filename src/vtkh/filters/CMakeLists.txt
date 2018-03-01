@@ -7,6 +7,7 @@ set(Headers
   CleanGrid.hpp
   Clip.hpp
   MarchingCubes.hpp
+  PointAverage.hpp  
   Threshold.hpp
   Slice.hpp
   )
@@ -16,6 +17,7 @@ set(Sources
   CleanGrid.cpp
   Clip.cpp
   MarchingCubes.cpp
+  PointAverage.cpp
   Threshold.cpp
   Slice.cpp
   )
