@@ -6,6 +6,7 @@ set(Headers
   Filter.hpp
   CleanGrid.hpp
   Clip.hpp
+  ClipField.hpp
   MarchingCubes.hpp
   PointAverage.hpp  
   Threshold.hpp
@@ -16,6 +17,7 @@ set(Sources
   Filter.cpp
   CleanGrid.cpp
   Clip.cpp
+  ClipField.cpp
   MarchingCubes.cpp
   PointAverage.cpp
   Threshold.cpp
