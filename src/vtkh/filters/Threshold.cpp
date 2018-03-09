@@ -1,5 +1,6 @@
 #include "Threshold.hpp"
 #include <vtkh/Error.hpp>
+#include <vtkh/filters/CleanGrid.hpp>
 
 
 #include <vtkm/cont/CellSetPermutation.h>
@@ -158,8 +159,7 @@ void Threshold::PostExecute()
 void Threshold::DoExecute()
 {
   
-  this->m_output = new DataSet();
-
+  DataSet temp_data;
   const int num_domains = this->m_input->GetNumberOfDomains(); 
 
   vtkm::filter::Threshold thresholder;
@@ -181,9 +181,14 @@ void Threshold::DoExecute()
 
     vtkm::cont::DataSet data_set = res.GetDataSet();
     detail::StripPermutation(data_set);
-    this->m_output->AddDomain(data_set, domain_id);
-    
+    temp_data.AddDomain(data_set, domain_id);
   }
+
+  CleanGrid cleaner; 
+  cleaner.SetInput(&temp_data);
+  cleaner.Update();
+  this->m_output = cleaner.GetOutput();
+
 }
 
 std::string

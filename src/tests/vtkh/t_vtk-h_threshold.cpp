@@ -39,8 +39,6 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
 
   thresher.SetUpperThreshold(upper_bound);
   thresher.SetLowerThreshold(lower_bound);
-  thresher.AddMapField("point_data");
-  thresher.AddMapField("cell_data");
   thresher.Update();
   vtkh::DataSet *output = thresher.GetOutput();
   vtkm::Bounds bounds = output->GetGlobalBounds();
@@ -55,7 +53,7 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
                                                           "threshold");  
   vtkh::RayTracer tracer;
   tracer.SetInput(output);
-  tracer.SetField("cell_data"); 
+  tracer.SetField("point_data"); 
 
   vtkh::Scene scene;
   scene.AddRender(render);
