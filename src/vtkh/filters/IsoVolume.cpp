@@ -1,6 +1,7 @@
 #include "IsoVolume.hpp"
 
 #include <vtkh/filters/ClipField.hpp>
+#include <vtkh/filters/CleanGrid.hpp>
 
 namespace vtkh 
 {
@@ -56,11 +57,17 @@ void IsoVolume::DoExecute()
   min_clip.SetField(m_field_name);
   min_clip.SetClipValue(m_range.Min);
   min_clip.Update();
-  this->m_output = min_clip.GetOutput();
+
+  delete clipped;
+  DataSet *iso = min_clip.GetOutput();
+  CleanGrid cleaner; 
+  cleaner.SetInput(iso);
+  cleaner.Update();
+  delete iso;
+  this->m_output = cleaner.GetOutput();
   
   vtkm::cont::ArrayHandle<vtkm::Range> r=  m_output->GetGlobalRange(m_field_name);
   std::cout<<"Out range "<<r.GetPortalControl().Get(0)<<"\n";
-  delete clipped;
 }
 
 std::string
