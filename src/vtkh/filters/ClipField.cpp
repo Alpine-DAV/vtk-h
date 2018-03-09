@@ -6,7 +6,8 @@ namespace vtkh
 {
 
 ClipField::ClipField()
-  : m_clip_value(0.0)
+  : m_clip_value(0.0),
+    m_invert(false)
 {
 
 }
@@ -20,6 +21,12 @@ void
 ClipField::SetClipValue(const vtkm::Float64 clip_value)
 {
   m_clip_value = clip_value;
+}
+
+void 
+ClipField::SetInvertClip(const bool invert)
+{
+  m_invert = invert;
 }
 
 void 
@@ -49,6 +56,7 @@ void ClipField::DoExecute()
 
   vtkm::filter::ClipWithField clipper;
   clipper.SetClipValue(m_clip_value);
+  clipper.SetInvertClip(m_invert);
 
   for(int i = 0; i < num_domains; ++i)
   {

@@ -1,0 +1,72 @@
+#include "IsoVolume.hpp"
+
+#include <vtkh/filters/ClipField.hpp>
+
+namespace vtkh 
+{
+
+IsoVolume::IsoVolume()
+{
+
+}
+
+IsoVolume::~IsoVolume()
+{
+
+}
+
+void 
+IsoVolume::SetRange(const vtkm::Range range)
+{
+  m_range = range;
+}
+
+void 
+IsoVolume::SetField(const std::string field_name)
+{
+  m_field_name = field_name;
+}
+
+void 
+IsoVolume::PreExecute() 
+{
+  Filter::PreExecute();
+}
+
+void 
+IsoVolume::PostExecute()
+{
+  Filter::PostExecute();
+}
+
+void IsoVolume::DoExecute()
+{
+  
+  ClipField max_clip;
+  max_clip.SetInput(this->m_input);
+  max_clip.SetField(m_field_name);
+  max_clip.SetClipValue(m_range.Max);
+  max_clip.SetInvertClip(true);
+  max_clip.Update();
+
+  DataSet *clipped = max_clip.GetOutput();
+  clipped->PrintSummary(std::cout);
+  ClipField min_clip;
+  min_clip.SetInput(clipped);
+  min_clip.SetField(m_field_name);
+  min_clip.SetClipValue(m_range.Min);
+  min_clip.Update();
+  this->m_output = min_clip.GetOutput();
+  
+  vtkm::cont::ArrayHandle<vtkm::Range> r=  m_output->GetGlobalRange(m_field_name);
+  std::cout<<"Out range "<<r.GetPortalControl().Get(0)<<"\n";
+  delete clipped;
+}
+
+std::string
+IsoVolume::GetName() const
+{
+  return "vtkh::IsoVolume";
+}
+
+} //  namespace vtkh
