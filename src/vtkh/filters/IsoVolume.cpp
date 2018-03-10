@@ -51,7 +51,7 @@ void IsoVolume::DoExecute()
   max_clip.Update();
 
   DataSet *clipped = max_clip.GetOutput();
-  clipped->PrintSummary(std::cout);
+  
   ClipField min_clip;
   min_clip.SetInput(clipped);
   min_clip.SetField(m_field_name);
@@ -66,8 +66,6 @@ void IsoVolume::DoExecute()
   delete iso;
   this->m_output = cleaner.GetOutput();
   
-  vtkm::cont::ArrayHandle<vtkm::Range> r=  m_output->GetGlobalRange(m_field_name);
-  std::cout<<"Out range "<<r.GetPortalControl().Get(0)<<"\n";
 }
 
 std::string
