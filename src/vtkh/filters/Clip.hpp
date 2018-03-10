@@ -18,6 +18,7 @@ public:
   void SetPlaneClip(const double origin[3], const double normal[3]);
   void SetCellSetIndex(vtkm::Id index);
   void SetCellSet(const std::string &cell_set);
+  void SetInvertClip(bool invert);
 protected:
   void PreExecute() override;
   void PostExecute() override;
@@ -26,6 +27,7 @@ protected:
   struct InternalsType;
   std::shared_ptr<InternalsType> m_internals;
   std::string m_cell_set;
+  bool m_invert;
 };
 
 } //namespace vtkh

@@ -330,9 +330,9 @@ DataSet::GetGlobalRange(const std::string &field_name) const
 {
   vtkm::cont::ArrayHandle<vtkm::Range> range;
   range = GetRange(field_name);
-  vtkm::Id num_components = range.GetNumberOfValues();
 
 #ifdef PARALLEL
+  vtkm::Id num_components = range.GetNumberOfValues();
   MPI_Comm mpi_comm = vtkh::GetMPIComm();
   //
   // it is possible to have an empty dataset at one of the ranks

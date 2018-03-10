@@ -1,5 +1,6 @@
 #include "Clip.hpp"
 
+#include <vtkh/filters/CleanGrid.hpp>
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 
 namespace vtkh 
@@ -13,7 +14,8 @@ struct Clip::InternalsType
 };
 
 Clip::Clip()
-  : m_internals(new InternalsType)
+  : m_internals(new InternalsType),
+    m_invert(false)
 {
 
 }
@@ -27,6 +29,12 @@ void
 Clip::SetCellSet(const std::string &cell_set)
 {
   m_cell_set = cell_set;
+}
+
+void 
+Clip::SetInvertClip(bool invert)
+{
+  m_invert = invert;
 }
 
 void 
@@ -87,10 +95,10 @@ void Clip::PostExecute()
 void Clip::DoExecute()
 {
   
-  this->m_output = new DataSet();
+  DataSet data_set;
 
   const int num_domains = this->m_input->GetNumberOfDomains(); 
-
+  m_internals->m_clipper.SetInvertClip(m_invert);
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -112,8 +120,13 @@ void Clip::DoExecute()
     {
       m_internals->m_clipper.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
-    this->m_output->AddDomain(res.GetDataSet(), domain_id);
+   data_set.AddDomain(res.GetDataSet(), domain_id);
   }
+   
+  CleanGrid cleaner; 
+  cleaner.SetInput(&data_set);
+  cleaner.Update();
+  this->m_output = cleaner.GetOutput();
 }
 
 std::string

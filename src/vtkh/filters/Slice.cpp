@@ -257,7 +257,6 @@ public:
       
     }
 
-    const vtkm::Id shapes = num_cells;
     const vtkm::Id conn_size = num_cells * 3;
 
     // calculate merged offsets for all domains
@@ -413,7 +412,6 @@ Slice::DoExecute()
     // to the input data set, since it might be used in other places
     for(int i = 0; i < num_domains; ++i)
     {
-      vtkm::Id domain_id;
       vtkm::cont::DataSet &dom = temp_ds.GetDomain(i);
 
       vtkm::cont::ArrayHandle<vtkm::Float32> slice_field;
