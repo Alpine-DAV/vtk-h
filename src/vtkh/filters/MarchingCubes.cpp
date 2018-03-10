@@ -101,7 +101,8 @@ void MarchingCubes::DoExecute()
   vtkm::filter::MarchingCubes marcher;
 
   marcher.SetIsoValues(m_iso_values);
-  marcher.SetMergeDuplicatePoints(true); 
+  marcher.SetMergeDuplicatePoints(true);
+  marcher.SetActiveField(m_field_name);
   const int num_domains = this->m_input->GetNumberOfDomains(); 
   int valid = 0;
   for(int i = 0; i < num_domains; ++i)
@@ -119,12 +120,8 @@ void MarchingCubes::DoExecute()
       continue;
     }
     valid++;
-    vtkm::filter::Result res = marcher.Execute(dom, m_field_name);
-    for(size_t f = 0; f < m_map_fields.size(); ++f)
-    {
-      marcher.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
-    }
-    m_output->AddDomain(res.GetDataSet(), domain_id);
+    auto dataset = marcher.Execute(dom, this->GetFieldSelection());
+    m_output->AddDomain(dataset, domain_id);
   }
 
 }

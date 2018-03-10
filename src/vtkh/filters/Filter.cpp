@@ -91,4 +91,17 @@ Filter::PropagateMetadata()
   m_output->SetCycle(m_input->GetCycle());
 }
 
+
+vtkm::filter::FieldSelection
+Filter::GetFieldSelection() const
+{
+  vtkm::filter::FieldSelection sel;
+  for (const auto& str : this->m_map_fields)
+  {
+    sel.AddField(str);
+  }
+  return sel;
+}
+
+
 } //namespace vtkh
