@@ -37,13 +37,8 @@ CleanGrid::DoExecute()
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-
-    vtkm::filter::Result res = cleaner.Execute(dom);
-    for(size_t f = 0; f < m_map_fields.size(); ++f)
-    {
-      cleaner.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
-    }
-    this->m_output->AddDomain(res.GetDataSet(), domain_id);
+    auto dataset = cleaner.Execute(dom, this->GetFieldSelection());
+    this->m_output->AddDomain(dataset, domain_id);
   }
 
 }

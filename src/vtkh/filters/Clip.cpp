@@ -114,13 +114,8 @@ void Clip::DoExecute()
       }
     }
 
-    vtkm::filter::Result res = m_internals->m_clipper.Execute(dom);
-
-    for(size_t f = 0; f < m_map_fields.size(); ++f)
-    {
-      m_internals->m_clipper.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
-    }
-   data_set.AddDomain(res.GetDataSet(), domain_id);
+    auto dataset = m_internals->m_clipper.Execute(dom, this->GetFieldSelection());
+    data_set.AddDomain(dataset, domain_id);
   }
    
   CleanGrid cleaner; 

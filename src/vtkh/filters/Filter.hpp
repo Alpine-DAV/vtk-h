@@ -3,6 +3,7 @@
 
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
+#include <vtkm/filter/FieldSelection.h>
 
 namespace vtkh
 {
@@ -25,8 +26,14 @@ public:
 protected:
   virtual void DoExecute() = 0;
   virtual void PreExecute();
-
   virtual void PostExecute();
+
+  //@{
+  /// These are all temporary methods added to gets things building again
+  /// while we totally deprecate vtk-h compnents
+  ///
+  vtkm::filter::FieldSelection GetFieldSelection() const;
+  //@}
 
   std::vector<std::string> m_map_fields;
 
