@@ -1,7 +1,6 @@
 #include <vtkh/filters/MarchingCubes.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
 #include <vtkm/filter/MarchingCubes.h>
-#include <mutex>
 
 namespace vtkh 
 {
@@ -93,36 +92,27 @@ MarchingCubes::ContainsIsoValues(vtkm::cont::DataSet &dom)
   }
 
   return false;
-
 }
 
 void MarchingCubes::DoExecute()
 {
   this->m_output = new DataSet();
-  vtkm::filter::MarchingCubes marcher;
 
-  marcher.SetIsoValues(m_iso_values);
-  marcher.SetMergeDuplicatePoints(true);
-  marcher.SetActiveField(m_field_name);
   const int num_domains = this->m_input->GetNumberOfDomains(); 
   int valid = 0;
 
-  std::cout<<"Domain Count: "<<num_domains<<std::endl;
-  std::mutex m;
-
-#pragma omp parallel for
+  #pragma omp parallel for  
   for(int i = 0; i < num_domains; ++i)
   {
+    vtkm::filter::MarchingCubes marcher;
+    marcher.SetIsoValues(m_iso_values);
+    marcher.SetMergeDuplicatePoints(true);       
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
+
     this->m_input->GetDomain(i, dom, domain_id);
-
-    if(!dom.HasField(m_field_name))
-    {
-      continue;
-    }
-
     bool valid_domain = ContainsIsoValues(dom);
+
     if(!valid_domain)
     {
       // vtkm does not like it if we ask it to contour
@@ -132,19 +122,17 @@ void MarchingCubes::DoExecute()
     }
     valid++;
     vtkm::filter::Result res = marcher.Execute(dom, m_field_name);
+
     for(size_t f = 0; f < m_map_fields.size(); ++f)
     {
       marcher.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
-#ifdef VTKH_USE_OPENMP
-    m.lock();
-#endif
-    m_output->AddDomain(res.GetDataSet(), domain_id);
-#ifdef VTKH_USE_OPENMP    
-    m.unlock();
-#endif    
-  }
 
+    #pragma omp critical
+    {
+      m_output->AddDomain(res.GetDataSet(), domain_id);
+    }
+  }
 }
 
 std::string

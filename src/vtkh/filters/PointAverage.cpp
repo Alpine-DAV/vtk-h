@@ -42,23 +42,22 @@ void PointAverage::DoExecute()
 {
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-  
+
+  #pragma omp parallel for
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
 
-    if(!dom.HasField(m_field_name))
-    {
-      continue;
-    }
-
     vtkm::filter::PointAverage avg;
     avg.SetOutputFieldName(m_output_field_name);
-    avg.SetActiveField(m_field_name);
-    auto dataset = avg.Execute(dom);
-    m_output->AddDomain(dataset, domain_id);
+    vtkm::filter::Result res = avg.Execute(dom, m_field_name);
+
+    #pragma omp critical
+    {
+      m_output->AddDomain(res.GetDataSet(), domain_id);
+    }
   }
 }
 
