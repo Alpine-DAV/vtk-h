@@ -91,10 +91,7 @@ TEST(vtkh_clip, vtkh_sphere_clip)
   //
   // chop the data set at the center
   //
-  vtkm::Bounds clip_bounds = data_set.GetGlobalBounds();
-  vtkm::Vec<vtkm::Float64, 3> vec_center = clip_bounds.Center();
     
-  //double center[3] = {vec_center[0], vec_center[1], vec_center[2]};
   double center[3] = {0,0,0};
 
   double radius = base_size * num_blocks * 0.5f;

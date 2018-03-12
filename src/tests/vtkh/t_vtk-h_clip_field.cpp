@@ -8,9 +8,10 @@
 
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
-#include <vtkh/filters/Threshold.hpp>
+#include <vtkh/filters/ClipField.hpp>
 #include <vtkh/rendering/RayTracer.hpp>
 #include <vtkh/rendering/Scene.hpp>
+
 #include "t_test_utils.hpp"
 
 #include <iostream>
@@ -18,47 +19,49 @@
 
 
 //----------------------------------------------------------------------------
-TEST(vtkh_threshold, vtkh_serial_threshold)
+TEST(vtkh_clip_field, vtkh_clip)
 {
   vtkh::DataSet data_set;
  
   const int base_size = 32;
-  const int num_blocks = 2; 
+  const int num_blocks = 1; 
   
   for(int i = 0; i < num_blocks; ++i)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
   }
+  
+  vtkh::ClipField clipper;
+  
+  clipper.SetClipValue(10.);
+  clipper.SetField("point_data");
+  clipper.SetInput(&data_set);
+  clipper.Update();
 
-  vtkh::Threshold thresher;
-  thresher.SetInput(&data_set);
-  thresher.SetField("point_data"); 
+  vtkh::DataSet *clip_output = clipper.GetOutput();
 
-  double upper_bound = (float)base_size * (float)num_blocks * 0.5f;
-  double lower_bound = 0;
-
-  thresher.SetUpperThreshold(upper_bound);
-  thresher.SetLowerThreshold(lower_bound);
-  thresher.Update();
-  vtkh::DataSet *output = thresher.GetOutput();
-  vtkm::Bounds bounds = output->GetGlobalBounds();
+  vtkm::Bounds bounds = clip_output->GetGlobalBounds();
 
   vtkm::rendering::Camera camera;
-  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
+  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
+  float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
   vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
                                                           512, 
                                                           camera, 
-                                                          *output, 
-                                                          "threshold");  
-  vtkh::RayTracer tracer;
-  tracer.SetInput(output);
-  tracer.SetField("point_data"); 
-
+                                                          *clip_output, 
+                                                          "clip_field",
+                                                          bg_color);  
+   
   vtkh::Scene scene;
   scene.AddRender(render);
-  scene.AddRenderer(&tracer);
-  scene.Render();
 
-  delete output; 
+  vtkh::RayTracer tracer;
+  tracer.SetInput(clip_output);
+  tracer.SetField("point_data"); 
+
+  scene.AddRenderer(&tracer);  
+  scene.Render();
+ 
+  delete clip_output; 
 }

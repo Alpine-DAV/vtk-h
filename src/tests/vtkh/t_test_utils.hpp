@@ -46,7 +46,6 @@ SpatialDivision GetBlock(int block, int num_blocks, SpatialDivision total_size)
 
   std::vector<SpatialDivision> divs; 
   divs.push_back(total_size);
-  int assigned = 1;
   int avail = num_blocks - 1;
   int current_dim = 0;
   int missed_splits = 0;

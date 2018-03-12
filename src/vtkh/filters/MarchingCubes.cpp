@@ -102,8 +102,9 @@ void MarchingCubes::DoExecute()
   vtkm::filter::MarchingCubes marcher;
 
   marcher.SetIsoValues(m_iso_values);
-  marcher.SetMergeDuplicatePoints(true); 
-  int num_domains = this->m_input->GetNumberOfDomains(); 
+  marcher.SetMergeDuplicatePoints(true);
+  marcher.SetActiveField(m_field_name);
+  const int num_domains = this->m_input->GetNumberOfDomains(); 
   int valid = 0;
 
   std::cout<<"Domain Count: "<<num_domains<<std::endl;
