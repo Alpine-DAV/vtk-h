@@ -171,7 +171,10 @@ void Threshold::DoExecute()
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-
+    if(!dom.HasField(m_field_name))
+    {
+      continue;
+    }
     auto data_set = thresholder.Execute(dom);
     detail::StripPermutation(data_set);
     temp_data.AddDomain(data_set, domain_id);

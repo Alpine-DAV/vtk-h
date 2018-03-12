@@ -54,7 +54,7 @@ void MarchingCubes::PreExecute()
 {
   Filter::PreExecute();
 
-  if(m_levels != -1) {
+  if(m_levels != -1 && m_input->GlobalFieldExists(m_field_name)) {
     vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
     float length = scalar_range.Length();
     float step = length / (m_levels + 1.f);
@@ -116,6 +116,12 @@ void MarchingCubes::DoExecute()
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
+
+    if(!dom.HasField(m_field_name))
+    {
+      continue;
+    }
+
     bool valid_domain = ContainsIsoValues(dom);
     if(!valid_domain)
     {
