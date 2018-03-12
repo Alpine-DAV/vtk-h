@@ -54,6 +54,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
+                t_vtk-h_empty_data
                 t_vtk-h_iso_volume
                 t_vtk-h_marching_cubes
                 t_vtk-h_threshold

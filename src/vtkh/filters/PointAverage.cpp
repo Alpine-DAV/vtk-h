@@ -49,6 +49,11 @@ void PointAverage::DoExecute()
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
 
+    if(!dom.HasField(m_field_name))
+    {
+      continue;
+    }
+
     vtkm::filter::PointAverage avg;
     avg.SetOutputFieldName(m_output_field_name);
     avg.SetActiveField(m_field_name);
