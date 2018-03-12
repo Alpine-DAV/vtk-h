@@ -91,7 +91,8 @@ if(MPI_FOUND)
     if(CUDA_FOUND)
          SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREV})
     else()
-         blt_add_target_compile_flags(TO vtkh_core_par FLAGS "-D PARALLEL")
+      blt_add_target_compile_flags(TO vtkh_core_par FLAGS "-D PARALLEL")
+      blt_add_target_compile_flags(TO vtkh_core_par FLAGS "-D VTKH_USE_OPENMP")
     endif()
     
 

@@ -1,6 +1,7 @@
 #include <vtkh/filters/MarchingCubes.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
 #include <vtkm/filter/MarchingCubes.h>
+#include <mutex>
 
 namespace vtkh 
 {
@@ -102,11 +103,15 @@ void MarchingCubes::DoExecute()
 
   marcher.SetIsoValues(m_iso_values);
   marcher.SetMergeDuplicatePoints(true); 
-  const int num_domains = this->m_input->GetNumberOfDomains(); 
+  int num_domains = this->m_input->GetNumberOfDomains(); 
   int valid = 0;
+
+  std::cout<<"Domain Count: "<<num_domains<<std::endl;
+  std::mutex m;
+
+#pragma omp parallel for
   for(int i = 0; i < num_domains; ++i)
   {
-    
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
@@ -124,7 +129,13 @@ void MarchingCubes::DoExecute()
     {
       marcher.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
     }
+#ifdef VTKH_USE_OPENMP
+    m.lock();
+#endif
     m_output->AddDomain(res.GetDataSet(), domain_id);
+#ifdef VTKH_USE_OPENMP    
+    m.unlock();
+#endif    
   }
 
 }

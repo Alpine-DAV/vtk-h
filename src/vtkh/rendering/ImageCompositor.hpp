@@ -3,6 +3,7 @@
 
 #include <vtkh/rendering/Image.hpp>
 #include <algorithm>
+#include <omp.h>
 
 namespace vtkh
 {
@@ -20,10 +21,14 @@ public:
     const int size = static_cast<int>(front.m_pixels.size() / 4); 
   
 #ifdef VTKH_USE_OPENMP
-    #pragma omp parallel for 
+    std::cout<<"OMP: "<<__FILE__<<" "<<__LINE__<<std::endl;
+    #pragma omp parallel for
 #endif
     for(int i = 0; i < size; ++i)
     {
+//        if (i==0) std::cout<<"NUMTHREADS= "<<omp_get_num_threads()<<std::endl;
+       //if (i == 0 || i == size-1 || i < 50) std::cout<<"thread= "<<omp_get_thread_num()<<std::endl;
+
       const int offset = i * 4;
       unsigned int alpha = front.m_pixels[offset + 3];
       const unsigned int opacity = 255 - alpha;
@@ -55,7 +60,8 @@ void ZBufferComposite(vtkh::Image &front, const vtkh::Image &image)
   const int size = static_cast<int>(front.m_depths.size()); 
 
 #ifdef vtkh_USE_OPENMP
-  #pragma omp parallel for 
+  std::cout<<"OMP: "<<__FILE__<<" "<<__LINE__<<std::endl;      
+  #pragma omp parallel for
 #endif
   for(int i = 0; i < size; ++i)
   {
@@ -123,6 +129,9 @@ void CombineImages(const std::vector<vtkh::Image> &images, std::vector<Pixel> &p
 
     const int image_size = images[i].GetNumberOfPixels(); 
     const int offset = i * image_size;
+#ifdef VTKH_USE_OPENMP
+    std::cout<<"OMP: "<<__FILE__<<" "<<__LINE__<<std::endl;          
+#endif
     #pragma omp parallel for
     for(int j = 0; j < image_size; ++j)
     {
@@ -144,6 +153,11 @@ void ZBufferBlend(std::vector<vtkh::Image> &images)
   const int num_images = static_cast<int>(images.size());
   std::vector<Pixel> pixels;
   CombineImages(images, pixels);
+
+#ifdef VTKH_USE_OPENMP  
+  std::cout<<"OMP: "<<__FILE__<<" "<<__LINE__<<std::endl;
+#endif
+  
   #pragma omp parallel for
   for(int i = 0; i < image_pixels; ++i)
   {
@@ -159,7 +173,9 @@ void ZBufferBlend(std::vector<vtkh::Image> &images)
     assert(pixel_id_0 == pixels[i].m_pixel_id);
   }
  
-
+#ifdef VTKH_USE_OPENMP  
+  std::cout<<"OMP: "<<__FILE__<<" "<<__LINE__<<std::endl;
+#endif
   #pragma omp parallel for
   for(int i = 0; i < image_pixels; ++i)
   {
