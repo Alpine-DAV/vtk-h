@@ -1,6 +1,7 @@
 #include "ClipField.hpp"
 
 #include <vtkm/filter/ClipWithField.h>
+#include <vtkm/filter/PointAverage.h>
 
 namespace vtkh 
 {
@@ -63,6 +64,25 @@ void ClipField::DoExecute()
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
+
+    if(!dom.HasField(m_field_name))
+    {
+      continue;
+    }
+    
+    //bool isCellAssoc = dom.GetField(m_field_name).GetAssociation() == 
+    //                   vtkm::cont::Field::ASSOC_CELL_SET; 
+    //if(isCellAssoc)
+    //{
+    //  vtkm::cont::DataSet tmp;
+    //  tmp.AddCellSet(dom.GetCellSet());
+    //  //std::string field_name = m_field_name + "_clip_point_centered";
+    //  vtkm::filter::PointAverage avg;
+    //  avg.SetOutputFieldName(m_field_name);
+    //  avg.SetActiveField(m_field_name);
+    //  auto temp = avg.Execute(dom);
+    //}
+      
 
     clipper.SetActiveField(m_field_name);
     auto dataset = clipper.Execute(dom, this->GetFieldSelection());
