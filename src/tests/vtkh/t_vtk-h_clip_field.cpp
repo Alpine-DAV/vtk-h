@@ -68,7 +68,7 @@ TEST(vtkh_clip_field, vtkh_clip)
 }
 
 //----------------------------------------------------------------------------
-TEST(vtkh_clip_field, vtkh_clip_cell_field)
+TEST(vtkh_clip_field, vtkh_clip_cell_centered)
 {
   vtkh::DataSet data_set;
  
@@ -80,18 +80,11 @@ TEST(vtkh_clip_field, vtkh_clip_cell_field)
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
   }
   
-  vtkh::Recenter recenter;
- 
-  recenter.SetField("cell_data");
-  recenter.SetInput(&data_set);
-  recenter.Update();
-
-  vtkh::DataSet *recenter_output = recenter.GetOutput();
   vtkh::ClipField clipper;
   
   clipper.SetClipValue(10.);
   clipper.SetField("cell_data");
-  clipper.SetInput(recenter_output);
+  clipper.SetInput(&data_set);
   clipper.Update();
 
   vtkh::DataSet *clip_output = clipper.GetOutput();
@@ -106,7 +99,7 @@ TEST(vtkh_clip_field, vtkh_clip_cell_field)
                                                           512, 
                                                           camera, 
                                                           *clip_output, 
-                                                          "clip_field",
+                                                          "clip_field_cell",
                                                           bg_color);  
    
   vtkh::Scene scene;
@@ -120,5 +113,5 @@ TEST(vtkh_clip_field, vtkh_clip_cell_field)
   scene.Render();
  
   delete clip_output; 
-  delete recenter_output; 
 }
+

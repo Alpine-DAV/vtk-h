@@ -52,11 +52,13 @@ public:
   vtkm::Bounds GetDomainBounds(const int &domain_index,
                                vtkm::Id coordinate_system_index = 0) const;
 
+  vtkm::cont::Field::AssociationEnum GetFieldAssociation(const std::string field_name,
+                                                         bool &valid_field) const;
   // returns the range of the scalar field across domains in this rank 
   // If the field does not exist, the call returns an array of 0 
   // throws an error if the number of components in different domains
   // do not match
-  vtkm::cont::ArrayHandle<vtkm::Range> GetRange(const std::string &field_name) const;
+  vtkm::cont::ArrayHandle<vtkm::Range> GetRange(const std::string &field_named) const;
   // returns the range of the scalar field across all ranks 
   // If the field does not exist, the call returns an array of 0 
   // throws an error if the number of components in different domains

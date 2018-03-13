@@ -1,7 +1,7 @@
 #include "ClipField.hpp"
 
 #include <vtkm/filter/ClipWithField.h>
-#include <vtkm/filter/PointAverage.h>
+#include <vtkh/filters/Recenter.hpp>
 
 namespace vtkh 
 {
@@ -58,6 +58,19 @@ void ClipField::DoExecute()
   vtkm::filter::ClipWithField clipper;
   clipper.SetClipValue(m_clip_value);
   clipper.SetInvertClip(m_invert);
+  bool valid_field = false;
+  bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
+                       vtkm::cont::Field::ASSOC_CELL_SET; 
+  bool delete_input = false;
+  if(valid_field && is_cell_assoc)
+  {
+    Recenter recenter;  
+    recenter.SetInput(m_input);
+    recenter.SetField(m_field_name);
+    recenter.Update();
+    m_input = recenter.GetOutput();
+    delete_input = true;
+  }
 
   for(int i = 0; i < num_domains; ++i)
   {
@@ -70,23 +83,13 @@ void ClipField::DoExecute()
       continue;
     }
     
-    //bool isCellAssoc = dom.GetField(m_field_name).GetAssociation() == 
-    //                   vtkm::cont::Field::ASSOC_CELL_SET; 
-    //if(isCellAssoc)
-    //{
-    //  vtkm::cont::DataSet tmp;
-    //  tmp.AddCellSet(dom.GetCellSet());
-    //  //std::string field_name = m_field_name + "_clip_point_centered";
-    //  vtkm::filter::PointAverage avg;
-    //  avg.SetOutputFieldName(m_field_name);
-    //  avg.SetActiveField(m_field_name);
-    //  auto temp = avg.Execute(dom);
-    //}
-      
-
     clipper.SetActiveField(m_field_name);
     auto dataset = clipper.Execute(dom, this->GetFieldSelection());
     this->m_output->AddDomain(dataset, domain_id);
+    if(delete_input)
+    {
+      delete m_input;
+    }
   }
 }
 

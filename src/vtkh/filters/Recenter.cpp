@@ -103,6 +103,7 @@ void Recenter::DoExecute()
         avg.SetActiveField(m_field_name);
         dataset = avg.Execute(dom);
       }
+
       vtkm::cont::Field recentered_field;
       recentered_field = vtkm::cont::Field(m_field_name, 
                                            dataset.GetField(out_name).GetAssociation(),
