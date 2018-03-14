@@ -1,4 +1,6 @@
+#include <vtkh/Error.hpp>
 #include <vtkh/filters/Recenter.hpp>
+
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/CellAverage.h>
 
@@ -6,6 +8,7 @@ namespace vtkh
 {
 
 Recenter::Recenter()
+ : m_assoc(vtkm::cont::Field::ASSOC_POINTS)
 {
 
 }
@@ -30,6 +33,17 @@ void Recenter::PreExecute()
 void Recenter::PostExecute()
 {
   Filter::PostExecute();
+}
+
+void Recenter::SetResultAssoc(vtkm::cont::Field::AssociationEnum assoc)
+{
+
+  if(assoc != vtkm::cont::Field::ASSOC_CELL_SET &&
+     assoc != vtkm::cont::Field::ASSOC_POINTS)
+  {
+    throw Error("Recenter can only recenter zonal and nodal fields");
+  }
+  m_assoc = assoc;
 }
 
 void Recenter::DoExecute()
@@ -83,32 +97,45 @@ void Recenter::DoExecute()
 
     if(temp.HasField(m_field_name))
     {
-      bool isCellAssoc = temp.GetField(m_field_name).GetAssociation() == 
-                         vtkm::cont::Field::ASSOC_CELL_SET; 
+      vtkm::cont::Field::AssociationEnum in_assoc = temp.GetField(m_field_name).GetAssociation(); 
+      bool is_cell_assoc = in_assoc == vtkm::cont::Field::ASSOC_CELL_SET; 
+      bool is_point_assoc = in_assoc == vtkm::cont::Field::ASSOC_POINTS; 
+
+      if(!is_cell_assoc && !is_point_assoc)
+      {
+        throw Error("Recenter: input field must be zonal or nodal");
+      }
 
       vtkm::cont::DataSet dataset;
       std::string out_name = m_field_name + "_out";
-
-      if(isCellAssoc)
+      if(in_assoc != m_assoc)
       {
-        vtkm::filter::PointAverage avg;
-        avg.SetOutputFieldName(out_name);
-        avg.SetActiveField(m_field_name);
-        dataset = avg.Execute(dom);
+        if(is_cell_assoc)
+        {
+          vtkm::filter::PointAverage avg;
+          avg.SetOutputFieldName(out_name);
+          avg.SetActiveField(m_field_name);
+          dataset = avg.Execute(dom);
+        }
+        else
+        {
+          vtkm::filter::CellAverage avg;
+          avg.SetOutputFieldName(out_name);
+          avg.SetActiveField(m_field_name);
+          dataset = avg.Execute(dom);
+        }
+
+        vtkm::cont::Field recentered_field;
+        recentered_field = vtkm::cont::Field(m_field_name, 
+                                             dataset.GetField(out_name).GetAssociation(),
+                                             dataset.GetField(out_name).GetData());
+        out_data.AddField(recentered_field);
       }
       else
       {
-        vtkm::filter::CellAverage avg;
-        avg.SetOutputFieldName(out_name);
-        avg.SetActiveField(m_field_name);
-        dataset = avg.Execute(dom);
+        // do nothing and pass the result
+        out_data.AddField(dom.GetField(m_field_name));
       }
-
-      vtkm::cont::Field recentered_field;
-      recentered_field = vtkm::cont::Field(m_field_name, 
-                                           dataset.GetField(out_name).GetAssociation(),
-                                           dataset.GetField(out_name).GetData());
-      out_data.AddField(recentered_field);
       
     }
     

@@ -82,7 +82,7 @@ TEST(vtkh_clip_field, vtkh_clip_cell_centered)
   
   vtkh::ClipField clipper;
   
-  clipper.SetClipValue(10.);
+  clipper.SetClipValue(.5);
   clipper.SetField("cell_data");
   clipper.SetInput(&data_set);
   clipper.Update();

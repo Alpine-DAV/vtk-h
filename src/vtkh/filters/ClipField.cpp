@@ -67,6 +67,7 @@ void ClipField::DoExecute()
     Recenter recenter;  
     recenter.SetInput(m_input);
     recenter.SetField(m_field_name);
+    recenter.SetResultAssoc(vtkm::cont::Field::ASSOC_POINTS); 
     recenter.Update();
     m_input = recenter.GetOutput();
     delete_input = true;
