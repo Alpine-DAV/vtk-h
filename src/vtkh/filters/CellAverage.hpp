@@ -1,5 +1,5 @@
-#ifndef VTK_H_POINT_AVERAGE_HPP
-#define VTK_H_POINT_AVERAGE_HPP
+#ifndef VTK_H_CELL_AVERAGE_HPP
+#define VTK_H_CELL_AVERAGE_HPP
 
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
@@ -8,11 +8,11 @@
 namespace vtkh
 {
 
-class PointAverage : public Filter
+class CellAverage : public Filter
 {
 public:
-  PointAverage(); 
-  virtual ~PointAverage(); 
+  CellAverage(); 
+  virtual ~CellAverage(); 
   std::string GetName() const override;
   void SetField(const std::string &field_name);
   void SetOutputField(const std::string &field_name);

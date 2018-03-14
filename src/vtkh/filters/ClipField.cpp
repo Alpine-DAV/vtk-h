@@ -1,6 +1,7 @@
 #include "ClipField.hpp"
 
 #include <vtkm/filter/ClipWithField.h>
+#include <vtkh/filters/Recenter.hpp>
 
 namespace vtkh 
 {
@@ -57,6 +58,20 @@ void ClipField::DoExecute()
   vtkm::filter::ClipWithField clipper;
   clipper.SetClipValue(m_clip_value);
   clipper.SetInvertClip(m_invert);
+  bool valid_field = false;
+  bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
+                       vtkm::cont::Field::ASSOC_CELL_SET; 
+  bool delete_input = false;
+  if(valid_field && is_cell_assoc)
+  {
+    Recenter recenter;  
+    recenter.SetInput(m_input);
+    recenter.SetField(m_field_name);
+    recenter.SetResultAssoc(vtkm::cont::Field::ASSOC_POINTS); 
+    recenter.Update();
+    m_input = recenter.GetOutput();
+    delete_input = true;
+  }
 
   for(int i = 0; i < num_domains; ++i)
   {
@@ -64,9 +79,18 @@ void ClipField::DoExecute()
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
 
+    if(!dom.HasField(m_field_name))
+    {
+      continue;
+    }
+    
     clipper.SetActiveField(m_field_name);
     auto dataset = clipper.Execute(dom, this->GetFieldSelection());
     this->m_output->AddDomain(dataset, domain_id);
+    if(delete_input)
+    {
+      delete m_input;
+    }
   }
 }
 

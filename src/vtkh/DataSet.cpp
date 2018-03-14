@@ -591,4 +591,119 @@ DataSet::GlobalFieldExists(const std::string &field_name) const
   return exists;
 }
 
+vtkm::cont::Field::AssociationEnum 
+DataSet::GetFieldAssociation(const std::string field_name, bool &valid_field) const
+{
+  valid_field = true;
+  if(!this->GlobalFieldExists(field_name))
+  {
+    valid_field = false; 
+    return vtkm::cont::Field::ASSOC_ANY;
+  }
+  
+  int assoc_id = -1; 
+  if(this->FieldExists(field_name))
+  {
+    const size_t num_domains = m_domains.size();
+    vtkm::Bounds bounds;
+
+    vtkm::cont::Field::AssociationEnum local_assoc;
+    for(size_t i = 0; i < num_domains; ++i)
+    {
+      vtkm::cont::DataSet dom = m_domains[i];
+      if(dom.HasField(field_name))
+      {
+        local_assoc = dom.GetField(field_name).GetAssociation();
+        if(local_assoc == vtkm::cont::Field::ASSOC_ANY)
+        {
+          assoc_id = 0;
+        }
+        else if ( local_assoc == vtkm::cont::Field::ASSOC_WHOLE_MESH)
+        {
+          assoc_id = 1;
+        }
+        else if ( local_assoc == vtkm::cont::Field::ASSOC_POINTS)
+        {
+          assoc_id = 2;
+        }
+        else if ( local_assoc == vtkm::cont::Field::ASSOC_CELL_SET)
+        {
+          assoc_id = 3;
+        }
+        else if ( local_assoc == vtkm::cont::Field::ASSOC_LOGICAL_DIM)
+        {
+          assoc_id = 4;
+        }
+        break;
+      }
+    }
+  }
+  
+#ifdef PARALLEL
+
+  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+
+
+  int *global_assocs = new int[vtkh::GetMPISize()];
+
+  MPI_Allgather(&assoc_id,
+                1,
+                MPI_INT,
+                global_assocs,
+                1,
+                MPI_INT,
+                mpi_comm);
+
+  int id = -1;
+
+  for(int i = 0; i < vtkh::GetMPISize(); ++i)
+  {
+    if(global_assocs[i] != -1)
+    {
+      if(id != -1 && global_assocs[i] != id)
+      {
+        std::stringstream msg;
+        msg<<"field "<< field_name
+           <<" has inconsistent associations";;
+        throw Error(msg.str());
+      }
+      else
+      {
+        id = std::max(id, global_assocs[i]);
+      }
+    }
+  }
+  assoc_id = id;
+  delete[] global_assocs;
+#endif
+
+  vtkm::cont::Field::AssociationEnum assoc;
+
+  if(assoc_id == 0)
+  {
+    assoc = vtkm::cont::Field::ASSOC_ANY;
+  }
+  else if ( assoc_id == 1)
+  {
+    assoc = vtkm::cont::Field::ASSOC_WHOLE_MESH;
+  }
+  else if ( assoc_id == 2)
+  {
+    assoc = vtkm::cont::Field::ASSOC_POINTS;
+  }
+  else if ( assoc_id == 3)
+  {
+    assoc = vtkm::cont::Field::ASSOC_CELL_SET;
+  }
+  else if ( assoc_id == 4)
+  {
+    assoc = vtkm::cont::Field::ASSOC_LOGICAL_DIM;
+  }
+  else
+  {
+    throw Error("Get association: unknow association");
+  }
+  return assoc;
+}
+
 } // namspace vtkh
