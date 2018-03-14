@@ -1,49 +1,48 @@
-#include <vtkh/filters/PointAverage.hpp>
-#include <vtkm/filter/PointAverage.h>
+#include <vtkh/filters/CellAverage.hpp>
+#include <vtkm/filter/CellAverage.h>
 
 namespace vtkh 
 {
 
-PointAverage::PointAverage()
+CellAverage::CellAverage()
 {
 
 }
 
-PointAverage::~PointAverage()
+CellAverage::~CellAverage()
 {
 
 }
 
 void 
-PointAverage::SetField(const std::string &field_name)
+CellAverage::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
 void 
-PointAverage::SetOutputField(const std::string &field_name)
+CellAverage::SetOutputField(const std::string &field_name)
 {
   m_output_field_name = field_name;
 }    
 
-void PointAverage::PreExecute() 
+void CellAverage::PreExecute() 
 {
   Filter::PreExecute();
   assert(m_field_name != "");
   assert(m_output_field_name != "");
 }
 
-void PointAverage::PostExecute()
+void CellAverage::PostExecute()
 {
   Filter::PostExecute();
 }
 
-void PointAverage::DoExecute()
+void CellAverage::DoExecute()
 {
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
   
-  #pragma omp parallel for
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -55,23 +54,18 @@ void PointAverage::DoExecute()
       continue;
     }
 
-    vtkm::filter::PointAverage avg;
+    vtkm::filter::CellAverage avg;
     avg.SetOutputFieldName(m_output_field_name);
     avg.SetActiveField(m_field_name);
-    avg.SetFieldsToPass(this->GetFieldSelection());
-    auto dataset = avg.Execute(dom);
-    
-    #pragma omp critical
-    {
-      m_output->AddDomain(dataset, domain_id);
-    }
+    auto dataset = avg.Execute(dom, this->GetFieldSelection());
+    m_output->AddDomain(dataset, domain_id);
   }
 }
 
 std::string
-PointAverage::GetName() const
+CellAverage::GetName() const
 {
-  return "vtkh::PointAverage";
+  return "vtkh::CellAverage";
 }
 
 } //  namespace vtkh

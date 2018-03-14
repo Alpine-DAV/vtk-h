@@ -4,24 +4,28 @@
 
 set(Headers
   Filter.hpp
+  CellAverage.hpp
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
   IsoVolume.hpp
   MarchingCubes.hpp
   PointAverage.hpp  
+  Recenter.hpp
   Threshold.hpp
   Slice.hpp
   )
 
 set(Sources
   Filter.cpp
+  CellAverage.cpp
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
   IsoVolume.cpp
   MarchingCubes.cpp
   PointAverage.cpp
+  Recenter.cpp
   Threshold.cpp
   Slice.cpp
   )
