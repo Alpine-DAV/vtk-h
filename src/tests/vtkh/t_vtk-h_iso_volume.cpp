@@ -49,12 +49,12 @@ TEST(vtkh_iso_volume, vtkh_iso_volume)
   camera.ResetToBounds(bounds);
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *iso_output, 
-                                                          "iso_volume",
-                                                          bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *iso_output, 
+                                         "iso_volume",
+                                         bg_color);  
    
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -100,12 +100,12 @@ TEST(vtkh_iso_volume, vtkh_iso_volume_empty)
   camera.ResetToBounds(bounds);
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *iso_output, 
-                                                          "iso_volume_empty",
-                                                          bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *iso_output, 
+                                         "iso_volume_empty",
+                                         bg_color);  
    
   vtkh::Scene scene;
   scene.AddRender(render);

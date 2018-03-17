@@ -15,7 +15,6 @@
 
 #include <iostream>
 
-#if 0 
 TEST(vtkh_slice, vtkh_slice)
 {
   vtkh::DataSet data_set;
@@ -41,12 +40,12 @@ TEST(vtkh_slice, vtkh_slice)
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
   vtkm::rendering::Camera camera;
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *slice, 
-                                                          "slice",
-                                                           bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *slice, 
+                                         "slice",
+                                          bg_color);  
   vtkh::RayTracer tracer;
   tracer.SetInput(slice);
   tracer.SetField("cell_data"); 
@@ -58,7 +57,7 @@ TEST(vtkh_slice, vtkh_slice)
 
   delete slice; 
 }
-#endif
+
 TEST(vtkh_slice, vtkh_mulit_slice)
 {
   vtkh::DataSet data_set;
@@ -98,12 +97,12 @@ TEST(vtkh_slice, vtkh_mulit_slice)
   
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
 
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          bounds, 
-                                                          domain_ids, 
-                                                          "2slice",
-                                                           bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         bounds, 
+                                         domain_ids, 
+                                         "2slice",
+                                          bg_color);  
   
   scene.AddRender(render);
   scene.Render();

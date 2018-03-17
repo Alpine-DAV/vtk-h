@@ -43,11 +43,11 @@ TEST(vtkh_raytracer, vtkh_parallel_render)
   vtkm::rendering::Camera camera;
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          data_set, 
-                                                          "ray_tracer_par");  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         data_set, 
+                                         "ray_tracer_par");  
   
   vtkh::RayTracer tracer;
    
