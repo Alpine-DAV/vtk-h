@@ -47,12 +47,12 @@ TEST(vtkh_clip_field, vtkh_clip)
   camera.ResetToBounds(bounds);
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *clip_output, 
-                                                          "clip_field",
-                                                          bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *clip_output, 
+                                         "clip_field",
+                                         bg_color);  
    
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -95,12 +95,12 @@ TEST(vtkh_clip_field, vtkh_clip_cell_centered)
   camera.ResetToBounds(bounds);
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *clip_output, 
-                                                          "clip_field_cell",
-                                                          bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *clip_output, 
+                                         "clip_field_cell",
+                                         bg_color);  
    
   vtkh::Scene scene;
   scene.AddRender(render);

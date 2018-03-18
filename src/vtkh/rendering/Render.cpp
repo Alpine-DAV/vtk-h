@@ -10,6 +10,8 @@ namespace vtkh
 {
 
 Render::Render()
+  : m_width(1024),
+    m_height(1024)
 {
 }
 
@@ -36,6 +38,12 @@ Render::GetDomainCanvas(const vtkm::Id &domain_id)
     ss<<"Render: canvas with domain id "<< domain_id <<" not found ";
     throw Error(ss.str());
   }
+
+  if(m_canvases[dom] == nullptr)
+  {
+    m_canvases[dom] = this->CreateCanvas();
+  }
+
   return m_canvases[dom];
 }
 
@@ -43,6 +51,11 @@ Render::vtkmCanvasPtr
 Render::GetCanvas(const vtkm::Id index)
 {
   assert(index >= 0 && index < m_canvases.size());
+
+  if(m_canvases[index] == nullptr)
+  {
+    m_canvases[index] = this->CreateCanvas();
+  }
   return m_canvases[index];
 }
 
@@ -52,6 +65,30 @@ Render::GetSceneBounds() const
   return m_scene_bounds;
 }
 
+vtkm::Int32
+Render::GetWidth() const
+{
+  return m_width;
+}
+
+vtkm::Int32
+Render::GetHeight() const
+{
+  return m_height;
+}
+
+void
+Render::SetWidth(const vtkm::Int32 width) 
+{
+  m_width = width;
+}
+
+void
+Render::SetHeight(const vtkm::Int32 height) 
+{
+  m_height = height;
+}
+
 void
 Render::SetSceneBounds(const vtkm::Bounds &bounds) 
 {
@@ -59,9 +96,9 @@ Render::SetSceneBounds(const vtkm::Bounds &bounds)
 }
 
 void 
-Render::AddCanvas(vtkmCanvasPtr canvas, vtkm::Id domain_id)
+Render::AddDomain(vtkm::Id domain_id)
 {
-  m_canvases.push_back(canvas);
+  m_canvases.push_back(nullptr);
   m_domain_ids.push_back(domain_id);
 }
 
@@ -69,6 +106,19 @@ int
 Render::GetNumberOfCanvases() const
 {
   return static_cast<int>(m_canvases.size());
+}
+
+void
+Render::ClearCanvases() 
+{
+  int num = static_cast<int>(m_canvases.size());
+  for(int i = 0; i < num; ++i)
+  {
+    if(m_canvases[i] != nullptr)
+    {
+      m_canvases[i] = nullptr;
+    }
+  }
 }
 
 bool 
@@ -105,10 +155,25 @@ Render::SetImageName(const std::string &name)
   m_image_name = name;
 }
 
+void 
+Render::SetBackgroundColor(float bg_color[4])
+{
+  m_bg_color.Components[0] = bg_color[0];
+  m_bg_color.Components[1] = bg_color[1];
+  m_bg_color.Components[2] = bg_color[2];
+  m_bg_color.Components[3] = bg_color[3];
+}
+
 std::string 
 Render::GetImageName() const 
 {
   return m_image_name;
+}
+
+vtkm::rendering::Color 
+Render::GetBackgroundColor() const 
+{
+  return m_bg_color;
 }
 
 void 
@@ -139,6 +204,15 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
   annotator.RenderScreenAnnotations(field_names, ranges, colors);
 }
 
+Render::vtkmCanvasPtr
+Render::CreateCanvas()
+{
+  Render::vtkmCanvasPtr canvas = std::make_shared<vtkm::rendering::CanvasRayTracer>(m_width, m_height);
+  canvas->SetBackgroundColor(m_bg_color);
+  canvas->Clear();
+  return canvas;
+}
+
 void
 Render::Save()
 {
@@ -157,4 +231,131 @@ Render::Save()
   encoder.Save(m_image_name + ".png");
 }
 
+vtkh::Render 
+MakeRender(int width,
+           int height, 
+           vtkm::Bounds scene_bounds,
+           const std::vector<vtkm::Id> &domain_ids,
+           const std::string &image_name,
+           float bg_color[4])
+{
+  vtkh::Render render;
+  vtkm::rendering::Camera camera;
+  camera.ResetToBounds(scene_bounds);
+  render.SetSceneBounds(scene_bounds);
+  render.SetWidth(width);
+  render.SetHeight(height);
+  //
+  // detect a 2d data set
+  //
+  float total_extent[3];
+  total_extent[0] = scene_bounds.X.Length();
+  total_extent[1] = scene_bounds.Y.Length();
+  total_extent[2] = scene_bounds.Z.Length();
+  int min_dim = 0;
+  if(total_extent[1] < total_extent[min_dim]) min_dim = 1;
+  if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
+  camera.SetModeTo3D(); 
+  bool is_2d = (vtkm::Abs(total_extent[min_dim]) < 1e-9f);
+
+  if(is_2d)
+  {
+    camera.SetModeTo2D(); 
+  }
+  else
+  {
+    camera.Azimuth(10.f);
+    camera.Elevation(30.f);
+  }
+
+  render.SetCamera(camera);
+  render.SetImageName(image_name);
+  render.SetBackgroundColor(bg_color);
+
+  const size_t num_domains = domain_ids.size();
+
+  for(size_t i = 0; i < num_domains; ++i)
+  {
+    //auto canvas = RendererType::GetNewCanvas(1, 1);
+    //canvas->Clear();
+    //canvas->SetBackgroundColor(render.GetBackgroundColor());
+    render.AddDomain(domain_ids[i]);
+  }
+
+  if(num_domains == 0)
+  {
+    //auto canvas = RendererType::GetNewCanvas(width, height);
+    //canvas->SetBackgroundColor(render.GetBackgroundColor());
+    //canvas->Clear();
+    vtkm::Id empty_data_set_id = -1;
+    render.AddDomain(empty_data_set_id);
+  }
+  return render;
+}
+
+vtkh::Render 
+MakeRender(int width,
+           int height, 
+           vtkm::rendering::Camera camera,
+           vtkh::DataSet &data_set,
+           const std::string &image_name,
+           float bg_color[4])
+{
+  vtkh::Render render;
+  render.SetCamera(camera);
+  render.SetImageName(image_name);
+  vtkm::Bounds bounds = data_set.GetGlobalBounds();
+  render.SetSceneBounds(bounds);
+  render.SetWidth(width);
+  render.SetHeight(height);
+  //
+  // detect a 2d data set
+  //
+  float total_extent[3];
+  total_extent[0] = bounds.X.Length();
+  total_extent[1] = bounds.Y.Length();
+  total_extent[2] = bounds.Z.Length();
+  int min_dim = 0;
+  if(total_extent[1] < total_extent[min_dim]) min_dim = 1;
+  if(total_extent[2] < total_extent[min_dim]) min_dim = 2;
+  camera.SetModeTo3D(); 
+  bool is_2d = (vtkm::Abs(total_extent[min_dim]) < 1e-9f);
+
+  if(is_2d)
+  {
+    camera.SetModeTo2D(); 
+  }
+  else
+  {
+    camera.Azimuth(10.f);
+    camera.Elevation(30.f);
+  }
+
+  render.SetBackgroundColor(bg_color);
+
+  int num_domains = static_cast<int>(data_set.GetNumberOfDomains());
+  for(int i = 0; i < num_domains; ++i)
+  {
+    vtkm::cont::DataSet ds; 
+    vtkm::Id domain_id;
+    data_set.GetDomain(i, ds, domain_id);
+    //auto canvas = RendererType::GetNewCanvas(width, height);
+
+    //canvas->SetBackgroundColor(render.GetBackgroundColor());
+    //canvas->Clear();
+
+    render.AddDomain(domain_id);
+  }
+
+  if(num_domains == 0)
+  {
+    //auto canvas = RendererType::GetNewCanvas(1,1);
+    //canvas->SetBackgroundColor(render.GetBackgroundColor());
+    //canvas->Clear();
+    vtkm::Id empty_data_set_id = -1;
+    render.AddDomain(empty_data_set_id);
+  }
+
+  return render;
+}
 } // namespace vtkh
