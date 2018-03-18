@@ -95,12 +95,12 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkm)
   camera.ResetToBounds(bounds);
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *thresh_output, 
-                                                          "empty_vtkm",
-                                                          bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *thresh_output, 
+                                         "empty_vtkm",
+                                         bg_color);  
    
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -184,12 +184,12 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkh)
   camera.ResetToBounds(bounds);
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *thresh_output, 
-                                                          "empty_vtkh",
-                                                          bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *thresh_output, 
+                                         "empty_vtkh",
+                                         bg_color);  
    
   vtkh::Scene scene;
   scene.AddRender(render);

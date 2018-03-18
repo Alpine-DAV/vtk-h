@@ -60,12 +60,12 @@ TEST(vtkh_marching_cubes_par, vtkh_parallel_marching_cubes)
   camera.ResetToBounds(bounds);
 
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *iso_output, 
-                                                          "iso_par",
-                                                          bg_color);  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *iso_output, 
+                                         "iso_par",
+                                         bg_color);  
 
   vtkh::Scene scene;
   scene.AddRender(render);

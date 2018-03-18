@@ -43,11 +43,11 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
   vtkm::rendering::Camera camera;
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender<vtkh::VolumeRenderer>(512, 
-                                                               512, 
-                                                               camera, 
-                                                               data_set, 
-                                                               "volume_par");  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         data_set, 
+                                         "volume_par");  
 
   vtkm::rendering::ColorTable color_map("cool2warm"); 
   color_map.AddAlphaControlPoint(0.0, .05);

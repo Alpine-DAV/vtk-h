@@ -59,11 +59,11 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 
   vtkm::rendering::Camera camera;
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          data_set, 
-                                                          "multi_par");  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         data_set, 
+                                         "multi_par");  
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
   tracer.SetField("cell_data"); 

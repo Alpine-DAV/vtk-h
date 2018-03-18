@@ -46,11 +46,11 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
   vtkm::rendering::Camera camera;
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender<vtkh::RayTracer>(512, 
-                                                          512, 
-                                                          camera, 
-                                                          *output, 
-                                                          "threshold");  
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *output, 
+                                         "threshold");  
   vtkh::RayTracer tracer;
   tracer.SetInput(output);
   tracer.SetField("point_data"); 

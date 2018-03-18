@@ -7,7 +7,8 @@ namespace vtkh
 {
 
 Scene::Scene()
-  : m_has_volume(false)
+  : m_has_volume(false),
+    m_batch_size(10)
 {
 
 }
@@ -17,10 +18,29 @@ Scene::~Scene()
 
 }
 
+void
+Scene::SetRenderBatchSize(int batch_size)
+{
+  assert(batch_size > 0);
+  m_batch_size = batch_size;
+}
+
+int
+Scene::GetRenderBatchSize() const
+{
+  return m_batch_size;
+}
+
 void 
 Scene::AddRender(vtkh::Render &render)
 {
   m_renders.push_back(render);
+}
+
+void 
+Scene::SetRenders(const std::vector<vtkh::Render> &renders)
+{
+  m_renders = renders;
 }
 
 bool
@@ -96,47 +116,77 @@ Scene::AddRenderer(vtkh::Renderer *renderer)
 void 
 Scene::Render()
 {
-  const int render_size = m_renders.size();
 
   std::vector<vtkm::Range> ranges; 
   std::vector<std::string> field_names; 
   std::vector<vtkm::rendering::ColorTable> color_tables; 
 
-  const int plot_size = m_renderers.size(); 
-  auto renderer = m_renderers.begin(); 
-  
-  for(int i = 0; i < plot_size; ++i)
+  bool do_once = true;
+
+  //
+  // We are going to render images in batches. With databases
+  // like Cinema, we could be rendering hundres of images. Keeping
+  // all the canvases around can hog memory so we will conserve it.
+  // For example, if we rendered 360 images at 1024^2, all the canvases
+  // would consume 7GB of space. Not good on the GPU, where resources 
+  // are limited.
+  //
+  const int render_size = m_renders.size();
+  int batch_start = 0; 
+  while(batch_start < render_size)
   {
-    if(i == plot_size - 1)
+    int batch_end = std::min(m_batch_size + batch_start, render_size);
+    auto begin = m_renders.begin() + batch_start;
+    auto end = m_renders.begin() + batch_end;
+
+    std::vector<vtkh::Render> current_batch(begin, end);
+    const int plot_size = m_renderers.size(); 
+    auto renderer = m_renderers.begin(); 
+
+    for(int i = 0; i < plot_size; ++i)
     {
-      (*renderer)->SetDoComposite(true);
+      if(i == plot_size - 1)
+      {
+        (*renderer)->SetDoComposite(true);
+      }
+      else
+      {
+        (*renderer)->SetDoComposite(false);
+      }
+
+      (*renderer)->SetRenders(current_batch);
+      (*renderer)->Update();
+     
+      // we only need to get the ranges and color tables once
+      if(do_once)
+      {
+        if((*renderer)->GetHasColorTable())
+        {
+          ranges.push_back((*renderer)->GetRange());
+          field_names.push_back((*renderer)->GetFieldName());
+          color_tables.push_back((*renderer)->GetColorTable());
+        }
+        do_once = false;
+      }
+
+      current_batch  = (*renderer)->GetRenders();
+      (*renderer)->ClearRenders();
+
+      renderer++;
     }
-    else
+    
+    // render screen annotations last and save
+    for(int i = 0; i < current_batch.size(); ++i)
     {
-      (*renderer)->SetDoComposite(false);
+      current_batch[i].RenderWorldAnnotations();
+      current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
+      current_batch[i].Save();
+      // free buffers
+      m_renders[batch_start + i].ClearCanvases();
     }
 
-    (*renderer)->SetRenders(m_renders);
-    (*renderer)->Update();
-
-    if((*renderer)->GetHasColorTable())
-    {
-      ranges.push_back((*renderer)->GetRange());
-      field_names.push_back((*renderer)->GetFieldName());
-      color_tables.push_back((*renderer)->GetColorTable());
-    }
-
-    m_renders = (*renderer)->GetRenders();
-    renderer++;
-  }
-  
-  // render screen annotations last and save
-  for(int i = 0; i < render_size; ++i)
-  {
-    m_renders[i].RenderWorldAnnotations();
-    m_renders[i].RenderScreenAnnotations(field_names, ranges, color_tables);
-    m_renders[i].Save();
-  }
+    batch_start = batch_end;
+  } // while
 }
 
 void 
