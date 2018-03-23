@@ -85,7 +85,8 @@ void ClipField::DoExecute()
     }
     
     clipper.SetActiveField(m_field_name);
-    auto dataset = clipper.Execute(dom, this->GetFieldSelection());
+    clipper.SetFieldsToPass(this->GetFieldSelection());
+    auto dataset = clipper.Execute(dom);
     this->m_output->AddDomain(dataset, domain_id);
     if(delete_input)
     {

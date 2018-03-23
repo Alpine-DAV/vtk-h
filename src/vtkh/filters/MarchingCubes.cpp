@@ -106,13 +106,19 @@ void MarchingCubes::DoExecute()
   {
     vtkm::filter::MarchingCubes marcher;
     marcher.SetIsoValues(m_iso_values);
+    marcher.SetActiveField(m_field_name);
     marcher.SetMergeDuplicatePoints(true);       
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
 
     this->m_input->GetDomain(i, dom, domain_id);
-    bool valid_domain = ContainsIsoValues(dom);
 
+    if(!dom.HasField(m_field_name))
+    {
+      continue;
+    }
+
+    bool valid_domain = ContainsIsoValues(dom);
     if(!valid_domain)
     {
       // vtkm does not like it if we ask it to contour
@@ -121,16 +127,13 @@ void MarchingCubes::DoExecute()
       continue;
     }
     valid++;
-    vtkm::filter::Result res = marcher.Execute(dom, m_field_name);
 
-    for(size_t f = 0; f < m_map_fields.size(); ++f)
-    {
-      marcher.MapFieldOntoOutput(res, dom.GetField(m_map_fields[f]));
-    }
+    marcher.SetFieldsToPass(this->GetFieldSelection());
+    auto dataset = marcher.Execute(dom);
 
     #pragma omp critical
     {
-      m_output->AddDomain(res.GetDataSet(), domain_id);
+      m_output->AddDomain(dataset, domain_id);
     }
   }
 }

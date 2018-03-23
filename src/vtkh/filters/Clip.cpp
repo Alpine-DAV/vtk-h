@@ -114,7 +114,8 @@ void Clip::DoExecute()
       }
     }
 
-    auto dataset = m_internals->m_clipper.Execute(dom, this->GetFieldSelection());
+    m_internals->m_clipper.SetFieldsToPass(this->GetFieldSelection());
+    auto dataset = m_internals->m_clipper.Execute(dom);
     data_set.AddDomain(dataset, domain_id);
   }
    

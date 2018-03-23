@@ -60,7 +60,7 @@ void PointAverage::DoExecute()
     avg.SetActiveField(m_field_name);
     avg.SetFieldsToPass(this->GetFieldSelection());
     auto dataset = avg.Execute(dom);
-    
+
     #pragma omp critical
     {
       m_output->AddDomain(dataset, domain_id);
