@@ -175,7 +175,8 @@ void Threshold::DoExecute()
     {
       continue;
     }
-    auto data_set = thresholder.Execute(dom, this->GetFieldSelection());
+    thresholder.SetFieldsToPass(this->GetFieldSelection());
+    auto data_set = thresholder.Execute(dom);
     detail::StripPermutation(data_set);
     temp_data.AddDomain(data_set, domain_id);
   }

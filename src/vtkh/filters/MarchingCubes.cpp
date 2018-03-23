@@ -126,7 +126,8 @@ void MarchingCubes::DoExecute()
       continue;
     }
     valid++;
-    auto dataset = marcher.Execute(dom, this->GetFieldSelection());
+    marcher.SetFieldsToPass(this->GetFieldSelection());
+    auto dataset = marcher.Execute(dom);
     m_output->AddDomain(dataset, domain_id);
   }
 

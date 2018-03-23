@@ -57,7 +57,8 @@ void PointAverage::DoExecute()
     vtkm::filter::PointAverage avg;
     avg.SetOutputFieldName(m_output_field_name);
     avg.SetActiveField(m_field_name);
-    auto dataset = avg.Execute(dom, this->GetFieldSelection());
+    avg.SetFieldsToPass(this->GetFieldSelection());
+    auto dataset = avg.Execute(dom);
     m_output->AddDomain(dataset, domain_id);
   }
 }
