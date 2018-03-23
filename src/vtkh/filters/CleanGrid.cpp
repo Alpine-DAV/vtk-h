@@ -37,7 +37,8 @@ CleanGrid::DoExecute()
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-    auto dataset = cleaner.Execute(dom, this->GetFieldSelection());
+    cleaner.SetFieldsToPass(this->GetFieldSelection());
+    auto dataset = cleaner.Execute(dom);
     this->m_output->AddDomain(dataset, domain_id);
   }
 
