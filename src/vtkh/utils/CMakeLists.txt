@@ -9,14 +9,28 @@ set(Headers
 
 set(Sources
   PNGEncoder.cpp
+  vtkm_dataset_info.cpp
   )
 
+set(vtkh_utils_thirdparty_libs vtkm vtkh_lodepng)
+
+if(TBB_FOUND)
+  list(APPEND vtkh_utils_thirdparty_libs tbb)
+endif()
+
+if(VTKM_FOUND)
+  list(APPEND vtkh_utils_thirdparty_libs vtkm)
+endif()
+
+if(CUDA_FOUND)
+  list(APPEND vtkh_utils_thirdparty_libs cuda)
+endif()
 
 blt_add_library(
   NAME vtkh_utils
   SOURCES ${Sources}
   HEADERS ${Headers}
-  DEPENDS_ON vtkh_lodepng
+  DEPENDS_ON ${vtkh_utils_thirdparty_libs}
   )
 
 # target_link_libraries(vtkh_utils PRIVATE vtkh_lodepng)

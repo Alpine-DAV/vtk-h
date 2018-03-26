@@ -16,7 +16,7 @@ set(Sources
   )
 
 
-set(vtkh_thirdparty_libs vtkm diy)
+set(vtkh_thirdparty_libs vtkm diy vtkh_utils)
 
 if(TBB_FOUND)
   list(APPEND vtkh_thirdparty_libs tbb)
