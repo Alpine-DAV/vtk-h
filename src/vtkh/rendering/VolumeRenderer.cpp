@@ -55,8 +55,8 @@ VolumeRenderer::VolumeRenderer()
   //
   // add some default opacity to the color table
   //
-  m_color_table.AddAlphaControlPoint(0.0f, .02);
-  m_color_table.AddAlphaControlPoint(1.0f, .5);
+  m_color_table.AddPointAlpha(0.0f, .02);
+  m_color_table.AddPointAlpha(.0f, .5);
   m_num_samples = 100.f;
 }
 
@@ -82,8 +82,17 @@ VolumeRenderer::PreExecute()
   float samples = m_num_samples;
 
   float ratio = correction_scalar / samples;
-  vtkm::rendering::ColorTable corrected;
-  corrected = this->m_color_table.CorrectOpacity(ratio);
+  vtkm::cont::ColorTable corrected;
+  corrected = m_color_table;
+  int num_points = corrected.GetNumberOfPointsAlpha();
+  for(int i = 0; i < num_points; i++)
+  {
+    vtkm::Vec<vtkm::Float64,4> point;
+    corrected.GetPointAlpha(i,point); 
+    point[1] = 1. - vtkm::Pow((1. - point[1]), double(ratio)); 
+    corrected.UpdatePointAlpha(i,point); 
+  }
+
   this->m_corrected_color_table = corrected;
 
   vtkm::Vec<vtkm::Float32,3> extent; 

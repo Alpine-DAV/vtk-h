@@ -49,9 +49,9 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
                                          data_set, 
                                          "volume_par");  
 
-  vtkm::rendering::ColorTable color_map("cool2warm"); 
-  color_map.AddAlphaControlPoint(0.0, .05);
-  color_map.AddAlphaControlPoint(1.0, .5);
+  vtkm::cont::ColorTable color_map("cool2warm"); 
+  color_map.AddPointAlpha(0.0, .05);
+  color_map.AddPointAlpha(1.0, .5);
   
   vtkh::VolumeRenderer tracer;
   tracer.SetColorTable(color_map);

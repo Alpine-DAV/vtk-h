@@ -16,7 +16,7 @@ namespace vtkh {
 
 Renderer::Renderer()
   : m_do_composite(true),
-    m_color_table("cool2warm"),
+    m_color_table("Cool to Warm"),
     m_field_index(0),
     m_has_color_table(true)
 {
@@ -82,12 +82,12 @@ Renderer::ClearRenders()
   m_renders.clear(); 
 }
 
-void Renderer::SetColorTable(const vtkm::rendering::ColorTable &color_table)
+void Renderer::SetColorTable(const vtkm::cont::ColorTable &color_table)
 {
   m_color_table = color_table;
 }
 
-vtkm::rendering::ColorTable Renderer::GetColorTable() const
+vtkm::cont::ColorTable Renderer::GetColorTable() const
 {
   return m_color_table;
 }

@@ -48,7 +48,7 @@ public:
   void                            RenderWorldAnnotations();
   void                            RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                                           const std::vector<vtkm::Range> &ranges,
-                                                          const std::vector<vtkm::rendering::ColorTable> &colors);
+                                                          const std::vector<vtkm::cont::ColorTable> &colors);
   void                            Save();
 protected:
   std::vector<vtkmCanvasPtr>   m_canvases;
