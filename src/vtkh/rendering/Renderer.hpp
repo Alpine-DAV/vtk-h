@@ -30,12 +30,12 @@ public:
   void ClearRenders(); 
 
   void SetField(const std::string field_name);
-  void SetColorTable(const vtkm::rendering::ColorTable &color_table);
+  void SetColorTable(const vtkm::cont::ColorTable &color_table);
   void SetDoComposite(bool do_composite);
   void SetRenders(const std::vector<Render> &renders);
   void SetRange(const vtkm::Range &range);
 
-  vtkm::rendering::ColorTable GetColorTable() const;
+  vtkm::cont::ColorTable GetColorTable() const;
   std::string                 GetFieldName() const;
   int                         GetNumberOfRenders() const; 
   std::vector<Render>         GetRenders() const;
@@ -53,8 +53,8 @@ protected:
   vtkmMapperPtr                            m_mapper;
   vtkm::Bounds                             m_bounds;
   vtkm::Range                              m_range;
-  vtkm::rendering::ColorTable              m_color_table;
-  vtkm::rendering::ColorTable              m_corrected_color_table;
+  vtkm::cont::ColorTable              m_color_table;
+  vtkm::cont::ColorTable              m_corrected_color_table;
   bool                                     m_has_color_table;  
   // methods
   virtual void PreExecute() override;

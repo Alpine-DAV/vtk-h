@@ -35,9 +35,14 @@ MeshRenderer::PreExecute()
   if(m_use_foreground_color)
   {
     vtkm::rendering::Color fg = m_renders[0].GetCanvas(0)->GetForegroundColor();
-    vtkm::rendering::ColorTable single_color;
-    single_color.AddControlPoint(0.f, fg); 
-    single_color.AddControlPoint(1.f, fg); 
+    vtkm::cont::ColorTable single_color;
+    vtkm::Vec<vtkm::Float32,3> fg_vec3_not_4;
+    fg_vec3_not_4[0] = fg.Components[0];
+    fg_vec3_not_4[1] = fg.Components[1];
+    fg_vec3_not_4[2] = fg.Components[2];
+    
+    single_color.AddPoint(0.f, fg_vec3_not_4); 
+    single_color.AddPoint(1.f, fg_vec3_not_4); 
     this->m_corrected_color_table = single_color;
     this->m_has_color_table = false;
   }

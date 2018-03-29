@@ -119,7 +119,7 @@ Scene::Render()
 
   std::vector<vtkm::Range> ranges; 
   std::vector<std::string> field_names; 
-  std::vector<vtkm::rendering::ColorTable> color_tables; 
+  std::vector<vtkm::cont::ColorTable> color_tables; 
 
   bool do_once = true;
 

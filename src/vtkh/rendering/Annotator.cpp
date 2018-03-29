@@ -32,7 +32,7 @@ Annotator::~Annotator()
 void 
 Annotator::RenderScreenAnnotations(const std::vector<std::string> &field_names, 
                                     const std::vector<vtkm::Range> &ranges,
-                                    const std::vector<vtkm::rendering::ColorTable> &color_tables)
+                                    const std::vector<vtkm::cont::ColorTable> &color_tables)
 {
   m_canvas.SetViewToScreenSpace(m_camera, true);
   // currently we only support 4 color bars, so grab the first 4 
