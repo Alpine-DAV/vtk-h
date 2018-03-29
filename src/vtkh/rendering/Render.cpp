@@ -194,7 +194,7 @@ Render::RenderWorldAnnotations()
 void 
 Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                 const std::vector<vtkm::Range> &ranges,
-                                const std::vector<vtkm::rendering::ColorTable> &colors)
+                                const std::vector<vtkm::cont::ColorTable> &colors)
 {
   int size = m_canvases.size(); 
   if(size < 1) return;

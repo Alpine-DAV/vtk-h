@@ -22,7 +22,7 @@ public:
   void RenderWorldAnnotations();
   void RenderScreenAnnotations(const std::vector<std::string> &field_names, 
                                const std::vector<vtkm::Range> &ranges,
-                               const std::vector<vtkm::rendering::ColorTable> &color_tables);
+                               const std::vector<vtkm::cont::ColorTable> &color_tables);
 
 protected:
   Annotator();

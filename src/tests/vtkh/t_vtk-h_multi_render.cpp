@@ -61,9 +61,9 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   tracer.SetInput(iso_output);
   tracer.SetField("cell_data"); 
 
-  vtkm::rendering::ColorTable color_map("cool2warm"); 
-  color_map.AddAlphaControlPoint(0.0, .1);
-  color_map.AddAlphaControlPoint(1.0, .3);
+  vtkm::cont::ColorTable color_map("Cool to Warm"); 
+  color_map.AddPointAlpha(0.0, .1);
+  color_map.AddPointAlpha(1.0, .3);
 
   vtkh::VolumeRenderer v_tracer;
   v_tracer.SetColorTable(color_map);
@@ -117,9 +117,9 @@ TEST(vtkh_raytracer, vtkh_serial_batch)
   tracer.SetInput(iso_output);
   tracer.SetField("cell_data"); 
 
-  vtkm::rendering::ColorTable color_map("cool2warm"); 
-  color_map.AddAlphaControlPoint(0.0, .1);
-  color_map.AddAlphaControlPoint(1.0, .3);
+  vtkm::cont::ColorTable color_map("Cool to Warm"); 
+  color_map.AddPointAlpha(0.0, .1);
+  color_map.AddPointAlpha(1.0, .3);
 
   vtkh::VolumeRenderer v_tracer;
   v_tracer.SetColorTable(color_map);
