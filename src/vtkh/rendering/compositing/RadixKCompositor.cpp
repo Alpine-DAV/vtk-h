@@ -121,8 +121,8 @@ RadixKCompositor::CompositeSurface(diy::mpi::communicator &diy_comm, Image &imag
   
     diy::DiscreteBounds global_bounds = VTKMBoundsToDIY(image.m_orig_bounds);
 
-    // tells diy to use all availible threads
-    const int num_threads = -1; 
+    // tells diy to use one thread
+    const int num_threads = 1; 
     const int num_blocks = diy_comm.size(); 
     const int magic_k = 8;
 
