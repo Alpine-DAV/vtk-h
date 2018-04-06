@@ -70,7 +70,7 @@ class UberenvVtkh(Package):
     
     depends_on("cmake@3.8.2")
 
-    depends_on("vtkm")
+    depends_on("vtkm@1.2.0")
     
 
     #on osx, always build mpich for mpi support
