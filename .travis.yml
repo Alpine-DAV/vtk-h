@@ -49,9 +49,9 @@ compiler:
   - gcc
 env:
   global:
-  - COMPILER_CC=gcc-4.9
-  - COMPILER_CXX=g++-4.9
-  - COMPILER_FC=gfortran-4.9
+  - COMPILER_CC=gcc-5
+  - COMPILER_CXX=g++-5
+  - COMPILER_FC=gfortran-5
   matrix:
     # we want to test both static and shared
     - BUILD_SHARED_LIBS=ON
@@ -62,9 +62,9 @@ addons:
     - ubuntu-toolchain-r-test
     packages:
        - binutils
-       - gcc-4.9
-       - g++-4.9
-       - gfortran-4.9
+       - gcc-5
+       - g++-5
+       - gfortran-5
 cache:
   directories:
     - /home/travis/build/Alpine-DAV/uberenv_libs
@@ -83,8 +83,7 @@ script:
   - export CACHE_ROOT=`pwd`
   # uninstall vtkm if it exists to force a rebuild
   - for f in ${CACHE_ROOT}/uberenv_libs/spack/opt/spack/*/*/vtkm*; do if [ -d $f ]; then echo "y" | ${CACHE_ROOT}/uberenv_libs/spack/bin/spack uninstall --dependents vtkm; fi; done;
-  #- python vtk-h/scripts/uberenv/uberenv.py --spec %gcc@4.9+mpich
-  - python vtk-h/scripts/uberenv/uberenv.py --spec %gcc@4.9
+  - python vtk-h/scripts/uberenv/uberenv.py --spec %gcc@5+mpi ^mpich
   - cd $TRAVIS_BUILD_DIR
   # create out-of-source build dir
   - mkdir travis-debug-build

@@ -62,6 +62,8 @@ class UberenvVtkh(Vtkh):
     #variant('cuda',   default=False, description="Enable CUDA support.")
     #variant('openmp', default=False, description="Enable OpenMP support.")
 
+    depends_on("cmake@3.8.3:3.9.999", when="+cmake")
+
     def url_for_version(self, version):
         dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
         dummy_tar_path = pjoin(dummy_tar_path,"uberenv-vtkh.tar.gz")
