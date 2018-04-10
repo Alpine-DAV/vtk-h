@@ -93,6 +93,11 @@ def parse_args():
                       dest="spec",
                       default=None,
                       help="spack compiler spec")
+    # what compiler to use
+    parser.add_option("--jobs",
+                      dest="jobs",
+                      default=None,
+                      help="number of cpus to use")
     # optional location of spack mirror
     parser.add_option("--mirror",
                       dest="mirror",
@@ -415,6 +420,8 @@ def main():
         if opts["ignore_ssl_errors"]:
             install_cmd += "-k "
         install_cmd += "install " + uberenv_pkg_name + opts["spec"]
+        if opts["jobs"]:
+            install_cmd += " --jobs " + opts["jobs"]
         res = sexe(install_cmd, echo=True)
         if res != 0:
             return res
