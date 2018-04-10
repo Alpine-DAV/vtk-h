@@ -419,9 +419,9 @@ def main():
         install_cmd = "spack/bin/spack "
         if opts["ignore_ssl_errors"]:
             install_cmd += "-k "
-        install_cmd += "install " + uberenv_pkg_name + opts["spec"]
         if opts["jobs"]:
-            install_cmd += " --jobs " + opts["jobs"]
+            install_cmd += "-j " + opts["jobs"] + " "
+        install_cmd += "install " + uberenv_pkg_name + opts["spec"]
         res = sexe(install_cmd, echo=True)
         if res != 0:
             return res
