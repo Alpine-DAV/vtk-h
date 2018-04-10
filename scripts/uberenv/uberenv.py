@@ -420,7 +420,7 @@ def main():
         if opts["ignore_ssl_errors"]:
             install_cmd += "-k "
         if opts["jobs"]:
-            install_cmd += "-j " + opts["jobs"] + " "
+            install_cmd += "-j" + opts["jobs"] + " "
         install_cmd += "install " + uberenv_pkg_name + opts["spec"]
         res = sexe(install_cmd, echo=True)
         if res != 0:
