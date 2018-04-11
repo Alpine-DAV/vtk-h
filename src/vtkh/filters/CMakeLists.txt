@@ -9,6 +9,7 @@ set(Headers
   Clip.hpp
   ClipField.hpp
   IsoVolume.hpp
+  NoOp.hpp
   MarchingCubes.hpp
   PointAverage.hpp  
   Recenter.hpp
@@ -23,25 +24,13 @@ set(Sources
   Clip.cpp
   ClipField.cpp
   IsoVolume.cpp
+  NoOp.cpp
   MarchingCubes.cpp
   PointAverage.cpp
   Recenter.cpp
   Threshold.cpp
   Slice.cpp
   )
-#
-# add_library(vtkh_filters ${Sources} ${Headers})
-#
-# target_include_directories(vtkh_filters
-#   PUBLIC
-#     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
-#     $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
-#     $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
-#   )
-#
-# target_link_libraries(vtkh_filters
-#   PUBLIC vtkh_core
-#   PRIVATE vtkh_dependencies_private)
 
 set(vtkh_filters_deps vtkh_core  )
 
