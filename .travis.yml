@@ -83,7 +83,7 @@ script:
   - export CACHE_ROOT=`pwd`
   # uninstall vtkm if it exists to force a rebuild
   - for f in ${CACHE_ROOT}/uberenv_libs/spack/opt/spack/*/*/vtkm*; do if [ -d $f ]; then echo "y" | ${CACHE_ROOT}/uberenv_libs/spack/bin/spack uninstall --dependents vtkm; fi; done;
-  - travis_wait 50 python vtk-h/scripts/uberenv/uberenv.py --spec "%gcc@5+mpi ^mpich" --jobs 16
+  - python vtk-h/scripts/uberenv/uberenv.py --spec "%gcc@5+mpi ^mpich" --jobs 16
   - cd $TRAVIS_BUILD_DIR
   # create out-of-source build dir
   - mkdir travis-debug-build
