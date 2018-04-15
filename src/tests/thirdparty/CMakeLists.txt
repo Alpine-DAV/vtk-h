@@ -60,7 +60,6 @@ endforeach()
 ################################
 # Add our VTKm Unit Tests
 ################################
-
 foreach(TEST ${VTKM_TESTS})
   add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
   target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
