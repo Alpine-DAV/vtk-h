@@ -16,14 +16,10 @@ set(Sources
   )
 
 
-set(vtkh_thirdparty_libs vtkm diy vtkh_utils)
+set(vtkh_thirdparty_libs ${VTKm_LIBRARIES} diy vtkh_utils)
 
 if(TBB_FOUND)
   list(APPEND vtkh_thirdparty_libs tbb)
-endif()
-
-if(VTKM_FOUND)
-  list(APPEND vtkh_thirdparty_libs vtkm)
 endif()
 
 if(CUDA_FOUND)
