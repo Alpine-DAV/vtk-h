@@ -64,7 +64,6 @@ from optparse import OptionParser
 from os import environ as env
 from os.path import join as pjoin
 
-
 def sexe(cmd,ret_output=False,echo = False):
     """ Helper for executing shell commands. """
     if echo:
@@ -78,7 +77,6 @@ def sexe(cmd,ret_output=False,echo = False):
         return p.returncode,res
     else:
         return subprocess.call(cmd,shell=True)
-
 
 def parse_args():
     "Parses args from command line"
