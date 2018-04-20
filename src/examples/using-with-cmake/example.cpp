@@ -50,11 +50,13 @@
 
 #include <iostream>
 
-#include "vtkh/vtkh.hpp"
+#include <vtkh/vtkh.hpp>
+#include <vtkh/DataSet.hpp>
 
 int main(int argc, char **argv)
 {
     std::cout << vtkh::AboutVTKH() << std::endl;
+    vtkh::DataSet d;
 }
 
 

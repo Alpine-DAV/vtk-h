@@ -34,8 +34,30 @@ if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKh_BINARY_DIR@/@VTKh_INSTALL_CONFIG_DIR@"
   set(VTKh_PACKAGE_IN_BUILD TRUE)
 endif()
 
+if(NOT TBB_DIR)
+  set(TBB_DIR "@TBB_DIR@")
+  # set TBB_ROOT for vtkm to find tbb on its own
+  set(TBB_ROOT "@TBB_DIR@")
+  message(STATUS "VTKh automatically found TBB_DIR: ${TBB_DIR}")
+else()
+  message(STATUS "VTKh using provided path TBB_DIR: ${TBB_DIR}")
+endif()
+
+if(NOT VTKM_DIR)
+  set(VTKM_DIR "@VTKM_DIR@")
+  message(STATUS "VTKh automatically found VTKM_DIR: ${VTKM_DIR}")
+else()
+  message(STATUS "VTKh using provided path  VTKM_DIR: ${VTKM_DIR}")
+endif()
+
+# set this before we load vtkm because package is overridden by vtkm
 # Load the library exports, but only if not compiling VTK-h itself
 set_and_check(VTKh_CONFIG_DIR "@PACKAGE_VTKh_INSTALL_CONFIG_DIR@")
 if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKh_BINARY_DIR@")
   include(${VTKh_CONFIG_DIR}/VTKhTargets.cmake)
 endif()
+
+set(VTKm_DIR ${VTKM_DIR}/lib/cmake/vtkm-1.2)
+include(${VTKM_DIR}/lib/cmake/vtkm-1.2/VTKmConfig.cmake)
+find_package(VTKm REQUIRED QUIET) 
+set(VTKM_FOUND TRUE)
