@@ -70,14 +70,16 @@ if(NOT VTKM_DIR)
 endif()
 
 if(NOT EXISTS ${VTKM_DIR}/lib/cmake/vtkm-1.2/VTKmConfig.cmake)
-  MESSAGE(FATAL_ERROR "Could not find VTKm CMake include file (${VTKM_DIR}/lib/cmake/vtkm-1.0/VTKmConfig.cmake)")
+  MESSAGE(FATAL_ERROR "Could not find VTKm CMake include file (${VTKM_DIR}/lib/cmake/vtkm-1.2/VTKmConfig.cmake)")
 endif()
 
 ###############################################################################
 # Import VTKm CMake targets
 ###############################################################################
+set(VTKm_DIR ${VTKM_DIR}/lib/cmake/vtkm-1.2)
 include(${VTKM_DIR}/lib/cmake/vtkm-1.2/VTKmConfig.cmake)
 
+find_package(VTKm REQUIRED QUIET)
 ###############################################################################
 # Set remaning CMake variables 
 ###############################################################################
@@ -86,6 +88,6 @@ set(VTKM_FOUND TRUE)
 # provide location of the headers in VTKM_INCLUDE_DIRS
 set(VTKM_INCLUDE_DIRS ${VTKM_DIR}/include/vtkm)
 
-
+# use VTKM_DIR to setup the options that cmake's find VTKm needs
 
 
