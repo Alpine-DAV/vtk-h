@@ -9,6 +9,7 @@ set(Headers
   Clip.hpp
   ClipField.hpp
   IsoVolume.hpp
+	Lagrangian.hpp
   NoOp.hpp
   MarchingCubes.hpp
   PointAverage.hpp  
@@ -24,6 +25,7 @@ set(Sources
   Clip.cpp
   ClipField.cpp
   IsoVolume.cpp
+	Lagrangian.cpp
   NoOp.cpp
   MarchingCubes.cpp
   PointAverage.cpp
