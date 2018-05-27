@@ -20,6 +20,18 @@ Lagrangian::SetField(const std::string &field_name)
   m_field_name = field_name;
 }
 
+void 
+Lagrangian::SetStepSize(const double &step_size)
+{
+  m_step_size = step_size;
+}
+
+void 
+Lagrangian::SetWriteFrequency(const int &write_frequency)
+{
+  m_write_frequency = write_frequency;
+}
+
 void Lagrangian::PreExecute() 
 {
   Filter::PreExecute();
@@ -33,10 +45,10 @@ void Lagrangian::PostExecute()
 void Lagrangian::DoExecute()
 {
 	vtkm::filter::Lagrangian lagrangianFilter;
-	vtkm::Float32 stepSize = 0.01;
-  lagrangianFilter.SetStepSize(stepSize);
-	lagrangianFilter.SetWriteFrequency(10);
-	lagrangianFilter.SetActiveField("velocity");
+//	vtkm::Float32 stepSize = 0.01;
+  lagrangianFilter.SetStepSize(m_step_size);
+	lagrangianFilter.SetWriteFrequency(m_write_frequency);
+	lagrangianFilter.SetActiveField(m_field_name);
 
 	this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
@@ -47,7 +59,7 @@ void Lagrangian::DoExecute()
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
 		
-		if(!dom.HasField("velocity"))
+		if(!dom.HasField(m_field_name))
 		{
 			// Cloverleaf3D has vectors stored in the form xvec, yvec, zvec. Composite these vectors.
 			if(dom.HasField("xvec") && dom.HasField("yvec") && dom.HasField("zvec"))
@@ -72,7 +84,7 @@ void Lagrangian::DoExecute()
 				auto composite = vtkm::cont::make_ArrayHandleCompositeVector(xData, 0, yData, 0, zData, 0);
 				vtkm::cont::ArrayCopy(composite, velocityField);
 
-				vtkm::cont::Field velocity("velocity", vtkm::cont::Field::ASSOC_POINTS, velocityField);
+				vtkm::cont::Field velocity(m_field_name, vtkm::cont::Field::ASSOC_POINTS, velocityField);
 				dom.AddField(velocity);
 			}
 			else
