@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vtkm/filter/Lagrangian.h>
 #include <vtkh/filters/Lagrangian.hpp>
 
@@ -45,7 +46,6 @@ void Lagrangian::PostExecute()
 void Lagrangian::DoExecute()
 {
 	vtkm::filter::Lagrangian lagrangianFilter;
-//	vtkm::Float32 stepSize = 0.01;
   lagrangianFilter.SetStepSize(m_step_size);
 	lagrangianFilter.SetWriteFrequency(m_write_frequency);
 	lagrangianFilter.SetActiveField(m_field_name);
