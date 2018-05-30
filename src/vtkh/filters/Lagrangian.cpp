@@ -62,11 +62,11 @@ void Lagrangian::DoExecute()
 		if(!dom.HasField(m_field_name))
 		{
 			// Cloverleaf3D has vectors stored in the form xvec, yvec, zvec. Composite these vectors.
-			if(dom.HasField("xvec") && dom.HasField("yvec") && dom.HasField("zvec"))
+			if(dom.HasField("velocity_x") && dom.HasField("velocity_y") && dom.HasField("velocity_z"))
 			{
-				vtkm::cont::Field x_field = dom.GetField("xvec");
-				vtkm::cont::Field y_field = dom.GetField("yvec");
-				vtkm::cont::Field z_field = dom.GetField("zvec");
+				vtkm::cont::Field x_field = dom.GetField("velocity_x");
+				vtkm::cont::Field y_field = dom.GetField("velocity_y");
+				vtkm::cont::Field z_field = dom.GetField("velocity_z");
 
 				vtkm::cont::DynamicArrayHandle xIn = x_field.GetData();	
 				vtkm::cont::DynamicArrayHandle yIn = x_field.GetData();	
@@ -83,15 +83,17 @@ void Lagrangian::DoExecute()
 				vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>> velocityField;
 				auto composite = vtkm::cont::make_ArrayHandleCompositeVector(xData, 0, yData, 0, zData, 0);
 				vtkm::cont::ArrayCopy(composite, velocityField);
-
+				
 				vtkm::cont::Field velocity(m_field_name, vtkm::cont::Field::ASSOC_POINTS, velocityField);
 				dom.AddField(velocity);
 			}
 			else
 			{
+				std::cout << "NOT CALLING LAGRANGIAN FILTER" << std::endl;
 				continue;
 			}
 		}
+		std::cout << "LAGRANGIAN FILTER CALL" << std::endl;
 		vtkm::cont::DataSet extractedBasis = lagrangianFilter.Execute(dom);
     m_output->AddDomain(extractedBasis, domain_id);
   }
