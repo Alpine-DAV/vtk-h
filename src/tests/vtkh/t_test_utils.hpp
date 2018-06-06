@@ -113,7 +113,7 @@ vtkm::cont::Field CreateCellScalarField(int size)
   }
 
   vtkm::cont::Field field("cell_data",
-                          vtkm::cont::Field::ASSOC_CELL_SET,
+                          vtkm::cont::Field::Association::CELL_SET,
                           "cells",
                           data);
   return field;
@@ -135,7 +135,7 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords)
   }
 
   vtkm::cont::Field field("point_data",
-                          vtkm::cont::Field::ASSOC_POINTS,
+                          vtkm::cont::Field::Association::POINTS,
                           data);
   return field;
 }
@@ -155,7 +155,7 @@ vtkm::cont::Field CreatePointVecField(int size)
   }
 
   vtkm::cont::Field field("vector_data",
-                          vtkm::cont::Field::ASSOC_POINTS,
+                          vtkm::cont::Field::Association::POINTS,
                           data);
   return field;
 }
