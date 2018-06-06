@@ -12,14 +12,10 @@ set(Sources
   vtkm_dataset_info.cpp
   )
 
-set(vtkh_utils_thirdparty_libs vtkm vtkh_lodepng)
+set(vtkh_utils_thirdparty_libs ${VTKm_LIBRARIES} vtkh_lodepng)
 
 if(TBB_FOUND)
   list(APPEND vtkh_utils_thirdparty_libs tbb)
-endif()
-
-if(VTKM_FOUND)
-  list(APPEND vtkh_utils_thirdparty_libs vtkm)
 endif()
 
 if(CUDA_FOUND)

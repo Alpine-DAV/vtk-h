@@ -187,12 +187,12 @@ public:
     {
       //check to see if this is a supported field ;
       const vtkm::cont::Field &scalar_field = m_in_data_sets[0].GetField(m_field_index);
-      bool is_supported = (scalar_field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                           scalar_field.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+      bool is_supported = (scalar_field.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+                           scalar_field.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
 
       if(!is_supported) return;
 
-      bool assoc_points = scalar_field.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS; 
+      bool assoc_points = scalar_field.GetAssociation() == vtkm::cont::Field::Association::POINTS; 
       vtkm::cont::ArrayHandle<T,S> out; 
       if(assoc_points)
       {
@@ -418,7 +418,7 @@ Slice::DoExecute()
       vtkm::cont::TryExecute(detail::SliceCaller(), dom.GetCoordinateSystem(), slice_field, point, normal);
       
       dom.AddField(vtkm::cont::Field(fname,
-                                      vtkm::cont::Field::ASSOC_POINTS,
+                                      vtkm::cont::Field::Association::POINTS,
                                       slice_field));
     } // each domain
      
