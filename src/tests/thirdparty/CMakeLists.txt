@@ -57,28 +57,18 @@ foreach(TEST ${TPL_TESTS})
     add_cpp_test(TEST ${TEST})
 endforeach()
 
-set(vtkm_smoke_libs ${VTKm_LIBRARIES})
-
-if(TBB_FOUND)
-  list(APPEND vtkm_smoke_libs ${TBB_LIBRARIES})
-endif()
-
-if(CUDA_FOUND)
-  list(APPEND vtkm_smoke_libs cuda)
-endif()
-
 ################################
 # Add our VTKm Unit Tests
 ################################
 foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${vtkm_smoke_libs})
+  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON vtkm)
   target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
   if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${vtkm_smoke_libs})
+    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON vtkm)
     target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
   endif()
   if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${vtkm_smoke_libs})
+    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON vtkm)
     target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
   endif()
 endforeach()
