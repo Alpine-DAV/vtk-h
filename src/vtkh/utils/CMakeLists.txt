@@ -14,8 +14,8 @@ set(Sources
 
 set(vtkh_utils_thirdparty_libs ${VTKm_LIBRARIES} vtkh_lodepng)
 
-if(TBB_FOUND)
-  list(APPEND vtkh_utils_thirdparty_libs tbb)
+if(ENABLE_OPENMP)
+  list(APPEND vtkh_utils_thirdparty_libs openmp)
 endif()
 
 if(CUDA_FOUND)

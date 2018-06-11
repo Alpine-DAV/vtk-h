@@ -34,15 +34,6 @@ if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKh_BINARY_DIR@/@VTKh_INSTALL_CONFIG_DIR@"
   set(VTKh_PACKAGE_IN_BUILD TRUE)
 endif()
 
-if(NOT TBB_DIR)
-  set(TBB_DIR "@TBB_DIR@")
-  # set TBB_ROOT for vtkm to find tbb on its own
-  set(TBB_ROOT "@TBB_DIR@")
-  message(STATUS "VTKh automatically found TBB_DIR: ${TBB_DIR}")
-else()
-  message(STATUS "VTKh using provided path TBB_DIR: ${TBB_DIR}")
-endif()
-
 if(NOT VTKM_DIR)
   set(VTKM_DIR "@VTKM_DIR@")
   message(STATUS "VTKh automatically found VTKM_DIR: ${VTKM_DIR}")

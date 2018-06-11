@@ -78,10 +78,10 @@ bool IsSerialEnabled()
   return serial.Exists();
 }
 
-bool IsTBBEnabled()
+bool IsOpenMPEnabled()
 {
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagTBB> tbb;
-  return tbb.Exists();
+  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagOpenMP> omp;
+  return omp.Exists();
 }
 
 bool IsCUDAEnabled()
@@ -97,11 +97,11 @@ void ForceSerial()
   global_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
 }
 
-void ForceTBB()
+void ForceOpenMP()
 {
   vtkm::cont::RuntimeDeviceTracker global_tracker;
   global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  global_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB());
+  global_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
 }
 
 void ForceCUDA()
@@ -136,9 +136,9 @@ std::string AboutVTKH()
     msg<<"Cuda ";
   }
 
-  if(IsTBBEnabled())
+  if(IsOpenMPEnabled())
   {
-    msg<<"TBB ";
+    msg<<"OpenMP ";
   }
 
   if(IsSerialEnabled())

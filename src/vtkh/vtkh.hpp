@@ -12,10 +12,10 @@ namespace vtkh
 
   std::string AboutVTKH();
   bool IsSerialEnabled();
-  bool IsTBBEnabled();
+  bool IsOpenMPEnabled();
   bool IsCUDAEnabled();
   void ForceSerial();
-  void ForceTBB();
+  void ForceOpenMP();
   void ForceCUDA();
   void ResetDevices();
   int GetMPIRank();
