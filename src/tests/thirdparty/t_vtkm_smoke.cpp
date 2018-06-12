@@ -53,7 +53,6 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Actor.h>
-//#include <vtkm/cont/DeviceAdapter.h>
 #include <iostream>
 
 
@@ -67,8 +66,6 @@ TEST(vtkm_smoke, headers_work)
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, basic_use)
 {
-    using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::cont::DataSet data = maker.Make3DExplicitDataSet2();
     //

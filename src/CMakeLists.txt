@@ -56,10 +56,6 @@ option(BUILD_SHARED_LIBS  "Build shared libraries"    ON)
 option(ENABLE_TESTS       "Build tests"               ON)
 option(ENABLE_MPI         "Build MPI Support"         ON)
 
-################################
-# Find VTKm and setup vars based on VTKm's capabilities.
-################################
-#find_package(VTKm REQUIRED OPTIONAL_COMPONENTS Rendering Serial CUDA TBB)
 
 ################################
 # Set BLT Options
@@ -88,7 +84,6 @@ include(cmake/Setup3rdParty.cmake)
 # These options that affect BLT. We set them up based on what
 # capabilities were found in VTKm
 cmake_dependent_option(ENABLE_CUDA "Build CUDA Support" ON "VTKm_CUDA_FOUND" OFF)
-cmake_dependent_option(ENABLE_TBB "Build TBB Support" ON "VTKm_TBB_FOUND" OFF)
 
 
 ################################
