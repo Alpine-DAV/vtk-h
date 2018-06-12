@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vtkm/filter/Lagrangian.h>
 #include <vtkh/filters/Lagrangian.hpp>
+#include <vtkh/vtkh.hpp>
 
 namespace vtkh 
 {
@@ -33,6 +34,30 @@ Lagrangian::SetWriteFrequency(const int &write_frequency)
   m_write_frequency = write_frequency;
 }
 
+void 
+Lagrangian::SetCustomSeedResolution(const int &cust_res)
+{
+	m_cust_res = cust_res;
+}
+
+void 
+Lagrangian::SetSeedResolutionInX(const int &x_res)
+{
+	m_x_res = x_res;
+}
+
+void 
+Lagrangian::SetSeedResolutionInY(const int &y_res)
+{
+	m_y_res = y_res;
+}
+void 
+Lagrangian::SetSeedResolutionInZ(const int &z_res)
+{
+	m_z_res = z_res;
+}
+
+
 void Lagrangian::PreExecute() 
 {
   Filter::PreExecute();
@@ -48,11 +73,15 @@ void Lagrangian::DoExecute()
 	vtkm::filter::Lagrangian lagrangianFilter;
   lagrangianFilter.SetStepSize(m_step_size);
 	lagrangianFilter.SetWriteFrequency(m_write_frequency);
+	lagrangianFilter.SetRank(vtkh::GetMPIRank());
 	lagrangianFilter.SetActiveField(m_field_name);
-
+	lagrangianFilter.SetCustomSeedResolution(m_cust_res);
+	lagrangianFilter.SetSeedResolutionInX(m_x_res);
+	lagrangianFilter.SetSeedResolutionInY(m_y_res);
+	lagrangianFilter.SetSeedResolutionInZ(m_z_res);
+	
 	this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-  
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -69,8 +98,8 @@ void Lagrangian::DoExecute()
 				vtkm::cont::Field z_field = dom.GetField("velocity_z");
 
 				vtkm::cont::DynamicArrayHandle xIn = x_field.GetData();	
-				vtkm::cont::DynamicArrayHandle yIn = x_field.GetData();	
-				vtkm::cont::DynamicArrayHandle zIn = x_field.GetData();	
+				vtkm::cont::DynamicArrayHandle yIn = y_field.GetData();	
+				vtkm::cont::DynamicArrayHandle zIn = z_field.GetData();	
 			
 				vtkm::cont::ArrayHandle<vtkm::Float64> xData;
 				vtkm::cont::ArrayHandle<vtkm::Float64> yData;
@@ -93,7 +122,7 @@ void Lagrangian::DoExecute()
 				continue;
 			}
 		}
-		std::cout << "LAGRANGIAN FILTER CALL" << std::endl;
+		std::cout << "LAGRANGIAN FILTER CALL:" << vtkh::GetMPIRank() << std::endl;
 		vtkm::cont::DataSet extractedBasis = lagrangianFilter.Execute(dom);
     m_output->AddDomain(extractedBasis, domain_id);
   }

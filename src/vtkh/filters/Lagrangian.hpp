@@ -17,7 +17,12 @@ public:
 	void SetField(const std::string &field_name);
   void SetStepSize(const double &step_size);
   void SetWriteFrequency(const int &write_frequency);
-
+	void SetCustomSeedResolution(const int &cust_res);
+	void SetSeedResolutionInX(const int &x_res);
+	void SetSeedResolutionInY(const int &y_res);
+	void SetSeedResolutionInZ(const int &z_res);
+	
+	
 protected:
   void PreExecute() override;
   void PostExecute() override;
@@ -25,7 +30,9 @@ protected:
 
   std::string m_field_name;
 	double m_step_size;
-	double m_write_frequency;
+	int m_write_frequency;
+	int m_cust_res;
+	int m_x_res, m_y_res, m_z_res;
 };
 
 } //namespace vtkh
