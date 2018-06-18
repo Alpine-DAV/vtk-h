@@ -9,6 +9,7 @@ set(Headers
   RayTracer.hpp
   Render.hpp
   Renderer.hpp
+  PointRenderer.hpp
   Scene.hpp
   VolumeRenderer.hpp
   compositing/Compositor.hpp
@@ -21,6 +22,7 @@ set(Sources
   RayTracer.cpp
   Render.cpp
   Renderer.cpp
+  PointRenderer.cpp
   Scene.cpp
   VolumeRenderer.cpp
   compositing/Compositor.cpp
