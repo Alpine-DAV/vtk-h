@@ -10,6 +10,11 @@
 #include <assert.h>
 #include <limits> 
 
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#include <vtkh/utils/vtkh_mpi_utils.hpp>
+#endif
+
 namespace vtkh 
 {
 DIYCompositor::DIYCompositor()

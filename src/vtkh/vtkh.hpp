@@ -3,10 +3,6 @@
 
 #include <string>
 
-#ifdef PARALLEL
-#include <mpi.h>
-#endif
-
 namespace vtkh
 {
 
@@ -20,10 +16,7 @@ namespace vtkh
   void ResetDevices();
   int GetMPIRank();
   int GetMPISize();
-#ifdef PARALLEL
-  void SetMPIComm(MPI_Comm mpi_comm);
-  MPI_Comm GetMPIComm();
-#endif
-
+  void SetMPICommHandle(int mpi_comm_id);
+  int  GetMPICommHandle();
 }
 #endif

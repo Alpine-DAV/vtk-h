@@ -60,8 +60,6 @@ option(ENABLE_MPI         "Build MPI Support"         ON)
 ################################
 # Set BLT Options
 ################################
-# forward the build shared libs option to blt
-set(ENABLE_SHARED_LIBS ${BUILD_SHARED_LIBS} CACHE INTERNAL "")
 
 # don't use BLT's all warnings feature
 set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
@@ -110,21 +108,23 @@ add_subdirectory(vtkh)
 #------------------------------------------------------------------------------
 # Add a interface target that makes it easier to depend on VTKh
 add_library(vtkh INTERFACE)
-target_link_libraries(vtkh INTERFACE vtkh_core vtkh_filters vtkh_rendering)
+target_link_libraries(vtkh INTERFACE
+                      vtkh_core
+                      vtkh_filters
+                      vtkh_rendering)
 
 # Install libraries
 install(TARGETS vtkh EXPORT ${VTKh_EXPORT_NAME})
 
 if (ENABLE_MPI)
-  add_library(vtkh_par INTERFACE)
-  target_link_libraries(vtkh_par INTERFACE vtkh_core_par vtkh_filters_par
-    vtkh_rendering_par)
-  target_compile_definitions(vtkh_par
-    INTERFACE PARALLEL # rename to VTKh_IS_PARALLEL or something like that.
-    )
+  add_library(vtkh_mpi INTERFACE)
+  target_link_libraries(vtkh_mpi INTERFACE
+                        vtkh_core_mpi
+                        vtkh_filters_mpi
+                        vtkh_rendering_mpi)
 
   # Install libraries
-  install(TARGETS vtkh_par EXPORT ${VTKh_EXPORT_NAME})
+  install(TARGETS vtkh_mpi EXPORT ${VTKh_EXPORT_NAME})
 endif()
 
 
