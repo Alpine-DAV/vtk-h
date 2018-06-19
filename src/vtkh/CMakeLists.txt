@@ -18,20 +18,14 @@ set(Sources
 
 set(vtkh_thirdparty_libs ${VTKm_LIBRARIES} diy vtkh_utils)
 
-if(TBB_FOUND)
-  list(APPEND vtkh_thirdparty_libs tbb)
+if(ENABLE_OPENMP)
+  list(APPEND vtkh_thirdparty_libs openmp)
 endif()
 
 if(CUDA_FOUND)
   list(APPEND vtkh_thirdparty_libs cuda)
 endif()
 
-
-#
-# add_library(vtkh_dependencies_private INTERFACE)
-# if (ENABLE_TBB)
-#   target_link_libraries(vtkh_dependencies_private INTERFACE tbb)
-# endif()
 
 
 # blt vtk dep, includes all of vtkm
