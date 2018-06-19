@@ -2,15 +2,13 @@
 # See License.txt
 #==============================================================================
 
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.9)
 
 ################################
 # cmake policy selections
 ################################
 # avoid warnings for project commands w/o VERSION
 cmake_policy(SET CMP0048 NEW)
-# use NEW policy to allow if "IN_LIST" support
-cmake_policy(SET CMP0057 NEW)
 
 ################################
 # VTK-h
