@@ -29,6 +29,10 @@ set(Sources
 
 set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
 
+if(ENABLE_OPENMP)
+  list(APPEND vtkh_rendering_deps openmp)
+endif()
+
 if(VTKm_CUDA_FOUND)
     # triggers cuda compile
     list(APPEND vtkh_rendering_deps cuda)
