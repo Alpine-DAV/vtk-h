@@ -29,10 +29,6 @@ set(vtkh_rendering_sources
 
 set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
 
-if(ENABLE_OPENMP)
-  list(APPEND vtkh_rendering_deps openmp)
-endif()
-
 if(VTKm_CUDA_FOUND)
     # triggers cuda compile
     list(APPEND vtkh_rendering_deps cuda)
@@ -44,6 +40,15 @@ blt_add_library(
   HEADERS ${vtkh_rendering_sources}
   DEPENDS_ON ${vtkh_rendering_deps}
   )
+
+if(ENABLE_OPENMP)
+  if(CUDA_FOUND)
+    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+  else()
+    add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+  endif()
+endif()
+
 
 # Install libraries
 install(TARGETS vtkh_rendering
@@ -83,8 +88,6 @@ if (MPI_FOUND)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
-         set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
-         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D VTKH_PARALLEL")
          # triggers cuda compile
          list(APPEND vtkh_rendering_mpi_deps cuda)
     endif()
@@ -96,22 +99,25 @@ if (MPI_FOUND)
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
 
-    if(CUDA_FOUND)
-         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREV})
-    else()
-         blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-D VTKH_PARALLEL")
+    if(ENABLE_OPENMP)
+        if(CUDA_FOUND)
+            blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+        else()
+            add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+        endif()
     endif()
 
-  # Install libraries
-  install(TARGETS vtkh_rendering_mpi
-    EXPORT ${VTKh_EXPORT_NAME}
-    ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
-    LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
-    RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
-    )
+    blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-D VTKH_PARALLEL")
+  
+    # Install libraries
+    install(TARGETS vtkh_rendering_mpi
+            EXPORT ${VTKh_EXPORT_NAME}
+            ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
+            LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
+            RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR})
 
-  # Install headers
-  install(FILES ${ParallelHeaders}
-    DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/rendering)
+    # Install headers
+    install(FILES ${ParallelHeaders}
+            DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/rendering)
 
 endif()

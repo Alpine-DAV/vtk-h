@@ -12,11 +12,11 @@ set(vtkh_utils_sources
   vtkm_dataset_info.cpp
   )
 
-set(vtkh_utils_thirdparty_libs ${VTKm_LIBRARIES} vtkh_lodepng)
+set(vtkh_utils_thirdparty_libs vtkm vtkh_lodepng)
 
-if(ENABLE_OPENMP)
-  list(APPEND vtkh_utils_thirdparty_libs openmp)
-endif()
+#if(ENABLE_OPENMP)
+#  list(APPEND vtkh_utils_thirdparty_libs openmp)
+#endif()
 
 if(CUDA_FOUND)
   list(APPEND vtkh_utils_thirdparty_libs cuda)
@@ -28,6 +28,16 @@ blt_add_library(
   HEADERS ${vtkh_utils_headers}
   DEPENDS_ON ${vtkh_utils_thirdparty_libs}
   )
+
+if(ENABLE_OPENMP)
+  if(CUDA_FOUND) 
+    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+  else()
+    add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+  endif()
+endif()
+
+
 
 # Install libraries
 install(TARGETS vtkh_utils
