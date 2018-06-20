@@ -33,7 +33,7 @@ if(ENABLE_OPENMP)
   if(CUDA_FOUND) 
     blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
   else()
-    add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
   endif()
 endif()
 
