@@ -90,7 +90,7 @@ void Lagrangian::DoExecute()
 		
 		if(!dom.HasField(m_field_name))
 		{
-			// Cloverleaf3D has vectors stored in the form xvec, yvec, zvec. Composite these vectors.
+			// Cloverleaf3D has a velocity field stored as velocity_x, velocity_y, velocity_z. Composite these vectors.
 			if(dom.HasField("velocity_x") && dom.HasField("velocity_y") && dom.HasField("velocity_z"))
 			{
 				vtkm::cont::Field x_field = dom.GetField("velocity_x");
@@ -118,11 +118,11 @@ void Lagrangian::DoExecute()
 			}
 			else
 			{
-				std::cout << "NOT CALLING LAGRANGIAN FILTER" << std::endl;
+				std::cout << "Lagrangian filter not called: velocity field names do not match." << std::endl;
 				continue;
 			}
 		}
-		std::cout << "LAGRANGIAN FILTER CALL:" << vtkh::GetMPIRank() << std::endl;
+		std::cout << "Lagrangian filter call on rank:" << vtkh::GetMPIRank() << std::endl;
 		vtkm::cont::DataSet extractedBasis = lagrangianFilter.Execute(dom);
     m_output->AddDomain(extractedBasis, domain_id);
   }
