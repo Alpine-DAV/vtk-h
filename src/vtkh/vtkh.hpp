@@ -3,27 +3,20 @@
 
 #include <string>
 
-#ifdef PARALLEL
-#include <mpi.h>
-#endif
-
 namespace vtkh
 {
 
   std::string AboutVTKH();
   bool IsSerialEnabled();
-  bool IsTBBEnabled();
+  bool IsOpenMPEnabled();
   bool IsCUDAEnabled();
   void ForceSerial();
-  void ForceTBB();
+  void ForceOpenMP();
   void ForceCUDA();
   void ResetDevices();
   int GetMPIRank();
   int GetMPISize();
-#ifdef PARALLEL
-  void SetMPIComm(MPI_Comm mpi_comm);
-  MPI_Comm GetMPIComm();
-#endif
-
+  void SetMPICommHandle(int mpi_comm_id);
+  int  GetMPICommHandle();
 }
 #endif
