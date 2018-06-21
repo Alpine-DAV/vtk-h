@@ -59,7 +59,8 @@
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, headers_work)
 {
-    vtkm::cont::DataSet *res = NULL;
+    vtkm::cont::DataSet *res;
+    res = NULL;
     EXPECT_EQ(1, 1);
 }
 

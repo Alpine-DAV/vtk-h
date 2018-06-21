@@ -11,8 +11,9 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/TryExecute.h>
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   #include <mpi.h>
+  #include <vtkh/utils/vtkh_mpi_utils.hpp>
 #endif
 namespace vtkh {
 namespace detail
@@ -141,7 +142,7 @@ vtkm::Id
 DataSet::GetGlobalNumberOfDomains() const
 {
   vtkm::Id domains = this->GetNumberOfDomains(); 
-#ifdef PARALLEL 
+#ifdef VKTH_PARALLEL 
   MPI_Comm mpi_comm = vtkh::GetMPIComm();
   int local_doms = static_cast<int>(domains);  
   int global_doms = 0;
@@ -202,7 +203,7 @@ DataSet::GetGlobalBounds(vtkm::Id coordinate_system_index) const
   vtkm::Bounds bounds;
   bounds = GetBounds(coordinate_system_index);
 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   MPI_Comm mpi_comm = vtkh::GetMPIComm();
 
   vtkm::Float64 x_min = bounds.X.Min;
@@ -331,7 +332,7 @@ DataSet::GetGlobalRange(const std::string &field_name) const
   vtkm::cont::ArrayHandle<vtkm::Range> range;
   range = GetRange(field_name);
 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   vtkm::Id num_components = range.GetNumberOfValues();
   MPI_Comm mpi_comm = vtkh::GetMPIComm();
   //
@@ -458,7 +459,7 @@ DataSet::IsStructured(int &topological_dims, const vtkm::Id cell_set_index) cons
     }
   }
 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   int local_boolean = is_structured ? 1 : 0; 
   int global_boolean;
   MPI_Comm mpi_comm = vtkh::GetMPIComm();
@@ -565,7 +566,7 @@ bool
 DataSet::GlobalFieldExists(const std::string &field_name) const
 {
   bool exists = FieldExists(field_name);
-#ifdef PARALLEL
+#ifdef VTKH_VTKH_PARALLEL
   int local_boolean = exists ? 1 : 0; 
   int global_boolean;
 
@@ -639,7 +640,7 @@ DataSet::GetFieldAssociation(const std::string field_name, bool &valid_field) co
     }
   }
   
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
 
   MPI_Comm mpi_comm = vtkh::GetMPIComm();
 
