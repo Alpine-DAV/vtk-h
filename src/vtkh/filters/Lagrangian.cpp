@@ -110,10 +110,10 @@ void Lagrangian::DoExecute()
 				zIn.CopyTo(zData);
 			
 				vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>> velocityField;
-				auto composite = vtkm::cont::make_ArrayHandleCompositeVector(xData, 0, yData, 0, zData, 0);
+				auto composite = vtkm::cont::make_ArrayHandleCompositeVector(xData, yData, zData);
 				vtkm::cont::ArrayCopy(composite, velocityField);
 				
-				vtkm::cont::Field velocity(m_field_name, vtkm::cont::Field::ASSOC_POINTS, velocityField);
+				vtkm::cont::Field velocity(m_field_name, vtkm::cont::Field::Association::POINTS, velocityField);
 				dom.AddField(velocity);
 			}
 			else
