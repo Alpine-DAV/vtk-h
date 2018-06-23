@@ -182,7 +182,7 @@ Render::RenderWorldAnnotations()
   int size = m_canvases.size(); 
   if(size < 1) return;
 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
 
@@ -220,7 +220,7 @@ Render::Save()
   // Rank 0 domain 0 contains the complete image.
   int size = m_canvases.size(); 
   if(size < 1) return;
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
   float* color_buffer = &GetVTKMPointer(m_canvases[0]->GetColorBuffer())[0][0]; 

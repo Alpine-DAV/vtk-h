@@ -60,17 +60,16 @@ endforeach()
 ################################
 # Add our VTKm Unit Tests
 ################################
-
 foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST}_Serial SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES})
-  target_compile_definitions(${TEST}_Serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
-  if (ENABLE_TBB)
-    add_cpp_test(TEST ${TEST}_TBB SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  add_cpp_test(TEST ${TEST}_serial SOURCE ${TEST} DEPENDS_ON vtkm)
+  target_compile_definitions(${TEST}_serial PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+  if (ENABLE_OPENMP)
+    add_cpp_test(TEST ${TEST}_openmp SOURCE ${TEST} DEPENDS_ON vtkm)
+    target_compile_definitions(${TEST}_openmp PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_OPENMP")
   endif()
-  if (ENABLE_CUDA)
-    add_cuda_test(TEST ${TEST}_CUDA SOURCE ${TEST} DEPENDS_ON ${VTKm_LIBRARIES} ${TBB_LIBRARIES})
-    target_compile_definitions(${TEST}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  if (CUDA_FOUND)
+    add_cuda_test(TEST ${TEST}_cuda SOURCE ${TEST} DEPENDS_ON vtkm)
+    target_compile_definitions(${TEST}_cuda PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
   endif()
 endforeach()
 
@@ -87,4 +86,5 @@ if(MPI_FOUND)
 else()
   message(STATUS "MPI disabled: Skipping related tests")
 endif()
+
 
