@@ -59,7 +59,7 @@ if(MPI_FOUND)
       NAME vtkh_core_mpi
       SOURCES ${vtkh_core_sources}
       HEADERS ${vtkh_core_headers}
-      DEPENDS_ON ${vtkh_thirdparty_libs} mpi vtkh_utils_mpi
+      DEPENDS_ON ${vtkh_thirdparty_libs} mpi
       )
 
   if(ENABLE_OPENMP)
@@ -70,7 +70,7 @@ if(MPI_FOUND)
       endif()
   endif()
 
-  blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-D VTKH_PARALLEL")
+  blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-DVTKH_PARALLEL")
 
   # Install libraries
   install(TARGETS vtkh_core_mpi

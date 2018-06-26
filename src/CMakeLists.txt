@@ -107,6 +107,7 @@ add_subdirectory(vtkh)
 add_library(vtkh INTERFACE)
 target_link_libraries(vtkh INTERFACE
                       vtkh_core
+                      vtkh_utils
                       vtkh_filters
                       vtkh_rendering)
 
@@ -117,6 +118,7 @@ if (ENABLE_MPI)
   add_library(vtkh_mpi INTERFACE)
   target_link_libraries(vtkh_mpi INTERFACE
                         vtkh_core_mpi
+                        vtkh_utils_mpi
                         vtkh_filters_mpi
                         vtkh_rendering_mpi)
 
