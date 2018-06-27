@@ -13,7 +13,6 @@
 #include <vtkm/cont/TryExecute.h>
 #ifdef VTKH_PARALLEL
   #include <mpi.h>
-  #include <vtkh/utils/vtkh_mpi_utils.hpp>
 #endif
 namespace vtkh {
 namespace detail
@@ -143,7 +142,7 @@ DataSet::GetGlobalNumberOfDomains() const
 {
   vtkm::Id domains = this->GetNumberOfDomains(); 
 #ifdef VKTH_PARALLEL 
-  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   int local_doms = static_cast<int>(domains);  
   int global_doms = 0;
   MPI_Allreduce(&local_doms, 
@@ -204,7 +203,7 @@ DataSet::GetGlobalBounds(vtkm::Id coordinate_system_index) const
   bounds = GetBounds(coordinate_system_index);
 
 #ifdef VTKH_PARALLEL
-  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
   vtkm::Float64 x_min = bounds.X.Min;
   vtkm::Float64 x_max = bounds.X.Max;
@@ -334,7 +333,7 @@ DataSet::GetGlobalRange(const std::string &field_name) const
 
 #ifdef VTKH_PARALLEL
   vtkm::Id num_components = range.GetNumberOfValues();
-  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   //
   // it is possible to have an empty dataset at one of the ranks
   // so we must check for this so MPI comm does not hang.
@@ -462,7 +461,7 @@ DataSet::IsStructured(int &topological_dims, const vtkm::Id cell_set_index) cons
 #ifdef VTKH_PARALLEL
   int local_boolean = is_structured ? 1 : 0; 
   int global_boolean;
-  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   MPI_Allreduce((void *)(&local_boolean),
                 (void *)(&global_boolean),
                 1,
@@ -570,7 +569,7 @@ DataSet::GlobalFieldExists(const std::string &field_name) const
   int local_boolean = exists ? 1 : 0; 
   int global_boolean;
 
-  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   MPI_Allreduce((void *)(&local_boolean),
                 (void *)(&global_boolean),
                 1,
@@ -642,7 +641,7 @@ DataSet::GetFieldAssociation(const std::string field_name, bool &valid_field) co
   
 #ifdef VTKH_PARALLEL
 
-  MPI_Comm mpi_comm = vtkh::GetMPIComm();
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
 
   int *global_assocs = new int[vtkh::GetMPISize()];

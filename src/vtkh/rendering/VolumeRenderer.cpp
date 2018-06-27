@@ -9,7 +9,6 @@
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
-#include <vtkh/utils/vtkh_mpi_utils.hpp>
 #endif
 
 
@@ -223,7 +222,7 @@ VolumeRenderer::DepthSort(int num_domains,
   assert(local_vis_order.size() == num_domains);
 #ifdef VTKH_PARALLEL
   int root = 0;
-  MPI_Comm comm = vtkh::GetMPIComm();
+  MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   int num_ranks = vtkh::GetMPISize();
   int rank = vtkh::GetMPIRank();
   int *domain_counts = NULL; 

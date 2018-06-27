@@ -8,7 +8,6 @@
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
-#include <vtkh/utils/vtkh_mpi_utils.hpp>
 #endif
 
 namespace vtkh
@@ -16,8 +15,12 @@ namespace vtkh
 
 static int g_mpi_comm_id = -1;
 
-#ifdef VTKH_PARALLEL // mpi case
 
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+#ifdef VTKH_PARALLEL // mpi case
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 void
@@ -51,9 +54,8 @@ GetMPICommHandle()
 int 
 GetMPIRank()
 {
-  CheckCommHandle();
   int rank;
-  MPI_Comm comm = GetMPIComm(); 
+  MPI_Comm comm = MPI_Comm_f2c(GetMPICommHandle());
   MPI_Comm_rank(comm, &rank);
   return rank;
 }
@@ -62,21 +64,24 @@ GetMPIRank()
 int 
 GetMPISize()
 {
-  CheckCommHandle();
   int size;
-  MPI_Comm comm = GetMPIComm(); 
+  MPI_Comm comm = MPI_Comm_f2c(GetMPICommHandle());
   MPI_Comm_size(comm, &size);
   return size;
 }
 
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 #else // non-mpi case
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 void
 CheckCommHandle()
 {
   std::stringstream msg;
-  msg<<"VTK-h internal error. Trying to access MPI comm in non-mpi vtkh lib";
+  msg<<"VTK-h internal error. Trying to access MPI comm in non-mpi vtkh lib.";
   msg<<"Are you using the right library (vtkh vs vtkh_mpi)?";
   throw Error(msg.str());
 }
@@ -86,7 +91,7 @@ void
 SetMPICommHandle(int mpi_comm_id)
 {
   std::stringstream msg;
-  msg<<"VTK-h internal error. Trying to set MPI comm handle in non-mpi vtkh lib";
+  msg<<"VTK-h internal error. Trying to set MPI comm handle in non-mpi vtkh lib.";
   msg<<"Are you using the right library (vtkh vs vtkh_mpi)?";
   throw Error(msg.str());
 }
@@ -96,7 +101,7 @@ int
 GetMPICommHandle()
 {
   std::stringstream msg;
-  msg<<"VTK-h internal error. Trying to get MPI comm handle in non-mpi vtkh lib";
+  msg<<"VTK-h internal error. Trying to get MPI comm handle in non-mpi vtkh lib.";
   msg<<"Are you using the right library (vtkh vs vtkh_mpi)?";
   throw Error(msg.str());
   return g_mpi_comm_id;
@@ -115,7 +120,9 @@ GetMPISize()
 {
   return 1;
 }
+//---------------------------------------------------------------------------//
 #endif
+//---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 bool
@@ -123,6 +130,17 @@ IsSerialEnabled()
 {
   vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagSerial> serial;
   return serial.Exists();
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsMPIEnabled()
+{
+#ifdef VTKH_PARALLEL
+  return true;
+#else
+  return false;
+#endif
 }
 
 //---------------------------------------------------------------------------//
