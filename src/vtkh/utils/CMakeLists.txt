@@ -54,6 +54,14 @@ if (MPI_FOUND)
       HEADERS ${vtkh_utils_headers}
       DEPENDS_ON ${vtkh_utils_thirdparty_libs} mpi
       )
+      
+      if(ENABLE_OPENMP)
+        if(CUDA_FOUND) 
+          blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+        else()
+          blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "${OpenMP_CXX_FLAGS}")
+        endif()
+      endif()
 
     # Install libraries
     install(TARGETS vtkh_utils_mpi

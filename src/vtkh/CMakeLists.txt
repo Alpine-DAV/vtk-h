@@ -16,11 +16,11 @@ set(vtkh_core_sources
   )
 
 
-set(vtkh_thirdparty_libs vtkm diy vtkh_utils)
+set(vtkh_core_deps vtkm diy vtkh_utils)
 
 
 if(CUDA_FOUND)
-  list(APPEND vtkh_thirdparty_libs cuda)
+  list(APPEND vtkh_core_deps cuda)
 endif()
 
 
@@ -29,14 +29,14 @@ blt_add_library(
   NAME vtkh_core
   SOURCES ${vtkh_core_sources}
   HEADERS ${vtkh_core_headers}
-  DEPENDS_ON ${vtkh_thirdparty_libs}
+  DEPENDS_ON ${vtkh_core_deps}
   )
 
 if(ENABLE_OPENMP)
   if(CUDA_FOUND)
-    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_core FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
   else()
-    blt_add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_core FLAGS "${OpenMP_CXX_FLAGS}")
   endif()
 endif()
 
@@ -55,18 +55,25 @@ install(FILES ${vtkh_core_headers}
 
 if(MPI_FOUND)
 
+  set(vtkh_core_mpi_deps vtkm diy vtkh_utils_mpi)
+
+  if(CUDA_FOUND)
+    list(APPEND vtkh_core_mpi_deps cuda)
+  endif()
+  
+  
   blt_add_library(
       NAME vtkh_core_mpi
       SOURCES ${vtkh_core_sources}
       HEADERS ${vtkh_core_headers}
-      DEPENDS_ON ${vtkh_thirdparty_libs} mpi
+      DEPENDS_ON ${vtkh_core_mpi_deps} mpi
       )
 
   if(ENABLE_OPENMP)
       if(CUDA_FOUND)
-          blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+          blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
       else()
-          blt_add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+          blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "${OpenMP_CXX_FLAGS}")
       endif()
   endif()
 
