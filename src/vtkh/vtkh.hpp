@@ -12,6 +12,9 @@ namespace vtkh
   bool        IsCUDAEnabled();
   bool        IsMPIEnabled();
   
+  int         CUDADeviceCount();
+  void        SelectCUDADevice(int device_index);
+      
   void        ForceSerial();
   void        ForceOpenMP();
   void        ForceCUDA();

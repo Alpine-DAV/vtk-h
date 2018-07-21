@@ -4,6 +4,11 @@
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
+
+#ifdef VTKM_CUDA
+#include <cuda.h>
+#endif
+
 #include <sstream>
 
 #ifdef VTKH_PARALLEL
@@ -157,6 +162,64 @@ IsCUDAEnabled()
 {
   vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagCuda> cuda;
   return cuda.Exists();
+}
+
+//---------------------------------------------------------------------------//
+int
+CUDADeviceCount()
+{
+    int device_count = 0;
+#ifdef VTKM_CUDA
+    cudaError_t res = cudaGetDeviceCount(&device_count);
+    if(res != cudaSuccess)
+    {
+        std::stringstream msg;
+        msg << "Failed to get CUDA device count"
+            << "CUDA Error Message: " 
+            << cudaGetErrorString(res);
+        throw Error(msg.str());
+    }
+    return device_count;
+
+#else
+    throw Error("Cannot fetch CUDA device count: VTK-m lacks CUDA support");
+#endif
+    return device_count;
+}
+
+//---------------------------------------------------------------------------//
+void
+SelectCUDADevice(int device_index)
+{
+#ifdef VTKM_CUDA
+    int device_count = CUDADeviceCount();
+    // make sure index is ok
+    if(device_index >= 0 && device_index < device_count)
+    {
+        cudaError_t res = cudaSetDevice(device_index);
+        if(res != cudaSuccess)
+        {
+            std::stringstream msg;
+            msg << "Failed to set CUDA device (device index = " 
+                << device_index << ")"
+                << "CUDA Error Message: " 
+                << cudaGetErrorString(res);
+            throw Error(msg.str());
+        }
+    }
+    else
+    {
+        std::stringstream msg;
+        msg << "Invalid CUDA device index: "
+            << device_index 
+            << " (number of devices = " 
+            << device_index << ")";
+        throw Error(msg.str());
+    }
+#else
+    throw Error("Cannot set CUDA device: VTK-m lacks CUDA support");
+#endif
+
 }
 
 //---------------------------------------------------------------------------//
