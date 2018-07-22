@@ -66,6 +66,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_volume_renderer
                 )
 
+set(CUDA_TESTS t_vtk-h_cuda)
 
 set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_dataset_par
@@ -85,6 +86,11 @@ foreach(TEST ${BASIC_TESTS})
     add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
 endforeach()
 
+if(CUDA_FOUND)
+  foreach(TEST ${CUDA_TESTS})
+      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+  endforeach()
+endif()
 
 ################################
 # Add optional tests
