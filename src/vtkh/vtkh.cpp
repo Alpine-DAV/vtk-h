@@ -131,14 +131,6 @@ GetMPISize()
 
 //---------------------------------------------------------------------------//
 bool
-IsSerialEnabled()
-{
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagSerial> serial;
-  return serial.Exists();
-}
-
-//---------------------------------------------------------------------------//
-bool
 IsMPIEnabled()
 {
 #ifdef VTKH_PARALLEL
@@ -150,7 +142,16 @@ IsMPIEnabled()
 
 //---------------------------------------------------------------------------//
 bool
-IsOpenMPEnabled()
+IsSerialAvailible()
+{
+  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagSerial> serial;
+  return serial.Exists();
+}
+
+
+//---------------------------------------------------------------------------//
+bool
+IsOpenMPAvailible()
 {
   vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagOpenMP> omp;
   return omp.Exists();
@@ -158,10 +159,38 @@ IsOpenMPEnabled()
 
 //---------------------------------------------------------------------------//
 bool
-IsCUDAEnabled()
+IsCUDAAvailible()
 {
   vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagCuda> cuda;
   return cuda.Exists();
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsSerialEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker global_tracker;
+  global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  return global_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial());
+}
+
+
+//---------------------------------------------------------------------------//
+bool
+IsOpenMPEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker global_tracker;
+  global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  return global_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP());
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsCUDAEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker global_tracker;
+  global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  return global_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda());
 }
 
 //---------------------------------------------------------------------------//
@@ -273,19 +302,44 @@ AboutVTKH()
 #endif
   msg<<"VTK-m adapters: ";
 
-  if(IsCUDAEnabled())
+  if(IsCUDAAvailible())
   {
-    msg<<"Cuda ";
+    msg<<"Cuda (";
+    if(IsCUDAEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
+
   }
 
-  if(IsOpenMPEnabled())
+  if(IsOpenMPAvailible())
   {
-    msg<<"OpenMP ";
+    msg<<"OpenMP (";
+    if(IsOpenMPEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
   }
 
-  if(IsSerialEnabled())
+  if(IsSerialAvailible())
   {
-    msg<<"Serial ";
+    msg<<"Serial (";
+    if(IsSerialEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
   }
   msg<<"\n";
  msg<<"------------------------------------------\n";
