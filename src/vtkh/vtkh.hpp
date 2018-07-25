@@ -8,9 +8,10 @@ namespace vtkh
 
   std::string AboutVTKH();
   // is backend support compiled in
-  bool        IsSerialAvailible();
-  bool        IsOpenMPAvailible();
-  bool        IsCUDAAvailible();
+  bool        IsSerialAvailable();
+  bool        IsOpenMPAvailable();
+  bool        IsCUDAAvailable();
+
   // is backend enabled (e.g., ForceX)
   bool        IsSerialEnabled();
   bool        IsOpenMPEnabled();

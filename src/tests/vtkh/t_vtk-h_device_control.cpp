@@ -56,7 +56,9 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 //----------------------------------------------------------------------------
 TEST(vtkh_raytracer, vtkh_omp_render)
 {
-  if(!vtkh::IsOpenMPAvailible())
+
+  if(!vtkh::IsOpenMPAvailable())
+
   {
     std::cout<<"OpenMP not availible: skipping test.\n";
     return;
@@ -101,7 +103,9 @@ TEST(vtkh_raytracer, vtkh_omp_render)
 //----------------------------------------------------------------------------
 TEST(vtkh_raytracer, vtkh_cuda_render)
 {
-  if(!vtkh::IsCUDAAvailible())
+
+  if(!vtkh::IsCUDAAvailable())
+
   {
     std::cout<<"CUDA not availible: skipping test.\n";
     return;
