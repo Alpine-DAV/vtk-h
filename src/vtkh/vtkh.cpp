@@ -142,7 +142,7 @@ IsMPIEnabled()
 
 //---------------------------------------------------------------------------//
 bool
-IsSerialAvailible()
+IsSerialAvailable()
 {
   vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagSerial> serial;
   return serial.Exists();
@@ -151,7 +151,7 @@ IsSerialAvailible()
 
 //---------------------------------------------------------------------------//
 bool
-IsOpenMPAvailible()
+IsOpenMPAvailable()
 {
   vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagOpenMP> omp;
   return omp.Exists();
@@ -159,7 +159,7 @@ IsOpenMPAvailible()
 
 //---------------------------------------------------------------------------//
 bool
-IsCUDAAvailible()
+IsCUDAAvailable()
 {
   vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagCuda> cuda;
   return cuda.Exists();
@@ -302,7 +302,7 @@ AboutVTKH()
 #endif
   msg<<"VTK-m adapters: ";
 
-  if(IsCUDAAvailible())
+  if(IsCUDAAvailable())
   {
     msg<<"Cuda (";
     if(IsCUDAEnabled())
@@ -316,7 +316,7 @@ AboutVTKH()
 
   }
 
-  if(IsOpenMPAvailible())
+  if(IsOpenMPAvailable())
   {
     msg<<"OpenMP (";
     if(IsOpenMPEnabled())
@@ -329,7 +329,7 @@ AboutVTKH()
     }
   }
 
-  if(IsSerialAvailible())
+  if(IsSerialAvailable())
   {
     msg<<"Serial (";
     if(IsSerialEnabled())
