@@ -11,6 +11,7 @@ namespace vtkh
   bool        IsSerialAvailable();
   bool        IsOpenMPAvailable();
   bool        IsCUDAAvailable();
+
   // is backend enabled (e.g., ForceX)
   bool        IsSerialEnabled();
   bool        IsOpenMPEnabled();
