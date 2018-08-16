@@ -53,22 +53,20 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Actor.h>
-//#include <vtkm/cont/DeviceAdapter.h>
 #include <iostream>
 
 
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, headers_work)
 {
-    vtkm::cont::DataSet *res = NULL;
+    vtkm::cont::DataSet *res;
+    res = NULL;
     EXPECT_EQ(1, 1);
 }
 
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, basic_use)
 {
-    using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::cont::DataSet data = maker.Make3DExplicitDataSet2();
     //
@@ -79,7 +77,7 @@ TEST(vtkm_smoke, basic_use)
     scalars.push_back(0);
     scalars.push_back(1);
     vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
-                                                           vtkm::cont::Field::ASSOC_CELL_SET,
+                                                           vtkm::cont::Field::Association::CELL_SET,
                                                            "cell_set",
                                                            scalars);
 

@@ -6,7 +6,7 @@
 #include <vtkh/utils/vtkm_dataset_info.hpp>
 #include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
 #include "compositing/DIYCompositor.hpp"
 #endif
 
@@ -21,7 +21,7 @@ Renderer::Renderer()
     m_has_color_table(true)
 {
   m_compositor  = NULL; 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   m_compositor  = new DIYCompositor(); 
 #else
   m_compositor  = new Compositor(); 
@@ -117,7 +117,7 @@ Renderer::Composite(const int &num_images)
 
     Image result = m_compositor->Composite();
 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
       ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 

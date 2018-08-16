@@ -10,12 +10,16 @@
 #include <assert.h>
 #include <limits> 
 
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#endif
+
 namespace vtkh 
 {
 DIYCompositor::DIYCompositor()
 : m_rank(0)
 {
-    m_diy_comm = diy::mpi::communicator(vtkh::GetMPIComm());
+    m_diy_comm = diy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
     m_rank = m_diy_comm.rank();
 }
   

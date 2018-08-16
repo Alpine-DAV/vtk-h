@@ -7,7 +7,7 @@
 // 
 // All rights reserved.
 // 
-// This file is part of Ascent. 
+// This file is part of VTK-h. 
 // 
 // For details, see: http://software.llnl.gov/ascent/.
 // 
@@ -44,19 +44,28 @@
 
 //-----------------------------------------------------------------------------
 ///
-/// file: example.cpp
+/// file: t_vtk-h_cuda.cpp
 ///
 //-----------------------------------------------------------------------------
 
-#include <iostream>
+#include "gtest/gtest.h"
 
 #include <vtkh/vtkh.hpp>
-#include <vtkh/DataSet.hpp>
 
-int main(int argc, char **argv)
+#include <iostream>
+
+using namespace std;
+
+
+//-----------------------------------------------------------------------------
+TEST(vtkh_cuda, vtkh_cuda_iface_checks)
 {
-    std::cout << vtkh::AboutVTKH() << std::endl;
-    vtkh::DataSet d;
-}
+  //vtkh::ForceCUDA();
+  EXPECT_TRUE(vtkh::IsCUDAEnabled());
+  EXPECT_TRUE(vtkh::CUDADeviceCount() > 0);
+  vtkh::SelectCUDADevice(1);
 
+  std::cout << vtkh::CUDADeviceCount();
+
+}
 

@@ -15,7 +15,7 @@ public:
   virtual ~Recenter(); 
   std::string GetName() const override;
   void SetField(const std::string &field_name);
-  void SetResultAssoc(vtkm::cont::Field::AssociationEnum assoc);
+  void SetResultAssoc(vtkm::cont::Field::Association assoc);
 
 protected:
   void PreExecute() override;
@@ -23,7 +23,7 @@ protected:
   void DoExecute() override;
   
   std::string m_field_name;
-  vtkm::cont::Field::AssociationEnum m_assoc;
+  vtkm::cont::Field::Association m_assoc;
 };
 
 } //namespace vtkh
