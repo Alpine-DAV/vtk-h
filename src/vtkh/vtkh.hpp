@@ -7,16 +7,30 @@ namespace vtkh
 {
 
   std::string AboutVTKH();
-  bool IsSerialEnabled();
-  bool IsOpenMPEnabled();
-  bool IsCUDAEnabled();
-  void ForceSerial();
-  void ForceOpenMP();
-  void ForceCUDA();
-  void ResetDevices();
-  int GetMPIRank();
-  int GetMPISize();
-  void SetMPICommHandle(int mpi_comm_id);
-  int  GetMPICommHandle();
+  // is backend support compiled in
+  bool        IsSerialAvailable();
+  bool        IsOpenMPAvailable();
+  bool        IsCUDAAvailable();
+
+  // is backend enabled (e.g., ForceX)
+  bool        IsSerialEnabled();
+  bool        IsOpenMPEnabled();
+  bool        IsCUDAEnabled();
+  
+  bool        IsMPIEnabled();
+  
+  int         CUDADeviceCount();
+  void        SelectCUDADevice(int device_index);
+      
+  void        ForceSerial();
+  void        ForceOpenMP();
+  void        ForceCUDA();
+  void        ResetDevices();
+
+  int         GetMPIRank();
+  int         GetMPISize();
+  
+  void        SetMPICommHandle(int mpi_comm_id);
+  int         GetMPICommHandle();
 }
 #endif

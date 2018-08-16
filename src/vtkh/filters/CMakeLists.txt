@@ -34,7 +34,7 @@ set(vtkh_filters_sources
   Slice.cpp
   )
 
-set(vtkh_filters_deps vtkh_core  )
+set(vtkh_filters_deps vtkh_core vtkh_utils )
 
 if(CUDA_FOUND)
     # triggers cuda compile
@@ -51,9 +51,9 @@ blt_add_library(
 
 if(ENABLE_OPENMP)
   if(CUDA_FOUND)
-    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_filters FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
   else()
-    blt_add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_filters FLAGS "${OpenMP_CXX_FLAGS}")
   endif()
 endif()
 
@@ -71,7 +71,7 @@ install(FILES ${vtkh_filters_headers}
 
 if (MPI_FOUND)
 
-    set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils vtkh_utils_mpi)
+    set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
@@ -88,9 +88,9 @@ if (MPI_FOUND)
   
     if(ENABLE_OPENMP)
           if(CUDA_FOUND)
-              blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
           else()
-              blt_add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "${OpenMP_CXX_FLAGS}")
           endif()
     endif()
 
