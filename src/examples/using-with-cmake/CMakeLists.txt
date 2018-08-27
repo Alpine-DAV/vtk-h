@@ -63,7 +63,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(using_with_cmake)
 
-include("FindVTKm.cmake")
 include("FindVTKh.cmake")
 
 # setup vtkh include paths

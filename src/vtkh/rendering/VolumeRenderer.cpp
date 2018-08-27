@@ -7,6 +7,11 @@
 
 #include <memory>
 
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#endif
+
+
 #define VTKH_OPACITY_CORRECTION 10.f
 
 namespace vtkh {
@@ -196,12 +201,12 @@ VolumeRenderer::Composite(const int &num_images)
 
     Image result = m_compositor->Composite();
     const std::string image_name = m_renders[i].GetImageName() + ".png";
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
 #endif
       ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
     }
 #endif
     m_compositor->ClearImages();
@@ -215,9 +220,9 @@ VolumeRenderer::DepthSort(int num_domains,
 {
   assert(min_depths.size() == num_domains);
   assert(local_vis_order.size() == num_domains);
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   int root = 0;
-  MPI_Comm comm = vtkh::GetMPIComm();
+  MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   int num_ranks = vtkh::GetMPISize();
   int rank = vtkh::GetMPIRank();
   int *domain_counts = NULL; 

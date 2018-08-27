@@ -93,11 +93,6 @@ def parse_args():
                       dest="spec",
                       default=None,
                       help="spack compiler spec")
-    # what compiler to use
-    parser.add_option("--jobs",
-                      dest="jobs",
-                      default=None,
-                      help="number of cpus to use")
     # optional location of spack mirror
     parser.add_option("--mirror",
                       dest="mirror",
@@ -130,6 +125,13 @@ def parse_args():
                       default=False,
                       help="Ignore SSL Errors")
 
+    # flag to use insecure curl + git
+    parser.add_option("--clone-only",
+                      action="store_true",
+                      dest="clone_only",
+                      default=False,
+                      help="Only clone spack and exit")
+
     ###############
     # parse args
     ###############
@@ -139,6 +141,9 @@ def parse_args():
     opts = vars(opts)
     if not opts["spack_config_dir"] is None:
         opts["spack_config_dir"] = os.path.abspath(opts["spack_config_dir"])
+        if not os.path.isdir(opts["spack_config_dir"]):
+            print "[ERROR: invalid spack config dir: %s ]" % opts["spack_config_dir"]
+            sys.exit(-1)
     return opts, extras
 
 
@@ -214,29 +219,6 @@ def patch_spack(spack_dir,uberenv_dir,cfg_dir,pkgs):
     dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
     # hot-copy our packages into spack
     sexe("cp -Rf %s %s" % (pkgs,dest_spack_pkgs))
-
-
-# def patch_spack_old(spack_dir,compilers_yaml,pkgs):
-#     # force uberenv config
-#     spack_lib_config = pjoin(spack_dir,"lib","spack","spack","config.py")
-#     print "[disabling user config scope in: %s]" % spack_lib_config
-#     cfg_script = open(spack_lib_config).read()
-#     src = "ConfigScope('user', os.path.expanduser('~/.spack'))"
-#     cfg_script = cfg_script.replace(src, "#DISABLED BY UBERENV: " + src)
-#     open(spack_lib_config,"w").write(cfg_script)
-#     # copy in the compiler spec
-#     print "[copying uberenv compiler specs]"
-#     spack_etc = pjoin(spack_dir,"etc")
-#     if not os.path.isdir(spack_etc):
-#         os.mkdir(spack_etc)
-#     spack_etc = pjoin(spack_etc,"spack")
-#     if not os.path.isdir(spack_etc):
-#         os.mkdir(spack_etc)
-#     sexe("cp %s spack/etc/spack/compilers.yaml" % compilers_yaml, echo=True)
-#     dest_spack_pkgs = pjoin(spack_dir,"var","spack","repos","builtin","packages")
-#     # hot-copy our packages into spack
-#     sexe("cp -Rf %s %s" % (pkgs,dest_spack_pkgs))
-
 
 def create_spack_mirror(mirror_path,pkg_name,ignore_ssl_errors=False):
     """
@@ -382,6 +364,7 @@ def main():
         clone_cmd ="git "
         if opts["ignore_ssl_errors"]:
             clone_cmd +="-c http.sslVerify=false "
+        #clone_cmd += "clone -b develop https://github.com/spack/spack.git"
         clone_cmd += "clone -b task/2018_04_update_ascent https://github.com/Alpine-DAV/spack.git"
         sexe(clone_cmd, echo=True)
         #if "spack_develop_commit" in project_opts:
@@ -391,9 +374,16 @@ def main():
         #    sexe("git reset --hard %s" % sha1)
 
     os.chdir(dest_dir)
+    if opts["clone_only"]:
+        sys.exit(0)
     # twist spack's arms 
     cfg_dir = uberenv_spack_config_dir(opts, uberenv_path)
     patch_spack(dest_spack, uberenv_path, cfg_dir, pkgs)
+    
+    # show the speck for what will be built
+    spec_cmd = "spack/bin/spack spec " + uberenv_pkg_name + opts["spec"]
+    res = sexe(spec_cmd, echo=True)
+
 
     ##########################################################
     # we now have an instance of spack configured how we 
@@ -419,14 +409,16 @@ def main():
         install_cmd = "spack/bin/spack "
         if opts["ignore_ssl_errors"]:
             install_cmd += "-k "
-        install_cmd += "install "
-        if opts["jobs"]:
-            install_cmd += "-j " + opts["jobs"] + " "
-        install_cmd += uberenv_pkg_name + opts["spec"]
+        install_cmd += "install " + uberenv_pkg_name + opts["spec"]
         res = sexe(install_cmd, echo=True)
+
+        python_enabled = True
+        if "~python" in opts["spec"]:
+            python_enabled = False 
+
         if res != 0:
             return res
-        if "spack_activate" in project_opts:
+        if "spack_activate" in project_opts and python_enabled:
             for pkg_name in project_opts["spack_activate"]:
               activate_cmd = "spack/bin/spack activate " + pkg_name
               sexe(activate_cmd, echo=True)   

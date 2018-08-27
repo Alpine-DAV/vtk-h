@@ -8,7 +8,7 @@ namespace vtkh
 {
 
 Recenter::Recenter()
- : m_assoc(vtkm::cont::Field::ASSOC_POINTS)
+ : m_assoc(vtkm::cont::Field::Association::POINTS)
 {
 
 }
@@ -35,11 +35,11 @@ void Recenter::PostExecute()
   Filter::PostExecute();
 }
 
-void Recenter::SetResultAssoc(vtkm::cont::Field::AssociationEnum assoc)
+void Recenter::SetResultAssoc(vtkm::cont::Field::Association assoc)
 {
 
-  if(assoc != vtkm::cont::Field::ASSOC_CELL_SET &&
-     assoc != vtkm::cont::Field::ASSOC_POINTS)
+  if(assoc != vtkm::cont::Field::Association::CELL_SET &&
+     assoc != vtkm::cont::Field::Association::POINTS)
   {
     throw Error("Recenter can only recenter zonal and nodal fields");
   }
@@ -97,9 +97,9 @@ void Recenter::DoExecute()
 
     if(temp.HasField(m_field_name))
     {
-      vtkm::cont::Field::AssociationEnum in_assoc = temp.GetField(m_field_name).GetAssociation(); 
-      bool is_cell_assoc = in_assoc == vtkm::cont::Field::ASSOC_CELL_SET; 
-      bool is_point_assoc = in_assoc == vtkm::cont::Field::ASSOC_POINTS; 
+      vtkm::cont::Field::Association in_assoc = temp.GetField(m_field_name).GetAssociation(); 
+      bool is_cell_assoc = in_assoc == vtkm::cont::Field::Association::CELL_SET; 
+      bool is_point_assoc = in_assoc == vtkm::cont::Field::Association::POINTS; 
 
       if(!is_cell_assoc && !is_point_assoc)
       {

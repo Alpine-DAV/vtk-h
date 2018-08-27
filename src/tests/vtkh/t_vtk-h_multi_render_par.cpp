@@ -15,7 +15,7 @@
 #include "t_test_utils.hpp"
 
 #include <iostream>
-
+#include <mpi.h>
 
 
 //----------------------------------------------------------------------------
@@ -25,7 +25,7 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   int comm_size, rank;
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  vtkh::SetMPIComm(MPI_COMM_WORLD);
+  vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
 
   vtkh::DataSet data_set;
 

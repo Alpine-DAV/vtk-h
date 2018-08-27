@@ -2,13 +2,14 @@
 # See License.txt
 #==============================================================================
 
-set(Headers
+set(vtkh_filters_headers
   Filter.hpp
   CellAverage.hpp
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
   IsoVolume.hpp
+  Lagrangian.hpp
   NoOp.hpp
   MarchingCubes.hpp
   PointAverage.hpp  
@@ -17,13 +18,14 @@ set(Headers
   Slice.hpp
   )
 
-set(Sources
+set(vtkh_filters_sources
   Filter.cpp
   CellAverage.cpp
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
   IsoVolume.cpp
+  Lagrangian.cpp
   NoOp.cpp
   MarchingCubes.cpp
   PointAverage.cpp
@@ -32,7 +34,7 @@ set(Sources
   Slice.cpp
   )
 
-set(vtkh_filters_deps vtkh_core  )
+set(vtkh_filters_deps vtkh_core vtkh_utils )
 
 if(CUDA_FOUND)
     # triggers cuda compile
@@ -42,15 +44,18 @@ endif()
 
 blt_add_library(
   NAME vtkh_filters
-  SOURCES ${Sources}
-  HEADERS ${Headers}
+  SOURCES ${vtkh_filters_sources}
+  HEADERS ${vtkh_filters_headers}
   DEPENDS_ON ${vtkh_filters_deps}
   )
 
-  ########
-  # TODO: We should have a macro for install targets + headers
-  ########
-
+if(ENABLE_OPENMP)
+  if(CUDA_FOUND)
+    blt_add_target_compile_flags(TO vtkh_filters FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+  else()
+    blt_add_target_compile_flags(TO vtkh_filters FLAGS "${OpenMP_CXX_FLAGS}")
+  endif()
+endif()
 
 # Install libraries
 install(TARGETS vtkh_filters
@@ -61,57 +66,42 @@ install(TARGETS vtkh_filters
   )
 
 # Install headers
-install(FILES ${Headers}
+install(FILES ${vtkh_filters_headers}
   DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
 
 if (MPI_FOUND)
 
-    set(vtkh_filters_par_deps vtkh_core_par vtkh_utils )
+    set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
-         set(CUDA_NVCC_FLAGS_PREV ${CUDA_NVCC_FLAGS})
-         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -D PARALLEL")
          # triggers cuda compile
-         list(APPEND vtkh_filters_par_deps cuda)
+         list(APPEND vtkh_filters_mpi_deps cuda)
     endif()
     
     blt_add_library(
-      NAME vtkh_filters_par
-      SOURCES ${Sources}
-      HEADERS ${Headers}
-      DEPENDS_ON ${vtkh_filters_par_deps}
+      NAME vtkh_filters_mpi
+      SOURCES ${vtkh_filters_sources}
+      HEADERS ${vtkh_filters_headers}
+      DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
-
-    if(CUDA_FOUND)
-         SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS_PREV})
-    else()
-         blt_add_target_compile_flags(TO vtkh_filters_par FLAGS "-D PARALLEL")
+  
+    if(ENABLE_OPENMP)
+          if(CUDA_FOUND)
+              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+          else()
+              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "${OpenMP_CXX_FLAGS}")
+          endif()
     endif()
-    
+
+    blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL")
 
 
-  # target_include_directories(vtkh_filters_par
-  #   PUBLIC
-  #     $<BUILD_INTERFACE:${VTKh_SOURCE_DIR}>
-  #     $<BUILD_INTERFACE:${VTKh_BINARY_DIR}>
-  #     $<INSTALL_INTERFACE:${VTKh_INSTALL_INCLUDE_DIR}>
-  #   )
-  # target_link_libraries(vtkh_filters_par
-  #   PUBLIC vtkh_core_par
-  #   PRIVATE vtkh_dependencies_private)
+    # Install libraries
+    install(TARGETS vtkh_filters_mpi
+            EXPORT ${VTKh_EXPORT_NAME}
+            ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
+            LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
+            RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR})
 
-
-  ########
-  # TODO: We should have a macro for install targets + headers
-  ########
-
-
-  # Install libraries
-  install(TARGETS vtkh_filters_par
-    EXPORT ${VTKh_EXPORT_NAME}
-    ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
-    LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
-    RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
-    )
 endif()

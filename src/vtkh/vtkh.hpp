@@ -3,27 +3,34 @@
 
 #include <string>
 
-#ifdef PARALLEL
-#include <mpi.h>
-#endif
-
 namespace vtkh
 {
 
   std::string AboutVTKH();
-  bool IsSerialEnabled();
-  bool IsTBBEnabled();
-  bool IsCUDAEnabled();
-  void ForceSerial();
-  void ForceTBB();
-  void ForceCUDA();
-  void ResetDevices();
-  int GetMPIRank();
-  int GetMPISize();
-#ifdef PARALLEL
-  void SetMPIComm(MPI_Comm mpi_comm);
-  MPI_Comm GetMPIComm();
-#endif
+  // is backend support compiled in
+  bool        IsSerialAvailable();
+  bool        IsOpenMPAvailable();
+  bool        IsCUDAAvailable();
 
+  // is backend enabled (e.g., ForceX)
+  bool        IsSerialEnabled();
+  bool        IsOpenMPEnabled();
+  bool        IsCUDAEnabled();
+  
+  bool        IsMPIEnabled();
+  
+  int         CUDADeviceCount();
+  void        SelectCUDADevice(int device_index);
+      
+  void        ForceSerial();
+  void        ForceOpenMP();
+  void        ForceCUDA();
+  void        ResetDevices();
+
+  int         GetMPIRank();
+  int         GetMPISize();
+  
+  void        SetMPICommHandle(int mpi_comm_id);
+  int         GetMPICommHandle();
 }
 #endif
