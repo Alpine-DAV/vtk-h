@@ -31,7 +31,7 @@ CleanGrid::DoExecute()
   vtkm::filter::CleanGrid cleaner;
 
   const int num_domains = this->m_input->GetNumberOfDomains(); 
-  int valid = 0;
+  
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
