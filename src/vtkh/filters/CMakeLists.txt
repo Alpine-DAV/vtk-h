@@ -9,6 +9,7 @@ set(vtkh_filters_headers
   Clip.hpp
   ClipField.hpp
   IsoVolume.hpp
+  Lagrangian.hpp
   NoOp.hpp
   MarchingCubes.hpp
   PointAverage.hpp  
@@ -24,6 +25,7 @@ set(vtkh_filters_sources
   Clip.cpp
   ClipField.cpp
   IsoVolume.cpp
+  Lagrangian.cpp
   NoOp.cpp
   MarchingCubes.cpp
   PointAverage.cpp
