@@ -109,6 +109,7 @@ vtkm::cont::Field CreateCellScalarField(int size)
   for(int i = 0; i < size; ++i)
   {
     vtkm::Float32 val = i / vtkm::Float32(size);
+    val = vtkm::Sin(float(i));
     data.GetPortalControl().Set(i, val);
   }
 
@@ -154,7 +155,8 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords)
   {
     vtkm::Vec<vtkm::FloatDefault,3> point = portal.Get(i);
 
-    vtkm::Float32 val = vtkm::Magnitude(point) + 1.f;
+    //vtkm::Float32 val = vtkm::Magnitude(point) + 1.f;
+    vtkm::Float32 val = vtkm::Sin(point[0]);
 
     data.GetPortalControl().Set(i, val);
   }

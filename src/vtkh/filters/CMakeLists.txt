@@ -10,6 +10,7 @@ set(vtkh_filters_headers
   ClipField.hpp
   GhostStripper.hpp
   Log.hpp
+  ContourTree.hpp
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
@@ -29,6 +30,7 @@ set(vtkh_filters_sources
   ClipField.cpp
   GhostStripper.cpp
   Log.cpp
+  ContourTree.cpp
   IsoVolume.cpp
   NoOp.cpp
   Lagrangian.cpp
