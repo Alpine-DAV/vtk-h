@@ -110,7 +110,8 @@ vtkm::cont::Field CreateCellScalarField(int size, const char* fieldName)
 
   for(int i = 0; i < size; ++i)
   {
-    FieldType val = i / FieldType(size);
+    FieldType val = i / vtkm::Float32(size);
+    val = vtkm::Sin(float(i));
     data.GetPortalControl().Set(i, val);
   }
 
@@ -157,7 +158,8 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* field
   {
     vtkm::Vec<FieldType,3> point = portal.Get(i);
 
-    FieldType val = vtkm::Magnitude(point) + 1.f;
+    //FieldType val = vtkm::Magnitude(point) + 1.f;
+    FieldType val = vtkm::Sin(point[0]);
     data.GetPortalControl().Set(i, val);
   }
 
@@ -298,7 +300,6 @@ vtkm::cont::DataSet CreateTestDataRectilinear(int block, int num_blocks, int bas
   vtkm::cont::DataSet data_set = dataSetBuilder.Create(xvals, yvals, zvals);
 
   int num_points = point_dims[0] * point_dims[1] * point_dims[2];
-  int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];
 
   data_set.AddField(CreatePointVecField<vtkm::Float32>(num_points, "vector_data_Float32"));
   data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
