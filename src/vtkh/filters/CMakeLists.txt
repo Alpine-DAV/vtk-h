@@ -8,6 +8,7 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  ContourTree.hpp
   IsoVolume.hpp
   NoOp.hpp
   MarchingCubes.hpp
@@ -23,6 +24,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  ContourTree.cpp
   IsoVolume.cpp
   NoOp.cpp
   MarchingCubes.cpp

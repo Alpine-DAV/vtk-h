@@ -1,6 +1,9 @@
 #include <vtkh/filters/MarchingCubes.hpp>
+#include <vtkh/filters/ContourTree.hpp>
+
 #include <vtkh/filters/CleanGrid.hpp>
 #include <vtkm/filter/MarchingCubes.h>
+
 
 namespace vtkh 
 {
@@ -105,6 +108,15 @@ void MarchingCubes::DoExecute()
   marcher.SetActiveField(m_field_name);
   const int num_domains = this->m_input->GetNumberOfDomains(); 
   int valid = 0;
+
+  // Contour tree test
+
+  // run contour tree every time
+  vtkh::ContourTree contour_tree;
+  contour_tree.SetInput(this->m_input);
+  contour_tree.SetField(m_field_name); 
+  contour_tree.Update();
+
   for(int i = 0; i < num_domains; ++i)
   {
     
