@@ -13,6 +13,7 @@ set(vtkh_filters_headers
   HistSampling.hpp
   Histogram.hpp
   Log.hpp
+  ContourTree.hpp
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
@@ -47,6 +48,7 @@ set(vtkh_filters_sources
   HistSampling.cpp
   Histogram.cpp
   Log.cpp
+  ContourTree.cpp
   IsoVolume.cpp
   NoOp.cpp
   Lagrangian.cpp
