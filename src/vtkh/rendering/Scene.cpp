@@ -180,6 +180,7 @@ Scene::Render()
     {
       current_batch[i].RenderWorldAnnotations();
       current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
+      current_batch[i].RenderBackground();
       current_batch[i].Save();
       // free buffers
       m_renders[batch_start + i].ClearCanvases();

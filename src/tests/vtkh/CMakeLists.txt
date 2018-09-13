@@ -64,6 +64,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_multi_render
                 t_vtk-h_point_renderer
                 t_vtk-h_raytracer
+                t_vtk-h_render
                 t_vtk-h_slice
                 t_vtk-h_volume_renderer
                 )

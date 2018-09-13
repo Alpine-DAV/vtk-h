@@ -35,17 +35,21 @@ public:
   vtkm::Int32                     GetHeight() const;
   vtkm::Int32                     GetWidth() const;
   vtkm::rendering::Color          GetBackgroundColor() const;
-
+  
+  void                            DoRenderAnnotations(bool on);
+  void                            DoRenderBackground(bool on);
   void                            SetWidth(const vtkm::Int32 width);
   void                            SetHeight(const vtkm::Int32 height);
   void                            SetSceneBounds(const vtkm::Bounds &bounds);
   void                            SetCamera(const vtkm::rendering::Camera &camera);
   void                            SetImageName(const std::string &name);
   void                            SetBackgroundColor(float bg_color[4]);
+  void                            SetForegroundColor(float fg_color[4]);
   void                            ClearCanvases();
   bool                            HasCanvas(const vtkm::Id &domain_id) const;
   void                            AddDomain(vtkm::Id domain_id);
   void                            RenderWorldAnnotations();
+  void                            RenderBackground();
   void                            RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                                           const std::vector<vtkm::Range> &ranges,
                                                           const std::vector<vtkm::cont::ColorTable> &colors);
@@ -59,10 +63,14 @@ protected:
   vtkm::Int32                  m_width;
   vtkm::Int32                  m_height;
   vtkm::rendering::Color       m_bg_color;
+  vtkm::rendering::Color       m_fg_color;
   vtkmCanvasPtr                CreateCanvas();
+  bool                         m_render_annotations;
+  bool                         m_render_background;
 }; 
 
 static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};
+static float vtkh_default_fg_color[4] = {1.f, 1.f, 1.f, 1.f};
 
 //template<typename RendererType>
 vtkh::Render 
@@ -71,7 +79,8 @@ MakeRender(int width,
            vtkm::Bounds scene_bounds,
            const std::vector<vtkm::Id> &domain_ids,
            const std::string &image_name,
-           float bg_color[4] = vtkh_default_bg_color);
+           float bg_color[4] = vtkh_default_bg_color,
+           float fg_color[4] = vtkh_default_fg_color);
 
 vtkh::Render 
 MakeRender(int width,
@@ -79,7 +88,8 @@ MakeRender(int width,
            vtkm::rendering::Camera camera,
            vtkh::DataSet &data_set,
            const std::string &image_name,
-           float bg_color[4] = vtkh_default_bg_color);
+           float bg_color[4] = vtkh_default_bg_color,
+           float fg_color[4] = vtkh_default_fg_color);
 
 } // namespace vtkh
 #endif
