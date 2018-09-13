@@ -77,11 +77,10 @@ void Annotator::RenderWorldAnnotations()
   vtkm::Float64 xrel = vtkm::Abs(dx) / size;
   vtkm::Float64 yrel = vtkm::Abs(dy) / size;
   vtkm::Float64 zrel = vtkm::Abs(dz) / size;
-  vtkm::rendering::Color axis_color(1.f, 1.f, 1.f);
   float major_tick_size = size / 40.f;
   float minor_tick_size = size / 80.f;
   this->m_x_axis_annotation.SetAxis(0);
-  this->m_x_axis_annotation.SetColor(axis_color);
+  this->m_x_axis_annotation.SetColor(m_canvas.GetForegroundColor());
   this->m_x_axis_annotation.SetTickInvert(xtest, ytest, ztest);
   this->m_x_axis_annotation.SetWorldPosition(
     xmin, ytest ? ymin : ymax, ztest ? zmin : zmax, xmax, ytest ? ymin : ymax, ztest ? zmin : zmax);
@@ -94,7 +93,7 @@ void Annotator::RenderWorldAnnotations()
   this->m_x_axis_annotation.Render(m_camera, *m_world_annotator, m_canvas);
 
   this->m_y_axis_annotation.SetAxis(1);
-  this->m_y_axis_annotation.SetColor(axis_color);
+  this->m_y_axis_annotation.SetColor(m_canvas.GetForegroundColor());
   this->m_y_axis_annotation.SetTickInvert(xtest, ytest, ztest);
   this->m_y_axis_annotation.SetWorldPosition(
     xtest ? xmin : xmax, ymin, ztest ? zmin : zmax, xtest ? xmin : xmax, ymax, ztest ? zmin : zmax);
@@ -107,7 +106,7 @@ void Annotator::RenderWorldAnnotations()
   this->m_y_axis_annotation.Render(m_camera, *m_world_annotator, m_canvas);
 
   this->m_z_axis_annotation.SetAxis(2);
-  this->m_z_axis_annotation.SetColor(axis_color);
+  this->m_z_axis_annotation.SetColor(m_canvas.GetForegroundColor());
   this->m_z_axis_annotation.SetTickInvert(xtest, ytest, ztest);
   this->m_z_axis_annotation.SetWorldPosition(
     xtest ? xmin : xmax, ytest ? ymin : ymax, zmin, xtest ? xmin : xmax, ytest ? ymin : ymax, zmax);

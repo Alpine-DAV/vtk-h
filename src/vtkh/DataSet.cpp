@@ -11,6 +11,7 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #ifdef VTKH_PARALLEL
   #include <mpi.h>
 #endif
@@ -40,27 +41,12 @@ public:
   }
 }; //class MemSetWorklet 
 
-struct MemSetCaller 
-{
-
-  template <typename Device, typename T>
-  VTKM_CONT bool operator()(Device, 
-                            vtkm::cont::ArrayHandle<T> &array,
-                            const T value,
-                            const vtkm::Id num_values) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    array.PrepareForOutput(num_values, Device());
-    vtkm::worklet::DispatcherMapField<MemSetWorklet<T>, Device>(MemSetWorklet<T>(value))
-      .Invoke(array);
-    return true;
-  }
-};
-
 template<typename T>
 void MemSet(vtkm::cont::ArrayHandle<T> &array, const T value, const vtkm::Id num_values)
 {
-  vtkm::cont::TryExecute(MemSetCaller(), array, value, num_values);
+  array.Allocate(num_values);
+  vtkm::worklet::DispatcherMapField<MemSetWorklet<T>>(MemSetWorklet<T>(value))
+    .Invoke(array);
 }
 
 } // namespace detail
