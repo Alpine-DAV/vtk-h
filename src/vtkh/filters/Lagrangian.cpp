@@ -2,6 +2,7 @@
 #include <vtkm/filter/Lagrangian.h>
 #include <vtkh/filters/Lagrangian.hpp>
 #include <vtkh/vtkh.hpp>
+#include <vtkh/Error.hpp>
 
 namespace vtkh 
 {
@@ -87,50 +88,21 @@ void Lagrangian::DoExecute()
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-		
-		if(!dom.HasField(m_field_name))
-		{
-			// Cloverleaf3D has a velocity field stored as velocity_x, velocity_y, velocity_z. Composite these vectors.
-			if(dom.HasField("velocity_x") && dom.HasField("velocity_y") && dom.HasField("velocity_z"))
-			{
-				vtkm::cont::Field x_field = dom.GetField("velocity_x");
-				vtkm::cont::Field y_field = dom.GetField("velocity_y");
-				vtkm::cont::Field z_field = dom.GetField("velocity_z");
-
-				vtkm::cont::DynamicArrayHandle xIn = x_field.GetData();	
-				vtkm::cont::DynamicArrayHandle yIn = y_field.GetData();	
-				vtkm::cont::DynamicArrayHandle zIn = z_field.GetData();	
-			
-				vtkm::cont::ArrayHandle<vtkm::Float64> xData;
-				vtkm::cont::ArrayHandle<vtkm::Float64> yData;
-				vtkm::cont::ArrayHandle<vtkm::Float64> zData;
-
-				xIn.CopyTo(xData);
-				yIn.CopyTo(yData);
-				zIn.CopyTo(zData);
-			
-				vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>> velocityField;
-				auto composite = vtkm::cont::make_ArrayHandleCompositeVector(xData, yData, zData);
-				vtkm::cont::ArrayCopy(composite, velocityField);
-				
-				vtkm::cont::Field velocity(m_field_name, vtkm::cont::Field::Association::POINTS, velocityField);
-				dom.AddField(velocity);
-			}
-      else if(dom.HasField("vector_data"))
+    if(dom.HasField(m_field_name))
+    {
+      using vectorField = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
+		  auto field = dom.GetField(m_field_name).GetData();		
+      if(!field.IsSameType(vectorField()))
       {
-				vtkm::cont::Field vel_field = dom.GetField("vector_data");
-				vtkm::cont::DynamicArrayHandle velIn = vel_field.GetData();	
-				vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>> velocityField;
-				velIn.CopyTo(velocityField);
-				vtkm::cont::Field velocity(m_field_name, vtkm::cont::Field::Association::POINTS, velocityField);
-				dom.AddField(velocity);
+        throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float64,3>>");
       }
-			else
-			{
-				std::cout << "Lagrangian filter not called: velocity field names do not match." << std::endl;
-				continue;
-			}
-		}
+    }
+    else
+    {
+      throw Error("Domain does not contain specified vector field for Lagrangian analysis.");
+    }
+
+
 		std::cout << "Lagrangian filter call on rank: " << vtkh::GetMPIRank() << std::endl;
 		vtkm::cont::DataSet extractedBasis = lagrangianFilter.Execute(dom);
 		std::cout << "Returned from Lagrangian filter call on rank: " << vtkh::GetMPIRank() << std::endl;
