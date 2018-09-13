@@ -54,6 +54,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
+                t_vtk-h_device_control
                 t_vtk-h_empty_data
                 t_vtk-h_iso_volume
                 t_vtk-h_no_op
@@ -67,6 +68,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_volume_renderer
                 )
 
+set(CUDA_TESTS t_vtk-h_cuda)
 
 set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_dataset_par
@@ -86,6 +88,11 @@ foreach(TEST ${BASIC_TESTS})
     add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
 endforeach()
 
+if(CUDA_FOUND)
+  foreach(TEST ${CUDA_TESTS})
+      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+  endforeach()
+endif()
 
 ################################
 # Add optional tests
@@ -94,7 +101,7 @@ if(MPI_FOUND AND ENABLE_MPI)
     message(STATUS "MPI enabled: Adding related unit tests")
     foreach(TEST ${MPI_TESTS})
         # this uses 2 procs
-        add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_par)
+        add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi)
     endforeach()
 else()
     message(STATUS "MPI disabled: Skipping related tests")

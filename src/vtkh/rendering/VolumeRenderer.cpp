@@ -7,6 +7,11 @@
 
 #include <memory>
 
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#endif
+
+
 #define VTKH_OPACITY_CORRECTION 10.f
 
 namespace vtkh {
@@ -55,9 +60,10 @@ VolumeRenderer::VolumeRenderer()
   //
   // add some default opacity to the color table
   //
-  m_color_table.AddPointAlpha(0.0f, .02);
-  m_color_table.AddPointAlpha(.0f, .5);
+  m_uncorrected_color_table.AddPointAlpha(0.0f, .02);
+  m_uncorrected_color_table.AddPointAlpha(.0f, .5);
   m_num_samples = 100.f;
+  CorrectOpacity();
 }
 
 VolumeRenderer::~VolumeRenderer()
@@ -72,18 +78,20 @@ VolumeRenderer::Update()
   PostExecute();
 }
 
-void 
-VolumeRenderer::PreExecute() 
+void VolumeRenderer::SetColorTable(const vtkm::cont::ColorTable &color_table)
 {
-  Renderer::PreExecute();
-  // we need to scale down the opacity to allow finer control
-  // transfer_functions
+  m_uncorrected_color_table = color_table;
+  CorrectOpacity();
+}
+
+void VolumeRenderer::CorrectOpacity()
+{
   const float correction_scalar = VTKH_OPACITY_CORRECTION;
   float samples = m_num_samples;
 
   float ratio = correction_scalar / samples;
   vtkm::cont::ColorTable corrected;
-  corrected = m_color_table;
+  corrected = m_uncorrected_color_table;
   int num_points = corrected.GetNumberOfPointsAlpha();
   for(int i = 0; i < num_points; i++)
   {
@@ -93,13 +101,19 @@ VolumeRenderer::PreExecute()
     corrected.UpdatePointAlpha(i,point); 
   }
 
-  this->m_corrected_color_table = corrected;
+  this->m_color_table = corrected;
+}
+
+void 
+VolumeRenderer::PreExecute() 
+{
+  Renderer::PreExecute();
 
   vtkm::Vec<vtkm::Float32,3> extent; 
   extent[0] = static_cast<vtkm::Float32>(this->m_bounds.X.Length());
   extent[1] = static_cast<vtkm::Float32>(this->m_bounds.Y.Length());
   extent[2] = static_cast<vtkm::Float32>(this->m_bounds.Z.Length());
-  vtkm::Float32 dist = vtkm::Magnitude(extent) / samples; 
+  vtkm::Float32 dist = vtkm::Magnitude(extent) / m_num_samples; 
   m_tracer->SetSampleDistance(dist);
 }
 
@@ -118,6 +132,7 @@ VolumeRenderer::SetNumberOfSamples(const int num_samples)
 {
   assert(num_samples > 0);
   m_num_samples = num_samples; 
+  CorrectOpacity();
 }
 
 Renderer::vtkmCanvasPtr 
@@ -196,12 +211,12 @@ VolumeRenderer::Composite(const int &num_images)
 
     Image result = m_compositor->Composite();
     const std::string image_name = m_renders[i].GetImageName() + ".png";
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
 #endif
       ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
     }
 #endif
     m_compositor->ClearImages();
@@ -215,9 +230,9 @@ VolumeRenderer::DepthSort(int num_domains,
 {
   assert(min_depths.size() == num_domains);
   assert(local_vis_order.size() == num_domains);
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   int root = 0;
-  MPI_Comm comm = vtkh::GetMPIComm();
+  MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   int num_ranks = vtkh::GetMPISize();
   int rank = vtkh::GetMPIRank();
   int *domain_counts = NULL; 

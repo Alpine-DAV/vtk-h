@@ -43,7 +43,7 @@ MeshRenderer::PreExecute()
     
     single_color.AddPoint(0.f, fg_vec3_not_4); 
     single_color.AddPoint(1.f, fg_vec3_not_4); 
-    this->m_corrected_color_table = single_color;
+    this->m_color_table = single_color;
     this->m_has_color_table = false;
   }
 }

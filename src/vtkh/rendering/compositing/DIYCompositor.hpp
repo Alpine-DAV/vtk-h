@@ -15,7 +15,7 @@ public:
      DIYCompositor();
     ~DIYCompositor();
     
-    void Cleanup();
+    void Cleanup() override;
     
 private:
     virtual void CompositeZBufferSurface() override;

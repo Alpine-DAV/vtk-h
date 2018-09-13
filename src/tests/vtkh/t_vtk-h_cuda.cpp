@@ -7,7 +7,7 @@
 // 
 // All rights reserved.
 // 
-// This file is part of Ascent. 
+// This file is part of VTK-h. 
 // 
 // For details, see: http://software.llnl.gov/ascent/.
 // 
@@ -44,70 +44,28 @@
 
 //-----------------------------------------------------------------------------
 ///
-/// file: vtkm_smoke.cpp
+/// file: t_vtk-h_cuda.cpp
 ///
 //-----------------------------------------------------------------------------
-#include <iostream>
+
 #include "gtest/gtest.h"
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/rendering/Actor.h>
+#include <vtkh/vtkh.hpp>
+
 #include <iostream>
 
+using namespace std;
+
 
 //-----------------------------------------------------------------------------
-TEST(vtkm_smoke, headers_work)
+TEST(vtkh_cuda, vtkh_cuda_iface_checks)
 {
-    vtkm::cont::DataSet *res;
-    res = NULL;
-    EXPECT_EQ(1, 1);
-}
+  //vtkh::ForceCUDA();
+  EXPECT_TRUE(vtkh::IsCUDAEnabled());
+  EXPECT_TRUE(vtkh::CUDADeviceCount() > 0);
+  vtkh::SelectCUDADevice(1);
 
-//-----------------------------------------------------------------------------
-TEST(vtkm_smoke, basic_use)
-{
-    vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::cont::DataSet data = maker.Make3DExplicitDataSet2();
-    //
-    // work around for a problem adding scalar fields of size 1
-    // to Actors
-    //
-    std::vector<vtkm::Float32> scalars;
-    scalars.push_back(0);
-    scalars.push_back(1);
-    vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
-                                                           vtkm::cont::Field::Association::CELL_SET,
-                                                           "cell_set",
-                                                           scalars);
-
-    const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
-    vtkm::rendering::Actor actor(data.GetCellSet(),
-                                 data.GetCoordinateSystem(),
-                                 scalarField);
-
-    vtkm::Bounds coordsBounds; // Xmin,Xmax,Ymin..
-    coordsBounds = actor.GetSpatialBounds();
-
-    //should be [0,1,0,1,0,1];
-    
-    std::cout <<  coordsBounds.X.Min << " " <<
-                  coordsBounds.X.Max << " " <<
-                  coordsBounds.Y.Min << " " <<
-                  coordsBounds.Y.Max << " " << 
-                  coordsBounds.Z.Min << " " << 
-                  coordsBounds.Z.Max << std::endl;
-                      
-    EXPECT_NEAR(coordsBounds.X.Min, 0.0, 1e-3 );
-    EXPECT_NEAR(coordsBounds.X.Max, 1.0, 1e-3 );
-    
-    EXPECT_NEAR(coordsBounds.Y.Min, 0.0, 1e-3 );
-    EXPECT_NEAR(coordsBounds.Y.Max, 1.0, 1e-3 );
-    
-    EXPECT_NEAR(coordsBounds.Z.Min, 0.0, 1e-3 );
-    EXPECT_NEAR(coordsBounds.Z.Max, 1.0, 1e-3 );
+  std::cout << vtkh::CUDADeviceCount();
 
 }
-
-
 

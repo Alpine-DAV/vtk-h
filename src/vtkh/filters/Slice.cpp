@@ -55,23 +55,6 @@ public:
   }
 }; //class SliceField 
 
-struct SliceCaller 
-{
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device, 
-                            const vtkm::cont::CoordinateSystem &coords,
-                            vtkm::cont::ArrayHandle<vtkm::Float32> &output,
-                            vtkm::Vec<vtkm::Float32, 3> point,
-                            vtkm::Vec<vtkm::Float32, 3> normal) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<SliceField, Device>(SliceField(point, normal))
-      .Invoke(coords.GetData(), output);
-    return true;
-  }
-};
-
 class Offset : public vtkm::worklet::WorkletMapField
 {
 protected:
@@ -95,22 +78,6 @@ public:
     values.Set(index, value + m_offset); 
   }
 }; //class Offset
-
-struct OffsetCaller 
-{
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device, 
-                            vtkm::cont::ArrayHandle<vtkm::Id> &conn,
-                            vtkm::cont::ArrayHandleCounting<vtkm::Id> &indexes,
-                            vtkm::Id offset) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<Offset, Device>(Offset(offset))
-      .Invoke(indexes, conn);
-    return true;
-  }
-};
 
 class MergeContours
 {
@@ -289,7 +256,8 @@ public:
       if(cell_offsets[dom] != 0)
       {
         vtkm::cont::ArrayHandleCounting<vtkm::Id> indexes(cell_offsets[dom]*3, 1, copy_size);
-        vtkm::cont::TryExecute(detail::OffsetCaller(), conn, indexes, point_offsets[dom] );
+        vtkm::worklet::DispatcherMapField<detail::Offset>(detail::Offset(point_offsets[dom]))
+          .Invoke(indexes, conn);
       }
 
       // merge coodinates
@@ -415,7 +383,8 @@ Slice::DoExecute()
       vtkm::cont::DataSet &dom = temp_ds.GetDomain(i);
 
       vtkm::cont::ArrayHandle<vtkm::Float32> slice_field;
-      vtkm::cont::TryExecute(detail::SliceCaller(), dom.GetCoordinateSystem(), slice_field, point, normal);
+      vtkm::worklet::DispatcherMapField<detail::SliceField>(detail::SliceField(point, normal))
+        .Invoke(dom.GetCoordinateSystem().GetData(), slice_field);
       
       dom.AddField(vtkm::cont::Field(fname,
                                       vtkm::cont::Field::Association::POINTS,
