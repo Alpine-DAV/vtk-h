@@ -101,11 +101,7 @@ void Lagrangian::DoExecute()
     {
       throw Error("Domain does not contain specified vector field for Lagrangian analysis.");
     }
-
-
-		std::cout << "Lagrangian filter call on rank: " << vtkh::GetMPIRank() << std::endl;
 		vtkm::cont::DataSet extractedBasis = lagrangianFilter.Execute(dom);
-		std::cout << "Returned from Lagrangian filter call on rank: " << vtkh::GetMPIRank() << std::endl;
     m_output->AddDomain(extractedBasis, domain_id);
   }
 }
