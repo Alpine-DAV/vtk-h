@@ -1,5 +1,6 @@
 #include <vtkh/filters/MarchingCubes.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
+#include <vtkh/filters/Recenter.hpp>
 #include <vtkm/filter/MarchingCubes.h>
 
 namespace vtkh 
@@ -53,6 +54,7 @@ void MarchingCubes::PreExecute()
 {
   Filter::PreExecute();
 
+
   if(m_levels != -1 && m_input->GlobalFieldExists(m_field_name)) {
     vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
     float length = scalar_range.Length();
@@ -103,6 +105,23 @@ void MarchingCubes::DoExecute()
   marcher.SetIsoValues(m_iso_values);
   marcher.SetMergeDuplicatePoints(true);
   marcher.SetActiveField(m_field_name);
+
+  // make sure we have a node-centered field
+  bool valid_field = false;
+  bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
+                       vtkm::cont::Field::Association::CELL_SET; 
+  bool delete_input = false;
+  if(valid_field && is_cell_assoc)
+  {
+    Recenter recenter;  
+    recenter.SetInput(m_input);
+    recenter.SetField(m_field_name);
+    recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS); 
+    recenter.Update();
+    m_input = recenter.GetOutput();
+    delete_input = true;
+  }
+
   const int num_domains = this->m_input->GetNumberOfDomains(); 
   int valid = 0;
   for(int i = 0; i < num_domains; ++i)
@@ -129,8 +148,13 @@ void MarchingCubes::DoExecute()
     marcher.SetFieldsToPass(this->GetFieldSelection());
     auto dataset = marcher.Execute(dom);
     m_output->AddDomain(dataset, domain_id);
+
   }
 
+  if(delete_input)
+  {
+    delete m_input;
+  }
 }
 
 std::string

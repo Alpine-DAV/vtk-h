@@ -9,6 +9,8 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/Lagrangian.hpp>
+#include <vtkh/rendering/LineRenderer.hpp>
+#include <vtkh/rendering/Scene.hpp>
 #include "t_test_utils.hpp"
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -61,6 +63,34 @@ vtkm::cont::DataSet MakeTestUniformDataSet(vtkm::Id time)
   return dataset;
 }
 
+void render_output(vtkh::DataSet *data, std::string file_name)
+{
+  data->AddConstantPointField(1.f,"lines");
+
+  vtkm::Bounds bounds = data->GetGlobalBounds();
+
+  vtkm::rendering::Camera camera;
+  camera.ResetToBounds(bounds);
+  float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
+  vtkh::Render render = vtkh::MakeRender(512, 
+                                         512, 
+                                         camera, 
+                                         *data, 
+                                         file_name,
+                                         bg_color);  
+
+  vtkh::Scene scene;
+  scene.AddRender(render);
+
+  vtkh::LineRenderer tracer;
+  tracer.SetRadius(.1f);
+  tracer.SetInput(data);
+  tracer.SetField("lines"); 
+
+  scene.AddRenderer(&tracer);  
+  scene.Render();
+}
+
 //----------------------------------------------------------------------------
 TEST(vtkh_lagrangian, vtkh_serial_lagrangian)
 {
@@ -82,5 +112,9 @@ TEST(vtkh_lagrangian, vtkh_serial_lagrangian)
     lagrangian.SetInput(&data_set);
     lagrangian.Update();
     vtkh::DataSet *extracted_basis = lagrangian.GetOutput();
+    extracted_basis->PrintSummary(std::cout);
+    if(time == 10) render_output(extracted_basis, "basis");
   }
+
+
 }

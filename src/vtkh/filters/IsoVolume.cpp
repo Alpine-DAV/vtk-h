@@ -2,7 +2,6 @@
 
 #include <vtkh/filters/ClipField.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
-#include <vtkh/filters/Recenter.hpp>
 
 namespace vtkh 
 {
