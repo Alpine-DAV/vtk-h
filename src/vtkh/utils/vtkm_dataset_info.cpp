@@ -216,17 +216,24 @@ VTKMDataSetInfo::GetCellDims(const vtkm::cont::DynamicCellSet &cell_set, int *di
 }
 
 bool 
-VTKMDataSetInfo::IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set)
+VTKMDataSetInfo::IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set, vtkm::UInt8 &shape_id)
 {
   int dims; 
-  bool is_single_shape = IsStructured(cell_set, dims);
-  
-  if(!is_single_shape)
+  shape_id = 0;
+  bool is_single_shape = false;
+  if(IsStructured(cell_set, dims))
+  {
+    is_single_shape = true;
+    shape_id = 12;
+  }
+  else 
   {
     // we have an explicit cell set so we have to look deeper
     if(cell_set.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
+      vtkm::cont::CellSetSingleType<> single = cell_set.Cast<vtkm::cont::CellSetSingleType<>>();  
       is_single_shape = true;
+      shape_id = single.GetCellShape(0);
     }
     else if(cell_set.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
@@ -242,6 +249,7 @@ VTKMDataSetInfo::IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set)
       if(min == max)
       {
         is_single_shape = true;
+        shape_id = max;
       }
     }
 

@@ -19,6 +19,28 @@ namespace vtkh {
 namespace detail
 {
 
+bool GlobalAgreement(bool local)
+{
+  bool agreement = local;
+#ifdef VTKH_PARALLEL
+  int local_boolean = local ? 1 : 0; 
+  int global_boolean;
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  MPI_Allreduce((void *)(&local_boolean),
+                (void *)(&global_boolean),
+                1,
+                MPI_INT,
+                MPI_SUM,
+                mpi_comm);
+
+  if(global_boolean != vtkh::GetMPISize())
+  {
+    agreement = false;
+  }
+#endif
+  return agreement;
+}
+
 template<typename T>
 class MemSetWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -421,16 +443,33 @@ DataSet::PrintSummary(std::ostream &stream) const
 }
 
 bool 
+DataSet::IsPointMesh(const vtkm::Id cell_set_index) const
+{
+  bool is_points = true;
+  const size_t num_domains = m_domains.size();
+  for(size_t i = 0; i < num_domains; ++i)
+  {
+    const vtkm::cont::DataSet &dom = m_domains[i];
+    vtkm::UInt8 shape_type;
+    bool single_type = VTKMDataSetInfo::IsSingleCellShape(dom.GetCellSet(cell_set_index), shape_type);
+    is_points = (single_type && shape_type == 1) && is_points;
+  }
+
+  is_points = detail::GlobalAgreement(is_points);
+  return is_points;
+}
+
+bool 
 DataSet::IsStructured(int &topological_dims, const vtkm::Id cell_set_index) const
 {
   topological_dims = -1;
-  bool is_structured = false;
+  bool is_structured = true;
   const size_t num_domains = m_domains.size();
   for(size_t i = 0; i < num_domains; ++i)
   {
     const vtkm::cont::DataSet &dom = m_domains[i];
     int dims; 
-    is_structured = VTKMDataSetInfo::IsStructured(dom, dims, cell_set_index);
+    is_structured = VTKMDataSetInfo::IsStructured(dom, dims, cell_set_index) && is_structured;
 
     if(i == 0)
     {
@@ -444,26 +483,12 @@ DataSet::IsStructured(int &topological_dims, const vtkm::Id cell_set_index) cons
     }
   }
 
-#ifdef VTKH_PARALLEL
-  int local_boolean = is_structured ? 1 : 0; 
-  int global_boolean;
-  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  MPI_Allreduce((void *)(&local_boolean),
-                (void *)(&global_boolean),
-                1,
-                MPI_INT,
-                MPI_SUM,
-                mpi_comm);
+  is_structured = detail::GlobalAgreement(is_structured);
 
-  if(global_boolean != vtkh::GetMPISize())
-  {
-    is_structured = false;
-  }
   if(!is_structured)
   {
     topological_dims = -1;
   }
-#endif
   return is_structured;
 }
 
