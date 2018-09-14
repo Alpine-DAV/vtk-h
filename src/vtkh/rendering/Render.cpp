@@ -11,7 +11,9 @@ namespace vtkh
 
 Render::Render()
   : m_width(1024),
-    m_height(1024)
+    m_height(1024),
+    m_render_annotations(true),
+    m_render_background(true)
 {
 }
 
@@ -63,6 +65,18 @@ vtkm::Bounds
 Render::GetSceneBounds() const
 {
   return m_scene_bounds;
+}
+
+void
+Render::DoRenderAnnotations(bool on) 
+{
+  m_render_annotations = on;
+}
+
+void
+Render::DoRenderBackground(bool on) 
+{
+  m_render_background = on;
 }
 
 vtkm::Int32
@@ -164,6 +178,15 @@ Render::SetBackgroundColor(float bg_color[4])
   m_bg_color.Components[3] = bg_color[3];
 }
 
+void 
+Render::SetForegroundColor(float fg_color[4])
+{
+  m_fg_color.Components[0] = fg_color[0];
+  m_fg_color.Components[1] = fg_color[1];
+  m_fg_color.Components[2] = fg_color[2];
+  m_fg_color.Components[3] = fg_color[3];
+}
+
 std::string 
 Render::GetImageName() const 
 {
@@ -179,6 +202,7 @@ Render::GetBackgroundColor() const
 void 
 Render::RenderWorldAnnotations()
 {
+  if(!m_render_annotations) return;
   int size = m_canvases.size(); 
   if(size < 1) return;
 
@@ -196,12 +220,21 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                 const std::vector<vtkm::Range> &ranges,
                                 const std::vector<vtkm::cont::ColorTable> &colors)
 {
+  if(!m_render_annotations) return;
   int size = m_canvases.size(); 
   if(size < 1) return;
   
-  m_canvases[0]->BlendBackground(); 
+  if(m_render_background) m_canvases[0]->BlendBackground(); 
   Annotator annotator(*m_canvases[0], m_camera, m_scene_bounds);
   annotator.RenderScreenAnnotations(field_names, ranges, colors);
+}
+
+void 
+Render::RenderBackground()
+{
+  int size = m_canvases.size(); 
+  if(size < 1) return;
+  if(m_render_background) m_canvases[0]->BlendBackground(); 
 }
 
 Render::vtkmCanvasPtr
@@ -209,6 +242,7 @@ Render::CreateCanvas()
 {
   Render::vtkmCanvasPtr canvas = std::make_shared<vtkm::rendering::CanvasRayTracer>(m_width, m_height);
   canvas->SetBackgroundColor(m_bg_color);
+  canvas->SetForegroundColor(m_fg_color);
   canvas->Clear();
   return canvas;
 }
@@ -237,7 +271,8 @@ MakeRender(int width,
            vtkm::Bounds scene_bounds,
            const std::vector<vtkm::Id> &domain_ids,
            const std::string &image_name,
-           float bg_color[4])
+           float bg_color[4], 
+           float fg_color[4])
 {
   vtkh::Render render;
   vtkm::rendering::Camera camera;
@@ -271,6 +306,7 @@ MakeRender(int width,
   render.SetCamera(camera);
   render.SetImageName(image_name);
   render.SetBackgroundColor(bg_color);
+  render.SetForegroundColor(fg_color);
 
   const size_t num_domains = domain_ids.size();
 
@@ -299,7 +335,8 @@ MakeRender(int width,
            vtkm::rendering::Camera camera,
            vtkh::DataSet &data_set,
            const std::string &image_name,
-           float bg_color[4])
+           float bg_color[4],
+           float fg_color[4])
 {
   vtkh::Render render;
   render.SetCamera(camera);
@@ -332,6 +369,7 @@ MakeRender(int width,
   }
 
   render.SetBackgroundColor(bg_color);
+  render.SetForegroundColor(fg_color);
 
   int num_domains = static_cast<int>(data_set.GetNumberOfDomains());
   for(int i = 0; i < num_domains; ++i)

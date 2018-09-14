@@ -9,6 +9,7 @@ set(vtkh_rendering_headers
   RayTracer.hpp
   Render.hpp
   Renderer.hpp
+  PointRenderer.hpp
   Scene.hpp
   VolumeRenderer.hpp
   compositing/Compositor.hpp
@@ -21,6 +22,7 @@ set(vtkh_rendering_sources
   RayTracer.cpp
   Render.cpp
   Renderer.cpp
+  PointRenderer.cpp
   Scene.cpp
   VolumeRenderer.cpp
   compositing/Compositor.cpp
