@@ -58,6 +58,7 @@ void ClipField::DoExecute()
   vtkm::filter::ClipWithField clipper;
   clipper.SetClipValue(m_clip_value);
   clipper.SetInvertClip(m_invert);
+
   bool valid_field = false;
   bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
                        vtkm::cont::Field::Association::CELL_SET; 

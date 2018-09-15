@@ -1,5 +1,4 @@
 #include "Renderer.hpp"
-#include "Image.hpp"
 #include "compositing/Compositor.hpp"
 
 #include <vtkh/utils/vtkm_array_utils.hpp>

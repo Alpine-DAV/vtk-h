@@ -5,6 +5,7 @@ set(vtkh_rendering_headers
   Annotator.hpp
   Image.hpp
   ImageCompositor.hpp
+  LineRenderer.hpp
   MeshRenderer.hpp
   RayTracer.hpp
   Render.hpp
@@ -18,6 +19,7 @@ set(vtkh_rendering_headers
 set(vtkh_rendering_sources
   Annotator.cpp
   Image.cpp
+  LineRenderer.cpp
   MeshRenderer.cpp
   RayTracer.cpp
   Render.cpp
