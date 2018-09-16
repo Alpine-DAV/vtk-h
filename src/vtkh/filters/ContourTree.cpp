@@ -10,8 +10,8 @@
 #include <vtkm/worklet/contourtree_ppp2/ProcessContourTree_Inc/PiecewiseLinearFunction.h>
 
 namespace cppp2_ns = vtkm::worklet::contourtree_ppp2;
-//using DataValueType = vtkm::Float32;
-using DataValueType = vtkm::Float64;
+using DataValueType = vtkm::Float32;
+//using DataValueType = vtkm::Float64;
 using ValueArray = vtkm::cont::ArrayHandle<DataValueType, vtkm::cont::StorageTagBasic>;
 using BranchType = vtkm::worklet::contourtree_ppp2::process_contourtree_inc::Branch<DataValueType>;
 using PLFType = vtkm::worklet::contourtree_ppp2::process_contourtree_inc::PiecewiseLinearFunction<DataValueType>;
@@ -25,14 +25,15 @@ namespace detail
 template<typename DeviceAdapter>
 void ComputeContourValues(vtkm::cont::DataSet &inDataSet, 
                           std::string fieldName,                       
-                          vtkm::filter::ContourTreePPP2 &filter)
+                          vtkm::filter::ContourTreePPP2 &filter,
+                          vtkm::Id numLevels,
+                          std::vector<DataValueType> &iso_values)
 {
 
-  vtkm::Id numLevels = 5;             // Number of iso levels to be selected
   DataValueType eps = 0.00001;        // Error away from critical point
   vtkm::Id numComp = numLevels + 1;   // Number of components the tree should be simplified to
   vtkm::Id contourType = 0;           // Approach to be used to select contours based on the tree
-  vtkm::Id contourSelectMethod = 0;          // Method to be used to compute the relevant iso values
+  vtkm::Id contourSelectMethod = 0;   // Method to be used to compute the relevant iso values
   bool usePersistenceSorter = true;
   ////////////////////////////////////////////
   // Compute the branch decomposition
@@ -89,36 +90,35 @@ void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
 #endif
 
   // Compute the relevant iso-values
-  std::vector<DataValueType> isoValues;
   switch(contourSelectMethod)
   {
     default:
     case 0:
       {
-        branchDecompostionRoot->getRelevantValues(contourType, eps, isoValues);
+        branchDecompostionRoot->getRelevantValues(contourType, eps, iso_values);
       }
       break;
     case 1:
       {
         PLFType plf;
         branchDecompostionRoot->accumulateIntervals(contourType, eps, plf);
-        isoValues = plf.nLargest(numLevels);
+        iso_values = plf.nLargest(numLevels);
       }
       break;
   }
 
   // Print the compute iso values
-  std::sort(isoValues.begin(), isoValues.end());
+  std::sort(iso_values.begin(), iso_values.end());
   std::cout << "Isovalues: ";
-  for (DataValueType val : isoValues) std::cout << val << " ";
+  for (DataValueType val : iso_values) std::cout << val << " ";
   std::cout << std::endl;
 
   // Unique isovalues
-  std::vector<DataValueType>::iterator it = std::unique (isoValues.begin(), isoValues.end());
-  isoValues.resize( std::distance(isoValues.begin(),it) );
+  std::vector<DataValueType>::iterator it = std::unique (iso_values.begin(), iso_values.end());
+  iso_values.resize( std::distance(iso_values.begin(),it) );
 
-  std::cout << isoValues.size() << "  Unique Isovalues: ";
-  for (DataValueType val : isoValues) std::cout << val << " ";
+  std::cout << iso_values.size() << "  Unique Isovalues: ";
+  for (DataValueType val : iso_values) std::cout << val << " ";
   std::cout << std::endl;
 
   std::cout<<"Acrs : " << filter.GetContourTree().arcs.GetNumberOfValues() <<std::endl;
@@ -131,10 +131,12 @@ struct ComputeCaller
   VTKM_CONT bool operator()(Device, 
                             vtkm::cont::DataSet &in,
                             std::string fieldName,
-                            vtkm::filter::ContourTreePPP2 &filter) const
+                            vtkm::filter::ContourTreePPP2 &filter,
+                            vtkm::Id numLevels,
+                            std::vector<DataValueType> &iso_values) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    ComputeContourValues<Device>(in, fieldName, filter);
+    ComputeContourValues<Device>(in, fieldName, filter, numLevels, iso_values);
     return true;
   }
 };
@@ -142,6 +144,7 @@ struct ComputeCaller
 } // namespace detail
 
 ContourTree::ContourTree()
+  : m_levels(5)
 {
 
 }
@@ -155,6 +158,18 @@ void
 ContourTree::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
+}
+
+void 
+ContourTree::SetNumLevels(int levels)
+{
+  m_levels = levels;
+}
+
+std::vector<double>
+ContourTree::GetIsoValues()
+{
+  return m_iso_values;
 }
 
 void ContourTree::PreExecute() 
@@ -174,6 +189,7 @@ void ContourTree::DoExecute()
   
   for(int i = 0; i < num_domains; ++i)
   {
+    std::cout<<"RUNNING TREE\n";
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
@@ -187,10 +203,15 @@ void ContourTree::DoExecute()
     //Convert the mesh of values into contour tree, pairs of vertex ids
     vtkm::filter::ContourTreePPP2 filter(useMarchingCubes,
                                          computeRegularStructure);
-
+    std::vector<DataValueType> iso_values;
     filter.SetActiveField(m_field_name);
     result = filter.Execute(dom);
-    vtkm::cont::TryExecute(detail::ComputeCaller(), result, m_field_name, filter);
+    vtkm::cont::TryExecute(detail::ComputeCaller(), result, m_field_name, filter, m_levels, iso_values);
+    m_iso_values.resize(iso_values.size());
+    for(size_t x = 0; x < iso_values.size(); ++x)
+    {
+      m_iso_values[x] = iso_values[x];
+    }
   }
 }
 

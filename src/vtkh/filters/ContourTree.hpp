@@ -15,13 +15,16 @@ public:
   virtual ~ContourTree(); 
   std::string GetName() const override;
   void SetField(const std::string &field_name);
-
+  void SetNumLevels(int levels);
+  std::vector<double> GetIsoValues();
 protected:
   void PreExecute() override;
   void PostExecute() override;
   void DoExecute() override;
 
   std::string m_field_name;
+  int m_levels;
+  std::vector<double> m_iso_values;
 };
 
 } //namespace vtkh
