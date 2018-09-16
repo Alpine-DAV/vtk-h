@@ -10,8 +10,8 @@
 #include <vtkm/worklet/contourtree_ppp2/ProcessContourTree_Inc/PiecewiseLinearFunction.h>
 
 namespace cppp2_ns = vtkm::worklet::contourtree_ppp2;
-using DataValueType = vtkm::Float32;
-//using DataValueType = vtkm::Float64;
+//using DataValueType = vtkm::Float32;
+using DataValueType = vtkm::Float64;
 using ValueArray = vtkm::cont::ArrayHandle<DataValueType, vtkm::cont::StorageTagBasic>;
 using BranchType = vtkm::worklet::contourtree_ppp2::process_contourtree_inc::Branch<DataValueType>;
 using PLFType = vtkm::worklet::contourtree_ppp2::process_contourtree_inc::PiecewiseLinearFunction<DataValueType>;

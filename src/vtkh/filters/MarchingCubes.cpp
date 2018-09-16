@@ -89,6 +89,7 @@ void MarchingCubes::PreExecute()
       vtkh::ContourTree contour_tree;
       contour_tree.SetInput(this->m_input);
       contour_tree.SetField(m_field_name); 
+      contour_tree.SetNumLevels(m_levels); 
       contour_tree.Update();
       m_iso_values = contour_tree.GetIsoValues();
     }
