@@ -1,5 +1,4 @@
 #include "Renderer.hpp"
-#include "Image.hpp"
 #include "compositing/Compositor.hpp"
 
 #include <vtkh/utils/vtkm_array_utils.hpp>
@@ -164,13 +163,6 @@ Renderer::PreExecute()
 
   m_bounds = m_input->GetGlobalBounds();
   
-  // we may have to correct opacity to stay consistent 
-  // if the number of samples in a volume rendering 
-  // increased, but we still want annotations to reflect
-  // the original color table values. If there is a 
-  // correction, a derived class will set a new corrected
-  // color table
-  m_corrected_color_table = m_color_table;
 }
 
 void 
@@ -221,7 +213,7 @@ Renderer::DoExecute()
     for(int i = 0; i < total_renders; ++i)
     {
 
-      m_mapper->SetActiveColorTable(m_corrected_color_table);
+      m_mapper->SetActiveColorTable(m_color_table);
       
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera(); 

@@ -53,7 +53,7 @@ public:
 
   static bool GetCellDims(const vtkm::cont::DynamicCellSet &cell_set, int *dims);
 
-  static bool IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set);
+  static bool IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set, vtkm::UInt8 &shape_id);
   
 };
 

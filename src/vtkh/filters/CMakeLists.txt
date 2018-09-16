@@ -11,6 +11,7 @@ set(vtkh_filters_headers
   ContourTree.hpp
   IsoVolume.hpp
   NoOp.hpp
+  Lagrangian.hpp
   MarchingCubes.hpp
   PointAverage.hpp  
   Recenter.hpp
@@ -27,6 +28,7 @@ set(vtkh_filters_sources
   ContourTree.cpp
   IsoVolume.cpp
   NoOp.cpp
+  Lagrangian.cpp
   MarchingCubes.cpp
   PointAverage.cpp
   Recenter.cpp

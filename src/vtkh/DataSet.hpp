@@ -82,6 +82,8 @@ public:
    */
   bool IsStructured(int &topological_dims, const vtkm::Id cell_set_index = 0) const;
 
+  bool IsPointMesh(const vtkm::Id cell_set_index = 0) const;
+
   void PrintSummary(std::ostream &stream) const;
 };
 
