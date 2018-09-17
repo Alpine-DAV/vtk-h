@@ -90,11 +90,12 @@ void Lagrangian::DoExecute()
     this->m_input->GetDomain(i, dom, domain_id);
     if(dom.HasField(m_field_name))
     {
-      using vectorField = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
+      using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
+      using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
 		  auto field = dom.GetField(m_field_name).GetData();		
-      if(!field.IsSameType(vectorField()))
+      if(!field.IsSameType(vectorField_d()) && !field.IsSameType(vectorField_f()))
       {
-        throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float64,3>>");
+        throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");
       }
     }
     else
