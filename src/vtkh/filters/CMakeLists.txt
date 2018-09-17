@@ -16,6 +16,7 @@ set(vtkh_filters_headers
   Recenter.hpp
   Threshold.hpp
   Slice.hpp
+  VectorMagnitude.hpp
   )
 
 set(vtkh_filters_sources
@@ -32,6 +33,7 @@ set(vtkh_filters_sources
   Recenter.cpp
   Threshold.cpp
   Slice.cpp
+  VectorMagnitude.cpp
   )
 
 set(vtkh_filters_deps vtkh_core vtkh_utils )
