@@ -13,7 +13,8 @@ Render::Render()
   : m_width(1024),
     m_height(1024),
     m_render_annotations(true),
-    m_render_background(true)
+    m_render_background(true),
+    m_shading(true)
 {
 }
 
@@ -95,6 +96,18 @@ void
 Render::SetWidth(const vtkm::Int32 width) 
 {
   m_width = width;
+}
+
+void
+Render::SetShadingOn(bool on) 
+{
+  m_shading = on;
+}
+
+bool
+Render::GetShadingOn() const
+{
+  return m_shading; 
 }
 
 void
@@ -296,6 +309,7 @@ MakeRender(int width,
   if(is_2d)
   {
     camera.SetModeTo2D(); 
+    render.SetShadingOn(false);
   }
   else
   {
@@ -361,6 +375,7 @@ MakeRender(int width,
   if(is_2d)
   {
     camera.SetModeTo2D(); 
+    render.SetShadingOn(false);
   }
   else
   {

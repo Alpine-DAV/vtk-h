@@ -24,6 +24,7 @@ public:
 
   Renderer(); 
   virtual ~Renderer(); 
+  virtual void SetShadingOn(bool on); 
   virtual void Update();
 
   void AddRender(vtkh::Render &render); 

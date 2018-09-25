@@ -35,6 +35,7 @@ public:
   vtkm::Int32                     GetHeight() const;
   vtkm::Int32                     GetWidth() const;
   vtkm::rendering::Color          GetBackgroundColor() const;
+  bool                            GetShadingOn() const;
   
   void                            DoRenderAnnotations(bool on);
   void                            DoRenderBackground(bool on);
@@ -45,6 +46,7 @@ public:
   void                            SetImageName(const std::string &name);
   void                            SetBackgroundColor(float bg_color[4]);
   void                            SetForegroundColor(float fg_color[4]);
+  void                            SetShadingOn(bool on);
   void                            ClearCanvases();
   bool                            HasCanvas(const vtkm::Id &domain_id) const;
   void                            AddDomain(vtkm::Id domain_id);
@@ -67,6 +69,7 @@ protected:
   vtkmCanvasPtr                CreateCanvas();
   bool                         m_render_annotations;
   bool                         m_render_background;
+  bool                         m_shading;;
 }; 
 
 static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};
