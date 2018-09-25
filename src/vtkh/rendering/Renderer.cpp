@@ -34,9 +34,16 @@ Renderer::~Renderer()
 }
 
 void 
+Renderer::SetShadingOn(bool on)
+
+{
+  // do nothing by default;
+}
+
+void 
 Renderer::SetField(const std::string field_name)
 {
-  m_field_name = field_name; 
+  m_field_name = field_name;
 }
 
 std::string
@@ -212,9 +219,15 @@ Renderer::DoExecute()
 
     for(int i = 0; i < total_renders; ++i)
     {
-
+      if(m_renders[i].GetShadingOn())
+      {
+        this->SetShadingOn(true);
+      }
+      else
+      {
+        this->SetShadingOn(false);
+      }
       m_mapper->SetActiveColorTable(m_color_table);
-      
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera(); 
       m_mapper->SetCanvas(&(*p_canvas));
