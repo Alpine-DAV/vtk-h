@@ -55,6 +55,8 @@ void ClipField::DoExecute()
 
   const int num_domains = this->m_input->GetNumberOfDomains(); 
 
+  std::cout<<"Domais "<<num_domains<<"\n";
+
   vtkm::filter::ClipWithField clipper;
   clipper.SetClipValue(m_clip_value);
   clipper.SetInvertClip(m_invert);
@@ -70,7 +72,7 @@ void ClipField::DoExecute()
     recenter.SetField(m_field_name);
     recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS); 
     recenter.Update();
-    m_input = recenter.GetOutput();
+    this->m_input = recenter.GetOutput();
     delete_input = true;
   }
 
@@ -89,10 +91,11 @@ void ClipField::DoExecute()
     clipper.SetFieldsToPass(this->GetFieldSelection());
     auto dataset = clipper.Execute(dom);
     this->m_output->AddDomain(dataset, domain_id);
-    if(delete_input)
-    {
-      delete m_input;
-    }
+  }
+
+  if(delete_input)
+  {
+    delete m_input;
   }
 }
 
