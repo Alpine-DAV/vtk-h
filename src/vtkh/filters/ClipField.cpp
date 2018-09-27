@@ -55,8 +55,6 @@ void ClipField::DoExecute()
 
   const int num_domains = this->m_input->GetNumberOfDomains(); 
 
-  std::cout<<"Domais "<<num_domains<<"\n";
-
   vtkm::filter::ClipWithField clipper;
   clipper.SetClipValue(m_clip_value);
   clipper.SetInvertClip(m_invert);
