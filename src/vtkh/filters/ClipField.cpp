@@ -52,6 +52,7 @@ void ClipField::DoExecute()
 {
   
   this->m_output = new DataSet();
+  vtkh::DataSet *old_input = this->m_input;
 
   const int num_domains = this->m_input->GetNumberOfDomains(); 
 
@@ -94,6 +95,7 @@ void ClipField::DoExecute()
   if(delete_input)
   {
     delete m_input;
+    this->m_input = old_input;
   }
 }
 

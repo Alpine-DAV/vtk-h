@@ -101,6 +101,7 @@ void MarchingCubes::DoExecute()
 {
   this->m_output = new DataSet();
   vtkm::filter::MarchingCubes marcher;
+  vtkh::DataSet *old_input = this->m_input;
 
   marcher.SetIsoValues(m_iso_values);
   marcher.SetMergeDuplicatePoints(true);
@@ -154,6 +155,7 @@ void MarchingCubes::DoExecute()
   if(delete_input)
   {
     delete m_input;
+    this->m_input = old_input;
   }
 }
 
