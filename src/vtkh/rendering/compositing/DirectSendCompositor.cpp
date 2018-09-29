@@ -158,11 +158,11 @@ DirectSendCompositor::CompositeVolume(diy::mpi::communicator &diy_comm,
     decomposer.decompose(diy_comm.rank(), assigner, all_create);
     MPI_Barrier(diy_comm); 
 
-    MPICollect(sub_image,diy_comm); 
-    //diy::all_to_all(master,
-    //                assigner,
-    //                CollectImages(decomposer),
-    //                magic_k);
+    //MPICollect(sub_image,diy_comm); 
+    diy::all_to_all(master,
+                    assigner,
+                    CollectImages(decomposer),
+                    magic_k);
   } 
 
   images.at(0).Swap(sub_image);

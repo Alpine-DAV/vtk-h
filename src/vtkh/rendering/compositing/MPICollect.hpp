@@ -74,7 +74,7 @@ static void MPICollect(Image &image, MPI_Comm comm)
 
       int rec_size = (inbound.X.Max - inbound.X.Min + 1) *
                      (inbound.Y.Max - inbound.Y.Min + 1);
-
+      
       MPI_Status status;
       MPI_Recv(&(incoming.m_pixels[0]), rec_size * 4, MPI_UNSIGNED_CHAR, i, 0, comm, &status);
       MPI_Recv(&(incoming.m_depths[0]), rec_size, MPI_FLOAT, i, 0, comm, &status);

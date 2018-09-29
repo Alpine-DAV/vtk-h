@@ -143,11 +143,11 @@ RadixKCompositor::CompositeSurface(diy::mpi::communicator &diy_comm, Image &imag
                 reduce_images);
 
 
-    MPICollect(image, diy_comm); 
-    //diy::all_to_all(master,
-    //                assigner,
-    //                CollectImages(decomposer),
-    //                magic_k);
+    //MPICollect(image, diy_comm); 
+    diy::all_to_all(master,
+                    assigner,
+                    CollectImages(decomposer),
+                    magic_k);
   
     if(diy_comm.rank() == 0) 
     {
