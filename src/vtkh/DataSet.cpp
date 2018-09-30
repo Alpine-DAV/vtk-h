@@ -576,7 +576,7 @@ bool
 DataSet::GlobalFieldExists(const std::string &field_name) const
 {
   bool exists = FieldExists(field_name);
-#ifdef VTKH_VTKH_PARALLEL
+#ifdef VTKH_PARALLEL
   int local_boolean = exists ? 1 : 0; 
   int global_boolean;
 
