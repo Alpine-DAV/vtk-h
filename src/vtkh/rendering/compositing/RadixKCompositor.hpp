@@ -13,7 +13,7 @@ class RadixKCompositor
 public:
   RadixKCompositor();
   ~RadixKCompositor();
-  void CompositeSurface(diy::mpi::communicator &diy_comm, Image &image); 
+  void CompositeSurface(diy::mpi::communicator &diy_comm, Image &image);
   std::string GetTimingString();
 private:
   std::stringstream m_timing_log;

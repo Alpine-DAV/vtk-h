@@ -6,7 +6,7 @@
 #include <diy/mpi.hpp>
 #include <iostream>
 
-namespace vtkh 
+namespace vtkh
 {
 
 class DIYCompositor : public Compositor
@@ -14,9 +14,9 @@ class DIYCompositor : public Compositor
 public:
      DIYCompositor();
     ~DIYCompositor();
-    
+
     void Cleanup() override;
-    
+
 private:
     virtual void CompositeZBufferSurface() override;
     virtual void CompositeZBufferBlend() override;

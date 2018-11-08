@@ -4,10 +4,10 @@
 #include <diy/decomposition.hpp>
 #include <vtkm/Bounds.h>
 
-namespace vtkh 
+namespace vtkh
 {
-  
-static  
+
+static
 vtkm::Bounds DIYBoundsToVTKM(const diy::DiscreteBounds &bounds)
 {
   vtkm::Bounds vtkm_bounds;
@@ -30,7 +30,7 @@ diy::DiscreteBounds VTKMBoundsToDIY(const vtkm::Bounds &bounds)
   diy_bounds.min[0] = bounds.X.Min;
   diy_bounds.min[1] = bounds.Y.Min;
   diy_bounds.min[2] = bounds.Z.Min;
-                                 
+
   diy_bounds.max[0] = bounds.X.Max;
   diy_bounds.max[1] = bounds.Y.Max;
   diy_bounds.max[2] = bounds.Z.Max;
