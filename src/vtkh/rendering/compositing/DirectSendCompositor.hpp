@@ -5,7 +5,7 @@
 #include <diy/mpi.hpp>
 #include <sstream>
 
-namespace vtkh 
+namespace vtkh
 {
 
 class DirectSendCompositor
@@ -13,8 +13,8 @@ class DirectSendCompositor
 public:
   DirectSendCompositor();
   ~DirectSendCompositor();
-  void CompositeVolume(diy::mpi::communicator &diy_comm, 
-                       std::vector<Image>     &images); 
+  void CompositeVolume(diy::mpi::communicator &diy_comm,
+                       std::vector<Image>     &images);
   std::string GetTimingString();
 private:
   std::stringstream m_timing_log;

@@ -26,10 +26,12 @@ blt_add_library(
   )
 
 if(ENABLE_OPENMP)
-  if(CUDA_FOUND) 
+  if(CUDA_FOUND)
     blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-Xcompiler -DVTKH_USE_OPENMP")
   else()
     blt_add_target_compile_flags(TO vtkh_utils FLAGS "${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
   endif()
 endif()
 
@@ -54,12 +56,14 @@ if (MPI_FOUND)
       HEADERS ${vtkh_utils_headers}
       DEPENDS_ON ${vtkh_utils_thirdparty_libs} mpi
       )
-      
+
       if(ENABLE_OPENMP)
-        if(CUDA_FOUND) 
+        if(CUDA_FOUND)
           blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+          blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-Xcompiler -DVTKH_USE_OPENMP")
         else()
           blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "${OpenMP_CXX_FLAGS}")
+          blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_USE_OPENMP")
         endif()
       endif()
 
