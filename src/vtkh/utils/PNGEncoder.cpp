@@ -67,7 +67,7 @@ PNGEncoder::Encode(const float *rgba_in,
     for(int x = 0; x < width; ++x)
 
 #ifdef VTKH_USE_OPENMP
-        #pragma omp parrallel for
+        #pragma omp parallel for
 #endif
         for (int y = 0; y < height; ++y)
         {
