@@ -13,11 +13,23 @@ set(vtkh_filters_headers
   Lagrangian.hpp
   MarchingCubes.hpp
   ParticleAdvection.hpp
+  avtParICAlgorithm.hpp
+  avtParICAlgorithm.hxx
+  Communicator.hpp
+  CommData.hpp
+  MemStream.h
+  MemStream.hxx
+  adapter.h
+  Integrator.hpp
+  Particle.hpp
+  BoundsMap.hpp
+  DebugMeowMeow.hpp
   PointAverage.hpp
   Recenter.hpp
   Threshold.hpp
   Slice.hpp
   VectorMagnitude.hpp
+  util.hpp
   )
 
 set(vtkh_filters_sources
@@ -98,7 +110,7 @@ if (MPI_FOUND)
           endif()
     endif()
 
-    blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL")
+    blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL -D TRACE_DEBUG")
 
 
     # Install libraries
