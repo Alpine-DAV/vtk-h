@@ -8,6 +8,7 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  Log.hpp
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
@@ -25,6 +26,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  Log.cpp
   IsoVolume.cpp
   NoOp.cpp
   Lagrangian.cpp

@@ -297,9 +297,6 @@ DataSet::GetRange(const std::string &field_name) const
     vtkm::cont::ArrayHandle<vtkm::Range> sub_range;
     sub_range = field.GetRange();
 
-    num_components = sub_range.GetPortalConstControl().GetNumberOfValues();
-    range = sub_range;
-
     vtkm::Id components = sub_range.GetPortalConstControl().GetNumberOfValues();
 
     // first range with data. Set range and keep looking
@@ -329,7 +326,6 @@ DataSet::GetRange(const std::string &field_name) const
       range.GetPortalControl().Set(c, c_range);
     }
   }
-
   return range;
 }
 
