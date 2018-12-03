@@ -136,7 +136,6 @@ void Log::DoExecute()
       dom.AddField(out_field);
     }
   }
-  m_output->PrintSummary(std::cout);
 }
 
 std::string
