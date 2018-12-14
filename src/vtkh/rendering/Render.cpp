@@ -311,7 +311,6 @@ MakeRender(int width,
     extent[0] = scene_bounds.X.Length();
     extent[1] = scene_bounds.Y.Length();
     extent[2] = scene_bounds.Z.Length();
-    std::cout<<extent[0]<<" "<<extent[1]<<" "<<extent[2]<<"\n";
     int min_dim = 0;
     int max_dim = 0;
     for(int i = 1; i < 3; ++i)
