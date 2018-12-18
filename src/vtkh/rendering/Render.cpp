@@ -305,30 +305,6 @@ MakeRender(int width,
     camera.SetModeTo2D();
     render.SetShadingOn(false);
   }
-  else
-  {
-    float extent[3];
-    extent[0] = scene_bounds.X.Length();
-    extent[1] = scene_bounds.Y.Length();
-    extent[2] = scene_bounds.Z.Length();
-    int min_dim = 0;
-    int max_dim = 0;
-    for(int i = 1; i < 3; ++i)
-    {
-      if(extent[i] < extent[min_dim]) min_dim = i;
-      if(extent[i] > extent[max_dim]) max_dim = i;
-    }
-    vtkm::Vec<vtkm::Float32, 3> pos = camera.GetLookAt();
-    float fov = camera.GetFieldOfView();
-    float fov_rad = fov * (vtkm::Pi() * 2.0) / 360.;
-    float distance = (extent[max_dim] * 0.5f) / vtkm::ATan(fov_rad * 0.5f);
-    pos[min_dim] += distance;
-    vtkm::Vec<vtkm::Float32, 3> up(0.f, 0.f, 0.f);
-    up[max_dim] = 1.f;
-    camera.SetPosition(pos);
-    camera.SetViewUp(up);
-
-  }
 
   render.SetCamera(camera);
   render.SetImageName(image_name);
