@@ -62,26 +62,28 @@ public:
         //cout<<"Toss an integrator: refCnt= "<<vecField.Internals.use_count()<<endl;
     }
 
+    /*
     int Go(bool recordPath,
            std::vector<Particle> &particles,
            const vtkm::Id &maxSteps,
            std::list<Particle> &I,
            std::list<Particle> &T,
            std::list<Particle> &A,
-           std::vector<vtkm::Vec<FieldType,4>> *particleTraces=NULL)
+           std::vector<vtkm::worklet::StreamlineResult<FieldType>> *particleTraces=NULL)
     {
         if (recordPath)
             return Trace(particles, maxSteps, I, T, A, particleTraces);
         else
             return Advect(particles, maxSteps, I, T, A, particleTraces);
     }
+    */
 
     int Advect(std::vector<Particle> &particles,
                const vtkm::Id &maxSteps,
                std::list<Particle> &I,
                std::list<Particle> &T,
                std::list<Particle> &A,
-               std::vector<vtkm::Vec<FieldType,4>> *particleTraces=NULL)
+               std::vector<vtkm::worklet::ParticleAdvectionResult<FieldType>> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType,3>> seedArray;
@@ -107,7 +109,7 @@ public:
             steps1 += stepsPortal.Get(i);
         }
 
-        if (particleTraces)
+        /*
         {
             for (int i = 0; i < nSeeds; i++)
             {
@@ -119,6 +121,10 @@ public:
                 particleTraces->push_back(p);
             }
         }
+        */
+
+        if (particleTraces)
+          (*particleTraces).push_back(result);
 
         int totalSteps = steps1-steps0;
         return totalSteps;
@@ -129,7 +135,7 @@ public:
               std::list<Particle> &I,
               std::list<Particle> &T,
               std::list<Particle> &A,
-              std::vector<vtkm::Vec<FieldType,4>> *particleTraces=NULL)
+              std::vector<vtkm::worklet::StreamlineResult<FieldType>> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType,3>> seedArray;
@@ -159,7 +165,7 @@ public:
             steps1 += stepsPortal.Get(i);
             UpdateStatus(particles[i], statusPortal.Get(i), maxSteps, I,T,A);
 
-            if (particleTraces)
+            /*
             {
                 for (int j = 0; j < nPts; j++)
                 {
@@ -172,7 +178,10 @@ public:
                     particleTraces->push_back(p);
                 }
             }
+            */
         }
+        if (particleTraces)
+          (*particleTraces).push_back(result);
 
         int totalSteps = steps1-steps0;
         return totalSteps;

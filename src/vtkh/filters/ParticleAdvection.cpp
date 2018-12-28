@@ -7,6 +7,9 @@
 #include <vtkh/Error.hpp>
 
 #include <vtkm/filter/Streamline.h>
+#include <vtkm/worklet/ParticleAdvection.h>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/cont/Algorithm.h>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
@@ -39,9 +42,8 @@ ParticleAdvection::ParticleAdvection()
       maxSteps(1000)
 {
 #ifdef VTKH_PARALLEL
-  mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  MPI_Comm_rank(mpiComm, &rank);
-  MPI_Comm_size(mpiComm, &numRanks);
+  rank = vtkh::GetMPIRank();
+  numRanks = vtkh::GetMPISize();
 #endif
 
 #ifdef TRACE_DEBUG
@@ -54,6 +56,7 @@ ParticleAdvection::ParticleAdvection()
 
 ParticleAdvection::~ParticleAdvection()
 {
+    cout<<"Streamline dtor"<<endl;
 }
 
 void ParticleAdvection::PreExecute()
@@ -66,27 +69,16 @@ void ParticleAdvection::PostExecute()
   Filter::PostExecute();
 }
 
-void ParticleAdvection::DoExecute()
+void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult<double>> &traces)
 {
-  cout<<__FILE__<<"  ParticleAdvection::DoExecute()"<<endl;
-
-  //steps:
-  //- compute bounds
-  //- load data
-  //- create seeds, and distribute
-  //- iterate
-  //- finish
-
-  this->Init();
-  this->CreateSeeds();
+#ifdef VTKH_PARALLEL
+  MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   cout<<rank<<" dom2rank: "<<domToRank<<endl;
   cout<<rank<<": "<<totalNumSeeds<<" "<<active.size()<<endl;
 
-  bool done = false;
   int N = totalNumSeeds;
-#ifdef VTKH_PARALLEL
-  MPICommunicator communicator(mpiComm, domToRank);
   int cnt = 0;
+  MPICommunicator communicator(mpiComm, domToRank);
 
   while (N > 0)
   {
@@ -95,12 +87,13 @@ void ParticleAdvection::DoExecute()
       vector<Particle> v;
       list<Particle> I, T, A;
       int numTerm = 0;
+
       if (GetActiveParticles(v))
       {
           DataBlock *blk = GetBlock(v[0].blockId);
 
           DBG("Integrate: "<<v.size()<<endl);
-          blk->integrator.Go(false, v, maxSteps, I, T, A);
+          blk->integrator.Trace(v, maxSteps, I, T, A, &traces);
           DBG("  -----Integrate:  ITA: "<<I.size()<<" "<<T.size()<<" "<<A.size()<<endl);
           DBG("                   I= "<<I<<endl);
           numTerm = T.size();
@@ -119,84 +112,109 @@ void ParticleAdvection::DoExecute()
       if (!in.empty())
           active.insert(active.end(), in.begin(), in.end());
       cnt++;
-//      if (cnt > 10)
-//          break;
 
       // no work available, take a snooze.
       if (active.empty())
       {
           DBG("    sleep"<<endl);
-          usleep(1000);
+          //usleep(1000);
       }
       DBG("   N --> "<<N<<endl);
       DBG(endl<<endl<<endl);
   }
+//  DumpTraces(rank, traces);
+  cout<<rank<<": done tracing. # of traces= "<<traces.size()<<endl;
   DBG("All done"<<endl);
-  MPI_Barrier(mpiComm);
-  exit(-1);
-
 #endif
+}
 
+void ParticleAdvection::DoExecute()
+{
+  this->Init();
+  this->CreateSeeds();
+  this->DumpDS();
 
+  vector<vtkm::worklet::StreamlineResult<double>> particleTraces;
+  this->TraceSeeds(particleTraces);
 
   this->m_output = new DataSet();
-  const int nDoms = this->m_input->GetNumberOfDomains();
 
-  std::vector<vtkm::cont::DataSet> datasets;
-  std::vector<vtkm::Id> blockIds;
-  for (int i = 0; i < nDoms; i++)
+  //Compact all the traces into a single dataset.
+  if (!particleTraces.empty())
   {
-    vtkm::Id domId;
-    vtkm::cont::DataSet dom;
-    this->m_input->GetDomain(i, dom, domId);
-    if(dom.HasField(m_field_name))
-    {
-      using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
-      using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
-      auto field = dom.GetField(m_field_name).GetData();
-      if(!field.IsSameType(vectorField_d()) && !field.IsSameType(vectorField_f()))
+      //Collapse particle trace data into one set of polylines.
+      vtkm::Id totalNumPts = 0, totalNumCells = 0;
+      std::vector<vtkm::Id> offsets(particleTraces.size(), 0), numLines(particleTraces.size(),0);
+      for (int i = 0; i < particleTraces.size(); i++)
       {
-        throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");
+          vtkm::Id n = particleTraces[i].positions.GetNumberOfValues();
+          offsets[i] = n;
+          totalNumPts += n;
+          n = particleTraces[i].polyLines.GetNumberOfCells();
+          totalNumCells += n;
+          numLines[i] = n;
+
       }
-    }
-    else
-    {
-      throw Error("Domain does not contain specified vector field for ParticleAdvection analysis.");
-    }
-    datasets.push_back(dom);
-    blockIds.push_back(domId);
 
-    vector<vtkm::Vec<vtkm::FloatDefault, 3>> pts;
-    vtkm::Bounds bounds = dom.GetCoordinateSystem().GetBounds();
-    int numPts = 100;
-    float dx = bounds.X.Max - bounds.X.Min;
-    float dy = bounds.Y.Max - bounds.Y.Min;
-    float dz = bounds.Z.Max - bounds.Z.Min;
-    pts.resize(numPts);
-    for (int i = 0; i < numPts; i++)
-    {
-        float x = bounds.X.Min + rand01()*dx;
-        float y = bounds.Y.Min + rand01()*dy;
-        float z = bounds.Z.Min + rand01()*dz;
-        pts[i] = vtkm::make_Vec(x,y,z);
-    }
+      //Append all the positions into one array.
+      vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>> positions;
+      positions.Allocate(totalNumPts);
+      auto posPortal = positions.GetPortalControl();
+      vtkm::Id idx = 0;
+      for (int i = 0; i < particleTraces.size(); i++)
+      {
+          auto inP = particleTraces[i].positions.GetPortalConstControl();
+          for (int j = 0; j < offsets[i]; j++, idx++)
+              posPortal.Set(idx, inP.Get(j));
+      }
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> seeds;
-    seeds = vtkm::cont::make_ArrayHandle(pts);
+      //Cell types are all lines...
+      vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
+      cellTypes.Allocate(totalNumCells);
+      vtkm::cont::ArrayHandleConstant<vtkm::UInt8> polyLineShape(vtkm::CELL_SHAPE_LINE, totalNumCells);
+      vtkm::cont::Algorithm::Copy(polyLineShape, cellTypes);
 
-    vtkm::filter::Streamline streamline;
-    streamline.SetStepSize(0.01);
-    streamline.SetNumberOfSteps(100);
-    streamline.SetSeeds(seeds);
+      //Append all the conn and cellCounts.
+      vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+      vtkm::cont::ArrayHandle<vtkm::IdComponent> cellCounts;
+      connectivity.Allocate(totalNumPts);
+      cellCounts.Allocate(totalNumCells);
+      auto connPortal = connectivity.GetPortalControl();
+      auto cntPortal = cellCounts.GetPortalControl();
 
-    streamline.SetActiveField(m_field_name);
-    vtkm::cont::DataSet res = streamline.Execute(dom);
-    res.PrintSummary(cout);
+      vtkm::Id offset = 0, connIdx = 0, cntIdx = 0;
+      for (int i = 0; i < particleTraces.size(); i++)
+      {
+          if (i > 0)
+              offset = offsets[i-1];
 
-    m_output->AddDomain(res, domId);
+          vtkm::Id n = particleTraces[i].polyLines.GetNumberOfCells();
+          vtkm::cont::ArrayHandle<vtkm::Id> ids;
+
+          for (vtkm::Id j = 0; j < n; j++)
+          {
+              particleTraces[i].polyLines.GetIndices(j, ids);
+              vtkm::Id nids = ids.GetNumberOfValues();
+              auto idsPortal = ids.GetPortalControl();
+              for (vtkm::Id k = 0; k < nids; k++, connIdx++)
+                  connPortal.Set(connIdx, idsPortal.Get(k)+offset);
+              cntPortal.Set(cntIdx, nids);
+              cntIdx++;
+          }
+      }
+
+      //Create a single polyLines cell set.
+      vtkm::cont::CellSetExplicit<> polyLines;
+      polyLines.Fill(positions.GetNumberOfValues(), cellTypes, cellCounts, connectivity);
+
+      vtkm::cont::DataSet ds;
+      vtkm::cont::CoordinateSystem outputCoords("coordinates", positions);
+      ds.AddCoordinateSystem(outputCoords);
+      ds.AddCellSet(polyLines);
+      this->m_output->AddDomain(ds, rank);
+
+      this->DumpSLOutput(ds, rank);
   }
-
-  cout<<__FILE__<<"  ParticleAdvection::DoExecute() DONE"<<endl;
 }
 
 
@@ -224,10 +242,66 @@ ParticleAdvection::GetName() const
   return "vtkh::ParticleAdvection";
 }
 
+void
+ParticleAdvection::DumpSLOutput(const vtkm::cont::DataSet &ds, int domId)
+{
+  char nm[128];
+  sprintf(nm, "ds.%03d.vtk", domId);
+  vtkm::io::writer::VTKDataSetWriter writer(nm);
+  writer.WriteDataSet(ds);
+  if (rank == 0)
+  {
+    ofstream output;
+    output.open("ds.visit", ofstream::out);
+    output<<"!NBLOCKS "<<numRanks<<endl;
+    for (int i = 0; i < numRanks; i++)
+    {
+        char nm[128];
+        sprintf(nm, "ds.%03d.vtk", i);
+        output<<nm<<endl;
+    }
+  }
+}
+
+void
+ParticleAdvection::DumpDS()
+{
+  int totalNumDoms = this->m_input->GetGlobalNumberOfDomains();
+  int nDoms = this->m_input->GetNumberOfDomains();
+
+  for (int i = 0; i < nDoms; i++)
+  {
+    vtkm::cont::DataSet dom;
+    vtkm::Id domId;
+    this->m_input->GetDomain(i, dom, domId);
+
+    char nm[128];
+    sprintf(nm, "dom.%03d.vtk", domId);
+
+    vtkm::io::writer::VTKDataSetWriter writer(nm);
+    writer.WriteDataSet(dom);
+  }
+
+  if (rank == 0)
+  {
+    ofstream output;
+    output.open("dom.visit", ofstream::out);
+    output<<"!NBLOCKS "<<numRanks<<endl;
+    for (int i = 0; i < totalNumDoms; i++)
+    {
+      char nm[128];
+      sprintf(nm, "dom.%03d.vtk", i);
+      output<<nm<<endl;
+    }
+  }
+}
 
 void
 ParticleAdvection::Init()
 {
+#ifdef VTKH_PARALLEL
+    MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+#endif
   int totalNumDoms = this->m_input->GetGlobalNumberOfDomains();
   int nDoms = this->m_input->GetNumberOfDomains();
 
@@ -239,12 +313,12 @@ ParticleAdvection::Init()
     vtkm::Id domId;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domId);
-    dom.PrintSummary(cout);
+    //dom.PrintSummary(cout);
     dataBlocks.push_back(new DataBlock(domId, dom, m_field_name, stepSize));
 
     vtkm::Bounds b = dom.GetCoordinateSystem().GetBounds();
     cout<<i<<" domId= "<<domId<<endl;
-    cout<<i<<" bounds: ("<<b.X.Min<<" "<<b.Y.Min<<" "<<b.Z.Min<<") ("<<b.X.Max<<" "<<b.Y.Max<<" "<<b.Z.Max<<endl;
+    cout<<i<<" bounds: ("<<b.X.Min<<" "<<b.Y.Min<<" "<<b.Z.Min<<") ("<<b.X.Max<<" "<<b.Y.Max<<" "<<b.Z.Max<<")"<<endl;
 
     locBounds[domId*6 + 0] = b.X.Min;
     locBounds[domId*6 + 1] = b.X.Max;
@@ -356,7 +430,12 @@ ParticleAdvection::CreateSeeds()
     else if (seedMethod == RANDOM)
         BoxOfSeeds(globalBounds, seeds);
     else if (seedMethod == RANDOM_BOX)
-        BoxOfSeeds(globalBounds, seeds);
+        BoxOfSeeds(seedBox, seeds);
+    else if (seedMethod == POINT)
+    {
+        Particle p(seedPoint, 0);
+        seeds.push_back(p);
+    }
 
     if (seedMethod == RANDOM_BLOCK)
         active.insert(active.end(), seeds.begin(), seeds.end());
@@ -375,8 +454,35 @@ ParticleAdvection::CreateSeeds()
     totalNumSeeds = active.size() + inactive.size();
 
 #ifdef VTKH_PARALLEL
+    MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
     MPI_Allreduce(MPI_IN_PLACE, &totalNumSeeds, 1, MPI_INT, MPI_SUM, mpiComm);
 #endif
+}
+
+void
+ParticleAdvection::DumpTraces(int idx, const vector<vtkm::Vec<double,4>> &particleTraces)
+{
+    ofstream output;
+    char nm[128];
+    sprintf(nm, "output.%03d.txt", idx);
+    output.open(nm, ofstream::out);
+
+    output<<"X,Y,Z,ID"<<endl;
+    for (auto &p : particleTraces)
+        output<<p[0]<<", "<<p[1]<<", "<<p[2]<<", "<<(int)p[3]<<endl;
+
+    if (idx == 0)
+    {
+        ofstream output;
+        output.open("output.visit", ofstream::out);
+        output<<"!NBLOCKS "<<numRanks<<endl;
+        for (int i = 0; i < numRanks; i++)
+        {
+            char nm[128];
+            sprintf(nm, "output.%03d.txt", i);
+            output<<nm<<endl;
+        }
+    }
 }
 
 } //  namespace vtkh

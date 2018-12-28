@@ -25,11 +25,34 @@ class DataBlock;
 class ParticleAdvection : public Filter
 {
 public:
-  enum SeedMethod {RANDOM=0, RANDOM_BLOCK, RANDOM_BOX};
+  enum SeedMethod {RANDOM=0, RANDOM_BLOCK, RANDOM_BOX, POINT};
 
   ParticleAdvection();
   virtual ~ParticleAdvection();
   std::string GetName() const override;
+
+  void SetSeedPoint(const vtkm::Vec<double,3> &pt)
+  {
+    seedMethod = POINT;
+    seedPoint = pt;
+  }
+  void SetSeedsRandomWhole(const int &n)
+  {
+    seedMethod = RANDOM;
+    numSeeds = n;
+  }
+  void SetSeedsRandomBlock(const int &n)
+  {
+    seedMethod = RANDOM_BLOCK;
+    numSeeds = n;
+  }
+  void SetSeedsRandomBox(const int &n, const vtkm::Bounds &box)
+  {
+    seedMethod = RANDOM_BOX;
+    numSeeds = n;
+    seedBox = box;
+  }
+
   void SetField(const std::string &field_name) {m_field_name = field_name;}
   void SetStepSize(const double &v) { stepSize = v;}
   void SetMaxSteps(const int &n) { maxSteps = n;}
@@ -41,6 +64,8 @@ protected:
 
   void Init();
   void CreateSeeds();
+  void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult<double>> &traces);
+
 
 
   DataBlock * GetBlock(int blockId);
@@ -56,6 +81,8 @@ protected:
   int randSeed;
   int seedMethod;
   int maxSteps;
+  vtkm::Bounds seedBox;
+  vtkm::Vec<double,3> seedPoint;
 
   float stepSize;
 
@@ -68,11 +95,10 @@ protected:
   std::list<Particle> active, inactive, terminated;
   bool GetActiveParticles(std::vector<Particle> &v);
 
-#ifdef VTKH_PARALLEL
-    MPI_Comm mpiComm;
-#endif
+  void DumpTraces(int idx, const vector<vtkm::Vec<double,4>> &particleTraces);
+  void DumpDS();
+  void DumpSLOutput(const vtkm::cont::DataSet &ds, int domId);
 };
-
 
 
 class DataBlock
