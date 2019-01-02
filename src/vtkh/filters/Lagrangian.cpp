@@ -4,7 +4,7 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Error.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
 
 Lagrangian::Lagrangian()
@@ -17,49 +17,49 @@ Lagrangian::~Lagrangian()
 
 }
 
-void 
+void
 Lagrangian::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void 
+void
 Lagrangian::SetStepSize(const double &step_size)
 {
   m_step_size = step_size;
 }
 
-void 
+void
 Lagrangian::SetWriteFrequency(const int &write_frequency)
 {
   m_write_frequency = write_frequency;
 }
 
-void 
+void
 Lagrangian::SetCustomSeedResolution(const int &cust_res)
 {
 	m_cust_res = cust_res;
 }
 
-void 
+void
 Lagrangian::SetSeedResolutionInX(const int &x_res)
 {
 	m_x_res = x_res;
 }
 
-void 
+void
 Lagrangian::SetSeedResolutionInY(const int &y_res)
 {
 	m_y_res = y_res;
 }
-void 
+void
 Lagrangian::SetSeedResolutionInZ(const int &z_res)
 {
 	m_z_res = z_res;
 }
 
 
-void Lagrangian::PreExecute() 
+void Lagrangian::PreExecute()
 {
   Filter::PreExecute();
 }
@@ -80,7 +80,7 @@ void Lagrangian::DoExecute()
 	lagrangianFilter.SetSeedResolutionInX(m_x_res);
 	lagrangianFilter.SetSeedResolutionInY(m_y_res);
 	lagrangianFilter.SetSeedResolutionInZ(m_z_res);
-	
+
 	this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
   for(int i = 0; i < num_domains; ++i)
@@ -92,8 +92,8 @@ void Lagrangian::DoExecute()
     {
       using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
       using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
-		  auto field = dom.GetField(m_field_name).GetData();		
-      if(!field.IsSameType(vectorField_d()) && !field.IsSameType(vectorField_f()))
+		  auto field = dom.GetField(m_field_name).GetData();
+      if(!field.IsType<vectorField_d>() && !field.IsType<vectorField_f>())
       {
         throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");
       }
