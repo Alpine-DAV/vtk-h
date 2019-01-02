@@ -3,12 +3,12 @@
 #include <vtkh/filters/CleanGrid.hpp>
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 
-namespace vtkh 
+namespace vtkh
 {
 
 struct Clip::InternalsType
 {
-  vtkm::filter::ClipWithImplicitFunction m_clipper; 
+  vtkm::filter::ClipWithImplicitFunction m_clipper;
   InternalsType()
   {}
 };
@@ -25,26 +25,26 @@ Clip::~Clip()
 
 }
 
-void 
+void
 Clip::SetCellSet(const std::string &cell_set)
 {
   m_cell_set = cell_set;
 }
 
-void 
+void
 Clip::SetInvertClip(bool invert)
 {
   m_invert = invert;
 }
 
-void 
+void
 Clip::SetBoxClip(const vtkm::Bounds &clipping_bounds)
 {
    auto box =  vtkm::cont::make_ImplicitFunctionHandle(
-                 vtkm::Box({ clipping_bounds.X.Min, 
-                             clipping_bounds.Y.Min, 
-                             clipping_bounds.Z.Min}, 
-                           { clipping_bounds.X.Max, 
+                 vtkm::Box({ clipping_bounds.X.Min,
+                             clipping_bounds.Y.Min,
+                             clipping_bounds.Z.Min},
+                           { clipping_bounds.X.Max,
                              clipping_bounds.Y.Max,
                              clipping_bounds.Z.Max}));
 
@@ -52,7 +52,7 @@ Clip::SetBoxClip(const vtkm::Bounds &clipping_bounds)
   m_internals->m_clipper.SetImplicitFunction(box);
 }
 
-void 
+void
 Clip::SetSphereClip(const double center[3], const double radius)
 {
   vtkm::Vec<vtkm::FloatDefault,3> vec_center;
@@ -65,8 +65,8 @@ Clip::SetSphereClip(const double center[3], const double radius)
   m_internals->m_clipper.SetImplicitFunction(sphere);
 }
 
-void 
-Clip::SetPlaneClip(const double origin[3], const double normal[3]) 
+void
+Clip::SetPlaneClip(const double origin[3], const double normal[3])
 {
   vtkm::Vec<vtkm::FloatDefault,3> vec_origin;
   vec_origin[0] = origin[0];
@@ -82,7 +82,7 @@ Clip::SetPlaneClip(const double origin[3], const double normal[3])
   m_internals->m_clipper.SetImplicitFunction(plane);
 }
 
-void Clip::PreExecute() 
+void Clip::PreExecute()
 {
   Filter::PreExecute();
 }
@@ -94,10 +94,10 @@ void Clip::PostExecute()
 
 void Clip::DoExecute()
 {
-  
+
   DataSet data_set;
 
-  const int num_domains = this->m_input->GetNumberOfDomains(); 
+  const int num_domains = this->m_input->GetNumberOfDomains();
   m_internals->m_clipper.SetInvertClip(m_invert);
   for(int i = 0; i < num_domains; ++i)
   {
@@ -118,8 +118,8 @@ void Clip::DoExecute()
     auto dataset = m_internals->m_clipper.Execute(dom);
     data_set.AddDomain(dataset, domain_id);
   }
-   
-  CleanGrid cleaner; 
+
+  CleanGrid cleaner;
   cleaner.SetInput(&data_set);
   cleaner.Update();
   this->m_output = cleaner.GetOutput();
