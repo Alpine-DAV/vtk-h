@@ -18,7 +18,9 @@
 namespace vtkh {
 namespace detail
 {
-
+//
+// returns true if all ranks say true
+//
 bool GlobalAgreement(bool local)
 {
   bool agreement = local;
@@ -436,6 +438,32 @@ DataSet::PrintSummary(std::ostream &stream) const
     stream<<"Domain "<<m_domain_ids[dom]<<"\n";
     m_domains[dom].PrintSummary(stream);
   }
+}
+
+bool
+DataSet::IsEmpty(const vtkm::Id cell_set_index) const
+{
+  bool is_empty = true;
+  const size_t num_domains = m_domains.size();
+  for(size_t i = 0; i < num_domains; ++i)
+  {
+    auto cellset = m_domains[i].GetCellSet(cell_set_index);
+    if(cellset.GetNumberOfCells() > 0)
+    {
+      is_empty = false;
+      break;
+    }
+  }
+
+  return is_empty;
+}
+
+bool
+DataSet::GlobalIsEmpty(const vtkm::Id cell_set_index) const
+{
+  bool is_empty = IsEmpty();
+  is_empty = detail::GlobalAgreement(is_empty);
+  return is_empty;
 }
 
 bool
