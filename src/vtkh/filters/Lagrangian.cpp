@@ -62,6 +62,7 @@ Lagrangian::SetSeedResolutionInZ(const int &z_res)
 void Lagrangian::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
 }
 
 void Lagrangian::PostExecute()

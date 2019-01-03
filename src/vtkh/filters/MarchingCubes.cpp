@@ -53,9 +53,10 @@ MarchingCubes::SetField(const std::string &field_name)
 void MarchingCubes::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
 
-
-  if(m_levels != -1 && m_input->GlobalFieldExists(m_field_name)) {
+  if(m_levels != -1)
+  {
     vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
     float length = scalar_range.Length();
     float step = length / (m_levels + 1.f);
@@ -69,7 +70,6 @@ void MarchingCubes::PreExecute()
   }
 
   assert(m_iso_values.size() > 0);
-  assert(m_field_name != "");
 }
 
 void MarchingCubes::PostExecute()

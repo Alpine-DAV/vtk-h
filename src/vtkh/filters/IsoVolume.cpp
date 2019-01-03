@@ -3,7 +3,7 @@
 #include <vtkh/filters/ClipField.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
 
 IsoVolume::IsoVolume()
@@ -16,25 +16,26 @@ IsoVolume::~IsoVolume()
 
 }
 
-void 
+void
 IsoVolume::SetRange(const vtkm::Range range)
 {
   m_range = range;
 }
 
-void 
+void
 IsoVolume::SetField(const std::string field_name)
 {
   m_field_name = field_name;
 }
 
-void 
-IsoVolume::PreExecute() 
+void
+IsoVolume::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
 }
 
-void 
+void
 IsoVolume::PostExecute()
 {
   Filter::PostExecute();
@@ -42,7 +43,7 @@ IsoVolume::PostExecute()
 
 void IsoVolume::DoExecute()
 {
-  
+
   ClipField max_clip;
   max_clip.SetInput(this->m_input);
   max_clip.SetField(m_field_name);
@@ -51,7 +52,7 @@ void IsoVolume::DoExecute()
   max_clip.Update();
 
   DataSet *clipped = max_clip.GetOutput();
-  
+
   ClipField min_clip;
   min_clip.SetInput(clipped);
   min_clip.SetField(m_field_name);
@@ -60,12 +61,12 @@ void IsoVolume::DoExecute()
 
   delete clipped;
   DataSet *iso = min_clip.GetOutput();
-  CleanGrid cleaner; 
+  CleanGrid cleaner;
   cleaner.SetInput(iso);
   cleaner.Update();
   delete iso;
   this->m_output = cleaner.GetOutput();
-  
+
 }
 
 std::string

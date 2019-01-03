@@ -4,7 +4,7 @@
 #include <vtkm/Math.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkh 
+namespace vtkh
 {
 
 namespace detail
@@ -18,7 +18,7 @@ public:
 
   typedef void ControlSignature(FieldIn<Scalar>, FieldOut<>);
   typedef void ExecutionSignature(_1, _2);
-  
+
   template<typename T>
   VTKM_EXEC
   void operator()(const T &value, vtkm::Float32& log_value) const
@@ -26,7 +26,7 @@ public:
     vtkm::Float32 f_value = static_cast<vtkm::Float32>(value);
     log_value = vtkm::Log(f_value);
   }
-}; //class SliceField 
+}; //class SliceField
 
 } // namespace detail
 
@@ -39,13 +39,13 @@ Log::~Log()
 
 }
 
-void 
+void
 Log::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void 
+void
 Log::SetResultField(const std::string &field_name)
 {
   m_result_name = field_name;
@@ -64,14 +64,17 @@ Log::GetResultField() const
   return m_result_name;
 }
 
-void Log::PreExecute() 
+void Log::PreExecute()
 {
   Filter::PreExecute();
+
+  Filter::CheckForRequiredField(m_field_name);
+
   if(m_result_name== "")
   {
     m_result_name= "log(" + m_field_name + ")";
   }
-   
+
   vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
   if(scalar_range.Min <= 0.f)
   {
@@ -89,12 +92,12 @@ void Log::PostExecute()
 
 void Log::DoExecute()
 {
-  
+
   this->m_output = new DataSet();
   // shallow copy input data set and bump internal ref counts
   *m_output = *m_input;
 
-  const int num_domains = this->m_input->GetNumberOfDomains(); 
+  const int num_domains = this->m_input->GetNumberOfDomains();
 
   for(int i = 0; i < num_domains; ++i)
   {
@@ -105,9 +108,9 @@ void Log::DoExecute()
       continue;
     }
 
-    vtkm::cont::Field::Association in_assoc = dom.GetField(m_field_name).GetAssociation(); 
-    bool is_cell_assoc = in_assoc == vtkm::cont::Field::Association::CELL_SET; 
-    bool is_point_assoc = in_assoc == vtkm::cont::Field::Association::POINTS; 
+    vtkm::cont::Field::Association in_assoc = dom.GetField(m_field_name).GetAssociation();
+    bool is_cell_assoc = in_assoc == vtkm::cont::Field::Association::CELL_SET;
+    bool is_point_assoc = in_assoc == vtkm::cont::Field::Association::POINTS;
 
     if(!is_cell_assoc && !is_point_assoc)
     {
@@ -119,7 +122,7 @@ void Log::DoExecute()
     vtkm::cont::Field in_field = dom.GetField(m_field_name);
     vtkm::worklet::DispatcherMapField<detail::LogField>()
       .Invoke(in_field, log_field);
-  
+
     if(is_cell_assoc)
     {
       vtkm::cont::Field out_field(m_result_name,

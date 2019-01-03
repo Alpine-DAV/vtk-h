@@ -43,6 +43,8 @@ protected:
   void MapAllFields();
 
   void PropagateMetadata();
+
+  void CheckForRequiredField(const std::string &field_name);
 };
 
 } //namespace vtkh
