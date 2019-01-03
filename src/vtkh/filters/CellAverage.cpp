@@ -1,7 +1,7 @@
 #include <vtkh/filters/CellAverage.hpp>
 #include <vtkm/filter/CellAverage.h>
 
-namespace vtkh 
+namespace vtkh
 {
 
 CellAverage::CellAverage()
@@ -14,21 +14,23 @@ CellAverage::~CellAverage()
 
 }
 
-void 
+void
 CellAverage::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void 
+void
 CellAverage::SetOutputField(const std::string &field_name)
 {
   m_output_field_name = field_name;
-}    
+}
 
-void CellAverage::PreExecute() 
+void CellAverage::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
+
   assert(m_field_name != "");
   assert(m_output_field_name != "");
 }
@@ -42,7 +44,7 @@ void CellAverage::DoExecute()
 {
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-  
+
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
