@@ -44,7 +44,7 @@ public:
   // checks to see if cells exist on this rank
   bool IsEmpty(const vtkm::Id cell_set_index = 0) const;
   // checks to see if cells exist on all ranks
-  bool GlobalIsEmpty(const vtkm::Id cell_set_index) const;
+  bool GlobalIsEmpty(const vtkm::Id cell_set_index = 0) const;
   // returns the number of domains on this rank
 
   vtkm::Id GetNumberOfDomains() const;
