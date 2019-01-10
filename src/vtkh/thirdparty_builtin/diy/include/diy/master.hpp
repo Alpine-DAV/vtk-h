@@ -1,6 +1,10 @@
 #ifndef DIY_MASTER_HPP
 #define DIY_MASTER_HPP
 
+#ifdef diy
+#undef diy
+#endif
+
 #include <vector>
 #include <map>
 #include <list>
