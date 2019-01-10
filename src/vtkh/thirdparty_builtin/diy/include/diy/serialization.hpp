@@ -1,5 +1,5 @@
-#ifndef DIY_SERIALIZATION_HPP
-#define DIY_SERIALIZATION_HPP
+#ifndef DIYY_SERIALIZATION_HPP
+#define DIYY_SERIALIZATION_HPP
 
 #include <vector>
 #include <valarray>
