@@ -16,7 +16,7 @@ public:
   LogField()
   {}
 
-  typedef void ControlSignature(FieldIn<Scalar>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2);
 
   template<typename T>
@@ -120,8 +120,9 @@ void Log::DoExecute()
 
     vtkm::cont::ArrayHandle<vtkm::Float32> log_field;
     vtkm::cont::Field in_field = dom.GetField(m_field_name);
+
     vtkm::worklet::DispatcherMapField<detail::LogField>()
-      .Invoke(in_field, log_field);
+      .Invoke(in_field.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()), log_field);
 
     if(is_cell_assoc)
     {
