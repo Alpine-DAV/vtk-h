@@ -43,7 +43,7 @@ public:
     vtkm::Normalize(m_normal);
   }
 
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, _2);
 
   template<typename T>
@@ -67,7 +67,7 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>);
+  typedef void ControlSignature(FieldIn, WholeArrayInOut);
   typedef void ExecutionSignature(_1, _2);
 
   template<typename PortalType>

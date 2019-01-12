@@ -55,7 +55,7 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldOut<>);
+  typedef void ControlSignature(FieldOut);
   typedef void ExecutionSignature(_1);
 
   VTKM_EXEC
