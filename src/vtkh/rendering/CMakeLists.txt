@@ -14,6 +14,10 @@ set(vtkh_rendering_headers
   Scene.hpp
   VolumeRenderer.hpp
   compositing/Compositor.hpp
+  compositing/PartialCompositor.hpp
+  compositing/AbsorptionPartial.hpp
+  compositing/EmissionPartial.hpp
+  compositing/VolumePartial.hpp
   )
 
 set(vtkh_rendering_sources
@@ -28,6 +32,7 @@ set(vtkh_rendering_sources
   Scene.cpp
   VolumeRenderer.cpp
   compositing/Compositor.cpp
+  compositing/PartialCompositor.cpp
   )
 
 
@@ -80,12 +85,14 @@ set(vtkh_rendering_mpi_headers
   compositing/vtkh_diy_collect.hpp
   compositing/vtkh_diy_image_block.hpp
   compositing/vtkh_diy_utils.hpp
+  compositing/PartialCompositor.hpp
   )
 
 set(vtkh_rendering_mpi_sources
   compositing/DIYCompositor.cpp
   compositing/DirectSendCompositor.cpp
   compositing/RadixKCompositor.cpp
+  compositing/PartialCompositor.cpp
   )
 
 if (MPI_FOUND)
