@@ -1,20 +1,18 @@
 #include "DIYCompositor.hpp"
 
-//#include "alpine_config.h"
-//#include "ascent_logging.hpp"
 #include <vtkh/vtkh.hpp>
 #include <vtkh/rendering/compositing/DirectSendCompositor.hpp>
 #include <vtkh/rendering/compositing/RadixKCompositor.hpp>
 #include <diy/mpi.hpp>
 
 #include <assert.h>
-#include <limits> 
+#include <limits>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
 #endif
 
-namespace vtkh 
+namespace vtkh
 {
 DIYCompositor::DIYCompositor()
 : m_rank(0)
@@ -22,12 +20,12 @@ DIYCompositor::DIYCompositor()
     m_diy_comm = diy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
     m_rank = m_diy_comm.rank();
 }
-  
+
 DIYCompositor::~DIYCompositor()
 {
 }
 
-void 
+void
 DIYCompositor::CompositeZBufferSurface()
 {
   assert(m_images.size() == 1);
@@ -38,13 +36,13 @@ DIYCompositor::CompositeZBufferSurface()
 
 }
 
-void 
+void
 DIYCompositor::CompositeZBufferBlend()
 {
-  assert("this is not implemented yet" == "error");  
+  assert("this is not implemented yet" == "error");
 }
 
-void 
+void
 DIYCompositor::CompositeVisOrder()
 {
   assert(m_images.size() != 0);
@@ -58,7 +56,7 @@ DIYCompositor::Cleanup()
 
 }
 
-}; //namespace vtkh 
+}; //namespace vtkh
 
 
 
