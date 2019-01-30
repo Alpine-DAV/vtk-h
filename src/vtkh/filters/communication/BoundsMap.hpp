@@ -60,6 +60,17 @@ public:
       return -1;
   }
 
+  int GetRank(const int &block_id)
+  {
+    auto it = m_rank_map.find(block_id);
+    int rank = -1;
+    if(it != m_rank_map.end())
+    {
+      rank = m_rank_map[block_id];
+    }
+    return rank;
+  }
+
   void Build()
   {
     int size = bm.size();

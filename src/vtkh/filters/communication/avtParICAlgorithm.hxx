@@ -38,7 +38,6 @@ avtParICAlgorithm::InitializeBuffers(int mSz,
 
     messageTagInfo[avtParICAlgorithm::MESSAGE_TAG] = pair<int,int>(numMsgRecvs, msgSize);
     messageTagInfo[avtParICAlgorithm::PARTICLE_TAG] = pair<int,int>(numSLRecvs, slSize*slsPerRecv);
-    messageTagInfo[avtParICAlgorithm::DATASET_PREP_TAG] = pair<int,int>(numDSRecvs, dsSize);
 
     //Setup receive buffers.
     map<int, pair<int, int> >::const_iterator it;
@@ -424,14 +423,9 @@ avtParICAlgorithm::RecvAny(vector<MsgCommData> *msgs,
     }
     if (recvICs)
     {
+        std::cout<<"looking to receive particle\n";
         tags.insert(avtParICAlgorithm::PARTICLE_TAG);
         recvICs->resize(0);
-    }
-    if (ds)
-    {
-        tags.insert(avtParICAlgorithm::DATASET_TAG);
-        tags.insert(avtParICAlgorithm::DATASET_PREP_TAG);
-        ds->resize(0);
     }
 
     if (tags.empty())
@@ -457,36 +451,19 @@ avtParICAlgorithm::RecvAny(vector<MsgCommData> *msgs,
         }
         else if (buffers[i].first == avtParICAlgorithm::PARTICLE_TAG)
         {
+            std::cout<<"particle tag\n";
             int num, sendRank;
             buffers[i].second->read(sendRank);
             buffers[i].second->read(num);
             for (int j = 0; j < num; j++)
             {
                 Particle recvP;
-                buffers[i].second->read(recvP);
+                //buffers[i].second->read(recvP);
+                Serialization<Particle>::read(*(buffers[i].second), recvP);
+                std::cout<<"reading "<<recvP<"\n";
                 ParticleCommData<Particle> d(sendRank, recvP);
                 recvICs->push_back(d);
             }
-        }
-        else if (buffers[i].first == avtParICAlgorithm::DATASET_TAG)
-        {
-            /*
-            BlockIDType dom;
-            buffers[i].second->read(dom);
-
-            vtkDataSet *d;
-            buffers[i].second->read(&d);
-            DSCommData dsData(dom, d);
-            ds->push_back(dsData);
-            */
-        }
-        else if (buffers[i].first == avtParICAlgorithm::DATASET_PREP_TAG)
-        {
-            int sendRank, dsLen;
-            buffers[i].second->read(sendRank);
-            buffers[i].second->read(dsLen);
-
-            PostRecv(avtParICAlgorithm::DATASET_TAG, dsLen);
         }
 
         delete buffers[i].second;
@@ -506,6 +483,7 @@ template <typename P, template <typename, typename> class Container,
           typename Allocator>
 void avtParICAlgorithm::SendICs(int dst, Container<P, Allocator> &c)
 {
+    std::cout<<"Sending to rank "<<dst<<"\n";
     if (dst == rank)
     {
         cerr<<"Error. Sending IC to yourself"<<endl;
@@ -519,7 +497,11 @@ void avtParICAlgorithm::SendICs(int dst, Container<P, Allocator> &c)
     int num = c.size();
     buff->write(num);
     for (auto &p : c)
-        buff->write(p);
+    {
+        std::cout<<"writing "<<p<<"\n";
+        Serialization<P>::write(*buff, p);
+        //buff->write(p);
+    }
     SendData(dst, avtParICAlgorithm::PARTICLE_TAG, buff);
     c.clear();
 }
@@ -553,19 +535,6 @@ bool avtParICAlgorithm::RecvICs(Container<P, Allocator> &recvICs)
         return true;
     }
     return false;
-
-/*
-
-    bool val = RecvICs(incoming);
-    if (val)
-    {
-        list<ParticleCommData<Particle>>::iterator it;
-        for (it = incoming.begin(); it != incoming.end(); it++)
-            recvICs.push_back((*it).p);
-    }
-
-    return val;
-*/
 }
 
 template <typename P>
@@ -592,45 +561,3 @@ bool avtParICAlgorithm::DoSendICs(int dst, vector<P> &ics)
 
     return true;
 }
-
-
-
-#if 0
-void
-avtParICAlgorithm::SendDS(int dst, vector<vtkDataSet *> &ds, vector<BlockIDType> &doms)
-{
-    int timerHandle = visitTimer->StartTimer();
-
-    //Serialize the data sets.
-    for (size_t i = 0; i < ds.size(); i++)
-    {
-        MemStream *dsBuff = new MemStream;
-
-        dsBuff->write(doms[i]);
-        dsBuff->write(ds[i]);
-        int totalLen = dsBuff->len();
-
-        MemStream *msgBuff = new MemStream(2*sizeof(int));
-        msgBuff->write(rank);
-        msgBuff->write(totalLen);
-        SendData(dst, avtParICAlgorithm::DATASET_PREP_TAG, msgBuff);
-        MsgCnt.value++;
-
-        //Send dataset.
-        messageTagInfo[avtParICAlgorithm::DATASET_TAG] = pair<int,int>(1, totalLen+sizeof(avtParICAlgorithm::Header));
-        SendData(dst, avtParICAlgorithm::DATASET_TAG, dsBuff);
-        messageTagInfo.erase(messageTagInfo.find(avtParICAlgorithm::DATASET_TAG));
-
-        DSCnt.value++;
-    }
-    CommTime.value += visitTimer->StopTimer(timerHandle, "SendDS");
-}
-#endif
-
-#if 0
-bool
-avtParICAlgorithm::RecvDS(vector<DSCommData> &ds)
-{
-    return RecvAny(NULL, NULL, &ds, false);
-}
-#endif

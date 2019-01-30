@@ -4,11 +4,10 @@
 #ifdef VTKH_PARALLEL
 
 #include <mpi.h>
-#include <vtkh/filters/Particle.hpp>
-#include <vtkh/filters/avtParICAlgorithm.hpp>
-#include <vtkh/filters/BoundsMap.hpp>
-
-#include <vtkh/filters/DebugMeowMeow.hpp>
+#include <vtkh/filters/communication/Particle.hpp>
+#include <vtkh/filters/communication/avtParICAlgorithm.hpp>
+#include <vtkh/filters/communication/BoundsMap.hpp>
+#include <vtkh/filters/communication/DebugMeowMeow.hpp>
 
 class MPICommunicator
 {
@@ -16,8 +15,9 @@ class MPICommunicator
     const int MSG_DONE = 2;
 
 public:
-    MPICommunicator(MPI_Comm _mpiComm, const vector<int> &_blockToRank) :
-        mpiComm(_mpiComm), a(_mpiComm), blockToRank(_blockToRank)
+    MPICommunicator(MPI_Comm _mpiComm)
+      :
+        mpiComm(_mpiComm), a(_mpiComm)
     {
         MPI_Comm_rank(mpiComm, &rank);
         MPI_Comm_size(mpiComm, &nProcs);
@@ -54,7 +54,7 @@ public:
                             list<Particle> &outData,
                             list<Particle> &inData,
                             list<Particle> &term,
-                            const BoundsMap &boundsMap,
+                            BoundsMap &boundsMap,
 //                            const Bounds &globalBounds,
 //                            reader::BaseReader *reader,
                             int numTerm)
@@ -84,7 +84,8 @@ public:
                 }
                 else
                 {
-                    int dst = blockToRank[id];
+                    int dst = boundsMap.GetRank(id);
+                    if(dst == -1) std::cout<<"COUND NOT FIND RANK for block "<<id<<"\n";
                     if (dst == rank)
                         inData.push_back(*lit);
                     else
@@ -236,9 +237,6 @@ public:
         return termCounter;
 #endif
     }
-
-    //map<int,vector<int>> rankToBlock;
-    vector<int> blockToRank;
 
     avtParICAlgorithm a;
     size_t termCounter, lastTerm;

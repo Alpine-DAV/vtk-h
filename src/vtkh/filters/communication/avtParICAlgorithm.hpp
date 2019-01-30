@@ -51,8 +51,6 @@ class avtParICAlgorithm
     bool RecvMsg(std::vector<MsgCommData> &msgs);
 
     // Send/Recv datasets.
-//  void SendDS(int dst, std::vector<vtkDataSet *> &ds, std::vector<BlockIDType> &doms);
-//  bool RecvDS(std::vector<DSCommData> &ds);
     bool RecvAny(std::vector<MsgCommData> *msgs,
                  std::list<ParticleCommData<Particle>> *recvICs,
                  std::vector<DSCommData> *ds,
@@ -97,9 +95,7 @@ class avtParICAlgorithm
     enum
     {
         MESSAGE_TAG = 42000,
-        PARTICLE_TAG = 42001,
-        DATASET_PREP_TAG = 42002,
-        DATASET_TAG = 42003
+        PARTICLE_TAG = 42001
     };
 
     //Message headers.

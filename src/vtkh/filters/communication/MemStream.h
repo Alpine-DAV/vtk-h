@@ -48,7 +48,6 @@
 #include <vector>
 #include <list>
 #include <cstring>
-#include <vtkh/filters/communication/Particle.hpp>
 
 using namespace std;
 //extern ofstream dbg;
@@ -79,14 +78,12 @@ class MemStream
     template <typename T> void io(Mode mode, T& t) {size_t s=1; io( mode, &t, s );}
     template <typename T> void io(Mode mode, std::vector<T> &v)  {return (mode == READ ? read(v) : write(v));}
     template <typename T> void io(Mode mode, std::list<T> &l)  {return (mode == READ ? read(l) : write(l));}
-    void                       io(Mode mode, Particle &v) {return (mode == READ ? read(v) : write(v));}
 
     //Read from buffer.
     template <typename T> void read(T *pt, const size_t &num);
     template <typename T> void read(T& t) {read(&t,1);}
     template <typename T> void read(std::vector<T> &v);
     template <typename T> void read(std::list<T> &l);
-    void read(Particle &v);
     void read(std::string &str);
     //void read(vtkDataSet **ds);
 
@@ -95,7 +92,6 @@ class MemStream
     template <typename T> void write(const T *const pt, size_t num);
     template <typename T> void write(const std::vector<T> &v);
     template <typename T> void write(const std::list<T> &l);
-    void write(const Particle &v);
     void write(const std::string &str);
     //void write(vtkDataSet *ds);
 
@@ -135,23 +131,6 @@ template <typename T> inline void MemStream::read(T *pt, const size_t &num)
     size_t nBytes = sizeof(T)*num;
     memcpy(pt, &_data[_pos], nBytes);
     _pos += nBytes;
-}
-
-inline void MemStream::read(Particle &v)
-{
-   #if 0
-    read(v.x);
-    read(v.y);
-    read(v.z);
-   #endif
-    read(v.coords[0]);
-    read(v.coords[1]);
-    read(v.coords[2]);
-    read(v.id);
-    read(v.nSteps);
-    read(v.status);
-    read(v.blockId);
-    //read(v.blockCount);
 }
 
 inline void MemStream::read(std::string &str)
@@ -209,24 +188,6 @@ template <typename T> inline void MemStream::write(const std::list<T> &l)
         write(*it);
 }
 
-inline void MemStream::write(const Particle &v)
-{
-  #if 0
-    write(v.x);
-    write(v.y);
-    write(v.z);
-  #endif
-
-    write(v.coords[0]);
-    write(v.coords[1]);
-    write(v.coords[2]);
-    write(v.id);
-    write(v.nSteps);
-    write(v.status);
-    write(v.blockId);
-    //write(v.blockCount);
-}
-
 inline void MemStream::write(const std::string &str)
 {
     size_t sz = str.size();
@@ -235,5 +196,12 @@ inline void MemStream::write(const std::string &str)
 }
 
 #include "MemStream.hxx"
+
+template<typename T>
+struct Serialization
+{
+  static void write(MemStream &memstream, const T &data);
+  static void read(MemStream &memstream, T &data);
+};
 
 #endif

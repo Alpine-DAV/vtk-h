@@ -5,6 +5,8 @@
 #include <vector>
 #include <vtkm/Types.h>
 
+#include <vtkh/filters/communication/MemStream.h>
+
 class Particle
 {
 public:
@@ -34,5 +36,31 @@ inline std::ostream &operator<<(std::ostream &os, const Particle &p)
     os<<" bid= "<<p.blockId;
     return os;
 }
+
+template<>
+struct Serialization<Particle>
+{
+  static void write(MemStream &memstream, const Particle &data)
+  {
+    memstream.write(data.coords[0]);
+    memstream.write(data.coords[1]);
+    memstream.write(data.coords[2]);
+    memstream.write(data.id);
+    memstream.write(data.nSteps);
+    memstream.write(data.status);
+    memstream.write(data.blockId);
+  }
+
+  static void read(MemStream &memstream, Particle &data)
+  {
+    memstream.read(data.coords[0]);
+    memstream.read(data.coords[1]);
+    memstream.read(data.coords[2]);
+    memstream.read(data.id);
+    memstream.read(data.nSteps);
+    memstream.read(data.status);
+    memstream.read(data.blockId);
+  }
+};
 
 #endif

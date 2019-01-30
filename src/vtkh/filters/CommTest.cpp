@@ -3,6 +3,7 @@
 #include "communication/BoundsMap.hpp"
 #ifdef VTKH_PARALLEL
 #include "communication/avtParICAlgorithm.hpp"
+//#include "communication/Communicator.hpp"
 #endif
 
 namespace vtkh
@@ -39,8 +40,6 @@ void CommTest::DoExecute()
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
   BoundsMap bmap;
-#ifdef VTKH_PARALLEL
-#endif
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -48,8 +47,51 @@ void CommTest::DoExecute()
     this->m_input->GetDomain(i, dom, domain_id);
     bmap.AddBlock(domain_id, dom.GetCoordinateSystem().GetBounds());
   }
-  bmap.Build();
 
+  bmap.Build(); // does parallel comm and builds lookups
+
+#ifdef VTKH_PARALLEL
+  MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  //MPICommunicator communicator(comm);
+  int rank;
+  int procs;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &procs);
+
+  int dest = (rank + 1) % procs;
+
+
+  Particle p;
+  p.coords[0] = rank;
+  p.coords[1] = rank;
+  p.coords[2] = rank;
+  p.id = rank;
+  p.nSteps = rank;
+  p.blockId = rank;
+  p.status = Particle::ACTIVE;
+
+  std::list<Particle> plist;
+  plist.push_back(p);
+
+  avtParICAlgorithm pcomm(comm);
+  pcomm.InitializeBuffers(2, procs, procs);
+  pcomm.SendICs(dest, plist);
+
+  bool expect_message = true;
+  list<ParticleCommData<Particle>> particleData;
+  vector<MsgCommData> msgData;
+  bool blockAndWait = false;
+  DBG(" ---RecvAny..."<<endl);
+  //pcomm.RecvAny(&msgData, &particleData, NULL, blockAndWait);
+  while(expect_message)
+  {
+    pcomm.RecvICs(particleData);
+    if(particleData.size() != 0) expect_message = false;
+  }
+
+  std::cout<<"done\n";
+
+#endif
 
   for(int i = 0; i < num_domains; ++i)
   {
