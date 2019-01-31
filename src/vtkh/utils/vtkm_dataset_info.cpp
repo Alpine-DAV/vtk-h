@@ -9,24 +9,24 @@
 
 #include <vtkm/cont/Algorithm.h>
 
-namespace vtkh 
+namespace vtkh
 {
 
-bool VTKMDataSetInfo::IsStructured(const vtkm::cont::DataSet &data_set, 
-                                   int &topo_dims, 
+bool VTKMDataSetInfo::IsStructured(const vtkm::cont::DataSet &data_set,
+                                   int &topo_dims,
                                    const vtkm::Id cell_set_index)
 {
   const vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet(cell_set_index);
   return IsStructured(cell_set, topo_dims);
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsStructured(const vtkm::rendering::Actor &actor, int &topo_dims)
 {
-  return IsStructured(actor.GetCells(), topo_dims); 
+  return IsStructured(actor.GetCells(), topo_dims);
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsStructured(const vtkm::cont::DynamicCellSet &cell_set, int &topo_dims)
 {
   bool is_structured = false;
@@ -47,74 +47,74 @@ VTKMDataSetInfo::IsStructured(const vtkm::cont::DynamicCellSet &cell_set, int &t
     is_structured = true;
     topo_dims = 3;
   }
-    
+
   return is_structured;
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsRectilinear(const vtkm::cont::DataSet &data_set)
 {
   const vtkm::cont::CoordinateSystem coords = data_set.GetCoordinateSystem();
   return IsRectilinear(coords);
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsRectilinear(const vtkm::rendering::Actor &actor)
 {
-  return IsRectilinear(actor.GetCoordinates()); 
+  return IsRectilinear(actor.GetCoordinates());
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsRectilinear(const vtkm::cont::CoordinateSystem &coords)
 {
 
-  bool is_rect= false; 
+  bool is_rect= false;
 
-  if(coords.GetData().IsSameType(CartesianArrayHandle()))
+  if(coords.GetData().IsType<CartesianArrayHandle>())
   {
-    is_rect = true; 
+    is_rect = true;
   }
   return is_rect;
 }
 
-bool 
+bool
 VTKMDataSetInfo:: IsUniform(const vtkm::cont::DataSet &data_set)
 {
   const vtkm::cont::CoordinateSystem coords = data_set.GetCoordinateSystem();
   return IsUniform(coords);
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsUniform(const vtkm::rendering::Actor &actor)
 {
-  return IsUniform(actor.GetCoordinates()); 
+  return IsUniform(actor.GetCoordinates());
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsUniform(const vtkm::cont::CoordinateSystem &coords)
 {
-  bool is_uniform= false; 
-  if(coords.GetData().IsSameType(UniformArrayHandle()))
+  bool is_uniform= false;
+  if(coords.GetData().IsType<UniformArrayHandle>())
   {
-    is_uniform = true; 
+    is_uniform = true;
   }
   return is_uniform;
 }
 
-bool 
+bool
 VTKMDataSetInfo::GetPointDims(const vtkm::cont::DataSet &data_set, int *dims)
 {
   const vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet();
   return GetPointDims(cell_set, dims);
 }
 
-bool 
+bool
 VTKMDataSetInfo::GetPointDims(const vtkm::rendering::Actor &actor, int *dims)
 {
-  return GetPointDims(actor.GetCells(), dims); 
+  return GetPointDims(actor.GetCells(), dims);
 }
 
-bool 
+bool
 VTKMDataSetInfo::GetPointDims(const vtkm::cont::DynamicCellSet &cell_set, int *dims)
 {
   int topo_dims;
@@ -128,26 +128,26 @@ VTKMDataSetInfo::GetPointDims(const vtkm::cont::DynamicCellSet &cell_set, int *d
   {
     success = true;
   }
-  
+
   if(topo_dims == 1)
   {
-    vtkm::cont::CellSetStructured<1> cell_set1 = 
-        cell_set.Cast<vtkm::cont::CellSetStructured<1>>();  
+    vtkm::cont::CellSetStructured<1> cell_set1 =
+        cell_set.Cast<vtkm::cont::CellSetStructured<1>>();
     vtkm::Id dims1 = cell_set1.GetPointDimensions();
     dims[0] = dims1;
   }
   else if(topo_dims == 2)
   {
-    vtkm::cont::CellSetStructured<2> cell_set2 = 
-        cell_set.Cast<vtkm::cont::CellSetStructured<2>>();  
+    vtkm::cont::CellSetStructured<2> cell_set2 =
+        cell_set.Cast<vtkm::cont::CellSetStructured<2>>();
     vtkm::Id2 dims2 = cell_set2.GetPointDimensions();
     dims[0] = dims2[0];
     dims[1] = dims2[1];
   }
   else if(topo_dims == 3)
   {
-    vtkm::cont::CellSetStructured<3> cell_set3 = 
-        cell_set.Cast<vtkm::cont::CellSetStructured<3>>();  
+    vtkm::cont::CellSetStructured<3> cell_set3 =
+        cell_set.Cast<vtkm::cont::CellSetStructured<3>>();
     vtkm::Id3 dims3 = cell_set3.GetPointDimensions();
     dims[0] = dims3[0];
     dims[1] = dims3[1];
@@ -158,20 +158,20 @@ VTKMDataSetInfo::GetPointDims(const vtkm::cont::DynamicCellSet &cell_set, int *d
 
 }
 
-bool 
+bool
 VTKMDataSetInfo::GetCellDims(const vtkm::cont::DataSet &data_set, int *dims)
 {
   const vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet();
   return GetCellDims(cell_set, dims);
 }
 
-bool 
+bool
 VTKMDataSetInfo::GetCellDims(const vtkm::rendering::Actor &actor, int *dims)
 {
-  return GetCellDims(actor.GetCells(), dims); 
+  return GetCellDims(actor.GetCells(), dims);
 }
 
-bool 
+bool
 VTKMDataSetInfo::GetCellDims(const vtkm::cont::DynamicCellSet &cell_set, int *dims)
 {
   int topo_dims;
@@ -185,26 +185,26 @@ VTKMDataSetInfo::GetCellDims(const vtkm::cont::DynamicCellSet &cell_set, int *di
   {
     success = true;
   }
-  
+
   if(topo_dims == 1)
   {
-    vtkm::cont::CellSetStructured<1> cell_set1 = 
-        cell_set.Cast<vtkm::cont::CellSetStructured<1>>();  
+    vtkm::cont::CellSetStructured<1> cell_set1 =
+        cell_set.Cast<vtkm::cont::CellSetStructured<1>>();
     vtkm::Id dims1 = cell_set1.GetCellDimensions();
     dims[0] = dims1;
   }
   else if(topo_dims == 2)
   {
-    vtkm::cont::CellSetStructured<2> cell_set2 = 
-        cell_set.Cast<vtkm::cont::CellSetStructured<2>>();  
+    vtkm::cont::CellSetStructured<2> cell_set2 =
+        cell_set.Cast<vtkm::cont::CellSetStructured<2>>();
     vtkm::Id2 dims2 = cell_set2.GetCellDimensions();
     dims[0] = dims2[0];
     dims[1] = dims2[1];
   }
   else if(topo_dims == 3)
   {
-    vtkm::cont::CellSetStructured<3> cell_set3 = 
-        cell_set.Cast<vtkm::cont::CellSetStructured<3>>();  
+    vtkm::cont::CellSetStructured<3> cell_set3 =
+        cell_set.Cast<vtkm::cont::CellSetStructured<3>>();
     vtkm::Id3 dims3 = cell_set3.GetCellDimensions();
     dims[0] = dims3[0];
     dims[1] = dims3[1];
@@ -215,10 +215,10 @@ VTKMDataSetInfo::GetCellDims(const vtkm::cont::DynamicCellSet &cell_set, int *di
 
 }
 
-bool 
+bool
 VTKMDataSetInfo::IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set, vtkm::UInt8 &shape_id)
 {
-  int dims; 
+  int dims;
   shape_id = 0;
   bool is_single_shape = false;
   if(IsStructured(cell_set, dims))
@@ -226,18 +226,18 @@ VTKMDataSetInfo::IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set, v
     is_single_shape = true;
     shape_id = 12;
   }
-  else 
+  else
   {
     // we have an explicit cell set so we have to look deeper
     if(cell_set.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
-      vtkm::cont::CellSetSingleType<> single = cell_set.Cast<vtkm::cont::CellSetSingleType<>>();  
+      vtkm::cont::CellSetSingleType<> single = cell_set.Cast<vtkm::cont::CellSetSingleType<>>();
       is_single_shape = true;
       shape_id = single.GetCellShape(0);
     }
     else if(cell_set.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
-      vtkm::cont::CellSetExplicit<> exp = cell_set.Cast<vtkm::cont::CellSetExplicit<>>();  
+      vtkm::cont::CellSetExplicit<> exp = cell_set.Cast<vtkm::cont::CellSetExplicit<>>();
       const vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = exp.GetShapesArray(
         vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 

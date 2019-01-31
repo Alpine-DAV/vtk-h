@@ -53,13 +53,9 @@ endif()
 MESSAGE(STATUS "Looking for VTKm using VTKM_DIR = ${VTKM_DIR}")
 
 # use VTKM_DIR to setup the options that cmake's find VTKm needs
-set(VTKm_DIR ${VTKM_DIR}/lib/cmake/vtkm-1.2)
-
-#
-# VTKm will find TBB via the env var "TBB_ROOT"
-#
-if(TBB_DIR)
-    set(ENV{TBB_ROOT} ${TBB_DIR})
+file(GLOB VTKm_DIR "${VTKM_DIR}/lib/cmake/vtkm-*")
+if(NOT VTKm_DIR)
+    MESSAGE(FATAL_ERROR "Failed to find VTKm at VTKM_DIR=${VTKM_DIR}/lib/cmake/vtk-*")
 endif()
 
 find_package(VTKm REQUIRED QUIET)

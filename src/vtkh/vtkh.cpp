@@ -41,7 +41,7 @@ CheckCommHandle()
 }
 
 //---------------------------------------------------------------------------//
-void 
+void
 SetMPICommHandle(int mpi_comm_id)
 {
   g_mpi_comm_id = mpi_comm_id;
@@ -56,7 +56,7 @@ GetMPICommHandle()
 }
 
 //---------------------------------------------------------------------------//
-int 
+int
 GetMPIRank()
 {
   int rank;
@@ -66,7 +66,7 @@ GetMPIRank()
 }
 
 //---------------------------------------------------------------------------//
-int 
+int
 GetMPISize()
 {
   int size;
@@ -92,7 +92,7 @@ CheckCommHandle()
 }
 
 //---------------------------------------------------------------------------//
-void 
+void
 SetMPICommHandle(int mpi_comm_id)
 {
   std::stringstream msg;
@@ -102,7 +102,7 @@ SetMPICommHandle(int mpi_comm_id)
 }
 
 //---------------------------------------------------------------------------//
-int 
+int
 GetMPICommHandle()
 {
   std::stringstream msg;
@@ -113,14 +113,14 @@ GetMPICommHandle()
 }
 
 //---------------------------------------------------------------------------//
-int 
+int
 GetMPIRank()
 {
-  return 1;
+  return 0;
 }
 
 //---------------------------------------------------------------------------//
-int 
+int
 GetMPISize()
 {
   return 1;
@@ -144,8 +144,8 @@ IsMPIEnabled()
 bool
 IsSerialAvailable()
 {
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagSerial> serial;
-  return serial.Exists();
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagSerial());
 }
 
 
@@ -153,16 +153,16 @@ IsSerialAvailable()
 bool
 IsOpenMPAvailable()
 {
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagOpenMP> omp;
-  return omp.Exists();
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagOpenMP());
 }
 
 //---------------------------------------------------------------------------//
 bool
 IsCUDAAvailable()
 {
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagCuda> cuda;
-  return cuda.Exists();
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagCuda());
 }
 
 //---------------------------------------------------------------------------//
@@ -204,7 +204,7 @@ CUDADeviceCount()
     {
         std::stringstream msg;
         msg << "Failed to get CUDA device count" << std::endl
-            << "CUDA Error Message: " 
+            << "CUDA Error Message: "
             << cudaGetErrorString(res);
         throw Error(msg.str());
     }
@@ -229,9 +229,9 @@ SelectCUDADevice(int device_index)
         if(res != cudaSuccess)
         {
             std::stringstream msg;
-            msg << "Failed to set CUDA device (device index = " 
+            msg << "Failed to set CUDA device (device index = "
                 << device_index << ")" << std::endl
-                << "CUDA Error Message: " 
+                << "CUDA Error Message: "
                 << cudaGetErrorString(res);
             throw Error(msg.str());
         }
@@ -240,8 +240,8 @@ SelectCUDADevice(int device_index)
     {
         std::stringstream msg;
         msg << "Invalid CUDA device index: "
-            << device_index 
-            << " (number of devices = " 
+            << device_index
+            << " (number of devices = "
             << device_index << ")";
         throw Error(msg.str());
     }

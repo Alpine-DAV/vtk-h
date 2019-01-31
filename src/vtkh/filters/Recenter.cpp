@@ -4,7 +4,7 @@
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/CellAverage.h>
 
-namespace vtkh 
+namespace vtkh
 {
 
 Recenter::Recenter()
@@ -18,16 +18,16 @@ Recenter::~Recenter()
 
 }
 
-void 
+void
 Recenter::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void Recenter::PreExecute() 
+void Recenter::PreExecute()
 {
   Filter::PreExecute();
-  assert(m_field_name != "");
+  Filter::CheckForRequiredField(m_field_name);
 }
 
 void Recenter::PostExecute()
@@ -50,18 +50,18 @@ void Recenter::DoExecute()
 {
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-  
+
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-   
+
     vtkm::cont::DataSet out_data, temp;
     // Since there is no way to remove a field from a dataset
     // we have to iterate over the data set to create a shallow
     // copy of everything else
-    
+
     const vtkm::Id num_fields = dom.GetNumberOfFields();
 
     for(vtkm::Id f = 0; f < num_fields; ++f)
@@ -69,37 +69,37 @@ void Recenter::DoExecute()
       vtkm::cont::Field field = dom.GetField(f);
       if(field.GetName() != m_field_name)
       {
-        out_data.AddField(field); 
+        out_data.AddField(field);
       }
       else
       {
         temp.AddField(field);
       }
     }
-    
+
     const vtkm::Id num_coords = dom.GetNumberOfCoordinateSystems();
 
     for(vtkm::Id f = 0; f < num_coords; ++f)
     {
       vtkm::cont::CoordinateSystem coords= dom.GetCoordinateSystem(f);
-      out_data.AddCoordinateSystem(coords); 
+      out_data.AddCoordinateSystem(coords);
       temp.AddCoordinateSystem(coords);
     }
-    
+
     const vtkm::Id num_cellsets= dom.GetNumberOfCellSets();
 
     for(vtkm::Id f = 0; f < num_cellsets; ++f)
     {
       vtkm::cont::DynamicCellSet cellset = dom.GetCellSet(f);
-      out_data.AddCellSet(cellset); 
+      out_data.AddCellSet(cellset);
       temp.AddCellSet(cellset);
     }
 
     if(temp.HasField(m_field_name))
     {
-      vtkm::cont::Field::Association in_assoc = temp.GetField(m_field_name).GetAssociation(); 
-      bool is_cell_assoc = in_assoc == vtkm::cont::Field::Association::CELL_SET; 
-      bool is_point_assoc = in_assoc == vtkm::cont::Field::Association::POINTS; 
+      vtkm::cont::Field::Association in_assoc = temp.GetField(m_field_name).GetAssociation();
+      bool is_cell_assoc = in_assoc == vtkm::cont::Field::Association::CELL_SET;
+      bool is_point_assoc = in_assoc == vtkm::cont::Field::Association::POINTS;
 
       if(!is_cell_assoc && !is_point_assoc)
       {
@@ -126,7 +126,7 @@ void Recenter::DoExecute()
         }
 
         vtkm::cont::Field recentered_field;
-        recentered_field = vtkm::cont::Field(m_field_name, 
+        recentered_field = vtkm::cont::Field(m_field_name,
                                              dataset.GetField(out_name).GetAssociation(),
                                              dataset.GetField(out_name).GetData());
         out_data.AddField(recentered_field);
@@ -136,9 +136,9 @@ void Recenter::DoExecute()
         // do nothing and pass the result
         out_data.AddField(dom.GetField(m_field_name));
       }
-      
+
     }
-    
+
     m_output->AddDomain(out_data, domain_id);
   }
 }

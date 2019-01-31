@@ -61,6 +61,7 @@ Lagrangian::SetSeedResolutionInZ(const int &z_res)
 void Lagrangian::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
 }
 
 void Lagrangian::PostExecute()
@@ -72,15 +73,16 @@ void Lagrangian::DoExecute()
 {
   vtkm::filter::Lagrangian lagrangianFilter;
   lagrangianFilter.SetStepSize(m_step_size);
-  lagrangianFilter.SetWriteFrequency(m_write_frequency);
-  lagrangianFilter.SetRank(vtkh::GetMPIRank());
-  lagrangianFilter.SetActiveField(m_field_name);
-  lagrangianFilter.SetCustomSeedResolution(m_cust_res);
-  lagrangianFilter.SetSeedResolutionInX(m_x_res);
-  lagrangianFilter.SetSeedResolutionInY(m_y_res);
-  lagrangianFilter.SetSeedResolutionInZ(m_z_res);
 
-  this->m_output = new DataSet();
+	lagrangianFilter.SetWriteFrequency(m_write_frequency);
+	lagrangianFilter.SetRank(vtkh::GetMPIRank());
+	lagrangianFilter.SetActiveField(m_field_name);
+	lagrangianFilter.SetCustomSeedResolution(m_cust_res);
+	lagrangianFilter.SetSeedResolutionInX(m_x_res);
+	lagrangianFilter.SetSeedResolutionInY(m_y_res);
+	lagrangianFilter.SetSeedResolutionInZ(m_z_res);
+
+	this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
   for(int i = 0; i < num_domains; ++i)
   {
@@ -92,6 +94,7 @@ void Lagrangian::DoExecute()
       using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
       using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
 		  auto field = dom.GetField(m_field_name).GetData();
+
       if(!field.IsSameType(vectorField_d()) && !field.IsSameType(vectorField_f()))
       {
         throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");

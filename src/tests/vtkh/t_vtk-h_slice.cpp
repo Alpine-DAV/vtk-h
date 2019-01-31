@@ -88,10 +88,11 @@ TEST(vtkh_slice, vtkh_mulit_slice)
   vtkh::DataSet *slice1  = slicer1.GetOutput();
   domain_ids = slice1->GetDomainIds();
   bounds.Include(slice1->GetGlobalBounds());
-
+  slice1->PrintSummary(std::cout);
   vtkh::RayTracer tracer1;
   tracer1.SetInput(slice1);
   tracer1.SetField("cell_data_Float32");
+
   scene.AddRenderer(&tracer1);
 
 

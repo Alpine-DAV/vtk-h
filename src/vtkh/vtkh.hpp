@@ -16,12 +16,12 @@ namespace vtkh
   bool        IsSerialEnabled();
   bool        IsOpenMPEnabled();
   bool        IsCUDAEnabled();
-  
+
   bool        IsMPIEnabled();
-  
+
   int         CUDADeviceCount();
   void        SelectCUDADevice(int device_index);
-      
+
   void        ForceSerial();
   void        ForceOpenMP();
   void        ForceCUDA();
@@ -29,7 +29,7 @@ namespace vtkh
 
   int         GetMPIRank();
   int         GetMPISize();
-  
+
   void        SetMPICommHandle(int mpi_comm_id);
   int         GetMPICommHandle();
 }

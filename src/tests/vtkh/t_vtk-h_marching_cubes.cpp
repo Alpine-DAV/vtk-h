@@ -33,7 +33,7 @@ TEST(vtkh_marching_cubes, vtkh_serial_marching_cubes)
   vtkh::MarchingCubes marcher;
   marcher.SetInput(&data_set);
   marcher.SetField("point_data_Float32");
-
+  
   const int num_vals = 2;
   double iso_vals [num_vals];
   iso_vals[0] = -1; // ask for something that does not exist
@@ -66,6 +66,7 @@ TEST(vtkh_marching_cubes, vtkh_serial_marching_cubes)
   scene.Render();
 
   delete iso_output;
+
 }
 
 //----------------------------------------------------------------------------

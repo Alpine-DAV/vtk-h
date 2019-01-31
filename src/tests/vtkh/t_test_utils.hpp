@@ -132,8 +132,7 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* field
   for(int i = 0; i < size; ++i)
   {
     vtkm::Vec<FieldType,3> point = portal.Get(i);
-
-    FieldType val = vtkm::Magnitude(point);
+    FieldType val = vtkm::Magnitude(point) + 1.f;
 
     data.GetPortalControl().Set(i, val);
   }

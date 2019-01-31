@@ -19,11 +19,11 @@ Renderer::Renderer()
     m_field_index(0),
     m_has_color_table(true)
 {
-  m_compositor  = NULL; 
+  m_compositor  = NULL;
 #ifdef VTKH_PARALLEL
-  m_compositor  = new DIYCompositor(); 
+  m_compositor  = new DIYCompositor();
 #else
-  m_compositor  = new Compositor(); 
+  m_compositor  = new Compositor();
 #endif
 
 }
@@ -33,10 +33,17 @@ Renderer::~Renderer()
   delete m_compositor;
 }
 
-void 
+void
+Renderer::SetShadingOn(bool on)
+
+{
+  // do nothing by default;
+}
+
+void
 Renderer::SetField(const std::string field_name)
 {
-  m_field_name = field_name; 
+  m_field_name = field_name;
 }
 
 std::string
@@ -51,7 +58,7 @@ Renderer::GetHasColorTable() const
   return m_has_color_table;
 }
 
-void 
+void
 Renderer::SetDoComposite(bool do_composite)
 {
   m_do_composite = do_composite;
@@ -60,13 +67,13 @@ Renderer::SetDoComposite(bool do_composite)
 void
 Renderer::AddRender(vtkh::Render &render)
 {
-  m_renders.push_back(render); 
+  m_renders.push_back(render);
 }
 
 void
 Renderer::SetRenders(const std::vector<vtkh::Render> &renders)
 {
-  m_renders = renders; 
+  m_renders = renders;
 }
 
 int
@@ -78,7 +85,7 @@ Renderer::GetNumberOfRenders() const
 void
 Renderer::ClearRenders()
 {
-  m_renders.clear(); 
+  m_renders.clear();
 }
 
 void Renderer::SetColorTable(const vtkm::cont::ColorTable &color_table)
@@ -91,7 +98,7 @@ vtkm::cont::ColorTable Renderer::GetColorTable() const
   return m_color_table;
 }
 
-void 
+void
 Renderer::Composite(const int &num_images)
 {
 
@@ -102,8 +109,8 @@ Renderer::Composite(const int &num_images)
 
     for(int dom = 0; dom < num_canvases; ++dom)
     {
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0]; 
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer()); 
+      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0];
+      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer());
 
       int height = m_renders[i].GetCanvas(dom)->GetHeight();
       int width = m_renders[i].GetCanvas(dom)->GetWidth();
@@ -119,19 +126,21 @@ Renderer::Composite(const int &num_images)
 #ifdef VTKH_PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
-      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
+      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
     }
 #else
-    ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
+    ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
 #endif
     m_compositor->ClearImages();
   } // for image
 }
 
-void 
-Renderer::PreExecute() 
+void
+Renderer::PreExecute()
 {
-  if(!m_range.IsNonEmpty() && m_input->GlobalFieldExists(m_field_name))
+  bool range_set = m_range.IsNonEmpty();
+  bool field_exists = m_input->GlobalFieldExists(m_field_name);
+  if(!range_set && field_exists)
   {
     // we have not been given a range, so ask the data set
     vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
@@ -162,19 +171,19 @@ Renderer::PreExecute()
   }
 
   m_bounds = m_input->GetGlobalBounds();
-  
+
 }
 
-void 
-Renderer::Update() 
+void
+Renderer::Update()
 {
   PreExecute();
   DoExecute();
   PostExecute();
 }
 
-void 
-Renderer::PostExecute() 
+void
+Renderer::PostExecute()
 {
   int total_renders = static_cast<int>(m_renders.size());
   if(m_do_composite)
@@ -183,12 +192,12 @@ Renderer::PostExecute()
   }
 }
 
-void 
-Renderer::DoExecute() 
+void
+Renderer::DoExecute()
 {
   if(m_mapper.get() == 0)
   {
-    std::string msg = "Renderer Error: no renderer was set by sub-class"; 
+    std::string msg = "Renderer Error: no renderer was set by sub-class";
     throw Error(msg);
   }
 
@@ -196,7 +205,7 @@ Renderer::DoExecute()
   int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
   for(int dom = 0; dom < num_domains; ++dom)
   {
-    vtkm::cont::DataSet data_set; 
+    vtkm::cont::DataSet data_set;
     vtkm::Id domain_id;
     m_input->GetDomain(dom, data_set, domain_id);
 
@@ -212,11 +221,17 @@ Renderer::DoExecute()
 
     for(int i = 0; i < total_renders; ++i)
     {
-
+      if(m_renders[i].GetShadingOn())
+      {
+        this->SetShadingOn(true);
+      }
+      else
+      {
+        this->SetShadingOn(false);
+      }
       m_mapper->SetActiveColorTable(m_color_table);
-      
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
-      const vtkmCamera &camera = m_renders[i].GetCamera(); 
+      const vtkmCamera &camera = m_renders[i].GetCamera();
       m_mapper->SetCanvas(&(*p_canvas));
       m_mapper->RenderCells(cellset,
                             coords,
@@ -231,35 +246,35 @@ Renderer::DoExecute()
 
 }
 
-void 
-Renderer::ImageToCanvas(Image &image, vtkm::rendering::Canvas &canvas, bool get_depth) 
+void
+Renderer::ImageToCanvas(Image &image, vtkm::rendering::Canvas &canvas, bool get_depth)
 {
-  const int width = canvas.GetWidth(); 
-  const int height = canvas.GetHeight(); 
+  const int width = canvas.GetWidth();
+  const int height = canvas.GetHeight();
   const int size = width * height;
   const int color_size = size * 4;
-  float* color_buffer = &GetVTKMPointer(canvas.GetColorBuffer())[0][0]; 
+  float* color_buffer = &GetVTKMPointer(canvas.GetColorBuffer())[0][0];
   float one_over_255 = 1.f / 255.f;
 #ifdef VTKH_USE_OPENMP
-  #pragma omp parallel for 
+  #pragma omp parallel for
 #endif
   for(int i = 0; i < color_size; ++i)
   {
     color_buffer[i] = static_cast<float>(image.m_pixels[i]) * one_over_255;
   }
 
-  float* depth_buffer = GetVTKMPointer(canvas.GetDepthBuffer()); 
+  float* depth_buffer = GetVTKMPointer(canvas.GetDepthBuffer());
   if(get_depth) memcpy(depth_buffer, &image.m_depths[0], sizeof(float) * size);
 }
 
-std::vector<Render> 
+std::vector<Render>
 Renderer::GetRenders() const
 {
   return m_renders;
 }
 
 vtkh::DataSet *
-Renderer::GetInput() 
+Renderer::GetInput()
 {
   return m_input;
 }
@@ -271,7 +286,7 @@ Renderer::GetRange() const
 }
 
 void
-Renderer::SetRange(const vtkm::Range &range) 
+Renderer::SetRange(const vtkm::Range &range)
 {
   m_range = range;
 }

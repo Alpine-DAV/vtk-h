@@ -13,14 +13,14 @@ public:
   void Blend(vtkh::Image &front, vtkh::Image &back)
   {
 
-    assert(front.m_bounds.X.Min == back.m_bounds.X.Min); 
-    assert(front.m_bounds.Y.Min == back.m_bounds.Y.Min); 
-    assert(front.m_bounds.X.Max == back.m_bounds.X.Max); 
-    assert(front.m_bounds.Y.Max == back.m_bounds.Y.Max); 
-    const int size = static_cast<int>(front.m_pixels.size() / 4); 
-  
+    assert(front.m_bounds.X.Min == back.m_bounds.X.Min);
+    assert(front.m_bounds.Y.Min == back.m_bounds.Y.Min);
+    assert(front.m_bounds.X.Max == back.m_bounds.X.Max);
+    assert(front.m_bounds.Y.Max == back.m_bounds.Y.Max);
+    const int size = static_cast<int>(front.m_pixels.size() / 4);
+
 #ifdef VTKH_USE_OPENMP
-    #pragma omp parallel for 
+    #pragma omp parallel for
 #endif
     for(int i = 0; i < size; ++i)
     {
@@ -28,18 +28,18 @@ public:
       unsigned int alpha = front.m_pixels[offset + 3];
       const unsigned int opacity = 255 - alpha;
 
-      front.m_pixels[offset + 0] += 
-        static_cast<unsigned char>(opacity * back.m_pixels[offset + 0] / 255); 
-      front.m_pixels[offset + 1] += 
-        static_cast<unsigned char>(opacity * back.m_pixels[offset + 1] / 255); 
-      front.m_pixels[offset + 2] += 
-        static_cast<unsigned char>(opacity * back.m_pixels[offset + 2] / 255); 
-      front.m_pixels[offset + 3] += 
-        static_cast<unsigned char>(opacity * back.m_pixels[offset + 3] / 255); 
+      front.m_pixels[offset + 0] +=
+        static_cast<unsigned char>(opacity * back.m_pixels[offset + 0] / 255);
+      front.m_pixels[offset + 1] +=
+        static_cast<unsigned char>(opacity * back.m_pixels[offset + 1] / 255);
+      front.m_pixels[offset + 2] +=
+        static_cast<unsigned char>(opacity * back.m_pixels[offset + 2] / 255);
+      front.m_pixels[offset + 3] +=
+        static_cast<unsigned char>(opacity * back.m_pixels[offset + 3] / 255);
 
-      float d1 = std::min(front.m_depths[i], 1.001f); 
-      float d2 = std::min(back.m_depths[i], 1.001f); 
-      float depth = std::min(d1,d2); 
+      float d1 = std::min(front.m_depths[i], 1.001f);
+      float d2 = std::min(back.m_depths[i], 1.001f);
+      float depth = std::min(d1,d2);
       front.m_depths[i] = depth;
     }
   }
@@ -47,15 +47,15 @@ public:
 void ZBufferComposite(vtkh::Image &front, const vtkh::Image &image)
 {
   assert(front.m_depths.size() == front.m_pixels.size() / 4);
-  assert(front.m_bounds.X.Min == image.m_bounds.X.Min); 
-  assert(front.m_bounds.Y.Min == image.m_bounds.Y.Min); 
-  assert(front.m_bounds.X.Max == image.m_bounds.X.Max); 
-  assert(front.m_bounds.Y.Max == image.m_bounds.Y.Max); 
+  assert(front.m_bounds.X.Min == image.m_bounds.X.Min);
+  assert(front.m_bounds.Y.Min == image.m_bounds.Y.Min);
+  assert(front.m_bounds.X.Max == image.m_bounds.X.Max);
+  assert(front.m_bounds.Y.Max == image.m_bounds.Y.Max);
 
-  const int size = static_cast<int>(front.m_depths.size()); 
+  const int size = static_cast<int>(front.m_depths.size());
 
 #ifdef vtkh_USE_OPENMP
-  #pragma omp parallel for 
+  #pragma omp parallel for
 #endif
   for(int i = 0; i < size; ++i)
   {
@@ -94,13 +94,13 @@ void ZBufferComposite(std::vector<vtkh::Image> &images)
 
 struct Pixel
 {
-  unsigned char m_color[4];  
+  unsigned char m_color[4];
   float         m_depth;
-  int           m_pixel_id;  // local (sub-image) pixels id 
+  int           m_pixel_id;  // local (sub-image) pixels id
 
   bool operator < (const Pixel &other) const
   {
-    if(m_pixel_id != other.m_pixel_id) 
+    if(m_pixel_id != other.m_pixel_id)
     {
       return m_pixel_id < other.m_pixel_id;
     }
@@ -121,9 +121,11 @@ void CombineImages(const std::vector<vtkh::Image> &images, std::vector<Pixel> &p
     //  Extract the partial composites into a contiguous array
     //
 
-    const int image_size = images[i].GetNumberOfPixels(); 
+    const int image_size = images[i].GetNumberOfPixels();
     const int offset = i * image_size;
+#ifdef VTKH_USE_OPENMP
     #pragma omp parallel for
+#endif
     for(int j = 0; j < image_size; ++j)
     {
       const int image_offset = j * 4;
@@ -144,26 +146,30 @@ void ZBufferBlend(std::vector<vtkh::Image> &images)
   const int num_images = static_cast<int>(images.size());
   std::vector<Pixel> pixels;
   CombineImages(images, pixels);
-  #pragma omp parallel for
+#ifdef VTKH_USE_OPENMP
+    #pragma omp parallel for
+#endif
   for(int i = 0; i < image_pixels; ++i)
   {
-    const int begin = image_pixels * i; 
-    const int end = image_pixels * i - 1; 
-    std::sort(pixels.begin() + begin, pixels.begin() + end);  
+    const int begin = image_pixels * i;
+    const int end = image_pixels * i - 1;
+    std::sort(pixels.begin() + begin, pixels.begin() + end);
   }
-  
+
   // check to see if that worked
   int pixel_id_0 = pixels[0].m_pixel_id;
   for(int i = 1; i < num_images; ++i)
   {
     assert(pixel_id_0 == pixels[i].m_pixel_id);
   }
- 
 
-  #pragma omp parallel for
+
+#ifdef VTKH_USE_OPENMP
+    #pragma omp parallel for
+#endif
   for(int i = 0; i < image_pixels; ++i)
   {
-    const int index = i * num_images; 
+    const int index = i * num_images;
     Pixel pixel = pixels[index];
     for(int j = 1; j < num_images; ++j)
     {
@@ -173,21 +179,21 @@ void ZBufferBlend(std::vector<vtkh::Image> &images)
       }
       unsigned int alpha = pixel.m_color[3];
       const unsigned int opacity = 255 - alpha;
-      pixel.m_color[0] 
-        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[0] / 255); 
-      pixel.m_color[1] 
-        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[1] / 255); 
-      pixel.m_color[2] 
-        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[2] / 255); 
-      pixel.m_color[3] 
-        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[3] / 255); 
+      pixel.m_color[0]
+        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[0] / 255);
+      pixel.m_color[1]
+        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[1] / 255);
+      pixel.m_color[2]
+        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[2] / 255);
+      pixel.m_color[3]
+        += static_cast<unsigned char>(opacity * pixels[index + j].m_color[3] / 255);
       pixel.m_depth = pixels[index + j].m_depth;
     } // for each image
-    images[0].m_pixels[i * 4 + 0] = pixel.m_color[0]; 
-    images[0].m_pixels[i * 4 + 1] = pixel.m_color[1]; 
-    images[0].m_pixels[i * 4 + 2] = pixel.m_color[2]; 
-    images[0].m_pixels[i * 4 + 3] = pixel.m_color[3]; 
-    images[0].m_depths[i] = pixel.m_depth; 
+    images[0].m_pixels[i * 4 + 0] = pixel.m_color[0];
+    images[0].m_pixels[i * 4 + 1] = pixel.m_color[1];
+    images[0].m_pixels[i * 4 + 2] = pixel.m_color[2];
+    images[0].m_pixels[i * 4 + 3] = pixel.m_color[3];
+    images[0].m_depths[i] = pixel.m_depth;
   } // for each pixel
 
 }

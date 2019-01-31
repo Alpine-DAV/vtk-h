@@ -3,7 +3,7 @@
 #include <vtkh/filters/Recenter.hpp>
 #include <vtkm/filter/MarchingCubes.h>
 
-namespace vtkh 
+namespace vtkh
 {
 
 MarchingCubes::MarchingCubes()
@@ -17,7 +17,7 @@ MarchingCubes::~MarchingCubes()
 
 }
 
-void 
+void
 MarchingCubes::SetIsoValue(const double &iso_value)
 {
   m_iso_values.clear();
@@ -25,14 +25,14 @@ MarchingCubes::SetIsoValue(const double &iso_value)
   m_levels = -1;
 }
 
-void 
+void
 MarchingCubes::SetLevels(const int &levels)
 {
   m_iso_values.clear();
   m_levels = levels;
 }
 
-void 
+void
 MarchingCubes::SetIsoValues(const double *iso_values, const int &num_values)
 {
   assert(num_values > 0);
@@ -44,18 +44,19 @@ MarchingCubes::SetIsoValues(const double *iso_values, const int &num_values)
   m_levels = -1;
 }
 
-void 
+void
 MarchingCubes::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void MarchingCubes::PreExecute() 
+void MarchingCubes::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
 
-
-  if(m_levels != -1 && m_input->GlobalFieldExists(m_field_name)) {
+  if(m_levels != -1)
+  {
     vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
     float length = scalar_range.Length();
     float step = length / (m_levels + 1.f);
@@ -67,9 +68,8 @@ void MarchingCubes::PreExecute()
       m_iso_values.push_back(iso);
     }
   }
-  
+
   assert(m_iso_values.size() > 0);
-  assert(m_field_name != "");
 }
 
 void MarchingCubes::PostExecute()
@@ -77,30 +77,11 @@ void MarchingCubes::PostExecute()
   Filter::PostExecute();
 }
 
-bool 
-MarchingCubes::ContainsIsoValues(vtkm::cont::DataSet &dom)
-{
-  vtkm::cont::Field field = dom.GetField(m_field_name);
-  vtkm::cont::ArrayHandle<vtkm::Range> ranges = field.GetRange();
-  assert(ranges.GetNumberOfValues() == 1);
-  vtkm::Range range = ranges.GetPortalControl().Get(0);
-  for(size_t i = 0; i < m_iso_values.size(); ++i)
-  {
-    double val = m_iso_values[i];
-    if(range.Contains(val))
-    {
-      return true;
-    }
-  }
-
-  return false;
-
-}
-
 void MarchingCubes::DoExecute()
 {
   this->m_output = new DataSet();
   vtkm::filter::MarchingCubes marcher;
+  vtkh::DataSet *old_input = this->m_input;
 
   marcher.SetIsoValues(m_iso_values);
   marcher.SetMergeDuplicatePoints(true);
@@ -109,24 +90,23 @@ void MarchingCubes::DoExecute()
   // make sure we have a node-centered field
   bool valid_field = false;
   bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
-                       vtkm::cont::Field::Association::CELL_SET; 
+                       vtkm::cont::Field::Association::CELL_SET;
   bool delete_input = false;
   if(valid_field && is_cell_assoc)
   {
-    Recenter recenter;  
+    Recenter recenter;
     recenter.SetInput(m_input);
     recenter.SetField(m_field_name);
-    recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS); 
+    recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS);
     recenter.Update();
     m_input = recenter.GetOutput();
     delete_input = true;
   }
 
-  const int num_domains = this->m_input->GetNumberOfDomains(); 
-  int valid = 0;
+  const int num_domains = this->m_input->GetNumberOfDomains();
   for(int i = 0; i < num_domains; ++i)
   {
-    
+
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
@@ -136,15 +116,6 @@ void MarchingCubes::DoExecute()
       continue;
     }
 
-    bool valid_domain = ContainsIsoValues(dom);
-    if(!valid_domain)
-    {
-      // vtkm does not like it if we ask it to contour
-      // values that do not exist in the field, so
-      // we have to check.
-      continue;
-    }
-    valid++;
     marcher.SetFieldsToPass(this->GetFieldSelection());
     auto dataset = marcher.Execute(dom);
     m_output->AddDomain(dataset, domain_id);
@@ -154,6 +125,7 @@ void MarchingCubes::DoExecute()
   if(delete_input)
   {
     delete m_input;
+    this->m_input = old_input;
   }
 }
 

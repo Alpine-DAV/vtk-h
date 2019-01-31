@@ -10,7 +10,7 @@
 #include <diy/reduce.hpp>
 #include <diy/reduce-operations.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
 
 struct Redistribute
@@ -27,26 +27,26 @@ struct Redistribute
     //
     // first round we have no incoming. Take the image we have,
     // chop it up into pieces, and send it to the domain resposible
-    // for that portion 
+    // for that portion
     //
     const int world_size = m_decomposer.nblocks;
-    const int local_images = block->m_images.size(); 
+    const int local_images = block->m_images.size();
     if(proxy.in_link().size() == 0)
     {
       std::map<diy::BlockID, std::vector<Image>> outgoing;
-      
+
       for(int i = 0; i < world_size; ++i)
       {
         diy::DiscreteBounds sub_image_bounds;
         m_decomposer.fill_bounds(sub_image_bounds, i);
         vtkm::Bounds vtkm_sub_bounds = DIYBoundsToVTKM(sub_image_bounds);
 
-        diy::BlockID dest = proxy.out_link().target(i); 
-        outgoing[dest].resize(local_images); 
+        diy::BlockID dest = proxy.out_link().target(i);
+        outgoing[dest].resize(local_images);
 
-        for(int img = 0;  img < local_images; ++img) 
+        for(int img = 0;  img < local_images; ++img)
         {
-          outgoing[dest][img].SubsetFrom(block->m_images[img], vtkm_sub_bounds); 
+          outgoing[dest][img].SubsetFrom(block->m_images[img], vtkm_sub_bounds);
         }
       } //for
 
@@ -65,7 +65,7 @@ struct Redistribute
 
         std::vector<Image> incoming;
         int gid = proxy.in_link().target(i).gid;
-        proxy.dequeue(gid, incoming); 
+        proxy.dequeue(gid, incoming);
         const int in_size = incoming.size();
         for(int img = 0; img < in_size; ++img)
         {
@@ -73,7 +73,7 @@ struct Redistribute
           //std::cout<<"rank "<<rank<<" rec "<<incoming[img].ToString()<<"\n";
         }
       } // for
-      
+
       ImageCompositor compositor;
       compositor.OrderedComposite(images);
 
@@ -88,7 +88,7 @@ struct Redistribute
 
         std::vector<Image> incoming;
         int gid = proxy.in_link().target(i).gid;
-        proxy.dequeue(gid, incoming); 
+        proxy.dequeue(gid, incoming);
         const int in_size = incoming.size();
         for(int img = 0; img < in_size; ++img)
         {
@@ -96,7 +96,7 @@ struct Redistribute
           //std::cout<<"rank "<<rank<<" rec "<<incoming[img].ToString()<<"\n";
         }
       } // for
-      
+
       //
       // we have images with a depth buffer and transparency
       //
@@ -118,13 +118,13 @@ DirectSendCompositor::~DirectSendCompositor()
 }
 
 void
-DirectSendCompositor::CompositeVolume(diy::mpi::communicator &diy_comm, 
+DirectSendCompositor::CompositeVolume(diy::mpi::communicator &diy_comm,
                                       std::vector<Image>     &images)
 {
   diy::DiscreteBounds global_bounds = VTKMBoundsToDIY(images.at(0).m_orig_bounds);
-  
-  const int num_threads = 1; 
-  const int num_blocks = diy_comm.size(); 
+
+  const int num_threads = 1;
+  const int num_blocks = diy_comm.size();
   const int magic_k = 8;
   Image sub_image;
   //
@@ -134,41 +134,41 @@ DirectSendCompositor::CompositeVolume(diy::mpi::communicator &diy_comm,
   {
     diy::Master master(diy_comm, num_threads);
     // create an assigner with one block per rank
-    diy::ContiguousAssigner assigner(num_blocks, num_blocks); 
+    diy::ContiguousAssigner assigner(num_blocks, num_blocks);
 
     AddMultiImageBlock create(master, images, sub_image);
 
     const int dims = 2;
     diy::RegularDecomposer<diy::DiscreteBounds> decomposer(dims, global_bounds, num_blocks);
     decomposer.decompose(diy_comm.rank(), assigner, create);
-    
-    diy::all_to_all(master, 
-                    assigner, 
-                    Redistribute(decomposer), 
+
+    diy::all_to_all(master,
+                    assigner,
+                    Redistribute(decomposer),
                     magic_k);
-  }  
+  }
 
   {
     diy::Master master(diy_comm, num_threads);
-    diy::ContiguousAssigner assigner(num_blocks, num_blocks); 
+    diy::ContiguousAssigner assigner(num_blocks, num_blocks);
 
     const int dims = 2;
     diy::RegularDecomposer<diy::DiscreteBounds> decomposer(dims, global_bounds, num_blocks);
     AddImageBlock all_create(master, sub_image);
     decomposer.decompose(diy_comm.rank(), assigner, all_create);
-    MPI_Barrier(diy_comm); 
+    MPI_Barrier(diy_comm);
 
-    MPICollect(sub_image,diy_comm); 
-    //diy::all_to_all(master,
-    //                assigner,
-    //                CollectImages(decomposer),
-    //                magic_k);
-  } 
+    //MPICollect(sub_image,diy_comm);
+    diy::all_to_all(master,
+                    assigner,
+                    CollectImages(decomposer),
+                    magic_k);
+  }
 
   images.at(0).Swap(sub_image);
 }
 
-std::string 
+std::string
 DirectSendCompositor::GetTimingString()
 {
   std::string res(m_timing_log.str());

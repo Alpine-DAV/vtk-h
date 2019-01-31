@@ -75,7 +75,7 @@ TEST(vtkh_clip, vtkh_box_clip)
 
   delete clip_output;
 }
-
+#if 0
 TEST(vtkh_clip, vtkh_sphere_clip)
 {
   vtkh::DataSet data_set;
@@ -130,3 +130,4 @@ TEST(vtkh_clip, vtkh_sphere_clip)
 
   delete clip_output;
 }
+#endif

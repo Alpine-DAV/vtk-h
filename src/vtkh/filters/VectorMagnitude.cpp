@@ -3,7 +3,7 @@
 
 #include <vtkm/filter/VectorMagnitude.h>
 
-namespace vtkh 
+namespace vtkh
 {
 
 VectorMagnitude::VectorMagnitude()
@@ -16,22 +16,22 @@ VectorMagnitude::~VectorMagnitude()
 
 }
 
-void 
+void
 VectorMagnitude::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void 
+void
 VectorMagnitude::SetResultName(const std::string name)
 {
   m_out_name = name;
 }
 
-void VectorMagnitude::PreExecute() 
+void VectorMagnitude::PreExecute()
 {
   Filter::PreExecute();
-  assert(m_field_name != "");
+  Filter::CheckForRequiredField(m_field_name);
 
   if(m_out_name == "")
   {
@@ -48,20 +48,20 @@ void VectorMagnitude::DoExecute()
 {
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-  
+
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-   
+
     vtkm::filter::VectorMagnitude mag;
     mag.SetOutputFieldName(m_out_name);
     mag.SetFieldsToPass(this->GetFieldSelection());
     mag.SetActiveField(m_field_name);
 
     auto dataset = mag.Execute(dom);
-    
+
     m_output->AddDomain(dataset, domain_id);
   }
 }

@@ -4,7 +4,7 @@
 #include <vtkh/rendering/Image.hpp>
 #include <diy/master.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
 
 struct ImageBlock
@@ -37,7 +37,7 @@ struct AddImageBlock
       m_master(master)
   {
   }
-  template<typename BoundsType, typename LinkType>                 
+  template<typename BoundsType, typename LinkType>
   void operator()(int gid,
                   const BoundsType &,  // local_bounds
                   const BoundsType &,  // local_with_ghost_bounds
@@ -49,7 +49,7 @@ struct AddImageBlock
     diy::Master& master = const_cast<diy::Master&>(m_master);
     master.add(gid, block, linked);
   }
-}; 
+};
 
 struct AddMultiImageBlock
 {
@@ -57,14 +57,14 @@ struct AddMultiImageBlock
   Image              &m_output;
   const diy::Master  &m_master;
 
-  AddMultiImageBlock(diy::Master &master, 
+  AddMultiImageBlock(diy::Master &master,
                      std::vector<Image> &images,
                      Image &output)
-    : m_master(master), 
+    : m_master(master),
       m_images(images),
       m_output(output)
   {}
-  template<typename BoundsType, typename LinkType>                 
+  template<typename BoundsType, typename LinkType>
   void operator()(int gid,
                   const BoundsType &,  // local_bounds
                   const BoundsType &,  // local_with_ghost_bounds
@@ -76,7 +76,7 @@ struct AddMultiImageBlock
     diy::Master& master = const_cast<diy::Master&>(m_master);
     int lid = master.add(gid, block, linked);
   }
-}; 
+};
 
 } //namespace  vtkh
 

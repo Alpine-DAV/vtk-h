@@ -14,6 +14,10 @@ set(vtkh_rendering_headers
   Scene.hpp
   VolumeRenderer.hpp
   compositing/Compositor.hpp
+  compositing/PartialCompositor.hpp
+  compositing/AbsorptionPartial.hpp
+  compositing/EmissionPartial.hpp
+  compositing/VolumePartial.hpp
   )
 
 set(vtkh_rendering_sources
@@ -28,6 +32,7 @@ set(vtkh_rendering_sources
   Scene.cpp
   VolumeRenderer.cpp
   compositing/Compositor.cpp
+  compositing/PartialCompositor.cpp
   )
 
 
@@ -48,8 +53,10 @@ blt_add_library(
 if(ENABLE_OPENMP)
   if(CUDA_FOUND)
     blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-Xcompiler -DVTKH_USE_OPENMP")
   else()
     blt_add_target_compile_flags(TO vtkh_rendering FLAGS "${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-DVTKH_USE_OPENMP")
   endif()
 endif()
 
@@ -78,16 +85,18 @@ set(vtkh_rendering_mpi_headers
   compositing/vtkh_diy_collect.hpp
   compositing/vtkh_diy_image_block.hpp
   compositing/vtkh_diy_utils.hpp
+  compositing/PartialCompositor.hpp
   )
 
 set(vtkh_rendering_mpi_sources
   compositing/DIYCompositor.cpp
   compositing/DirectSendCompositor.cpp
   compositing/RadixKCompositor.cpp
+  compositing/PartialCompositor.cpp
   )
 
 if (MPI_FOUND)
-    
+
     set(vtkh_rendering_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkh_filters_mpi )
 
     # necessary b/c of how find_cuda works
@@ -95,7 +104,7 @@ if (MPI_FOUND)
          # triggers cuda compile
          list(APPEND vtkh_rendering_mpi_deps cuda)
     endif()
-    
+
     blt_add_library(
         NAME vtkh_rendering_mpi
         SOURCES ${vtkh_rendering_sources} ${vtkh_rendering_mpi_sources}
@@ -106,13 +115,15 @@ if (MPI_FOUND)
     if(ENABLE_OPENMP)
         if(CUDA_FOUND)
             blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+            blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-Xcompiler -DVTKH_USE_OPENMP")
         else()
             blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "${OpenMP_CXX_FLAGS}")
+            blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-DVTKH_USE_OPENMP")
         endif()
     endif()
 
     blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-D VTKH_PARALLEL")
-  
+
     # Install libraries
     install(TARGETS vtkh_rendering_mpi
             EXPORT ${VTKh_EXPORT_NAME}

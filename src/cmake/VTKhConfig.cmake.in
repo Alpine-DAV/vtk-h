@@ -48,7 +48,11 @@ if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKh_BINARY_DIR@")
   include(${VTKh_CONFIG_DIR}/VTKhTargets.cmake)
 endif()
 
-set(VTKm_DIR ${VTKM_DIR}/lib/cmake/vtkm-1.2)
-include(${VTKM_DIR}/lib/cmake/vtkm-1.2/VTKmConfig.cmake)
+# use VTKM_DIR to setup the options that cmake's find VTKm needs
+file(GLOB VTKm_DIR "${VTKM_DIR}/lib/cmake/vtkm-*")
+if(NOT VTKm_DIR)
+    MESSAGE(FATAL_ERROR "Failed to find VTKm at VTKM_DIR=${VTKM_DIR}/lib/cmake/vtk-*")
+endif()
+include(${VTKm_DIR}/VTKmConfig.cmake)
 find_package(VTKm REQUIRED QUIET) 
 set(VTKM_FOUND TRUE)

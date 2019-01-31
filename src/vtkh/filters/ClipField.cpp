@@ -3,7 +3,7 @@
 #include <vtkm/filter/ClipWithField.h>
 #include <vtkh/filters/Recenter.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
 
 ClipField::ClipField()
@@ -18,31 +18,32 @@ ClipField::~ClipField()
 
 }
 
-void 
+void
 ClipField::SetClipValue(const vtkm::Float64 clip_value)
 {
   m_clip_value = clip_value;
 }
 
-void 
+void
 ClipField::SetInvertClip(const bool invert)
 {
   m_invert = invert;
 }
 
-void 
+void
 ClipField::SetField(const std::string field_name)
 {
   m_field_name = field_name;
 }
 
-void 
-ClipField::PreExecute() 
+void
+ClipField::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
 }
 
-void 
+void
 ClipField::PostExecute()
 {
   Filter::PostExecute();
@@ -50,10 +51,11 @@ ClipField::PostExecute()
 
 void ClipField::DoExecute()
 {
-  
-  this->m_output = new DataSet();
 
-  const int num_domains = this->m_input->GetNumberOfDomains(); 
+  this->m_output = new DataSet();
+  vtkh::DataSet *old_input = this->m_input;
+
+  const int num_domains = this->m_input->GetNumberOfDomains();
 
   vtkm::filter::ClipWithField clipper;
   clipper.SetClipValue(m_clip_value);
@@ -61,16 +63,16 @@ void ClipField::DoExecute()
 
   bool valid_field = false;
   bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
-                       vtkm::cont::Field::Association::CELL_SET; 
+                       vtkm::cont::Field::Association::CELL_SET;
   bool delete_input = false;
   if(valid_field && is_cell_assoc)
   {
-    Recenter recenter;  
+    Recenter recenter;
     recenter.SetInput(m_input);
     recenter.SetField(m_field_name);
-    recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS); 
+    recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS);
     recenter.Update();
-    m_input = recenter.GetOutput();
+    this->m_input = recenter.GetOutput();
     delete_input = true;
   }
 
@@ -84,15 +86,17 @@ void ClipField::DoExecute()
     {
       continue;
     }
-    
+
     clipper.SetActiveField(m_field_name);
     clipper.SetFieldsToPass(this->GetFieldSelection());
     auto dataset = clipper.Execute(dom);
     this->m_output->AddDomain(dataset, domain_id);
-    if(delete_input)
-    {
-      delete m_input;
-    }
+  }
+
+  if(delete_input)
+  {
+    delete m_input;
+    this->m_input = old_input;
   }
 }
 

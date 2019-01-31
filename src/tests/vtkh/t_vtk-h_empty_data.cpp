@@ -55,6 +55,7 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkm)
 
   vtkh::MarchingCubes marcher;
   marcher.SetField("point_data_Float32");
+
   marcher.SetInput(iso_output);
   marcher.SetIsoValues(iso_vals, num_vals);
   marcher.AddMapField("point_data_Float32");
@@ -205,4 +206,16 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkh)
   delete contour_output;
   delete clip_output;
   delete thresh_output;
+  
+  bool got_error = false;
+  try
+  {
+    iso.Update();
+  }
+  catch(vtkh::Error &e)
+  {
+    got_error = true;
+  }
+
+  ASSERT_TRUE(got_error);
 }
