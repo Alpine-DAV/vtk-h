@@ -20,10 +20,10 @@
 TEST(vtkh_render, vtkh_no_annotations)
 {
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
-  const int num_blocks = 2; 
-  
+  const int num_blocks = 2;
+
   for(int i = 0; i < num_blocks; ++i)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
@@ -34,16 +34,16 @@ TEST(vtkh_render, vtkh_no_annotations)
   vtkm::rendering::Camera camera;
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         data_set, 
-                                         "annotations_off");  
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         data_set,
+                                         "annotations_off");
   render.DoRenderAnnotations(false);
   vtkh::RayTracer tracer;
-   
+
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data"); 
+  tracer.SetField("point_data_Float32");
 
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -54,10 +54,10 @@ TEST(vtkh_render, vtkh_no_annotations)
 TEST(vtkh_render, vtkh_no_bg_or_annotations)
 {
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
-  const int num_blocks = 2; 
-  
+  const int num_blocks = 2;
+
   for(int i = 0; i < num_blocks; ++i)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
@@ -68,17 +68,17 @@ TEST(vtkh_render, vtkh_no_bg_or_annotations)
   vtkm::rendering::Camera camera;
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         data_set, 
-                                         "all_off");  
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         data_set,
+                                         "all_off");
   render.DoRenderAnnotations(false);
   render.DoRenderBackground(false);
   vtkh::RayTracer tracer;
-   
+
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data"); 
+  tracer.SetField("point_data_Float32");
 
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -89,10 +89,10 @@ TEST(vtkh_render, vtkh_no_bg_or_annotations)
 TEST(vtkh_render, vtkh_bg_color)
 {
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
-  const int num_blocks = 2; 
-  
+  const int num_blocks = 2;
+
   for(int i = 0; i < num_blocks; ++i)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
@@ -106,17 +106,17 @@ TEST(vtkh_render, vtkh_bg_color)
 
   float bg_color[4] = {1.f, 1.f, 1.f, 1.f};
   float fg_color[4] = {0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         data_set, 
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         data_set,
                                          "white_bg",
                                          bg_color,
-                                         fg_color);  
+                                         fg_color);
   vtkh::RayTracer tracer;
-   
+
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data"); 
+  tracer.SetField("point_data_Float32");
 
   vtkh::Scene scene;
   scene.AddRender(render);

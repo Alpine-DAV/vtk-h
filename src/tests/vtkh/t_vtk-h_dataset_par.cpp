@@ -22,14 +22,14 @@ TEST(vtkh_dataset_par, vtkh_range_par)
   int comm_size, rank;
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
+
   vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
   const int blocks_per_rank = 2;
-  const int num_blocks = comm_size * blocks_per_rank; 
-  
+  const int num_blocks = comm_size * blocks_per_rank;
+
   for(int i = 0; i < blocks_per_rank; ++i)
   {
     int domain_id = rank * blocks_per_rank + i;
@@ -37,9 +37,9 @@ TEST(vtkh_dataset_par, vtkh_range_par)
   }
 
   vtkm::Bounds data_bounds = data_set.GetGlobalBounds();
-  
+
   const double max_val = base_size * num_blocks;
-  const double min_val = 0.; 
+  const double min_val = 0.;
 
   EXPECT_EQ(data_bounds.X.Min, min_val);
   EXPECT_EQ(data_bounds.Y.Min, min_val);
@@ -53,21 +53,21 @@ TEST(vtkh_dataset_par, vtkh_range_par)
 
   vtkm::cont::ArrayHandle<vtkm::Range> vec_range;
 
-  vec_range = data_set.GetGlobalRange("vector_data");
+  vec_range = data_set.GetGlobalRange("vector_data_Float32");
 
   EXPECT_EQ(3, vec_range.GetPortalControl().GetNumberOfValues());
 
   vtkm::cont::ArrayHandle<vtkm::Range> scalar_range;
-  scalar_range = data_set.GetGlobalRange("point_data");
+  scalar_range = data_set.GetGlobalRange("point_data_Float32");
   EXPECT_EQ(1, scalar_range.GetPortalControl().GetNumberOfValues());
 
   int topo_dims;
   EXPECT_EQ(true, data_set.IsStructured(topo_dims));
   EXPECT_EQ(3, topo_dims);
-  
+
   if(rank ==0)
   {
-    vtkm::cont::DataSet unstructured; 
+    vtkm::cont::DataSet unstructured;
 
     std::vector<vtkm::Vec<vtkm::Float32,3>> coords;
     coords.push_back(vtkm::Vec<vtkm::Float32,3>(0.f, 0.f, 0.f));
@@ -82,7 +82,7 @@ TEST(vtkh_dataset_par, vtkh_range_par)
     conn.push_back(0);
     conn.push_back(1);
     conn.push_back(2);
-    
+
     vtkm::cont::DataSetBuilderExplicit builder;
     unstructured = builder.Create(coords, shapes, num_indices, conn, "coordinates", "cells");
     data_set.AddDomain(unstructured, -1);
@@ -90,6 +90,6 @@ TEST(vtkh_dataset_par, vtkh_range_par)
 
   EXPECT_EQ(false, data_set.IsStructured(topo_dims));
   EXPECT_EQ(-1, topo_dims);
-  
+
   MPI_Finalize();
 }
