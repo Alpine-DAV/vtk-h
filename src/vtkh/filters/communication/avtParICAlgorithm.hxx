@@ -460,7 +460,7 @@ avtParICAlgorithm::RecvAny(vector<MsgCommData> *msgs,
                 Particle recvP;
                 //buffers[i].second->read(recvP);
                 Serialization<Particle>::read(*(buffers[i].second), recvP);
-                std::cout<<"reading "<<recvP<"\n";
+                std::cout<<"reading "<<recvP<<"\n";
                 ParticleCommData<Particle> d(sendRank, recvP);
                 recvICs->push_back(d);
             }

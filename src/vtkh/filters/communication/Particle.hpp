@@ -33,7 +33,7 @@ inline std::ostream &operator<<(std::ostream &os, const Particle &p)
     if (p.status == Particle::ACTIVE) os<<"ACTIVE";
     else if (p.status == Particle::TERMINATE) os<<"TERM";
     else if (p.status == Particle::OUTOFBOUNDS) os<<"OOB";
-    os<<" bid= "<<p.blockId;
+    os<<" bid = "<<p.blockId;
     return os;
 }
 
