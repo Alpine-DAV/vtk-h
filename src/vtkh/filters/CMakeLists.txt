@@ -112,7 +112,7 @@ if (MPI_FOUND)
           endif()
     endif()
 
-    blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL -D TRACE_DEBUG")
+    blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL")
 
 
     # Install libraries

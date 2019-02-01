@@ -113,14 +113,16 @@ public:
     return domain_ids;
   }
 
-  template<typename T, typename U>
-  void CopyCoords(vtkm::cont::ArrayHandleVirtual<vtkm::Vec<T,3>> &input,
+  template<typename U>
+  void CopyCoords(vtkm::cont::ArrayHandleVirtualCoordinates &input,
                   vtkm::cont::ArrayHandle<vtkm::Vec<U,3>> &output,
                   vtkm::Id offset)
   {
     vtkm::Id copy_size = input.GetNumberOfValues();
     vtkm::Id start = 0;
-    vtkm::cont::Algorithm::CopySubRange(input, start, copy_size, output, offset);
+
+    vtkm::cont::ArrayHandleVirtualCoordinates tmp(output);
+    vtkm::cont::Algorithm::CopySubRange(input, start, copy_size, tmp, offset);
   }
 
   struct CopyField
@@ -263,20 +265,22 @@ public:
       // merge coodinates
       auto coords = doms[dom].GetCoordinateSystem().GetData();
       this->CopyCoords(coords, out_coords, point_offsets[dom]);
-      //if(coords == CoordsType3f())
-      //{
-      //  CoordsType3f in = coords.Cast<CoordsType3f>();
-      //  this->CopyCoords(in, out_coords, point_offsets[dom]);
-      //}
-      //if(coords.IsType<CoordsType3d>())
-      //{
-      //  CoordsType3d in = coords.Cast<CoordsType3d>();
-      //  this->CopyCoords(in, out_coords, point_offsets[dom]);
-      //}
-      //else
-      //{
-      //  throw Error("Merge contour: unknown coordinate type");
-      //}
+      /*
+      if(coords == CoordsType3f())
+      {
+        CoordsType3f in = coords.Cast<CoordsType3f>();
+        this->CopyCoords(in, out_coords, point_offsets[dom]);
+      }
+      if(coords.IsType<CoordsType3d>())
+      {
+        CoordsType3d in = coords.Cast<CoordsType3d>();
+        this->CopyCoords(in, out_coords, point_offsets[dom]);
+      }
+      else
+      {
+        throw Error("Merge contour: unknown coordinate type");
+      }
+      */
 
     } // for each domain
 

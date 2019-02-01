@@ -69,7 +69,7 @@ void ParticleAdvection::PostExecute()
   Filter::PostExecute();
 }
 
-void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult<double>> &traces)
+void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &traces)
 {
 #ifdef VTKH_PARALLEL
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
@@ -134,7 +134,7 @@ void ParticleAdvection::DoExecute()
   this->CreateSeeds();
   this->DumpDS();
 
-  vector<vtkm::worklet::StreamlineResult<double>> particleTraces;
+  vector<vtkm::worklet::StreamlineResult> particleTraces;
   this->TraceSeeds(particleTraces);
 
   this->m_output = new DataSet();

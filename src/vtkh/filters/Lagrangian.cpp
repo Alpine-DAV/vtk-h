@@ -93,9 +93,9 @@ void Lagrangian::DoExecute()
     {
       using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
       using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
-		  auto field = dom.GetField(m_field_name).GetData();
+      auto field = dom.GetField(m_field_name).GetData();
 
-      if(!field.IsSameType(vectorField_d()) && !field.IsSameType(vectorField_f()))
+      if(!field.IsType<vectorField_d>() && !field.IsType<vectorField_f>())
       {
         throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");
       }

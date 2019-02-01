@@ -64,7 +64,7 @@ protected:
 
   void Init();
   void CreateSeeds();
-  void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult<double>> &traces);
+  void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult> &traces);
 
 
 

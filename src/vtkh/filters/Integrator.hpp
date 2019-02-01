@@ -27,20 +27,12 @@ class Integrator
     typedef FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
 
     //Uniform grid evaluator and RK4 integrator.
-    using UniformEvalType =
-        vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                              FieldType,
-                                                              DeviceAdapter>;
-    using RK4UniformType =
-        vtkm::worklet::particleadvection::RK4Integrator<UniformEvalType, FieldType>;
+    using UniformEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
+    using RK4UniformType = vtkm::worklet::particleadvection::RK4Integrator<UniformEvalType>;
 
     //Rectilinear grid evaluator and RK4 integrator.
-    using RectilinearEvalType =
-        vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldPortalConstType,
-                                                                  FieldType,
-                                                                  DeviceAdapter>;
-    using RK4RectilinearType =
-        vtkm::worklet::particleadvection::RK4Integrator<RectilinearEvalType, FieldType>;
+    using RectilinearEvalType = vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldHandle>;
+    using RK4RectilinearType = vtkm::worklet::particleadvection::RK4Integrator<RectilinearEvalType>;
 
 public:
     Integrator(vtkm::cont::DataSet &ds, const string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
@@ -83,7 +75,7 @@ public:
                std::list<Particle> &I,
                std::list<Particle> &T,
                std::list<Particle> &A,
-               std::vector<vtkm::worklet::ParticleAdvectionResult<FieldType>> *particleTraces=NULL)
+               std::vector<vtkm::worklet::ParticleAdvectionResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType,3>> seedArray;
@@ -92,9 +84,9 @@ public:
         int steps0 = SeedPrep(particles, seedArray, stepsTakenArray);
 
         vtkm::worklet::ParticleAdvection particleAdvection;
-        vtkm::worklet::ParticleAdvectionResult<FieldType> result;
+        vtkm::worklet::ParticleAdvectionResult result;
 
-        result = particleAdvection.Run(rectRK4, seedArray, stepsTakenArray, maxSteps,  DeviceAdapter());
+        result = particleAdvection.Run(rectRK4, seedArray, stepsTakenArray, maxSteps);
         auto posPortal = result.positions.GetPortalConstControl();
         auto statusPortal = result.status.GetPortalConstControl();
         auto stepsPortal = result.stepsTaken.GetPortalConstControl();
@@ -135,7 +127,7 @@ public:
               std::list<Particle> &I,
               std::list<Particle> &T,
               std::list<Particle> &A,
-              std::vector<vtkm::worklet::StreamlineResult<FieldType>> *particleTraces=NULL)
+              std::vector<vtkm::worklet::StreamlineResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType,3>> seedArray;
@@ -144,8 +136,8 @@ public:
         int steps0 = SeedPrep(particles, seedArray, stepsTakenArray);
 
         vtkm::worklet::Streamline streamline;
-        vtkm::worklet::StreamlineResult<FieldType> result;
-        result = streamline.Run(rectRK4, seedArray, stepsTakenArray, maxSteps, DeviceAdapter());
+        vtkm::worklet::StreamlineResult result;
+        result = streamline.Run(rectRK4, seedArray, stepsTakenArray, maxSteps);
 
         auto posPortal = result.positions.GetPortalConstControl();
         auto statusPortal = result.status.GetPortalConstControl();
