@@ -5,11 +5,13 @@ set(vtkh_utils_headers
   PNGEncoder.hpp
   vtkm_array_utils.hpp
   vtkm_dataset_info.hpp
+  vtkm_permutation_removal.hpp
   )
 
 set(vtkh_utils_sources
   PNGEncoder.cpp
   vtkm_dataset_info.cpp
+  vtkm_permutation_removal.cpp
   )
 
 set(vtkh_utils_thirdparty_libs vtkm vtkh_lodepng)

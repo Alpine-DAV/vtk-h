@@ -1,6 +1,10 @@
 #include <vtkh/filters/GhostStripper.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
+#include <vtkh/utils/vtkm_permutation_removal.hpp>
 
+#include <vtkm/filter/ExtractStructured.h>
+#include <vtkm/filter/Threshold.h>
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/cont/Algorithm.h>
 
@@ -254,6 +258,40 @@ vtkm::cont::DataSet Strip(vtkm::cont::DataSet &dataset,
   vtkm::cont::CellSetStructured<DIMS> cellset =
         dyn_cellset.Cast<vtkm::cont::CellSetStructured<DIMS>>();
 
+
+  vtkm::Id3 new_point_dims;
+  new_point_dims[0] = max[0] - min[0] + 1;
+  new_point_dims[1] = max[1] - min[1] + 1;
+  new_point_dims[2] = max[2] - min[2] + 1;
+
+  if(DIMS == 1)
+  {
+    vtkm::cont::CellSetStructured<1> res_cellset(cellset.GetName());
+    vtkm::Id ptype = new_point_dims[0];
+    res_cellset.SetPointDimensions(ptype);
+    res.AddCellSet(res_cellset);
+  }
+  else if(DIMS == 2)
+  {
+    vtkm::cont::CellSetStructured<2> res_cellset(cellset.GetName());
+    vtkm::Id2 ptype;
+    ptype[0] = new_point_dims[0];
+    ptype[1] = new_point_dims[1];
+    res_cellset.SetPointDimensions(ptype);
+    res.AddCellSet(res_cellset);
+  }
+  else if(DIMS == 3)
+  {
+    vtkm::cont::CellSetStructured<3> res_cellset(cellset.GetName());
+    vtkm::Id3 ptype;
+    ptype[0] = new_point_dims[0];
+    ptype[1] = new_point_dims[1];
+    ptype[2] = new_point_dims[2];
+    res_cellset.SetPointDimensions(ptype);
+    res.AddCellSet(res_cellset);
+  }
+
+
   return res;
 }
 
@@ -335,6 +373,10 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             max,
                             cell_dims,
                             size);
+    //if(can_strip)
+    //{
+    //  vtkm::cont::DataSet stripped = Strip<2>(dataset, cell_dims, min, max);
+    //}
   }
   else if(cell_set.IsSameType(vtkm::cont::CellSetStructured<2>()))
   {
@@ -349,6 +391,10 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             max,
                             cell_dims,
                             size);
+    //if(can_strip)
+    //{
+    //  vtkm::cont::DataSet stripped = Strip<2>(dataset, cell_dims, min, max);
+    //}
   }
   else if(cell_set.IsSameType(vtkm::cont::CellSetStructured<3>()))
   {
@@ -364,10 +410,10 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             max,
                             cell_dims,
                             size);
-    if(can_strip)
-    {
-      vtkm::cont::DataSet stripped = Strip<3>(dataset, cell_dims, min, max);
-    }
+    //if(can_strip)
+    //{
+    //  vtkm::cont::DataSet stripped = Strip<3>(dataset, cell_dims, min, max);
+    //}
   }
 
   return can_strip;
@@ -437,17 +483,44 @@ void GhostStripper::DoExecute()
     vtkm::cont::Field field = dom.GetField(m_field_name);
 
     int topo_dims = 0;
-    if(!VTKMDataSetInfo::IsStructured(dom, topo_dims))
-    {
-      // do threshold
-    }
-    else
+    bool do_threshold = true;
+
+    if(VTKMDataSetInfo::IsStructured(dom, topo_dims))
     {
       vtkm::Vec<vtkm::Id,3> min, max;
-      detail::StructuredStrip(dom, field, m_min_value, m_max_value, min, max);
+      bool can_strip = detail::StructuredStrip(dom, field, m_min_value, m_max_value, min, max);
+      if(can_strip)
+      {
+        do_threshold = false;
+        vtkm::filter::ExtractStructured extract;
+        vtkm::RangeId3 range(min[0],max[0], min[1], max[1], min[2], max[2]);
+        vtkm::Id3 sample(1, 1, 1);
+        extract.SetVOI(range);
+        extract.SetSampleRate(sample);
+        extract.SetFieldsToPass(this->GetFieldSelection());
+        vtkm::cont::DataSet output = extract.Execute(dom);
+        output.PrintSummary(std::cout);
+        m_output->AddDomain(output, domain_id);
+      }
+
+      if(do_threshold)
+      {
+
+        vtkm::filter::Threshold thresholder;
+        thresholder.SetUpperThreshold(m_max_value);
+        thresholder.SetLowerThreshold(m_min_value);
+        thresholder.SetActiveField(m_field_name);
+        thresholder.SetFieldsToPass(this->GetFieldSelection());
+        auto tout = thresholder.Execute(dom);
+        vtkh::StripPermutation(tout);
+
+        vtkm::filter::CleanGrid cleaner;
+        cleaner.SetFieldsToPass(this->GetFieldSelection());
+        auto clout = cleaner.Execute(dom);
+        m_output->AddDomain(clout, domain_id);
+      }
     }
     //auto dataset = marcher.Execute(dom);
-    //m_output->AddDomain(dataset, domain_id);
 
   }
 

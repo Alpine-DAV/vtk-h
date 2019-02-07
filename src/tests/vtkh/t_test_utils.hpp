@@ -122,7 +122,7 @@ vtkm::cont::Field CreateCellScalarField(int size)
 vtkm::cont::Field CreateGhostScalarField(vtkm::Id3 dims)
 {
   vtkm::Int32 size = dims[0] * dims[1] * dims[2];
-  vtkm::cont::ArrayHandle<vtkm::UInt8> data;
+  vtkm::cont::ArrayHandle<vtkm::Int32> data;
   data.Allocate(size);
 
   for(int z = 0; z < dims[2]; ++z)
