@@ -171,6 +171,60 @@ Renderer::PreExecute()
   }
 
   m_bounds = m_input->GetGlobalBounds();
+  std::cout<<"======================================n";
+  m_input->PrintSummary(std::cout);
+  std::cout<<"**********\n";
+  if(VTKMDataSetInfo::IsUniform(m_input->GetDomain(0))) std::cout<<"IS UNIFORM\n";
+  if(VTKMDataSetInfo::IsRectilinear(m_input->GetDomain(0))) std::cout<<"IS RECTILINEAR\n";
+  vtkm::cont::ArrayHandleVirtualCoordinates vcoords = m_input->GetDomain(0).GetCoordinateSystem().GetData();
+  using BasicCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+  using RectilinearCoordsArrayType =
+        vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                                  vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                                  vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
+
+  using Rectilinear32CoordsArrayType =
+        vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle  <vtkm::Float32>,
+                                                  vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                                  vtkm::cont::ArrayHandle<vtkm::Float32>>;
+
+    if (vcoords.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
+    {
+     // using HandleType = vtkm::cont::ArrayHandleUniformPointCoordinates;
+     // using T = typename HandleType::ValueType;
+     // using S = typename HandleType::StorageTag;
+     // auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+     // vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+     // vtkmdiy::save(bb, array->GetHandle());
+        std::cout<<"UNUNUNUNUNUNUNUUN\n";
+    }//
+    else if (vcoords.IsType<RectilinearCoordsArrayType>())
+    {
+      std::cout<<"RTRRTRTRTRTRTRTRTRTR\n";
+     // using HandleType = RectilinearCoordsArrayType;
+     // using T = typename HandleType::ValueType;
+     // using S = typename HandleType::StorageTag;
+     // auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+     // vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+     // vtkmdiy::save(bb, array->GetHandle());
+    }
+    else if (vcoords.IsType<Rectilinear32CoordsArrayType>())
+    {
+      std::cout<<"2323232323232 RTRRTRTRTRTRTRTRTRTR\n";
+     // using HandleType = RectilinearCoordsArrayType;
+     // using T = typename HandleType::ValueType;
+     // using S = typename HandleType::StorageTag;
+     // auto array = storage->Cast<vtkm::cont::StorageAny<T, S>>();
+     // vtkmdiy::save(bb, vtkm::cont::TypeString<HandleType>::Get());
+     // vtkmdiy::save(bb, array->GetHandle());
+    }
+    else
+    {
+      std::cout<<"EXEXEXEXEXEXEXEXEXEXE\n";
+     // vtkmdiy::save(bb, vtkm::cont::TypeString<BasicCoordsType>::Get());
+     // vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, obj);
+    }
+
 
 }
 

@@ -491,15 +491,22 @@ void GhostStripper::DoExecute()
       bool can_strip = detail::StructuredStrip(dom, field, m_min_value, m_max_value, min, max);
       if(can_strip)
       {
+        std::cout<<"Before "<<dom.GetCoordinateSystem().GetBounds()<<"\n";
+        if(VTKMDataSetInfo::IsUniform(dom)) std::cout<<"++** IS UNIFORM\n";
+        if(VTKMDataSetInfo::IsRectilinear(dom)) std::cout<<"++** IS RECTILINEAR\n";
         do_threshold = false;
         vtkm::filter::ExtractStructured extract;
-        vtkm::RangeId3 range(min[0],max[0], min[1], max[1], min[2], max[2]);
+        vtkm::RangeId3 range(min[0],max[0]+2, min[1], max[1]+2, min[2], max[2]+2);
         vtkm::Id3 sample(1, 1, 1);
         extract.SetVOI(range);
         extract.SetSampleRate(sample);
+        extract.SetIncludeBoundary(true);
         extract.SetFieldsToPass(this->GetFieldSelection());
         vtkm::cont::DataSet output = extract.Execute(dom);
-        output.PrintSummary(std::cout);
+        std::cout<<"after "<<output.GetCoordinateSystem().GetBounds()<<"\n";
+        //output.PrintSummary(std::cout);
+        if(VTKMDataSetInfo::IsUniform(output)) std::cout<<"** IS UNIFORM\n";
+        if(VTKMDataSetInfo::IsRectilinear(output)) std::cout<<"** IS RECTILINEAR\n";
         m_output->AddDomain(output, domain_id);
       }
 
@@ -520,10 +527,10 @@ void GhostStripper::DoExecute()
         m_output->AddDomain(clout, domain_id);
       }
     }
-    //auto dataset = marcher.Execute(dom);
 
   }
 
+  //m_output->PrintSummary(std::cout);
 }
 
 std::string
