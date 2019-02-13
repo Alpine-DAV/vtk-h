@@ -23,7 +23,6 @@ set(vtkh_filters_headers
   communication/Communicator.hpp
   communication/DebugMeowMeow.hpp
   communication/MemStream.h
-  communication/MemStream.hxx
   communication/avtParICAlgorithm.hpp
   communication/avtParICAlgorithm.hxx
   )
@@ -86,6 +85,11 @@ if (MPI_FOUND)
 
     set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi)
 
+    set(vtkh_mpi_headers
+                        communication/Messenger.hpp)
+    set(vtkh_mpi_sources
+                        communication/Messenger.cpp)
+
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
          # triggers cuda compile
@@ -94,8 +98,8 @@ if (MPI_FOUND)
 
     blt_add_library(
       NAME vtkh_filters_mpi
-      SOURCES ${vtkh_filters_sources}
-      HEADERS ${vtkh_filters_headers}
+      SOURCES ${vtkh_filters_sources} ${vtkh_mpi_sources}
+      HEADERS ${vtkh_filters_headers} ${vtkh_mpi_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
 

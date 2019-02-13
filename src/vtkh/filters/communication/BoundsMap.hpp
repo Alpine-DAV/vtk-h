@@ -16,6 +16,10 @@
 #if VTKH_PARALLEL
 #include <mpi.h>
 #endif
+
+namespace vtkh
+{
+
 class BoundsMap
 {
 public:
@@ -153,7 +157,7 @@ public:
       m_rank_map[dom_id] = current_rank;
       if(rank == 0)
       {
-        std::cout<<"domain "<<dom_id<<" bounds "<< bounds <<" rank "<<current_rank<<"\n";
+        //std::cout<<"domain "<<dom_id<<" bounds "<< bounds <<" rank "<<current_rank<<"\n";
       }
     }
 
@@ -176,4 +180,5 @@ protected:
 
 };
 
+} // namespace vtkh
 #endif

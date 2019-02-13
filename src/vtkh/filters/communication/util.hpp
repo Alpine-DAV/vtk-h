@@ -2,6 +2,7 @@
 #define __UTIL_COMM_H
 
 #include <vector>
+#include <map>
 #include <iostream>
 #include <deque>
 

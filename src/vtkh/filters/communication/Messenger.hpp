@@ -1,5 +1,5 @@
-#ifndef AVT_PAR_IC_ALGORITHM_H
-#define AVT_PAR_IC_ALGORITHM_H
+#ifndef VTKH_MESSENGER_H
+#define VTKH_MESSENGER_H
 
 #include <mpi.h>
 #include <list>
@@ -14,16 +14,27 @@ namespace vtkh
 
 class MemStream;
 
-class avtParICAlgorithm
+class Messenger
 {
   public:
-    avtParICAlgorithm(MPI_Comm comm);
-    ~avtParICAlgorithm() {}
+    Messenger(MPI_Comm comm);
+    ~Messenger() {}
 
-    void InitializeBuffers(int msgSize,
-                           int numMsgRecvs,
-                           int numICRecvs,
-                           int numDSRecvs=0);
+    //Message headers.
+    typedef struct
+    {
+        int rank, id, tag, numPackets, packet, packetSz, dataSz;
+    } Header;
+
+    // Register message tags for this messenger
+    // Must be called before InitializeBuffers
+    void RegisterTag(int tag,         // Unique message tag
+                     int num_recvs,   // number of receives to check each time
+                     int size);       // size in bytes for each message
+
+    // Creates receives buffers for all tags registered to this messenger
+    void InitializeBuffers();
+
     void Cleanup() { CleanupRequests(); }
 
 
@@ -31,35 +42,12 @@ class avtParICAlgorithm
     void CleanupRequests(int tag=-1);
     void CheckPendingSendRequests();
 
-    // Send/Recv Integral curves.
-    template <typename P, template <typename, typename> class Container,
-              typename Allocator=std::allocator<P>>
-    void SendICs(int dst, Container<P, Allocator> &c);
+    //// Send/Recv messages.
+    //void SendMsg(int dst, std::vector<int> &msg);
+    //void SendAllMsg(std::vector<int> &msg);
+    //bool RecvMsg(std::vector<MsgCommData> &msgs);
 
-    template <typename P, template <typename, typename> class Container,
-              typename Allocator=std::allocator<P>>
-    void SendICs(std::map<int, Container<P, Allocator>> &m);
-
-    template <typename P, template <typename, typename> class Container,
-              typename Allocator=std::allocator<P>>
-    bool RecvICs(Container<P, Allocator> &recvICs);
-
-    template <typename P, template <typename, typename> class Container,
-              typename Allocator=std::allocator<P>>
-    bool RecvICs(Container<ParticleCommData<P>, Allocator> &recvICs);
-
-    // Send/Recv messages.
-    void SendMsg(int dst, std::vector<int> &msg);
-    void SendAllMsg(std::vector<int> &msg);
-    bool RecvMsg(std::vector<MsgCommData> &msgs);
-
-    // Send/Recv datasets.
-    bool RecvAny(std::vector<MsgCommData> *msgs,
-                 std::list<ParticleCommData<Particle>> *recvICs,
-                 std::vector<DSCommData> *ds,
-                 bool blockAndWait);
-
-  private:
+  protected:
     void PostRecv(int tag);
     void PostRecv(int tag, int sz, int src=-1);
     void SendData(int dst, int tag, MemStream *buff);
@@ -85,7 +73,7 @@ class avtParICAlgorithm
     typedef std::map<RankIdPair, std::list<unsigned char *>>::iterator packetIterator;
 
     int rank, nProcs;
-
+    MPI_Comm m_mpi_comm;
     std::map<RequestTagPair, unsigned char *> sendBuffers, recvBuffers;
     std::map<RankIdPair, std::list<unsigned char *>> recvPackets;
 
@@ -101,14 +89,7 @@ class avtParICAlgorithm
         PARTICLE_TAG = 42001
     };
 
-    //Message headers.
-    typedef struct
-    {
-        int rank, id, tag, numPackets, packet, packetSz, dataSz;
-    } Header;
 };
 
-#include "avtParICAlgorithm.hxx"
-
-} //namespace vtkh
+} // namespace vtkh
 #endif

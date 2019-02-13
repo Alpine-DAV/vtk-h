@@ -51,6 +51,8 @@
 
 using namespace std;
 //extern ofstream dbg;
+namespace vtkh
+{
 
 class MemStream
 {
@@ -80,20 +82,12 @@ class MemStream
     template <typename T> void io(Mode mode, std::list<T> &l)  {return (mode == READ ? read(l) : write(l));}
 
     //Read from buffer.
-    template <typename T> void read(T *pt, const size_t &num);
-    template <typename T> void read(T& t) {read(&t,1);}
-    template <typename T> void read(std::vector<T> &v);
-    template <typename T> void read(std::list<T> &l);
-    void read(std::string &str);
-    //void read(vtkDataSet **ds);
+
+    void read_binary(unsigned char *data, const size_t &size);
+    //void read(std::string &str);
 
     //Write to buffer.
-    template <typename T> void write(const T& t) {write( &t, 1 );}
-    template <typename T> void write(const T *const pt, size_t num);
-    template <typename T> void write(const std::vector<T> &v);
-    template <typename T> void write(const std::list<T> &l);
-    void write(const std::string &str);
-    //void write(vtkDataSet *ds);
+    void write_binary(const unsigned char *data, size_t size);
 
     void SaveFile( const char *filename );
     void LoadFile( const char *filename );
@@ -118,6 +112,23 @@ class MemStream
     }
 };
 
+inline void MemStream::read_binary(unsigned char *data, const size_t &size)
+{
+    size_t nBytes = sizeof(unsigned char)*size;
+    memcpy(data, &_data[_pos], nBytes);
+    _pos += nBytes;
+}
+
+inline void MemStream::write_binary(const unsigned char *data, size_t size)
+{
+    size_t nBytes = sizeof(unsigned char)*size;
+    CheckSize(nBytes);
+    memcpy(&_data[_pos], data, nBytes );
+    _pos += nBytes;
+
+    if (_pos > _len)
+        _len = _pos;
+}
 
 inline void MemStream::setPos(size_t p)
 {
@@ -126,82 +137,98 @@ inline void MemStream::setPos(size_t p)
         throw "MemStream::setPos failed";
 }
 
-template <typename T> inline void MemStream::read(T *pt, const size_t &num)
-{
-    size_t nBytes = sizeof(T)*num;
-    memcpy(pt, &_data[_pos], nBytes);
-    _pos += nBytes;
-}
-
-inline void MemStream::read(std::string &str)
-{
-    size_t sz;
-    read(sz);
-    str.resize(sz);
-    read(&str[0], sz);
-}
-
-template <typename T> inline void MemStream::read(std::vector<T> &v)
-{
-    size_t sz;
-    read(sz);
-    v.resize(sz);
-    for ( size_t i = 0; i < sz; i++ )
-        read(v[i]);
-}
-
-template <typename T> inline void MemStream::read(std::list<T> &l)
-{
-    size_t sz;
-    read(sz);
-    for (size_t i = 0; i < sz; i++)
-    {
-        T v;
-        read(v);
-        l.push_back(v);
-    }
-}
-
-template <typename T> inline void MemStream::write(const T *const pt, size_t num)
-{
-    size_t nBytes = sizeof(T)*num;
-    CheckSize(nBytes);
-    memcpy(&_data[_pos], pt, nBytes );
-    _pos += nBytes;
-
-    if (_pos > _len)
-        _len = _pos;
-}
-
-template <typename T> inline void MemStream::write(const std::vector<T> &v)
-{
-    write(v.size());
-    for (size_t i = 0; i < v.size(); i++)
-        write(v[i]);
-}
-
-template <typename T> inline void MemStream::write(const std::list<T> &l)
-{
-    write(l.size());
-    typename std::list<T>::const_iterator it;
-    for (it = l.begin(); it != l.end(); it++)
-        write(*it);
-}
-
-inline void MemStream::write(const std::string &str)
-{
-    size_t sz = str.size();
-    write(sz);
-    write(str.data(), sz);
-}
-
 #include "MemStream.hxx"
 
 template<typename T>
 struct Serialization
 {
-  static void write(MemStream &memstream, const T &data);
-  static void read(MemStream &memstream, T &data);
+#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
+    static_assert(std::is_trivially_copyable<T>::value, "Default serialization works only for trivially copyable types");
+#endif
+  static void write(MemStream &memstream, const T &data)
+  {
+    memstream.write_binary((const unsigned char*) &data, sizeof(T));
+  }
+  static void read(MemStream &memstream, T &data)
+  {
+    memstream.read_binary((unsigned char*) &data, sizeof(T));
+  }
 };
 
+template<typename T>
+static void write(MemStream &memstream, const T &data)
+{
+  Serialization<T>::write(memstream, data);
+}
+template<typename T>
+static void read(MemStream &memstream, T &data)
+{
+  Serialization<T>::read(memstream, data);
+}
+
+template<class T>
+struct Serialization<std::vector<T>>
+{
+  static void write(MemStream &memstream, const std::vector<T> &data)
+  {
+    const size_t sz = data.size();
+    vtkh::write(memstream, sz);
+    for (size_t i = 0; i < sz; i++)
+        vtkh::write(memstream, data[i]);
+  }
+
+  static void read(MemStream &memstream, std::vector<T> &data)
+  {
+    size_t sz;
+    vtkh::read(memstream, sz);
+    data.resize(sz);
+    for ( size_t i = 0; i < sz; i++ )
+        vtkh::read(memstream, data[i]);
+  }
+};
+
+template<class T>
+struct Serialization<std::list<T>>
+{
+  static void write(MemStream &memstream, const std::list<T> &data)
+  {
+    vtkh::write(memstream, data.size());
+    typename std::list<T>::const_iterator it;
+    for (it = data.begin(); it != data.end(); it++)
+        vtkh::write(memstream, *it);
+  }
+
+  static void read(MemStream &memstream, std::list<T> &data)
+  {
+    size_t sz;
+    vtkh::read(memstream, sz);
+    for (size_t i = 0; i < sz; i++)
+    {
+        T v;
+        vtkh::read(memstream, v);
+        data.push_back(v);
+    }
+  }
+};
+
+//template<>
+//struct Serialization<std::string>
+//{
+//  static void write(MemStream &memstream, const std::string &data)
+//  {
+//    size_t sz = data.size();
+//    memstream.write(sz);
+//    memstream.write(data.data(), sz);
+//  }
+//
+//  static void read(MemStream &memstream, std::string &data)
+//  {
+//    size_t sz;
+//    memstream.read(sz);
+//    data.resize(sz);
+//    memstream.read(&data[0], sz);
+//  }
+//};
+
+} // namespace vtkh
 #endif

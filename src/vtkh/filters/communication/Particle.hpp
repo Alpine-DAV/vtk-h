@@ -6,6 +6,8 @@
 #include <vtkm/Types.h>
 
 #include <vtkh/filters/communication/MemStream.h>
+namespace vtkh
+{
 
 class Particle
 {
@@ -42,25 +44,25 @@ struct Serialization<Particle>
 {
   static void write(MemStream &memstream, const Particle &data)
   {
-    memstream.write(data.coords[0]);
-    memstream.write(data.coords[1]);
-    memstream.write(data.coords[2]);
-    memstream.write(data.id);
-    memstream.write(data.nSteps);
-    memstream.write(data.status);
-    memstream.write(data.blockId);
+    vtkh::write(memstream, data.coords[0]);
+    vtkh::write(memstream, data.coords[1]);
+    vtkh::write(memstream, data.coords[2]);
+    vtkh::write(memstream, data.id);
+    vtkh::write(memstream, data.nSteps);
+    vtkh::write(memstream, data.status);
+    vtkh::write(memstream, data.blockId);
   }
 
   static void read(MemStream &memstream, Particle &data)
   {
-    memstream.read(data.coords[0]);
-    memstream.read(data.coords[1]);
-    memstream.read(data.coords[2]);
-    memstream.read(data.id);
-    memstream.read(data.nSteps);
-    memstream.read(data.status);
-    memstream.read(data.blockId);
+    vtkh::read(memstream, data.coords[0]);
+    vtkh::read(memstream, data.coords[1]);
+    vtkh::read(memstream, data.coords[2]);
+    vtkh::read(memstream, data.id);
+    vtkh::read(memstream, data.nSteps);
+    vtkh::read(memstream, data.status);
+    vtkh::read(memstream, data.blockId);
   }
 };
-
+} //namespace vtkh
 #endif
