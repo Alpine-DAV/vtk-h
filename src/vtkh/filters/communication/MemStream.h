@@ -137,8 +137,6 @@ inline void MemStream::setPos(size_t p)
         throw "MemStream::setPos failed";
 }
 
-#include "MemStream.hxx"
-
 template<typename T>
 struct Serialization
 {

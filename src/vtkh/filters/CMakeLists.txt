@@ -44,6 +44,7 @@ set(vtkh_filters_sources
   Threshold.cpp
   Slice.cpp
   VectorMagnitude.cpp
+  communication/MemStream.cpp
   )
 
 set(vtkh_filters_deps vtkh_core vtkh_utils )
