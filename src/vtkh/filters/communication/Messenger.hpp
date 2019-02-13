@@ -83,12 +83,6 @@ class Messenger
     int slSize, slsPerRecv, msgSize;
     long msgID;
 
-    enum
-    {
-        MESSAGE_TAG = 42000,
-        PARTICLE_TAG = 42001
-    };
-
 };
 
 } // namespace vtkh

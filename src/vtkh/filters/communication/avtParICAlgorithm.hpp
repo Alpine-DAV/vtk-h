@@ -1,5 +1,5 @@
-#ifndef AVT_PAR_IC_ALGORITHM_H
-#define AVT_PAR_IC_ALGORITHM_H
+#ifndef VTKH_PAR_IC_ALGORITHM_H
+#define VTKH_PAR_IC_ALGORITHM_H
 
 #include <mpi.h>
 #include <list>
@@ -8,28 +8,23 @@
 #include <map>
 #include "CommData.hpp"
 #include "Particle.hpp"
+#include "Messenger.hpp"
 
 namespace vtkh
 {
 
 class MemStream;
 
-class avtParICAlgorithm
+class avtParICAlgorithm : public Messenger
 {
   public:
     avtParICAlgorithm(MPI_Comm comm);
     ~avtParICAlgorithm() {}
 
-    void InitializeBuffers(int msgSize,
-                           int numMsgRecvs,
-                           int numICRecvs,
-                           int numDSRecvs=0);
-    void Cleanup() { CleanupRequests(); }
-
-
-    //Manage communication.
-    void CleanupRequests(int tag=-1);
-    void CheckPendingSendRequests();
+    void RegisterMessages(int msgSize,
+                          int numMsgRecvs,
+                          int numICRecvs,
+                          int numDSRecvs=0);
 
     // Send/Recv Integral curves.
     template <typename P, template <typename, typename> class Container,
@@ -60,40 +55,8 @@ class avtParICAlgorithm
                  bool blockAndWait);
 
   private:
-    void PostRecv(int tag);
-    void PostRecv(int tag, int sz, int src=-1);
-    void SendData(int dst, int tag, MemStream *buff);
-    bool RecvData(std::set<int> &tags,
-                  std::vector<std::pair<int,MemStream *>> &buffers,
-                  bool blockAndWait=false);
-    bool RecvData(int tag, std::vector<MemStream *> &buffers,
-                  bool blockAndWait=false);
-    void AddHeader(MemStream *buff);
-    void RemoveHeader(MemStream *input, MemStream *header, MemStream *buff);
-
     template <typename P>
     bool DoSendICs(int dst, std::vector<P> &ics);
-    void PrepareForSend(int tag, MemStream *buff, std::vector<unsigned char *> &buffList);
-    static bool PacketCompare(const unsigned char *a, const unsigned char *b);
-    void ProcessReceivedBuffers(std::vector<unsigned char*> &incomingBuffers,
-                                std::vector<std::pair<int, MemStream *>> &buffers);
-
-    // Send/Recv buffer management structures.
-    typedef std::pair<MPI_Request, int> RequestTagPair;
-    typedef std::pair<int, int> RankIdPair;
-    typedef std::map<RequestTagPair, unsigned char *>::iterator bufferIterator;
-    typedef std::map<RankIdPair, std::list<unsigned char *>>::iterator packetIterator;
-
-    int rank, nProcs;
-
-    std::map<RequestTagPair, unsigned char *> sendBuffers, recvBuffers;
-    std::map<RankIdPair, std::list<unsigned char *>> recvPackets;
-
-    // Maps MPI_TAG to pair(num buffers, data size).
-    std::map<int, std::pair<int, int>> messageTagInfo;
-    int numMsgRecvs, numSLRecvs, numDSRecvs;
-    int slSize, slsPerRecv, msgSize;
-    long msgID;
 
     enum
     {

@@ -1,5 +1,7 @@
 #include "MemStream.h"
+
 using namespace std;
+
 namespace vtkh
 {
 
@@ -71,19 +73,6 @@ MemStream::CheckSize(size_t sz)
     }
 }
 
-
-
-// ****************************************************************************
-//  Method: MemStream::SaveFile
-//
-//  Purpose:
-//     Save MemStream to file.
-//
-//  Programmer: David Camp
-//  Creation:   February 24, 2012
-//
-// ****************************************************************************
-
 void
 MemStream::SaveFile( const char *filename )
 {
@@ -98,17 +87,6 @@ MemStream::SaveFile( const char *filename )
         fclose( fp );
     }
 }
-
-// ****************************************************************************
-//  Method: MemStream::LoadFile
-//
-//  Purpose:
-//     Load MemStream from file.
-//
-//  Programmer: David Camp
-//  Creation:   February 24, 2012
-//
-// ****************************************************************************
 
 void
 MemStream::LoadFile( const char *filename )

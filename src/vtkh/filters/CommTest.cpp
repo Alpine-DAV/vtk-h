@@ -74,7 +74,7 @@ void CommTest::DoExecute()
   plist.push_back(p);
 
   avtParICAlgorithm pcomm(comm);
-  pcomm.InitializeBuffers(2, procs, procs);
+  pcomm.RegisterMessages(2, procs, procs);
   pcomm.SendICs(dest, plist);
 
   bool expect_message = true;
