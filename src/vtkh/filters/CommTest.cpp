@@ -1,9 +1,10 @@
 #include <vtkh/filters/CommTest.hpp>
 
 #include "communication/BoundsMap.hpp"
+#include "communication/Ray.hpp"
 #ifdef VTKH_PARALLEL
 #include "communication/avtParICAlgorithm.hpp"
-//#include "communication/Communicator.hpp"
+#include "communication/RayMessenger.hpp"
 #endif
 
 namespace vtkh
@@ -61,6 +62,7 @@ void CommTest::DoExecute()
   int dest = (rank + 1) % procs;
 
 
+
   Particle p;
   p.coords[0] = rank;
   p.coords[1] = rank;
@@ -90,6 +92,24 @@ void CommTest::DoExecute()
   }
 
   std::cout<<"done\n";
+  Ray ray;
+  ray.m_origin[0] = rank;
+  ray.m_origin[1] = rank;
+  ray.m_origin[2] = rank;
+  std::vector<Ray> rays;
+  rays.push_back(ray);
+
+  RayMessenger rmessenger(comm);
+  rmessenger.RegisterMessages(2, procs, procs);
+  rmessenger.SendRays(dest, rays);
+  std::vector<ParticleCommData<Ray>> ray_data;;
+  expect_message = true;
+
+  while(expect_message)
+  {
+    rmessenger.RecvRays(ray_data);
+    if(ray_data.size() != 0) expect_message = false;
+  }
 
 #endif
 

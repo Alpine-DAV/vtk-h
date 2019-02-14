@@ -25,6 +25,7 @@ set(vtkh_filters_headers
   communication/MemStream.h
   communication/avtParICAlgorithm.hpp
   communication/avtParICAlgorithm.hxx
+  communication/Ray.hpp
   )
 
 set(vtkh_filters_sources
@@ -86,10 +87,11 @@ if (MPI_FOUND)
 
     set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi)
 
-    set(vtkh_mpi_headers
-                        communication/Messenger.hpp)
-    set(vtkh_mpi_sources
-                        communication/Messenger.cpp)
+    set(vtkh_mpi_headers communication/Messenger.hpp
+                         communication/RayMessenger.hpp)
+
+    set(vtkh_mpi_sources communication/Messenger.cpp
+                         communication/RayMessenger.cpp)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)

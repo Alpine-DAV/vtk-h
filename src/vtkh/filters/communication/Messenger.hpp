@@ -42,11 +42,6 @@ class Messenger
     void CleanupRequests(int tag=-1);
     void CheckPendingSendRequests();
 
-    //// Send/Recv messages.
-    //void SendMsg(int dst, std::vector<int> &msg);
-    //void SendAllMsg(std::vector<int> &msg);
-    //bool RecvMsg(std::vector<MsgCommData> &msgs);
-
   protected:
     void PostRecv(int tag);
     void PostRecv(int tag, int sz, int src=-1);
