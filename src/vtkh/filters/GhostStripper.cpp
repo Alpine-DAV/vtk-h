@@ -164,138 +164,6 @@ public:
 }; //class Validate
 
 template<int DIMS>
-class CreateFlags : public vtkm::worklet::WorkletMapField
-{
-protected:
-  vtkm::Vec<vtkm::Id,3> m_dims;
-  vtkm::Vec<vtkm::Id,3> m_valid_min;
-  vtkm::Vec<vtkm::Id,3> m_valid_max;
-public:
-  VTKM_CONT
-  CreateFlags(vtkm::Vec<vtkm::Id,3> dims,
-              vtkm::Vec<vtkm::Id,3> valid_min,
-              vtkm::Vec<vtkm::Id,3> valid_max)
-    : m_dims(dims),
-      m_valid_min(valid_min),
-      m_valid_max(valid_max)
-  {
-  }
-
-  typedef void ControlSignature(FieldOut);
-  typedef void ExecutionSignature(WorkIndex, _1);
-
-  VTKM_EXEC
-  void operator()(const vtkm::Id &index, vtkm::UInt8 &flag) const
-  {
-    flag = 1; // this is a valid zone
-
-    vtkm::Vec<vtkm::Id,3> logical = get_logical<DIMS>(index, m_dims);
-    for(vtkm::Int32 i = 0; i < DIMS; ++i)
-    {
-      if(logical[i] < m_valid_min[i] || logical[i] > m_valid_max[i])
-      {
-        flag = 0;
-      }
-    }
-
-  }
-}; //class CreateFlags
-
-template<int DIMS>
-vtkm::cont::ArrayHandle<vtkm::UInt8>
-MakePointFlags(vtkm::Vec<vtkm::Id,3> cell_dims,
-               vtkm::Vec<vtkm::Id,3> min,
-               vtkm::Vec<vtkm::Id,3> max)
-{
-  vtkm::Id size = 1;
-  vtkm::Vec<vtkm::Id, 3> point_dims;
-  for(int i = 0; i < DIMS; ++i)
-  {
-    point_dims[i] = cell_dims[i] + 1;
-    size *= point_dims[i];
-  }
-  vtkm::cont::ArrayHandle<vtkm::UInt8> flags;
-  flags.Allocate(size);
-
-  vtkm::worklet::DispatcherMapField<CreateFlags<DIMS>>(CreateFlags<DIMS>(point_dims,
-                                                                         min,
-                                                                         max)).Invoke(flags);
-  return flags;
-}
-
-template<int DIMS>
-vtkm::cont::ArrayHandle<vtkm::UInt8>
-MakeCellFlags(vtkm::Vec<vtkm::Id,3> cell_dims,
-               vtkm::Vec<vtkm::Id,3> min,
-               vtkm::Vec<vtkm::Id,3> max)
-{
-  vtkm::Id size = 1;
-  for(int i = 0; i < DIMS; ++i)
-  {
-    size *= cell_dims[i];
-  }
-  vtkm::cont::ArrayHandle<vtkm::UInt8> flags;
-  flags.Allocate(size);
-
-  vtkm::worklet::DispatcherMapField<CreateFlags<DIMS>>(CreateFlags<DIMS>(cell_dims,
-                                                                         min,
-                                                                         max)).Invoke(flags);
-  return flags;
-}
-
-template<int DIMS>
-vtkm::cont::DataSet Strip(vtkm::cont::DataSet &dataset,
-                          vtkm::Vec<vtkm::Id,3> cell_dims,
-                          vtkm::Vec<vtkm::Id,3> min,
-                          vtkm::Vec<vtkm::Id,3> max)
-{
-  vtkm::cont::DataSet res;
-  vtkm::cont::ArrayHandle<vtkm::UInt8> cell_flags = MakeCellFlags<DIMS>(cell_dims,min,max);
-  vtkm::cont::ArrayHandle<vtkm::UInt8> point_flags = MakePointFlags<DIMS>(cell_dims,min,max);
-
-  const vtkm::cont::DynamicCellSet dyn_cellset = dataset.GetCellSet();
-
-  vtkm::cont::CellSetStructured<DIMS> cellset =
-        dyn_cellset.Cast<vtkm::cont::CellSetStructured<DIMS>>();
-
-
-  vtkm::Id3 new_point_dims;
-  new_point_dims[0] = max[0] - min[0] + 1;
-  new_point_dims[1] = max[1] - min[1] + 1;
-  new_point_dims[2] = max[2] - min[2] + 1;
-
-  if(DIMS == 1)
-  {
-    vtkm::cont::CellSetStructured<1> res_cellset(cellset.GetName());
-    vtkm::Id ptype = new_point_dims[0];
-    res_cellset.SetPointDimensions(ptype);
-    res.AddCellSet(res_cellset);
-  }
-  else if(DIMS == 2)
-  {
-    vtkm::cont::CellSetStructured<2> res_cellset(cellset.GetName());
-    vtkm::Id2 ptype;
-    ptype[0] = new_point_dims[0];
-    ptype[1] = new_point_dims[1];
-    res_cellset.SetPointDimensions(ptype);
-    res.AddCellSet(res_cellset);
-  }
-  else if(DIMS == 3)
-  {
-    vtkm::cont::CellSetStructured<3> res_cellset(cellset.GetName());
-    vtkm::Id3 ptype;
-    ptype[0] = new_point_dims[0];
-    ptype[1] = new_point_dims[1];
-    ptype[2] = new_point_dims[2];
-    res_cellset.SetPointDimensions(ptype);
-    res.AddCellSet(res_cellset);
-  }
-
-
-  return res;
-}
-
-template<int DIMS>
 bool CanStrip(vtkm::cont::Field  &ghost_field,
               const vtkm::Int32 min_value,
               const vtkm::Int32 max_value,
@@ -325,9 +193,6 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
   valid_max[1] = minmax.GetPortalConstControl().Get(4);
   valid_max[2] = minmax.GetPortalConstControl().Get(5);
 
-  std::cout<<"Cell Dims "<<cell_dims<<"\n";
-  std::cout<<"Min valid "<<valid_min<<" - "<<valid_max<<"\n";
-
   vtkm::cont::ArrayHandle<vtkm::UInt8> valid_flags;
   valid_flags.Allocate(size);
 
@@ -342,7 +207,6 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
      .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListTagScalarAll()), valid_flags);
 
   vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(valid_flags, vtkm::UInt8(0), vtkm::Maximum());
-  if(res == 0) std::cout<<"WE CAN STRIP\n";
   return res == 0;
 }
 
@@ -359,7 +223,7 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
   vtkm::Vec<vtkm::Id,3> cell_dims(0,0,0);
 
 
-  bool can_strip;
+  bool can_strip = false;
   vtkm::Id size = 0;
   if(cell_set.IsSameType(vtkm::cont::CellSetStructured<1>()))
   {
@@ -373,10 +237,6 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             max,
                             cell_dims,
                             size);
-    //if(can_strip)
-    //{
-    //  vtkm::cont::DataSet stripped = Strip<2>(dataset, cell_dims, min, max);
-    //}
   }
   else if(cell_set.IsSameType(vtkm::cont::CellSetStructured<2>()))
   {
@@ -391,10 +251,6 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             max,
                             cell_dims,
                             size);
-    //if(can_strip)
-    //{
-    //  vtkm::cont::DataSet stripped = Strip<2>(dataset, cell_dims, min, max);
-    //}
   }
   else if(cell_set.IsSameType(vtkm::cont::CellSetStructured<3>()))
   {
@@ -410,10 +266,6 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             max,
                             cell_dims,
                             size);
-    //if(can_strip)
-    //{
-    //  vtkm::cont::DataSet stripped = Strip<3>(dataset, cell_dims, min, max);
-    //}
   }
 
   return can_strip;
@@ -491,9 +343,6 @@ void GhostStripper::DoExecute()
       bool can_strip = detail::StructuredStrip(dom, field, m_min_value, m_max_value, min, max);
       if(can_strip)
       {
-        std::cout<<"Before "<<dom.GetCoordinateSystem().GetBounds()<<"\n";
-        if(VTKMDataSetInfo::IsUniform(dom)) std::cout<<"++** IS UNIFORM\n";
-        if(VTKMDataSetInfo::IsRectilinear(dom)) std::cout<<"++** IS RECTILINEAR\n";
         do_threshold = false;
         vtkm::filter::ExtractStructured extract;
         vtkm::RangeId3 range(min[0],max[0]+2, min[1], max[1]+2, min[2], max[2]+2);
@@ -503,10 +352,6 @@ void GhostStripper::DoExecute()
         extract.SetIncludeBoundary(true);
         extract.SetFieldsToPass(this->GetFieldSelection());
         vtkm::cont::DataSet output = extract.Execute(dom);
-        std::cout<<"after "<<output.GetCoordinateSystem().GetBounds()<<"\n";
-        //output.PrintSummary(std::cout);
-        if(VTKMDataSetInfo::IsUniform(output)) std::cout<<"** IS UNIFORM\n";
-        if(VTKMDataSetInfo::IsRectilinear(output)) std::cout<<"** IS RECTILINEAR\n";
         m_output->AddDomain(output, domain_id);
       }
 
@@ -530,7 +375,6 @@ void GhostStripper::DoExecute()
 
   }
 
-  //m_output->PrintSummary(std::cout);
 }
 
 std::string
