@@ -355,22 +355,21 @@ void GhostStripper::DoExecute()
         m_output->AddDomain(output, domain_id);
       }
 
-      if(do_threshold)
-      {
+    }
 
-        vtkm::filter::Threshold thresholder;
-        thresholder.SetUpperThreshold(m_max_value);
-        thresholder.SetLowerThreshold(m_min_value);
-        thresholder.SetActiveField(m_field_name);
-        thresholder.SetFieldsToPass(this->GetFieldSelection());
-        auto tout = thresholder.Execute(dom);
-        vtkh::StripPermutation(tout);
-
-        vtkm::filter::CleanGrid cleaner;
-        cleaner.SetFieldsToPass(this->GetFieldSelection());
-        auto clout = cleaner.Execute(dom);
-        m_output->AddDomain(clout, domain_id);
-      }
+    if(do_threshold)
+    {
+      vtkm::filter::Threshold thresholder;
+      thresholder.SetUpperThreshold(m_max_value);
+      thresholder.SetLowerThreshold(m_min_value);
+      thresholder.SetActiveField(m_field_name);
+      thresholder.SetFieldsToPass(this->GetFieldSelection());
+      auto tout = thresholder.Execute(dom);
+      vtkh::StripPermutation(tout);
+      vtkm::filter::CleanGrid cleaner;
+      cleaner.SetFieldsToPass(this->GetFieldSelection());
+      auto clout = cleaner.Execute(dom);
+      m_output->AddDomain(clout, domain_id);
     }
 
   }
