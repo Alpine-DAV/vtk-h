@@ -8,12 +8,13 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  GhostStripper.hpp
   Log.hpp
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
-  PointAverage.hpp  
+  PointAverage.hpp
   Recenter.hpp
   Threshold.hpp
   Slice.hpp
@@ -26,6 +27,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  GhostStripper.cpp
   Log.cpp
   IsoVolume.cpp
   NoOp.cpp
@@ -82,14 +84,14 @@ if (MPI_FOUND)
          # triggers cuda compile
          list(APPEND vtkh_filters_mpi_deps cuda)
     endif()
-    
+
     blt_add_library(
       NAME vtkh_filters_mpi
       SOURCES ${vtkh_filters_sources}
       HEADERS ${vtkh_filters_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
-  
+
     if(ENABLE_OPENMP)
           if(CUDA_FOUND)
               blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")

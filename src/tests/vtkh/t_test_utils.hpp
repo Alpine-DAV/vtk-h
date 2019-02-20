@@ -31,20 +31,20 @@ struct SpatialDivision
     r_split = *this;
     assert(CanSplit(dim));
     int size = m_maxs[dim] - m_mins[dim] + 1;
-    int left_offset = size / 2;   
-  
+    int left_offset = size / 2;
+
     //shrink the left side
     m_maxs[dim] = m_mins[dim] + left_offset - 1;
     //shrink the right side
     r_split.m_mins[dim] = m_maxs[dim] + 1;
-    return r_split;    
+    return r_split;
   }
 };
 
 SpatialDivision GetBlock(int block, int num_blocks, SpatialDivision total_size)
 {
 
-  std::vector<SpatialDivision> divs; 
+  std::vector<SpatialDivision> divs;
   divs.push_back(total_size);
   int avail = num_blocks - 1;
   int current_dim = 0;
@@ -63,7 +63,7 @@ SpatialDivision GetBlock(int block, int num_blocks, SpatialDivision total_size)
       }
       divs.push_back(divs[i].Split(current_dim));
       --avail;
-    }      
+    }
     if(temp_avail == avail)
     {
       // dims were too small to make any spit
@@ -87,7 +87,7 @@ SpatialDivision GetBlock(int block, int num_blocks, SpatialDivision total_size)
                    <<" Adding "<<avail<<" empty data sets\n";
         }
 
-        avail = 0; 
+        avail = 0;
       }
     }
     else
@@ -109,10 +109,35 @@ vtkm::cont::Field CreateCellScalarField(int size)
   for(int i = 0; i < size; ++i)
   {
     vtkm::Float32 val = i / vtkm::Float32(size);
-    data.GetPortalControl().Set(i, val); 
+    data.GetPortalControl().Set(i, val);
   }
 
   vtkm::cont::Field field("cell_data",
+                          vtkm::cont::Field::Association::CELL_SET,
+                          "cells",
+                          data);
+  return field;
+}
+
+vtkm::cont::Field CreateGhostScalarField(vtkm::Id3 dims)
+{
+  vtkm::Int32 size = dims[0] * dims[1] * dims[2];
+  vtkm::cont::ArrayHandle<vtkm::Int32> data;
+  data.Allocate(size);
+
+  for(int z = 0; z < dims[2]; ++z)
+    for(int y = 0; y < dims[1]; ++y)
+      for(int x = 0; x < dims[0]; ++x)
+  {
+    vtkm::UInt8 flag = 0;
+    if(x < 1 || x > dims[0] - 2) flag = 1;
+    if(y < 1 || y > dims[1] - 2) flag = 1;
+    if(z < 1 || z > dims[2] - 2) flag = 1;
+    vtkm::Id index = z * dims[0] * dims[1] + y * dims[0] + x;
+    data.GetPortalControl().Set(index, flag);
+  }
+
+  vtkm::cont::Field field("ghosts",
                           vtkm::cont::Field::Association::CELL_SET,
                           "cells",
                           data);
@@ -128,10 +153,10 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords)
   for(int i = 0; i < size; ++i)
   {
     vtkm::Vec<vtkm::FloatDefault,3> point = portal.Get(i);
-    
+
     vtkm::Float32 val = vtkm::Magnitude(point) + 1.f;
 
-    data.GetPortalControl().Set(i, val); 
+    data.GetPortalControl().Set(i, val);
   }
 
   vtkm::cont::Field field("point_data",
@@ -151,7 +176,7 @@ vtkm::cont::Field CreatePointVecField(int size)
 
     vtkm::Vec<vtkm::Float32, 3> vec(val, -val, val);
 
-    data.GetPortalControl().Set(i, vec); 
+    data.GetPortalControl().Set(i, vec);
   }
 
   vtkm::cont::Field field("vector_data",
@@ -168,16 +193,16 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   mesh_size.m_mins[1] = 0;
   mesh_size.m_mins[2] = 0;
 
-  mesh_size.m_maxs[0] = num_blocks * base_size - 1; 
-  mesh_size.m_maxs[1] = num_blocks * base_size - 1; 
-  mesh_size.m_maxs[2] = num_blocks * base_size - 1; 
+  mesh_size.m_maxs[0] = num_blocks * base_size - 1;
+  mesh_size.m_maxs[1] = num_blocks * base_size - 1;
+  mesh_size.m_maxs[2] = num_blocks * base_size - 1;
 
   SpatialDivision local_block = GetBlock(block, num_blocks, mesh_size);
 
   vtkm::Vec<vtkm::Float32,3> origin;
-  origin[0] = local_block.m_mins[0]; 
-  origin[1] = local_block.m_mins[1]; 
-  origin[2] = local_block.m_mins[2]; 
+  origin[0] = local_block.m_mins[0];
+  origin[1] = local_block.m_mins[1];
+  origin[2] = local_block.m_mins[2];
 
   vtkm::Vec<vtkm::Float32,3> spacing(1.f, 1.f, 1.f);
 
@@ -197,11 +222,11 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   UniformCoords point_handle(point_dims,
                              origin,
                              spacing);
-   
+
   vtkm::cont::CoordinateSystem coords("coords", point_handle);
   data_set.AddCoordinateSystem(coords);
 
-  vtkm::cont::CellSetStructured<3> cell_set("cells");   
+  vtkm::cont::CellSetStructured<3> cell_set("cells");
   cell_set.SetPointDimensions(point_dims);
   data_set.AddCellSet(cell_set);
 
@@ -211,6 +236,7 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   data_set.AddField(CreatePointScalarField(point_handle));
   data_set.AddField(CreatePointVecField(num_points));
   data_set.AddField(CreateCellScalarField(num_cells));
+  data_set.AddField(CreateGhostScalarField(cell_dims));
 
   return data_set;
 }

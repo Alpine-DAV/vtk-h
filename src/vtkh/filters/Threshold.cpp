@@ -1,78 +1,15 @@
 #include "Threshold.hpp"
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
+#include <vtkh/utils/vtkm_permutation_removal.hpp>
 
-
-#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/filter/Threshold.h>
-#include <vtkm/worklet/CellDeepCopy.h>
 
 namespace vtkh
 {
 
 namespace detail
 {
-typedef vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>>
-  PermStructured2d;
-
-typedef vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>>
-  PermStructured3d;
-
-typedef vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>>
-  PermExplicit;
-
-typedef  vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>>
-  PermExplicitSingle;
-//
-// Theshold outputs CellSetPermutations which cannot
-// be consumed by anything else in vtkm, so we need
-// to explicitly do a deep copy and make the cell set
-// explicit
-//
-
-void StripPermutation(vtkm::cont::DataSet &data_set)
-{
-  vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet();
-  vtkm::cont::DataSet result;
-  vtkm::cont::CellSetExplicit<> explicit_cells;
-
-  if(cell_set.IsSameType(PermStructured2d()))
-  {
-    PermStructured2d perm = cell_set.Cast<PermStructured2d>();
-    explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
-  }
-  else if(cell_set.IsSameType(PermStructured3d()))
-  {
-    PermStructured3d perm = cell_set.Cast<PermStructured3d>();
-    explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
-  }
-  else if(cell_set.IsSameType(PermExplicit()))
-  {
-    PermExplicit perm = cell_set.Cast<PermExplicit>();
-    explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
-  }
-  else if(cell_set.IsSameType(PermExplicitSingle()))
-  {
-    PermExplicitSingle perm = cell_set.Cast<PermExplicitSingle>();
-    explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
-  }
-
-  result.AddCellSet(explicit_cells);
-
-  vtkm::Id num_coords = data_set.GetNumberOfCoordinateSystems();
-  for(vtkm::Id i = 0; i < num_coords; ++i)
-  {
-    result.AddCoordinateSystem(data_set.GetCoordinateSystem(i));
-  }
-
-  vtkm::Id num_fields = data_set.GetNumberOfFields();
-  for(vtkm::Id i = 0; i < num_fields; ++i)
-  {
-    result.AddField(data_set.GetField(i));
-  }
-
-  data_set = result;
-}
 
 } // namespace detail
 
@@ -153,7 +90,7 @@ void Threshold::DoExecute()
     }
     thresholder.SetFieldsToPass(this->GetFieldSelection());
     auto data_set = thresholder.Execute(dom);
-    detail::StripPermutation(data_set);
+    vtkh::StripPermutation(data_set);
     temp_data.AddDomain(data_set, domain_id);
   }
 
