@@ -60,8 +60,8 @@ if(MPI_FOUND)
   if(CUDA_FOUND)
     list(APPEND vtkh_core_mpi_deps cuda)
   endif()
-  
-  
+
+
   blt_add_library(
       NAME vtkh_core_mpi
       SOURCES ${vtkh_core_sources}
@@ -88,5 +88,6 @@ if(MPI_FOUND)
     )
 endif()
 
+add_subdirectory(vtkm_filters)
 add_subdirectory(filters)
 add_subdirectory(rendering)

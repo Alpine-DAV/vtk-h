@@ -1,16 +1,11 @@
-//-----------------------------------------------------------------------------
-///
-/// file: vtkm_permutation_removal.cpp
-///
-//-----------------------------------------------------------------------------
+#include "vtkmThreshold.hpp"
 
-
-#include <vtkh/utils/vtkm_permutation_removal.hpp>
-#include <vtkm/cont/CellSetPermutation.h>
+#include <vtkm/filter/Threshold.h>
 #include <vtkm/worklet/CellDeepCopy.h>
+
+
 namespace vtkh
 {
-
 typedef vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>>
   PermStructured2d;
 
@@ -66,5 +61,22 @@ void StripPermutation(vtkm::cont::DataSet &data_set)
 
   data_set = result;
 }
-} // namespace vtkh
 
+vtkm::cont::DataSet
+vtkmThreshold::Run(vtkm::cont::DataSet &input,
+                   std::string field_name,
+                   double min_value,
+                   double max_value,
+                   vtkm::filter::FieldSelection map_fields)
+{
+  vtkm::filter::Threshold thresholder;
+  thresholder.SetUpperThreshold(max_value);
+  thresholder.SetLowerThreshold(min_value);
+  thresholder.SetActiveField(field_name);
+  thresholder.SetFieldsToPass(map_fields);
+  auto output = thresholder.Execute(input);
+  vtkh::StripPermutation(output);
+  return output;
+}
+
+} // namespace vtkh

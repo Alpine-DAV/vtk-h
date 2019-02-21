@@ -1,9 +1,7 @@
 #include "Threshold.hpp"
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
-#include <vtkh/utils/vtkm_permutation_removal.hpp>
-
-#include <vtkm/filter/Threshold.h>
+#include <vtkh/vtkm_filters/vtkmThreshold.hpp>
 
 namespace vtkh
 {
@@ -75,10 +73,6 @@ void Threshold::DoExecute()
   DataSet temp_data;
   const int num_domains = this->m_input->GetNumberOfDomains();
 
-  vtkm::filter::Threshold thresholder;
-  thresholder.SetUpperThreshold(m_range.Max);
-  thresholder.SetLowerThreshold(m_range.Min);
-  thresholder.SetActiveField(m_field_name);
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -88,9 +82,15 @@ void Threshold::DoExecute()
     {
       continue;
     }
-    thresholder.SetFieldsToPass(this->GetFieldSelection());
-    auto data_set = thresholder.Execute(dom);
-    vtkh::StripPermutation(data_set);
+
+    vtkmThreshold thresholder;
+
+    auto data_set = thresholder.Run(dom,
+                                    m_field_name,
+                                    m_range.Min,
+                                    m_range.Max,
+                                    this->GetFieldSelection());
+
     temp_data.AddDomain(data_set, domain_id);
   }
 

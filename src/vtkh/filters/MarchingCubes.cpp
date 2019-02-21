@@ -1,7 +1,7 @@
 #include <vtkh/filters/MarchingCubes.hpp>
 #include <vtkh/filters/CleanGrid.hpp>
 #include <vtkh/filters/Recenter.hpp>
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkh/vtkm_filters/vtkmMarchingCubes.hpp>
 
 namespace vtkh
 {
@@ -80,12 +80,8 @@ void MarchingCubes::PostExecute()
 void MarchingCubes::DoExecute()
 {
   this->m_output = new DataSet();
-  vtkm::filter::MarchingCubes marcher;
   vtkh::DataSet *old_input = this->m_input;
 
-  marcher.SetIsoValues(m_iso_values);
-  marcher.SetMergeDuplicatePoints(true);
-  marcher.SetActiveField(m_field_name);
 
   // make sure we have a node-centered field
   bool valid_field = false;
@@ -116,8 +112,13 @@ void MarchingCubes::DoExecute()
       continue;
     }
 
-    marcher.SetFieldsToPass(this->GetFieldSelection());
-    auto dataset = marcher.Execute(dom);
+    vtkh::vtkmMarchingCubes marcher;
+
+    auto dataset = marcher.Run(dom,
+                               m_field_name,
+                               m_iso_values,
+                               this->GetFieldSelection());
+
     m_output->AddDomain(dataset, domain_id);
 
   }
