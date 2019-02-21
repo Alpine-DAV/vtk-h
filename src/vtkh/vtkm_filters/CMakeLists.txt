@@ -3,11 +3,27 @@
 #==============================================================================
 
 set(vtkm_filters_headers
+  vtkmCellAverage.hpp
+  vtkmClip.hpp
+  vtkmCleanGrid.hpp
+  vtkmClipWithField.hpp
+  vtkmExtractStructured.hpp
+  vtkmMarchingCubes.hpp
+  vtkmPointAverage.hpp
   vtkmThreshold.hpp
+  vtkmVectorMagnitude.hpp
   )
 
 set(vtkm_filters_sources
+  vtkmCellAverage.cpp
+  vtkmClip.cpp
+  vtkmCleanGrid.cpp
+  vtkmClipWithField.cpp
+  vtkmExtractStructured.cpp
+  vtkmMarchingCubes.cpp
+  vtkmPointAverage.cpp
   vtkmThreshold.cpp
+  vtkmVectorMagnitude.cpp
   )
 
 set(vtkm_filters_deps vtkm)

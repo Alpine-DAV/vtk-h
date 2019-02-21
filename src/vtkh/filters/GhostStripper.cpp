@@ -1,10 +1,9 @@
 #include <vtkh/filters/GhostStripper.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
-#include <vtkh/utils/vtkm_permutation_removal.hpp>
+#include <vtkh/vtkm_filters/vtkmThreshold.hpp>
+#include <vtkh/vtkm_filters/vtkmCleanGrid.hpp>
+#include <vtkh/vtkm_filters/vtkmExtractStructured.hpp>
 
-#include <vtkm/filter/ExtractStructured.h>
-#include <vtkm/filter/Threshold.h>
-#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/cont/Algorithm.h>
 
@@ -344,14 +343,15 @@ void GhostStripper::DoExecute()
       if(can_strip)
       {
         do_threshold = false;
-        vtkm::filter::ExtractStructured extract;
         vtkm::RangeId3 range(min[0],max[0]+2, min[1], max[1]+2, min[2], max[2]+2);
         vtkm::Id3 sample(1, 1, 1);
-        extract.SetVOI(range);
-        extract.SetSampleRate(sample);
-        extract.SetIncludeBoundary(true);
-        extract.SetFieldsToPass(this->GetFieldSelection());
-        vtkm::cont::DataSet output = extract.Execute(dom);
+
+        vtkh::vtkmExtractStructured extract;
+        auto output = extract.Run(dom,
+                                  range,
+                                  sample,
+                                  this->GetFieldSelection());
+
         m_output->AddDomain(output, domain_id);
       }
 
@@ -359,16 +359,15 @@ void GhostStripper::DoExecute()
 
     if(do_threshold)
     {
-      vtkm::filter::Threshold thresholder;
-      thresholder.SetUpperThreshold(m_max_value);
-      thresholder.SetLowerThreshold(m_min_value);
-      thresholder.SetActiveField(m_field_name);
-      thresholder.SetFieldsToPass(this->GetFieldSelection());
-      auto tout = thresholder.Execute(dom);
-      vtkh::StripPermutation(tout);
-      vtkm::filter::CleanGrid cleaner;
-      cleaner.SetFieldsToPass(this->GetFieldSelection());
-      auto clout = cleaner.Execute(dom);
+      vtkmThreshold thresholder;
+      auto tout = thresholder.Run(dom,
+                                  m_field_name,
+                                  m_min_value,
+                                  m_max_value,
+                                  this->GetFieldSelection());
+
+      vtkh::vtkmCleanGrid cleaner;
+      auto clout = cleaner.Run(dom, this->GetFieldSelection());
       m_output->AddDomain(clout, domain_id);
     }
 

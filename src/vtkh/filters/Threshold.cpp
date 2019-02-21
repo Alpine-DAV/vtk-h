@@ -84,7 +84,13 @@ void Threshold::DoExecute()
     }
 
     vtkmThreshold thresholder;
-    auto data_set = thresholder.DoIt(dom, m_field_name, m_range.Min, m_range.Max, this->GetFieldSelection());
+
+    auto data_set = thresholder.Run(dom,
+                                    m_field_name,
+                                    m_range.Min,
+                                    m_range.Max,
+                                    this->GetFieldSelection());
+
     temp_data.AddDomain(data_set, domain_id);
   }
 

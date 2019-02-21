@@ -1,5 +1,5 @@
-#ifndef VTK_H_VTKM_THRESHOLD_HPP
-#define VTK_H_VTKM_THRESHOLD_HPP
+#ifndef VTK_H_VTKM_VECTOR_MAGNITUDE_HPP
+#define VTK_H_VTKM_VECTOR_MAGNITUDE_HPP
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/filter/FieldSelection.h>
@@ -7,13 +7,12 @@
 namespace vtkh
 {
 
-class vtkmThreshold
+class vtkmVectorMagnitude
 {
 public:
   vtkm::cont::DataSet Run(vtkm::cont::DataSet &input,
                           std::string field_name,
-                          double min_value,
-                          double max_value,
+                          std::string out_field_name,
                           vtkm::filter::FieldSelection map_fields);
 };
 }
