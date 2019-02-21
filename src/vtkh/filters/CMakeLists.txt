@@ -40,7 +40,7 @@ set(vtkh_filters_sources
   VectorMagnitude.cpp
   )
 
-set(vtkh_filters_deps vtkh_core vtkh_utils )
+set(vtkh_filters_deps vtkh_core vtkh_utils vtkm_compiled_filters)
 
 if(CUDA_FOUND)
     # triggers cuda compile
@@ -77,7 +77,7 @@ install(FILES ${vtkh_filters_headers}
 
 if (MPI_FOUND)
 
-    set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi)
+    set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkm_compiled_filters)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
