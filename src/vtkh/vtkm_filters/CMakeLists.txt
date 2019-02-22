@@ -30,14 +30,14 @@ set(vtkm_filters_sources
 
 set(vtkm_filters_deps vtkm)
 
+if(ENABLE_OPENMP)
+    list(APPEND vtkm_filters_deps openmp)
+endif()
+
 if(CUDA_FOUND)
     # triggers cuda compile
     list(APPEND vtkm_filters_deps cuda)
-    # defend against vtkm code cuda can't reseason about
-    if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
-        set(particle_cuda_src "${CMAKE_CURRENT_SOURCE_DIR}/vtkmLagrangian.cpp")
-        set_source_files_properties(${particle_cuda_src} PROPERTIES COMPILE_FLAGS "-Xptxas --opt-level=0")
-    endif()
+
 endif()
 
 
@@ -48,11 +48,10 @@ blt_add_library(
   DEPENDS_ON ${vtkm_filters_deps}
   )
 
-if(ENABLE_OPENMP)
-  if(CUDA_FOUND)
-    blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
-  else()
-    blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "${OpenMP_CXX_FLAGS}")
+if(CUDA_FOUND)
+  # defend against vtkm code cuda can't reseason about
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
+    blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
   endif()
 endif()
 

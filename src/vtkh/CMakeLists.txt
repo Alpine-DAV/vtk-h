@@ -23,6 +23,10 @@ if(CUDA_FOUND)
   list(APPEND vtkh_core_deps cuda)
 endif()
 
+if(ENABLE_OPENMP)
+    list(APPEND vtkm_core_deps openmp)
+endif()
+
 
 # blt vtk dep, includes all of vtkm
 blt_add_library(
@@ -31,15 +35,6 @@ blt_add_library(
   HEADERS ${vtkh_core_headers}
   DEPENDS_ON ${vtkh_core_deps}
   )
-
-if(ENABLE_OPENMP)
-  if(CUDA_FOUND)
-    blt_add_target_compile_flags(TO vtkh_core FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
-  else()
-    blt_add_target_compile_flags(TO vtkh_core FLAGS "${OpenMP_CXX_FLAGS}")
-  endif()
-endif()
-
 
 # Install libraries
 install(TARGETS vtkh_core
@@ -68,14 +63,6 @@ if(MPI_FOUND)
       HEADERS ${vtkh_core_headers}
       DEPENDS_ON ${vtkh_core_mpi_deps} mpi
       )
-
-  if(ENABLE_OPENMP)
-      if(CUDA_FOUND)
-          blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
-      else()
-          blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "${OpenMP_CXX_FLAGS}")
-      endif()
-  endif()
 
   blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-DVTKH_PARALLEL")
 

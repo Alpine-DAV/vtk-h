@@ -41,6 +41,11 @@ set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
 if(VTKm_CUDA_FOUND)
     # triggers cuda compile
     list(APPEND vtkh_rendering_deps cuda)
+    message(STATUS "CCCCCCCCCCCUUUUUUUUUUUUUUUUUDDDDDDDDDDDDDDDAAAAAAA")
+endif()
+
+if(ENABLE_OPENMPJ)
+    list(APPEND vtkh_rendering_deps openmp)
 endif()
 
 blt_add_library(
@@ -50,14 +55,17 @@ blt_add_library(
   DEPENDS_ON ${vtkh_rendering_deps}
   )
 
+#if(ENABLE_OPENMP)
+#  if(CUDA_FOUND)
+#    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
+#    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-Xcompiler" "-DVTKH_USE_OPENMP")
+#  else()
+#    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "${OpenMP_CXX_FLAGS}")
+#    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-DVTKH_USE_OPENMP")
+#  endif()
+#endif()
 if(ENABLE_OPENMP)
-  if(CUDA_FOUND)
-    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
-    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-Xcompiler" "-DVTKH_USE_OPENMP")
-  else()
-    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "${OpenMP_CXX_FLAGS}")
     blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-DVTKH_USE_OPENMP")
-  endif()
 endif()
 
 
@@ -105,6 +113,10 @@ if (MPI_FOUND)
          list(APPEND vtkh_rendering_mpi_deps cuda)
     endif()
 
+    if(ENABLE_OPENMP)
+         list(APPEND vtkh_rendering_mpi_deps openmp)
+    endif()
+
     blt_add_library(
         NAME vtkh_rendering_mpi
         SOURCES ${vtkh_rendering_sources} ${vtkh_rendering_mpi_sources}
@@ -113,13 +125,7 @@ if (MPI_FOUND)
     )
 
     if(ENABLE_OPENMP)
-        if(CUDA_FOUND)
-            blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
-            blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-Xcompiler" "-DVTKH_USE_OPENMP")
-        else()
-            blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "${OpenMP_CXX_FLAGS}")
-            blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-DVTKH_USE_OPENMP")
-        endif()
+      blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-DVTKH_USE_OPENMP")
     endif()
 
     blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-D VTKH_PARALLEL")
