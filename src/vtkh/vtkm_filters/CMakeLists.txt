@@ -8,6 +8,7 @@ set(vtkm_filters_headers
   vtkmCleanGrid.hpp
   vtkmClipWithField.hpp
   vtkmExtractStructured.hpp
+  vtkmLagrangian.hpp
   vtkmMarchingCubes.hpp
   vtkmPointAverage.hpp
   vtkmThreshold.hpp
@@ -20,6 +21,7 @@ set(vtkm_filters_sources
   vtkmCleanGrid.cpp
   vtkmClipWithField.cpp
   vtkmExtractStructured.cpp
+  vtkmLagrangian.cpp
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
   vtkmThreshold.cpp
@@ -31,6 +33,11 @@ set(vtkm_filters_deps vtkm)
 if(CUDA_FOUND)
     # triggers cuda compile
     list(APPEND vtkm_filters_deps cuda)
+    # defend against vtkm code cuda can't reseason about
+    if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
+        set(particle_cuda_src "${CMAKE_CURRENT_SOURCE_DIR}/vtkmLagrangian.cpp")
+        set_source_files_properties(${particle_cuda_src} PROPERTIES COMPILE_FLAGS "-Xptxas --opt-level=0")
+    endif()
 endif()
 
 
