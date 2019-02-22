@@ -22,6 +22,7 @@ set(vtkm_filters_sources
   vtkmClipWithField.cpp
   vtkmExtractStructured.cpp
   vtkmLagrangian.cpp
+>>>>>>> origin/develop
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
   vtkmThreshold.cpp
