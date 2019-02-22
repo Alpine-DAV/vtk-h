@@ -22,7 +22,6 @@ set(vtkm_filters_sources
   vtkmClipWithField.cpp
   vtkmExtractStructured.cpp
   vtkmLagrangian.cpp
->>>>>>> origin/develop
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
   vtkmThreshold.cpp
@@ -51,7 +50,7 @@ blt_add_library(
 
 if(ENABLE_OPENMP)
   if(CUDA_FOUND)
-    blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+    blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
   else()
     blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "${OpenMP_CXX_FLAGS}")
   endif()
