@@ -60,6 +60,11 @@ endif()
 
 find_package(VTKm REQUIRED QUIET)
 
+if(ENABLE_CUDA AND NOT VTKm_ENABLE_CUDA)
+   message(FATAL_ERROR "VTK-h CUDA support requires VTK-m with CUDA support (ENABLE_CUDA == TRUE, however VTKm_ENABLE_CUDA == FALSE")
+endif()
+
+
 set(VTKM_FOUND TRUE)
 
 set(VTKM_TARGETS vtkm_cont vtkm_rendering)

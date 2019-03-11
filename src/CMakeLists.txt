@@ -51,6 +51,7 @@ include(VTKhBuildType)
 ################################
 option(BUILD_SHARED_LIBS  "Build shared libraries"    ON)
 option(ENABLE_TESTS       "Build tests"               ON)
+option(ENABLE_CUDA        "Enable CUDA Support"       OFF)
 option(ENABLE_MPI         "Build MPI Support"         ON)
 
 
@@ -70,7 +71,6 @@ set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
 include(blt/SetupBLT.cmake)
 
 
-
 ################################
 # Basic CMake Setup
 ################################
@@ -80,11 +80,6 @@ include(cmake/CMakeBasics.cmake)
 # Setup 3rd Party Libs
 ################################
 include(cmake/Setup3rdParty.cmake)
-
-# These options that affect BLT. We set them up based on what
-# capabilities were found in VTKm
-cmake_dependent_option(ENABLE_CUDA "Build CUDA Support" ON "VTKm_CUDA_FOUND" OFF)
-
 
 ################################
 # Setup tests helpers

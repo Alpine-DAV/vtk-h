@@ -28,7 +28,9 @@ set(vtkm_filters_sources
   vtkmVectorMagnitude.cpp
   )
 
-set(vtkm_filters_deps vtkm_cont)
+# we use these specific vtk-m targets b/c our favorite version
+# of cmake does not yet support transitive deps for object libs
+set(vtkm_filters_deps  vtkm_compiler_flags vtkm_taotuple vtkm_diy )
 
 if(ENABLE_OPENMP)
     list(APPEND vtkm_filters_deps openmp)
