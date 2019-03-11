@@ -28,7 +28,7 @@ set(vtkm_filters_sources
   vtkmVectorMagnitude.cpp
   )
 
-set(vtkm_filters_deps vtkm)
+set(vtkm_filters_deps vtkm_cont)
 
 if(ENABLE_OPENMP)
     list(APPEND vtkm_filters_deps openmp)
@@ -46,7 +46,10 @@ blt_add_library(
   SOURCES ${vtkm_filters_sources}
   HEADERS ${vtkm_filters_headers}
   DEPENDS_ON ${vtkm_filters_deps}
+  OBJECT TRUE
   )
+
+message(STATUS "###### ${vtkm_filters_deps}")
 
 if(CUDA_FOUND)
   # defend against vtkm code cuda can't reseason about
@@ -54,15 +57,14 @@ if(CUDA_FOUND)
     blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
   endif()
 endif()
-
 # Install libraries
-install(TARGETS vtkm_compiled_filters
-  EXPORT ${VTKh_EXPORT_NAME}
-  ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
-  LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
-  RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
-  )
-
-# Install headers
-install(FILES ${vtkm_filters_headers}
-  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/vtkm_filters)
+#install(TARGETS vtkm_compiled_filters
+#  EXPORT ${VTKh_EXPORT_NAME}
+#  ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
+#  LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
+#  RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
+#  )
+#
+## Install headers
+#install(FILES ${vtkm_filters_headers}
+#  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/vtkm_filters)

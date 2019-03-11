@@ -171,6 +171,7 @@ Renderer::PreExecute()
   }
 
   m_bounds = m_input->GetGlobalBounds();
+  std::cout<<"Bounds "<<m_bounds<<"\n";
 }
 
 void

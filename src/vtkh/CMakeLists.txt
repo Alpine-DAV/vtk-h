@@ -21,6 +21,7 @@ set(vtkh_core_deps vtkm diy vtkh_utils)
 
 if(CUDA_FOUND)
   list(APPEND vtkh_core_deps cuda)
+  message(STATUS "(*((((((((((((((((((((((((((((((((((((((((((((((((((")
 endif()
 
 if(ENABLE_OPENMP)
@@ -35,7 +36,6 @@ blt_add_library(
   HEADERS ${vtkh_core_headers}
   DEPENDS_ON ${vtkh_core_deps}
   )
-
 # Install libraries
 install(TARGETS vtkh_core
   EXPORT ${VTKh_EXPORT_NAME}
