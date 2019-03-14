@@ -33,7 +33,7 @@ set(vtkm_filters_sources
 set(vtkm_filters_deps  vtkm_compiler_flags vtkm_taotuple vtkm_diy )
 
 if(ENABLE_OPENMP)
-    list(APPEND vtkm_filters_deps openmp)
+  #list(APPEND vtkm_filters_deps openmp)
 endif()
 
 if(CUDA_FOUND)

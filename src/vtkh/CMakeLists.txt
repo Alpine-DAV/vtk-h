@@ -21,7 +21,6 @@ set(vtkh_core_deps vtkm diy vtkh_utils)
 
 if(CUDA_FOUND)
   list(APPEND vtkh_core_deps cuda)
-  message(STATUS "(*((((((((((((((((((((((((((((((((((((((((((((((((((")
 endif()
 
 if(ENABLE_OPENMP)
