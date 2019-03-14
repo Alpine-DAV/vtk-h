@@ -18,18 +18,18 @@ vtkmLagrangian::Run(vtkm::cont::DataSet &input,
 #ifdef VTKH_BYPASS_VTKM_BIH
   return vtkm::cont::DataSet();
 #else
-  //vtkm::filter::Lagrangian lagrangianFilter;
-  //lagrangianFilter.SetStepSize(step_size);
-  //lagrangianFilter.SetWriteFrequency(write_frequency);
-  //lagrangianFilter.SetRank(rank);
-  //lagrangianFilter.SetActiveField(field_name);
-  //lagrangianFilter.SetCustomSeedResolution(cust_res);
-  //lagrangianFilter.SetSeedResolutionInX(x_res);
-  //lagrangianFilter.SetSeedResolutionInY(y_res);
-  //lagrangianFilter.SetSeedResolutionInZ(z_res);
+  vtkm::filter::Lagrangian lagrangianFilter;
+  lagrangianFilter.SetStepSize(step_size);
+  lagrangianFilter.SetWriteFrequency(write_frequency);
+  lagrangianFilter.SetRank(rank);
+  lagrangianFilter.SetActiveField(field_name);
+  lagrangianFilter.SetCustomSeedResolution(cust_res);
+  lagrangianFilter.SetSeedResolutionInX(x_res);
+  lagrangianFilter.SetSeedResolutionInY(y_res);
+  lagrangianFilter.SetSeedResolutionInZ(z_res);
 
-  //auto output = lagrangianFilter.Execute(input);
-  //return output;
+  auto output = lagrangianFilter.Execute(input);
+  return output;
 #endif
 }
 

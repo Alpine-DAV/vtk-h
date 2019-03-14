@@ -51,22 +51,9 @@ blt_add_library(
   OBJECT TRUE
   )
 
-message(STATUS "###### ${vtkm_filters_deps}")
-
 if(CUDA_FOUND)
   # defend against vtkm code cuda can't reseason about
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
   endif()
 endif()
-# Install libraries
-#install(TARGETS vtkm_compiled_filters
-#  EXPORT ${VTKh_EXPORT_NAME}
-#  ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
-#  LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
-#  RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
-#  )
-#
-## Install headers
-#install(FILES ${vtkm_filters_headers}
-#  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/vtkm_filters)

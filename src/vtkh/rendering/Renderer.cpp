@@ -171,7 +171,6 @@ Renderer::PreExecute()
   }
 
   m_bounds = m_input->GetGlobalBounds();
-  std::cout<<"Bounds "<<m_bounds<<"\n";
 }
 
 void
@@ -229,7 +228,9 @@ Renderer::DoExecute()
       {
         this->SetShadingOn(false);
       }
+
       m_mapper->SetActiveColorTable(m_color_table);
+
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera();
       m_mapper->SetCanvas(&(*p_canvas));
