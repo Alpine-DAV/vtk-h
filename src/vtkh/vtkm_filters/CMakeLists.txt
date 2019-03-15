@@ -33,13 +33,13 @@ set(vtkm_filters_sources
 set(vtkm_filters_deps  vtkm_compiler_flags vtkm_taotuple vtkm_diy )
 
 if(ENABLE_OPENMP)
-  #list(APPEND vtkm_filters_deps openmp)
+  list(APPEND vtkm_filters_deps openmp)
+  message(STATUS "OOOOOOPPPPPPPPPPPPPEEEEEEEEEEEEEEEEEENNNNNNNNNNNNNNNPPPPPPPPPPP")
 endif()
 
 if(CUDA_FOUND)
     # triggers cuda compile
     list(APPEND vtkm_filters_deps cuda)
-
 endif()
 
 
