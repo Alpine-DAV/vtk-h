@@ -34,7 +34,6 @@ set(vtkm_filters_deps  vtkm_compiler_flags vtkm_taotuple vtkm_diy )
 
 if(ENABLE_OPENMP)
   list(APPEND vtkm_filters_deps openmp)
-  message(STATUS "OOOOOOPPPPPPPPPPPPPEEEEEEEEEEEEEEEEEENNNNNNNNNNNNNNNPPPPPPPPPPP")
 endif()
 
 if(CUDA_FOUND)

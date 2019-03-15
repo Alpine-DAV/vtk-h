@@ -66,8 +66,6 @@ set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
 # Init BLT
 ################################
 set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
-#set (CUDA_LINK_WITH_NVCC ON CACHE BOOL "")
-#set(gtest_disable_pthreads ON CACHE BOOL "")
 include(blt/SetupBLT.cmake)
 
 
