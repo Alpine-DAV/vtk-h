@@ -384,6 +384,12 @@ def main():
     spec_cmd = "spack/bin/spack spec " + uberenv_pkg_name + opts["spec"]
     res = sexe(spec_cmd, echo=True)
 
+    #clean out any temp spack build stages
+    cln_cmd = "spack/bin/spack clean "
+    res = sexe(cln_cmd, echo=True)
+
+    cln_cmd = "spack/bin/spack clean -d"
+    res = sexe(cln_cmd, echo=True)
 
     ##########################################################
     # we now have an instance of spack configured how we
