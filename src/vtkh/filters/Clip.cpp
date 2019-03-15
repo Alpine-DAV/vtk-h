@@ -5,7 +5,6 @@
 
 namespace vtkh
 {
-
 struct Clip::InternalsType
 {
   vtkm::cont::ImplicitFunctionHandle m_func;

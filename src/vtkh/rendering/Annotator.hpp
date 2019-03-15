@@ -14,13 +14,13 @@ namespace vtkh
 class Annotator
 {
 public:
-  Annotator(vtkm::rendering::Canvas &canvas, 
+  Annotator(vtkm::rendering::Canvas &canvas,
             vtkm::rendering::Camera &camera,
             vtkm::Bounds bounds);
   ~Annotator();
 
   void RenderWorldAnnotations();
-  void RenderScreenAnnotations(const std::vector<std::string> &field_names, 
+  void RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                const std::vector<vtkm::Range> &ranges,
                                const std::vector<vtkm::cont::ColorTable> &color_tables);
 
@@ -35,12 +35,12 @@ protected:
   vtkm::rendering::AxisAnnotation3D       m_y_axis_annotation;
   vtkm::rendering::AxisAnnotation3D       m_z_axis_annotation;
   vtkm::rendering::ColorBarAnnotation     m_color_bar_annotation;
-  vtkm::rendering::WorldAnnotator        *m_world_annotator; 
+  vtkm::rendering::WorldAnnotator        *m_world_annotator;
   std::vector<vtkm::Bounds>               m_color_bar_pos;
   //std::vector<vtkm::rendering::TextAnnotation*> m_text_annotations;
   //void RenderScreen2DAnnotations(vtkm::Range range, const  std::string &field_name);
   //void RenderScreen3DAnnotations(vtkm::Range range, const std::string &field_name);
 };
-  
+
 }// namespace vtkh
 #endif
