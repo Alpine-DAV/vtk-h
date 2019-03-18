@@ -26,6 +26,12 @@ public:
   BoundsMap() {}
   BoundsMap(const BoundsMap &_bm) : bm(_bm.bm) {}
 
+  void Clear()
+  {
+    bm.clear();
+    m_rank_map.clear();
+  }
+
   void AddBlock(int id, const vtkm::Bounds &bounds)
   {
       if (bm.find(id) == bm.end())

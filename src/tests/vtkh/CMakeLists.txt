@@ -68,6 +68,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_raytracer
                 t_vtk-h_render
                 t_vtk-h_slice
+                t_vtk-h_spatial_query
                 t_vtk-h_vector_magnitude
                 t_vtk-h_volume_renderer
                 )

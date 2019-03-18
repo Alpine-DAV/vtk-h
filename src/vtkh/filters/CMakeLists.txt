@@ -14,6 +14,7 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
+  PathTrace.hpp
   PointAverage.hpp
   Recenter.hpp
   Threshold.hpp
@@ -25,6 +26,7 @@ set(vtkh_filters_headers
   communication/MemStream.h
   communication/avtParICAlgorithm.hpp
   communication/avtParICAlgorithm.hxx
+  communication/SpatialQuery.hpp
   communication/Ray.hpp
   )
 
@@ -40,11 +42,13 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
+  PathTrace.cpp
   PointAverage.cpp
   Recenter.cpp
   Threshold.cpp
   Slice.cpp
   VectorMagnitude.cpp
+  communication/SpatialQuery.cpp
   communication/MemStream.cpp
   )
 

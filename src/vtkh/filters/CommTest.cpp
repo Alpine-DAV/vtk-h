@@ -7,6 +7,8 @@
 #include "communication/RayMessenger.hpp"
 #endif
 
+#include "communication/SpatialQuery.hpp"
+
 namespace vtkh
 {
 
@@ -110,6 +112,7 @@ void CommTest::DoExecute()
     rmessenger.RecvRays(ray_data);
     if(ray_data.size() != 0) expect_message = false;
   }
+  std::cout<<ray_data[0].p<<"\n";
 
 #endif
 
