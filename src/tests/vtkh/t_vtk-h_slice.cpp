@@ -48,7 +48,7 @@ TEST(vtkh_slice, vtkh_slice)
                                           bg_color);
   vtkh::RayTracer tracer;
   tracer.SetInput(slice);
-  tracer.SetField("cell_data");
+  tracer.SetField("cell_data_Float32");
 
   vtkh::Scene scene;
   scene.AddRenderer(&tracer);
@@ -91,7 +91,7 @@ TEST(vtkh_slice, vtkh_mulit_slice)
 
   vtkh::RayTracer tracer1;
   tracer1.SetInput(slice1);
-  tracer1.SetField("cell_data");
+  tracer1.SetField("cell_data_Float32");
   scene.AddRenderer(&tracer1);
 
 
