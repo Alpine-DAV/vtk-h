@@ -66,8 +66,6 @@ protected:
   void CreateSeeds();
   void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult> &traces);
 
-
-
   DataBlock * GetBlock(int blockId);
   int DomainToRank(int blockId) {return domToRank[blockId];}
   void BoxOfSeeds(const vtkm::Bounds &box,

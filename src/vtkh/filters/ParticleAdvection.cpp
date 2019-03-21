@@ -276,7 +276,7 @@ ParticleAdvection::DumpDS()
     this->m_input->GetDomain(i, dom, domId);
 
     char nm[128];
-    sprintf(nm, "dom.%03d.vtk", domId);
+    sprintf(nm, "dom.%03lld.vtk", domId);
 
     vtkm::io::writer::VTKDataSetWriter writer(nm);
     writer.WriteDataSet(dom);

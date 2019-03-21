@@ -298,6 +298,9 @@ DataSet::GetRange(const std::string &field_name) const
     const vtkm::cont::Field &field = m_domains[i].GetField(field_name);
     vtkm::cont::ArrayHandle<vtkm::Range> sub_range;
     sub_range = field.GetRange();
+    num_components = sub_range.GetPortalConstControl().GetNumberOfValues();
+    range = sub_range;
+
 
     vtkm::Id components = sub_range.GetPortalConstControl().GetNumberOfValues();
 
@@ -328,6 +331,7 @@ DataSet::GetRange(const std::string &field_name) const
       range.GetPortalControl().Set(c, c_range);
     }
   }
+
   return range;
 }
 
@@ -441,6 +445,7 @@ DataSet::PrintSummary(std::ostream &stream) const
 }
 
 bool
+
 DataSet::IsEmpty(const vtkm::Id cell_set_index) const
 {
   bool is_empty = true;

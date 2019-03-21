@@ -14,11 +14,24 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
+  ParticleAdvection.hpp
+  avtParICAlgorithm.hpp
+  avtParICAlgorithm.hxx
+  Communicator.hpp
+  CommData.hpp
+  MemStream.h
+  MemStream.hxx
+  adapter.h
+  Integrator.hpp
+  Particle.hpp
+  BoundsMap.hpp
+  DebugMeowMeow.hpp
   PointAverage.hpp
   Recenter.hpp
   Threshold.hpp
   Slice.hpp
   VectorMagnitude.hpp
+  util.hpp
   )
 
 set(vtkh_filters_sources
@@ -33,6 +46,7 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
+  ParticleAdvection.cpp
   PointAverage.cpp
   Recenter.cpp
   Threshold.cpp
@@ -81,6 +95,7 @@ if (MPI_FOUND)
          list(APPEND vtkh_filters_mpi_deps cuda)
     endif()
 
+
     if(ENABLE_OPENMP)
          list(APPEND vtkh_filters_mpi_deps openmp)
     endif()
@@ -91,8 +106,16 @@ if (MPI_FOUND)
       HEADERS ${vtkh_filters_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
+    if(ENABLE_OPENMP)
+          if(CUDA_FOUND)
+              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
+          else()
+              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "${OpenMP_CXX_FLAGS}")
+          endif()
+    endif()
 
-    blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL")
+
+    blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS)
 
 
     # Install libraries

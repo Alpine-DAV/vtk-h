@@ -26,24 +26,16 @@ class Integrator
     typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
     typedef FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
 
-    //Uniform grid evaluator and RK4 integrator.
-    using UniformEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldHandle>;
-    using RK4UniformType = vtkm::worklet::particleadvection::RK4Integrator<UniformEvalType>;
-
-    //Rectilinear grid evaluator and RK4 integrator.
-    using RectilinearEvalType = vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldHandle>;
-    using RK4RectilinearType = vtkm::worklet::particleadvection::RK4Integrator<RectilinearEvalType>;
+    using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
+    using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
 public:
     Integrator(vtkm::cont::DataSet &ds, const string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
     {
         vecField = ds.GetField(fieldName).GetData().Cast<FieldHandle>();
 
-        //uniformEval = UniformEvalType(ds->GetCoordinateSystem(), ds->GetCellSet(0), vecField);
-        //uniformRK4 = RK4UniformType(eval, stepSize);
-
-        rectEval = RectilinearEvalType(ds.GetCoordinateSystem(), ds.GetCellSet(0), vecField);
-        rectRK4 = RK4RectilinearType(rectEval, stepSize);
+        gridEval = GridEvalType(ds.GetCoordinateSystem(), ds.GetCellSet(), vecField);
+        rk4 = RK4Type(gridEval, stepSize);
     }
 
     ~Integrator()
@@ -86,12 +78,13 @@ public:
         vtkm::worklet::ParticleAdvection particleAdvection;
         vtkm::worklet::ParticleAdvectionResult result;
 
-        result = particleAdvection.Run(rectRK4, seedArray, stepsTakenArray, maxSteps);
+        result = particleAdvection.Run(rk4, seedArray, stepsTakenArray, maxSteps);
         auto posPortal = result.positions.GetPortalConstControl();
         auto statusPortal = result.status.GetPortalConstControl();
         auto stepsPortal = result.stepsTaken.GetPortalConstControl();
 
         //Update particle data.
+        //Need a functor to do this...
         int steps1 = 0;
         for (int i = 0; i < nSeeds; i++)
         {
@@ -137,7 +130,7 @@ public:
 
         vtkm::worklet::Streamline streamline;
         vtkm::worklet::StreamlineResult result;
-        result = streamline.Run(rectRK4, seedArray, stepsTakenArray, maxSteps);
+        result = streamline.Run(rk4, seedArray, stepsTakenArray, maxSteps);
 
         auto posPortal = result.positions.GetPortalConstControl();
         auto statusPortal = result.status.GetPortalConstControl();
@@ -231,11 +224,8 @@ private:
     }
 
     FieldType stepSize;
-    UniformEvalType uniformEval;
-    RK4UniformType uniformRK4;
-    RectilinearEvalType rectEval;
-    RK4RectilinearType rectRK4;
-
+    GridEvalType gridEval;
+    RK4Type rk4;
     FieldHandle vecField;
 };
 
