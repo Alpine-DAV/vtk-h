@@ -97,26 +97,26 @@ public:
     for (vtkm::Id i = 1; i <= count; ++i)
     {
       const vtkm::Id aabb_index = leafs.Get(currentNode + i);
-      std::cout<<"********\n";
-      std::cout<<"* Current min "<<minDistance<<" closest "<<closestDistance<<"\n";
-      std::cout<<"* index  "<<aabb_index<<"\n";
-      std::cout<<"* "; print_aabb(aabb_index);
+      //std::cout<<"********\n";
+      //std::cout<<"* Current min "<<minDistance<<" closest "<<closestDistance<<"\n";
+      //std::cout<<"* index  "<<aabb_index<<"\n";
+      //std::cout<<"* "; print_aabb(aabb_index);
       Precision distance = -1.;
       vtkm::Vec<Precision,2> mm;
       IntersectAABB(aabb_index, originDir, invDir,closestDistance, minDistance, mm);
       if(mm[1] > mm[0])
       {
-        std::cout<<"* Valid intersection \n";
+        //std::cout<<"* Valid intersection \n";
         distance = mm[0];
       }
-      std::cout<<"* "<<mm[0]<<" "<<mm[1]<<"\n";
+      //std::cout<<"* "<<mm[0]<<" "<<mm[1]<<"\n";
       if (distance != -1. && distance < closestDistance && distance >= minDistance)
       {
-        std::cout<<"* Closest so far\n";
+        //std::cout<<"* Closest so far\n";
         closestDistance = distance;
         min_max = mm;
       }
-      std::cout<<"*********\n\n";
+      //std::cout<<"*********\n\n";
     } // for
   }
 
@@ -137,7 +137,7 @@ public:
       Precision distance = -1.;
       vtkm::Vec<Precision,2> mm;
       IntersectAABB(aabb_index, originDir, invDir, min_max[1], min_max[0], mm);
-      std::cout<<"Inside interval "<<min_max[0]<<" - "<<min_max[1]<<" aabb "<<mm[0]<<"- "<<mm[1]<<"\n";
+      //std::cout<<"Inside interval "<<min_max[0]<<" - "<<min_max[1]<<" aabb "<<mm[0]<<"- "<<mm[1]<<"\n";
       bool valid = mm[1] > mm[0];
       if(valid && mm[1] >= mm[0] && mm[0] >= min_max[0] && mm[0] < min_max[1])
       {
@@ -371,8 +371,8 @@ public:
       } // if leaf node
 
     } //while
-    std::cout<<"Min "<<min_max[0]<<"\n";
-    std::cout<<"Max "<<min_max[1]<<"\n";
+    //std::cout<<"Min "<<min_max[0]<<"\n";
+    //std::cout<<"Max "<<min_max[1]<<"\n";
     //if (hitIndex != -1)
     //  distance = closestDistance;
   } // ()
@@ -512,7 +512,7 @@ public:
       } // if leaf node
 
     } //while
-    std::cout<<"count "<<count<<"\n";
+    //std::cout<<"count "<<count<<"\n";
     //if (hitIndex != -1)
     //  distance = closestDistance;
   } // ()
@@ -660,7 +660,7 @@ public:
       } // if leaf node
 
     } //while
-    std::cout<<"count "<<count<<"\n";
+    //std::cout<<"count "<<count<<"\n";
     //if (hitIndex != -1)
     //  distance = closestDistance;
   } // ()

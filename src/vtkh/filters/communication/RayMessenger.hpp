@@ -32,8 +32,6 @@ class RayMessenger : public Messenger
 
     bool RecvRays(std::vector<Ray> &rays);
 
-    bool RecvRays(std::vector<ParticleCommData<Ray>> &rays);
-
     // Send/Recv messages.
     void SendMsg(int dst, std::vector<int> &msg);
     void SendAllMsg(std::vector<int> &msg);
@@ -41,7 +39,7 @@ class RayMessenger : public Messenger
 
     // Send/Recv datasets.
     bool RecvAny(std::vector<MsgCommData> *msgs,
-                 std::vector<ParticleCommData<Ray>> *recvICs,
+                 std::vector<Ray> *rays,
                  bool blockAndWait);
 
   private:

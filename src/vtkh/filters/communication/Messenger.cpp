@@ -154,7 +154,6 @@ Messenger::PrepareForSend(int tag, MemStream *buff, vector<unsigned char *> &buf
 
     int bytesLeft = buff->len();
     int maxDataLen = it->second.second;
-
     Messenger::Header header;
     header.tag = tag;
     header.rank = rank;
@@ -169,7 +168,6 @@ Messenger::PrepareForSend(int tag, MemStream *buff, vector<unsigned char *> &buf
     msgID++;
 
     buffList.resize(header.numPackets);
-
     size_t pos = 0;
     for (int i = 0; i < header.numPackets; i++)
     {
@@ -194,6 +192,7 @@ Messenger::PrepareForSend(int tag, MemStream *buff, vector<unsigned char *> &buf
         buffList[i] = b;
         bytesLeft -= maxDataLen;
     }
+
 }
 
 void
@@ -245,8 +244,8 @@ Messenger::RecvData(int tag, std::vector<MemStream *> &buffers,
 
 bool
 Messenger::RecvData(set<int> &tags,
-                            vector<pair<int, MemStream *> > &buffers,
-                            bool blockAndWait)
+                    vector<pair<int, MemStream *> > &buffers,
+                    bool blockAndWait)
 {
     buffers.resize(0);
 
@@ -309,7 +308,7 @@ Messenger::RecvData(set<int> &tags,
 
 void
 Messenger::ProcessReceivedBuffers(vector<unsigned char*> &incomingBuffers,
-                                          vector<pair<int, MemStream *> > &buffers)
+                                  vector<pair<int, MemStream *> > &buffers)
 {
     for (size_t i = 0; i < incomingBuffers.size(); i++)
     {
@@ -361,7 +360,7 @@ Messenger::ProcessReceivedBuffers(vector<unsigned char*> &incomingBuffers,
 
                         Messenger::Header header;
                         memcpy(&header, bi, sizeof(header));
-                        vtkh::write(*mergedBuff, header);
+                        mergedBuff->write_binary((bi+sizeof(header)), header.dataSz);
                         delete [] bi;
                     }
 

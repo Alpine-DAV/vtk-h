@@ -44,8 +44,8 @@ void SpatialQuery::Build()
   auto z_mx = aabbs.zmaxs.GetPortalControl();
 
   int i = 0;
-  std::vector<int> dom_ids;
-  dom_ids.resize(size);
+  m_domain_map.Allocate(size);
+  auto domain_portal = m_domain_map.GetPortalControl();
   for(auto it = m_bounds_map.bm.begin(); it != m_bounds_map.bm.end(); ++it)
   {
     const vtkm::Bounds &bounds = it->second;
@@ -58,7 +58,7 @@ void SpatialQuery::Build()
     z_mx.Set(i, bounds.Z.Max);
     // keep track of the aabb index to the domain id so we
     // can map back later
-    dom_ids[i] = it->first;
+    domain_portal.Set(i, it->first);
 
     ++i;
   }
@@ -82,10 +82,8 @@ void SpatialQuery::Build()
   m_is_built = true;
 }
 
-void SpatialQuery::IntersectRays(vtkm::rendering::raytracing::Ray<vtkm::Float32> &rays)
-                                 //vtkm::cont::ArrayHandle<vtkm::Int32> &candidates,
-                                 //vtkm::cont::ArrayHandle<vtkm::Int32> &offsets,
-                                 //vtkm::cont::ArrayHandle<vtkm::Int32> &counts)
+SpatialQuery::Result
+SpatialQuery::IntersectRays(vtkm::rendering::raytracing::Ray<vtkm::Float32> &rays)
 {
   if(!m_is_built)
   {
@@ -123,12 +121,13 @@ void SpatialQuery::IntersectRays(vtkm::rendering::raytracing::Ray<vtkm::Float32>
   vtkm::worklet::DispatcherMapField<detail::GetCandidates>(detail::GetCandidates())
     .Invoke(rays.Dir, rays.Origin, min_max, counts, m_inner_nodes, m_leaf_nodes, aabb_data, offsets, candidates);
 
-  auto c = candidates.GetPortalControl();
-  auto cc = counts.GetPortalControl();
-  for(int i = 0; i < cc.Get(0); ++i)
-  {
-    std::cout<<"Candidate "<<c.Get(i)<<"\n";
-  }
+  //auto c = candidates.GetPortalControl();
+  //auto cc = counts.GetPortalControl();
+  //for(int i = 0; i < cc.Get(0); ++i)
+  //{
+  //  std::cout<<"Candidate "<<c.Get(i)<<"\n";
+  //}
+  return Result(candidates, offsets, counts, m_domain_map);
 
 }
 

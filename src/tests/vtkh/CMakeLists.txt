@@ -78,6 +78,7 @@ set(CUDA_TESTS t_vtk-h_cuda)
 set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_dataset_par
               t_vtk-h_no_op_par
+              t_vtk-h_path_trace_par
               t_vtk-h_marching_cubes_par
               t_vtk-h_multi_render_par
               t_vtk-h_parallel_comm_par

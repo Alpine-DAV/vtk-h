@@ -21,6 +21,7 @@ public:
   vtkm::Float32              m_distance;
   vtkm::Float32              m_max_distance;
   vtkm::Int32                m_pixel_id;
+  vtkm::Int32                m_dest_dom;
 
   friend std::ostream &operator<<(std::ostream &os, const Ray &r)
   {
@@ -46,6 +47,7 @@ struct Serialization<Ray>
     vtkh::write(memstream, data.m_max_distance);
     vtkh::write(memstream, data.m_pixel_id);
     vtkh::write(memstream, data.m_depth);
+    vtkh::write(memstream, data.m_dest_dom);
   }//
 
   static void read(MemStream &memstream, Ray &data)
@@ -58,6 +60,7 @@ struct Serialization<Ray>
     vtkh::read(memstream, data.m_max_distance);
     vtkh::read(memstream, data.m_pixel_id);
     vtkh::read(memstream, data.m_depth);
+    vtkh::read(memstream, data.m_dest_dom);
   }
 };
 } //namespace vtkh

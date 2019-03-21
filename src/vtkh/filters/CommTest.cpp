@@ -104,7 +104,7 @@ void CommTest::DoExecute()
   RayMessenger rmessenger(comm);
   rmessenger.RegisterMessages(2, procs, procs);
   rmessenger.SendRays(dest, rays);
-  std::vector<ParticleCommData<Ray>> ray_data;;
+  std::vector<Ray> ray_data;
   expect_message = true;
 
   while(expect_message)
@@ -112,7 +112,7 @@ void CommTest::DoExecute()
     rmessenger.RecvRays(ray_data);
     if(ray_data.size() != 0) expect_message = false;
   }
-  std::cout<<ray_data[0].p<<"\n";
+  std::cout<<ray_data[0]<<"\n";
 
 #endif
 

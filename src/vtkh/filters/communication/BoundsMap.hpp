@@ -142,14 +142,21 @@ public:
 
     bm.clear();
     m_rank_map.clear();
-    int current_rank = 0;
+
+    //build a map of rank that handles empty counts
+    int *rank_map = new int[total_boxs];
+    int idx = 0;
+    for(int i = 0; i < procs; ++i)
+    {
+      for(int d = 0; d < dom_counts[i]; ++d)
+      {
+        rank_map[idx] = i;
+        ++idx;
+      }
+    }
+
     for(int i = 0; i < total_boxs; ++i)
     {
-      if(i >= dom_offsets[current_rank])
-      {
-        current_rank++;
-      }
-
       const int offset = i * 6;
       int dom_id = dom_rec_buff[i];
       vtkm::Bounds &bounds = bm[dom_id];
@@ -160,10 +167,10 @@ public:
       bounds.Z.Min = box_rec_buff[offset + 4];
       bounds.Z.Max = box_rec_buff[offset + 5];
 
-      m_rank_map[dom_id] = current_rank;
+      m_rank_map[dom_id] = rank_map[i];
       if(rank == 0)
       {
-        //std::cout<<"domain "<<dom_id<<" bounds "<< bounds <<" rank "<<current_rank<<"\n";
+        std::cout<<"domain "<<dom_id<<" rank "<<rank_map[i]<<"\n";
       }
     }
 
@@ -175,6 +182,7 @@ public:
     delete[] box_offsets;
     delete[] dom_counts;
     delete[] box_counts;
+    delete[] rank_map;
 #endif
     // Placeholder for more complex representatoin like a bvh that needs to
     // be constructed

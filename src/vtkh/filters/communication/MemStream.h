@@ -116,6 +116,7 @@ static void write(MemStream &memstream, const T &data)
 {
   Serialization<T>::write(memstream, data);
 }
+
 template<typename T>
 static void read(MemStream &memstream, T &data)
 {

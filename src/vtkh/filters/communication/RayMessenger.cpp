@@ -15,9 +15,9 @@ RayMessenger::RayMessenger(MPI_Comm comm)
 
 void
 RayMessenger::RegisterMessages(int mSz,
-                                    int nMsgRecvs,
-                                    int nICRecvs,
-                                    int nDSRecvs)
+                               int nMsgRecvs,
+                               int nICRecvs,
+                               int nDSRecvs)
 {
     numMsgRecvs = nMsgRecvs;
     numSLRecvs = nICRecvs;
@@ -33,9 +33,11 @@ RayMessenger::RegisterMessages(int mSz,
     //During particle advection, the IC state is only serialized.
     slSize = 256; // avoids splitting send buffer into multiple chunks
     //slSize = sizeof(Ray);
-    slsPerRecv = 64;
+    //slsPerRecv = 64;
+    //slsPerRecv = 640; //works
+    slsPerRecv = 639;
 
-    int dsSize = 2*sizeof(int);
+    int dsSize = 2 * sizeof(int);
 
     this->RegisterTag(RayMessenger::MESSAGE_TAG, numMsgRecvs, msgSize);
     this->RegisterTag(RayMessenger::RAY_TAG, numSLRecvs, slSize * slsPerRecv);
@@ -70,20 +72,19 @@ RayMessenger::SendAllMsg(vector<int> &msg)
 
 bool
 RayMessenger::RecvAny(vector<MsgCommData> *msgs,
-                      std::vector<ParticleCommData<Ray>> *recvICs,
+                      std::vector<Ray> *rays,
                       bool blockAndWait)
 {
     set<int> tags;
-    if (msgs)
+    if(msgs)
     {
-        tags.insert(RayMessenger::MESSAGE_TAG);
-        msgs->resize(0);
+      tags.insert(RayMessenger::MESSAGE_TAG);
+      msgs->resize(0);
     }
-    if (recvICs)
+    if(rays)
     {
-        std::cout<<"looking to receive particle\n";
-        tags.insert(RayMessenger::RAY_TAG);
-        recvICs->resize(0);
+      tags.insert(RayMessenger::RAY_TAG);
+      rays->resize(0);
     }
 
     if (tags.empty())
@@ -99,32 +100,26 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
     {
         if (buffers[i].first == RayMessenger::MESSAGE_TAG)
         {
-            int sendRank;
-            vector<int> m;
-            vtkh::read(*buffers[i].second, sendRank);
-            vtkh::read(*buffers[i].second, m);
+          int sendRank;
+          vector<int> m;
+          vtkh::read(*buffers[i].second, sendRank);
+          vtkh::read(*buffers[i].second, m);
 
-            MsgCommData msg(sendRank, m);
+          MsgCommData msg(sendRank, m);
 
-            msgs->push_back(msg);
+          msgs->push_back(msg);
         }
         else if (buffers[i].first == RayMessenger::RAY_TAG)
         {
-            std::cout<<"ray tag\n";
-            int num, sendRank;
-            vtkh::read(*buffers[i].second, sendRank);
-            vtkh::read(*buffers[i].second, num);
-
-            for (int j = 0; j < num; j++)
-            {
-                Ray recvP;
-                //buffers[i].second->read(recvP);
-                vtkh::read(*(buffers[i].second), recvP);
-                //Serialization<Particle>::read(*(buffers[i].second), recvP);
-                std::cout<<"reading "<<recvP<<"\n";
-                ParticleCommData<Ray> d(sendRank, recvP);
-                recvICs->push_back(d);
-            }
+          int num, sendRank;
+          vtkh::read(*buffers[i].second, sendRank);
+          vtkh::read(*buffers[i].second, num);
+          rays->resize(num);
+          for (int j = 0; j < num; j++)
+          {
+            vtkh::read(*(buffers[i].second), (*rays)[j]);
+          }
+          std::cout<<"["<<rank<<"] <-- ["<<sendRank<<"] "<<rays->size()<<"\n";
         }
 
         delete buffers[i].second;
@@ -142,7 +137,6 @@ RayMessenger::RecvMsg(vector<MsgCommData> &msgs)
 
 void RayMessenger::SendRays(int dst, std::vector<Ray> &rays)
 {
-    std::cout<<"Sending to rank "<<dst<<"\n";
     if (dst == rank)
     {
         cerr<<"Error. Sending IC to yourself"<<endl;
@@ -157,9 +151,8 @@ void RayMessenger::SendRays(int dst, std::vector<Ray> &rays)
     vtkh::write(*buff, num);
     for (auto &ray : rays)
     {
-        std::cout<<"writing "<<ray<<"\n";
+        //std::cout<<"writing "<<ray<<"\n";
         vtkh::write(*buff, ray);
-        //buff->write(p);
     }
     SendData(dst, RayMessenger::RAY_TAG, buff);
     rays.clear();
@@ -172,22 +165,9 @@ void RayMessenger::SendRays(std::map<int, std::vector<Ray>> &ray_map)
             SendRays(mit->first, mit->second);
 }
 
-bool RayMessenger::RecvRays(std::vector<ParticleCommData<Ray>> &rays)
+bool RayMessenger::RecvRays(std::vector<Ray> &rays)
 {
     return RecvAny(NULL, &rays, false);
-}
-
-bool RayMessenger::RecvRays(std::vector<Ray>  &rays)
-{
-  std::vector<ParticleCommData<Ray>> incoming;
-
-    if (RecvRays(incoming))
-    {
-        for (auto &it : incoming)
-            rays.push_back(it.p);
-        return true;
-    }
-    return false;
 }
 
 } // namespace vtkh

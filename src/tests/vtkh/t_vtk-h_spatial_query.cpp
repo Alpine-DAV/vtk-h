@@ -65,7 +65,7 @@ TEST(vtkh_spatial_bounds, vtkh_basic)
 
   add_ray(rays, 0, orig, dir, d_min, d_max);
 
-  squery.IntersectRays(rays);
+  vtkh::SpatialQuery::Result res  = squery.IntersectRays(rays);
 
 }
 
@@ -101,8 +101,7 @@ TEST(vtkh_spatial_bounds, vtkh_overlap)
 
   add_ray(rays, 0, orig, dir, d_min, d_max);
 
-  squery.IntersectRays(rays);
-
+  vtkh::SpatialQuery::Result res  = squery.IntersectRays(rays);
 }
 
 //----------------------------------------------------------------------------
@@ -145,7 +144,7 @@ TEST(vtkh_spatial_bounds, vtkh_edge_case)
 
   add_ray(rays, 0, orig, dir, d_min, d_max);
 
-  squery.IntersectRays(rays);
+  vtkh::SpatialQuery::Result res  = squery.IntersectRays(rays);
 
 }
 
