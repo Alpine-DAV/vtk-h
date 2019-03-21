@@ -10,8 +10,8 @@ namespace vtkh
 class IsoVolume: public Filter
 {
 public:
-  IsoVolume(); 
-  virtual ~IsoVolume(); 
+  IsoVolume();
+  virtual ~IsoVolume();
   std::string GetName() const override;
   void SetRange(const vtkm::Range range);
   void SetField(const std::string field_name);

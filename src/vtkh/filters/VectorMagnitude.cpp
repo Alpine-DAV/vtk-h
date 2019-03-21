@@ -1,7 +1,7 @@
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/VectorMagnitude.hpp>
 
-#include <vtkm/filter/VectorMagnitude.h>
+#include <vtkh/vtkm_filters/vtkmVectorMagnitude.hpp>
 
 namespace vtkh
 {
@@ -55,12 +55,11 @@ void VectorMagnitude::DoExecute()
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
 
-    vtkm::filter::VectorMagnitude mag;
-    mag.SetOutputFieldName(m_out_name);
-    mag.SetFieldsToPass(this->GetFieldSelection());
-    mag.SetActiveField(m_field_name);
-
-    auto dataset = mag.Execute(dom);
+    vtkh::vtkmVectorMagnitude mag;
+    auto dataset = mag.Run(dom,
+                           m_field_name,
+                           m_out_name,
+                           this->GetFieldSelection());
 
     m_output->AddDomain(dataset, domain_id);
   }
