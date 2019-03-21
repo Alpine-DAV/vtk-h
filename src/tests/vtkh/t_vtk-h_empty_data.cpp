@@ -132,7 +132,17 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkh)
   iso.SetRange(iso_range);
   iso.SetField("point_data_Float32");
   iso.SetInput(&data_set);
-  iso.Update();
+  bool got_error = false;
+  try
+  {
+    iso.Update();
+  }
+  catch(vtkh::Error &e)
+  {
+    got_error = true;
+  }
+
+  ASSERT_TRUE(got_error);
 
   vtkh::DataSet *iso_output = iso.GetOutput();
 

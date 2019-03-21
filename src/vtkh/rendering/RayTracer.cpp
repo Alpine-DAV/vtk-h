@@ -30,4 +30,12 @@ RayTracer::GetName() const
   return "vtkh::RayTracer";
 }
 
+void 
+RayTracer::SetShadingOn(bool on)
+{
+  // do nothing by default;
+  typedef vtkm::rendering::MapperRayTracer TracerType;
+  std::static_pointer_cast<TracerType>(this->m_mapper)->SetShadingOn(on);
+}
+
 } // namespace vtkh

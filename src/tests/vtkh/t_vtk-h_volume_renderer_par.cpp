@@ -50,6 +50,7 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
                                          "volume_par");
 
   vtkm::cont::ColorTable color_map("cool2warm");
+
   color_map.AddPointAlpha(0.0, .05);
   color_map.AddPointAlpha(1.0, .5);
 

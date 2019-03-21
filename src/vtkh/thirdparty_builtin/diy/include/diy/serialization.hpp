@@ -1,5 +1,5 @@
-#ifndef DIY_SERIALIZATION_HPP
-#define DIY_SERIALIZATION_HPP
+#ifndef DIYY_SERIALIZATION_HPP
+#define DIYY_SERIALIZATION_HPP
 
 #include <vector>
 #include <valarray>
@@ -89,7 +89,7 @@ namespace diy
   template<class T>
   struct Serialization: public detail::Default
   {
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 5)
+#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
     static_assert(std::is_trivially_copyable<T>::value, "Default serialization works only for trivially copyable types");
 #endif
 

@@ -3,7 +3,7 @@
 #include <vtkh/rendering/VolumeRenderer.hpp>
 
 
-namespace vtkh 
+namespace vtkh
 {
 
 Scene::Scene()
@@ -31,13 +31,13 @@ Scene::GetRenderBatchSize() const
   return m_batch_size;
 }
 
-void 
+void
 Scene::AddRender(vtkh::Render &render)
 {
   m_renders.push_back(render);
 }
 
-void 
+void
 Scene::SetRenders(const std::vector<vtkh::Render> &renders)
 {
   m_renders = renders;
@@ -67,7 +67,7 @@ Scene::IsVolume(vtkh::Renderer *renderer)
   return is_volume;
 }
 
-void 
+void
 Scene::AddRenderer(vtkh::Renderer *renderer)
 {
   bool is_volume = IsVolume(renderer);
@@ -80,7 +80,7 @@ Scene::AddRenderer(vtkh::Renderer *renderer)
       throw Error("Scenes only support a single volume plot");
     }
 
-    m_has_volume = true; 
+    m_has_volume = true;
     // make sure that the volume render is last
     m_renderers.push_back(renderer);
   }
@@ -113,13 +113,13 @@ Scene::AddRenderer(vtkh::Renderer *renderer)
   }
 }
 
-void 
+void
 Scene::Render()
 {
 
-  std::vector<vtkm::Range> ranges; 
-  std::vector<std::string> field_names; 
-  std::vector<vtkm::cont::ColorTable> color_tables; 
+  std::vector<vtkm::Range> ranges;
+  std::vector<std::string> field_names;
+  std::vector<vtkm::cont::ColorTable> color_tables;
 
   bool do_once = true;
 
@@ -128,11 +128,11 @@ Scene::Render()
   // like Cinema, we could be rendering hundres of images. Keeping
   // all the canvases around can hog memory so we will conserve it.
   // For example, if we rendered 360 images at 1024^2, all the canvases
-  // would consume 7GB of space. Not good on the GPU, where resources 
+  // would consume 7GB of space. Not good on the GPU, where resources
   // are limited.
   //
   const int render_size = m_renders.size();
-  int batch_start = 0; 
+  int batch_start = 0;
   while(batch_start < render_size)
   {
     int batch_end = std::min(m_batch_size + batch_start, render_size);
@@ -140,8 +140,8 @@ Scene::Render()
     auto end = m_renders.begin() + batch_end;
 
     std::vector<vtkh::Render> current_batch(begin, end);
-    const int plot_size = m_renderers.size(); 
-    auto renderer = m_renderers.begin(); 
+    const int plot_size = m_renderers.size();
+    auto renderer = m_renderers.begin();
 
     for(int i = 0; i < plot_size; ++i)
     {
@@ -156,7 +156,7 @@ Scene::Render()
 
       (*renderer)->SetRenders(current_batch);
       (*renderer)->Update();
-     
+
       // we only need to get the ranges and color tables once
       if(do_once)
       {
@@ -174,7 +174,7 @@ Scene::Render()
 
       renderer++;
     }
-    
+
     // render screen annotations last and save
     for(int i = 0; i < current_batch.size(); ++i)
     {
@@ -190,7 +190,7 @@ Scene::Render()
   } // while
 }
 
-void 
+void
 Scene::Save()
 {
 

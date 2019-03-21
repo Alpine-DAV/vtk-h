@@ -14,7 +14,7 @@ PNGEncoder::PNGEncoder()
 :m_buffer(NULL),
  m_buffer_size(0)
 {}
-  
+
 PNGEncoder::~PNGEncoder()
 {
     Cleanup();
@@ -42,11 +42,11 @@ PNGEncoder::Encode(const unsigned char *rgba_in,
                                             &rgba_flip[0],
                                             width,
                                             height,
-                                            LCT_RGBA, // these settings match those for 
+                                            LCT_RGBA, // these settings match those for
                                             8);       // lodepng_encode32_file
 
     delete [] rgba_flip;
-    
+
     if(error)
     {
       std::cerr<<"lodepng_encode_memory failed\n";
@@ -67,7 +67,7 @@ PNGEncoder::Encode(const float *rgba_in,
     for(int x = 0; x < width; ++x)
 
 #ifdef VTKH_USE_OPENMP
-        #pragma omp parrallel for
+        #pragma omp parallel for
 #endif
         for (int y = 0; y < height; ++y)
         {
@@ -84,11 +84,11 @@ PNGEncoder::Encode(const float *rgba_in,
                                             &rgba_flip[0],
                                             width,
                                             height,
-                                            LCT_RGBA, // these settings match those for 
+                                            LCT_RGBA, // these settings match those for
                                             8);       // lodepng_encode32_file
 
     delete [] rgba_flip;
-    
+
     if(error)
     {
       std::cerr<<"lodepng_encode_memory failed\n";
@@ -104,7 +104,7 @@ PNGEncoder::Save(const std::string &filename)
         /// we have a problem ...!
         return;
     }
-    
+
     unsigned error = lodepng_save_file(m_buffer,
                                        m_buffer_size,
                                        filename.c_str());
@@ -131,7 +131,7 @@ PNGEncoder::Cleanup()
 {
     if(m_buffer != NULL)
     {
-        //lodepng_free(m_buffer); 
+        //lodepng_free(m_buffer);
         // ^-- Not found even if LODEPNG_COMPILE_ALLOCATORS is defined?
         // simply use "free"
         free(m_buffer);

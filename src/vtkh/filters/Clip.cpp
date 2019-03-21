@@ -1,14 +1,13 @@
 #include "Clip.hpp"
 
 #include <vtkh/filters/CleanGrid.hpp>
-#include <vtkm/filter/ClipWithImplicitFunction.h>
+#include <vtkh/vtkm_filters/vtkmClip.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
-
 struct Clip::InternalsType
 {
-  vtkm::filter::ClipWithImplicitFunction m_clipper; 
+  vtkm::cont::ImplicitFunctionHandle m_func;
   InternalsType()
   {}
 };
@@ -25,34 +24,34 @@ Clip::~Clip()
 
 }
 
-void 
+void
 Clip::SetCellSet(const std::string &cell_set)
 {
   m_cell_set = cell_set;
 }
 
-void 
+void
 Clip::SetInvertClip(bool invert)
 {
   m_invert = invert;
 }
 
-void 
+void
 Clip::SetBoxClip(const vtkm::Bounds &clipping_bounds)
 {
    auto box =  vtkm::cont::make_ImplicitFunctionHandle(
-                 vtkm::Box({ clipping_bounds.X.Min, 
-                             clipping_bounds.Y.Min, 
-                             clipping_bounds.Z.Min}, 
-                           { clipping_bounds.X.Max, 
+                 vtkm::Box({ clipping_bounds.X.Min,
+                             clipping_bounds.Y.Min,
+                             clipping_bounds.Z.Min},
+                           { clipping_bounds.X.Max,
                              clipping_bounds.Y.Max,
                              clipping_bounds.Z.Max}));
 
 
-  m_internals->m_clipper.SetImplicitFunction(box);
+  m_internals->m_func = box;
 }
 
-void 
+void
 Clip::SetSphereClip(const double center[3], const double radius)
 {
   vtkm::Vec<vtkm::FloatDefault,3> vec_center;
@@ -62,11 +61,11 @@ Clip::SetSphereClip(const double center[3], const double radius)
   vtkm::FloatDefault r = radius;
 
   auto sphere = vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(vec_center, r));
-  m_internals->m_clipper.SetImplicitFunction(sphere);
+  m_internals->m_func = sphere;
 }
 
-void 
-Clip::SetPlaneClip(const double origin[3], const double normal[3]) 
+void
+Clip::SetPlaneClip(const double origin[3], const double normal[3])
 {
   vtkm::Vec<vtkm::FloatDefault,3> vec_origin;
   vec_origin[0] = origin[0];
@@ -79,10 +78,10 @@ Clip::SetPlaneClip(const double origin[3], const double normal[3])
   vec_normal[2] = normal[2];
 
   auto plane = vtkm::cont::make_ImplicitFunctionHandle(vtkm::Plane(vec_origin, vec_normal));
-  m_internals->m_clipper.SetImplicitFunction(plane);
+  m_internals->m_func = plane;
 }
 
-void Clip::PreExecute() 
+void Clip::PreExecute()
 {
   Filter::PreExecute();
 }
@@ -94,32 +93,37 @@ void Clip::PostExecute()
 
 void Clip::DoExecute()
 {
-  
+
   DataSet data_set;
 
-  const int num_domains = this->m_input->GetNumberOfDomains(); 
-  m_internals->m_clipper.SetInvertClip(m_invert);
+  const int num_domains = this->m_input->GetNumberOfDomains();
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
 
+    vtkm::Id cell_set_index = 0;
     if(m_cell_set != "")
     {
       if(dom.HasCellSet(m_cell_set))
       {
-        vtkm::Id cell_set_index = dom.GetCellSetIndex(m_cell_set);
-        m_internals->m_clipper.SetActiveCellSetIndex(cell_set_index);
+        cell_set_index = dom.GetCellSetIndex(m_cell_set);
       }
     }
 
-    m_internals->m_clipper.SetFieldsToPass(this->GetFieldSelection());
-    auto dataset = m_internals->m_clipper.Execute(dom);
+    vtkh::vtkmClip clipper;
+
+    auto dataset = clipper.Run(dom,
+                               m_internals->m_func,
+                               cell_set_index,
+                               m_invert,
+                               this->GetFieldSelection());
+
     data_set.AddDomain(dataset, domain_id);
   }
-   
-  CleanGrid cleaner; 
+
+  CleanGrid cleaner;
   cleaner.SetInput(&data_set);
   cleaner.Update();
   this->m_output = cleaner.GetOutput();

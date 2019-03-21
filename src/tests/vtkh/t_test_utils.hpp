@@ -122,8 +122,34 @@ vtkm::cont::Field CreateCellScalarField(int size, const char* fieldName)
   return field;
 }
 
+vtkm::cont::Field CreateGhostScalarField(vtkm::Id3 dims)
+{
+  vtkm::Int32 size = dims[0] * dims[1] * dims[2];
+  vtkm::cont::ArrayHandle<vtkm::Int32> data;
+  data.Allocate(size);
+
+  for(int z = 0; z < dims[2]; ++z)
+    for(int y = 0; y < dims[1]; ++y)
+      for(int x = 0; x < dims[0]; ++x)
+  {
+    vtkm::UInt8 flag = 0;
+    if(x < 1 || x > dims[0] - 2) flag = 1;
+    if(y < 1 || y > dims[1] - 2) flag = 1;
+    if(z < 1 || z > dims[2] - 2) flag = 1;
+    vtkm::Id index = z * dims[0] * dims[1] + y * dims[0] + x;
+    data.GetPortalControl().Set(index, flag);
+  }
+
+  vtkm::cont::Field field("ghosts",
+                          vtkm::cont::Field::Association::CELL_SET,
+                          "cells",
+                          data);
+  return field;
+}
+
 template <typename FieldType>
 vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* fieldName)
+
 {
   const int size = coords.GetPortalConstControl().GetNumberOfValues();
   vtkm::cont::ArrayHandle<FieldType> data;
@@ -134,7 +160,6 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* field
     vtkm::Vec<FieldType,3> point = portal.Get(i);
 
     FieldType val = vtkm::Magnitude(point);
-
     data.GetPortalControl().Set(i, val);
   }
 
@@ -278,6 +303,10 @@ vtkm::cont::DataSet CreateTestDataRectilinear(int block, int num_blocks, int bas
   int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];
 
   data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
+  data_set.AddField(CreatePointScalarField(point_handle));
+  data_set.AddField(CreatePointVecField(num_points));
+  data_set.AddField(CreateCellScalarField(num_cells));
+  data_set.AddField(CreateGhostScalarField(cell_dims));
 
   return data_set;
 }

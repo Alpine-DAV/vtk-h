@@ -50,6 +50,7 @@ TEST(vtkh_clip, vtkh_box_clip)
 
   vtkh::DataSet *clip_output = clipper.GetOutput();
 
+  clip_output->PrintSummary(std::cout);
   vtkm::Bounds bounds = clip_output->GetGlobalBounds();
 
   vtkm::rendering::Camera camera;
@@ -76,6 +77,9 @@ TEST(vtkh_clip, vtkh_box_clip)
   delete clip_output;
 }
 
+  delete clip_output;
+}
+#if 0
 TEST(vtkh_clip, vtkh_sphere_clip)
 {
   vtkh::DataSet data_set;
@@ -130,3 +134,4 @@ TEST(vtkh_clip, vtkh_sphere_clip)
 
   delete clip_output;
 }
+#endif

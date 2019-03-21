@@ -1,5 +1,5 @@
 #include <iostream>
-#include <vtkm/filter/Lagrangian.h>
+#include <vtkh/vtkm_filters/vtkmLagrangian.hpp>
 #include <vtkh/filters/Lagrangian.hpp>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Error.hpp>
@@ -61,6 +61,7 @@ Lagrangian::SetSeedResolutionInZ(const int &z_res)
 void Lagrangian::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
 }
 
 void Lagrangian::PostExecute()
@@ -70,15 +71,7 @@ void Lagrangian::PostExecute()
 
 void Lagrangian::DoExecute()
 {
-  vtkm::filter::Lagrangian lagrangianFilter;
-  lagrangianFilter.SetStepSize(m_step_size);
-  lagrangianFilter.SetWriteFrequency(m_write_frequency);
-  lagrangianFilter.SetRank(vtkh::GetMPIRank());
-  lagrangianFilter.SetActiveField(m_field_name);
-  lagrangianFilter.SetCustomSeedResolution(m_cust_res);
-  lagrangianFilter.SetSeedResolutionInX(m_x_res);
-  lagrangianFilter.SetSeedResolutionInY(m_y_res);
-  lagrangianFilter.SetSeedResolutionInZ(m_z_res);
+  vtkmLagrangian lagrangianFilter;
 
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
@@ -91,8 +84,8 @@ void Lagrangian::DoExecute()
     {
       using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
       using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
-		  auto field = dom.GetField(m_field_name).GetData();
-      if(!field.IsSameType(vectorField_d()) && !field.IsSameType(vectorField_f()))
+      auto field = dom.GetField(m_field_name).GetData();
+      if(!field.IsType<vectorField_d>() && !field.IsType<vectorField_f>())
       {
         throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");
       }
@@ -101,7 +94,17 @@ void Lagrangian::DoExecute()
     {
       throw Error("Domain does not contain specified vector field for Lagrangian analysis.");
     }
-    vtkm::cont::DataSet extractedBasis = lagrangianFilter.Execute(dom);
+
+    vtkm::cont::DataSet extractedBasis = lagrangianFilter.Run(dom,
+                                                              m_field_name,
+                                                              m_step_size,
+                                                              m_write_frequency,
+                                                              vtkh::GetMPIRank(),
+                                                              m_cust_res,
+                                                              m_x_res,
+                                                              m_y_res,
+                                                              m_z_res);
+
     m_output->AddDomain(extractedBasis, domain_id);
   }
 }

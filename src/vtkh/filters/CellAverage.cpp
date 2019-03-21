@@ -1,7 +1,7 @@
 #include <vtkh/filters/CellAverage.hpp>
-#include <vtkm/filter/CellAverage.h>
+#include <vtkh/vtkm_filters/vtkmCellAverage.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
 
 CellAverage::CellAverage()
@@ -14,21 +14,23 @@ CellAverage::~CellAverage()
 
 }
 
-void 
+void
 CellAverage::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void 
+void
 CellAverage::SetOutputField(const std::string &field_name)
 {
   m_output_field_name = field_name;
-}    
+}
 
-void CellAverage::PreExecute() 
+void CellAverage::PreExecute()
 {
   Filter::PreExecute();
+  Filter::CheckForRequiredField(m_field_name);
+
   assert(m_field_name != "");
   assert(m_output_field_name != "");
 }
@@ -42,7 +44,7 @@ void CellAverage::DoExecute()
 {
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-  
+
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -54,12 +56,11 @@ void CellAverage::DoExecute()
       continue;
     }
 
-    vtkm::filter::CellAverage avg;
-    avg.SetOutputFieldName(m_output_field_name);
-    avg.SetFieldsToPass(this->GetFieldSelection());
-    avg.SetActiveField(m_field_name);
-
-    auto dataset = avg.Execute(dom);
+    vtkh::vtkmCellAverage avg;
+    auto dataset = avg.Run(dom,
+                           m_field_name,
+                           m_output_field_name,
+                           this->GetFieldSelection());
     m_output->AddDomain(dataset, domain_id);
   }
 }

@@ -12,8 +12,8 @@
 namespace vtkh {
 //
 // A Render contains the information needed to create a single image.
-// There are 'n' canvases that matches the number of domains in the 
-// data set. It is possible to chain multiple plots together that 
+// There are 'n' canvases that matches the number of domains in the
+// data set. It is possible to chain multiple plots together that
 // are rendering separate data, i.e. the result of different data
 // transformations, to handle this we keep track of the domain ids
 // that each canvas is associated with.
@@ -21,8 +21,8 @@ namespace vtkh {
 
 class Render
 {
-public: 
-  typedef std::shared_ptr<vtkm::rendering::CanvasRayTracer> vtkmCanvasPtr; 
+public:
+  typedef std::shared_ptr<vtkm::rendering::CanvasRayTracer> vtkmCanvasPtr;
 
   Render();
   ~Render();
@@ -35,7 +35,8 @@ public:
   vtkm::Int32                     GetHeight() const;
   vtkm::Int32                     GetWidth() const;
   vtkm::rendering::Color          GetBackgroundColor() const;
-  
+  bool                            GetShadingOn() const;
+
   void                            DoRenderAnnotations(bool on);
   void                            DoRenderBackground(bool on);
   void                            SetWidth(const vtkm::Int32 width);
@@ -45,6 +46,7 @@ public:
   void                            SetImageName(const std::string &name);
   void                            SetBackgroundColor(float bg_color[4]);
   void                            SetForegroundColor(float fg_color[4]);
+  void                            SetShadingOn(bool on);
   void                            ClearCanvases();
   bool                            HasCanvas(const vtkm::Id &domain_id) const;
   void                            AddDomain(vtkm::Id domain_id);
@@ -57,7 +59,7 @@ public:
 protected:
   std::vector<vtkmCanvasPtr>   m_canvases;
   std::vector<vtkm::Id>        m_domain_ids;
-  vtkm::rendering::Camera      m_camera; 
+  vtkm::rendering::Camera      m_camera;
   std::string                  m_image_name;
   vtkm::Bounds                 m_scene_bounds;
   vtkm::Int32                  m_width;
@@ -67,24 +69,25 @@ protected:
   vtkmCanvasPtr                CreateCanvas();
   bool                         m_render_annotations;
   bool                         m_render_background;
-}; 
+  bool                         m_shading;
+};
 
 static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};
 static float vtkh_default_fg_color[4] = {1.f, 1.f, 1.f, 1.f};
 
 //template<typename RendererType>
-vtkh::Render 
+vtkh::Render
 MakeRender(int width,
-           int height, 
+           int height,
            vtkm::Bounds scene_bounds,
            const std::vector<vtkm::Id> &domain_ids,
            const std::string &image_name,
            float bg_color[4] = vtkh_default_bg_color,
            float fg_color[4] = vtkh_default_fg_color);
 
-vtkh::Render 
+vtkh::Render
 MakeRender(int width,
-           int height, 
+           int height,
            vtkm::rendering::Camera camera,
            vtkh::DataSet &data_set,
            const std::string &image_name,

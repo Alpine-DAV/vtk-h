@@ -2,16 +2,16 @@
 
 namespace vtkh
 {
-  
-Annotator::Annotator(vtkm::rendering::Canvas &canvas, 
+
+Annotator::Annotator(vtkm::rendering::Canvas &canvas,
                      vtkm::rendering::Camera &camera,
                      vtkm::Bounds bounds)
-  : m_canvas(canvas), 
+  : m_canvas(canvas),
     m_camera(camera),
     m_bounds(bounds)
 {
   m_is_3d = m_camera.GetMode() == vtkm::rendering::Camera::MODE_3D;
-  m_world_annotator = m_canvas.CreateWorldAnnotator(); 
+  m_world_annotator = m_canvas.CreateWorldAnnotator();
   // add defualt color bar positions
   vtkm::Bounds p1(vtkm::Range(0.84, 0.92), vtkm::Range(+0.1, +0.8), vtkm::Range(0, 0));
   vtkm::Bounds p2(vtkm::Range(0.84, 0.92), vtkm::Range(-0.8, -0.1), vtkm::Range(0, 0));
@@ -22,21 +22,21 @@ Annotator::Annotator(vtkm::rendering::Canvas &canvas,
   m_color_bar_pos.push_back(p2);
   m_color_bar_pos.push_back(p3);
   m_color_bar_pos.push_back(p4);
-}  
+}
 
 Annotator::~Annotator()
 {
   delete m_world_annotator;
 }
 
-void 
-Annotator::RenderScreenAnnotations(const std::vector<std::string> &field_names, 
+void
+Annotator::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                     const std::vector<vtkm::Range> &ranges,
                                     const std::vector<vtkm::cont::ColorTable> &color_tables)
 {
   m_canvas.SetViewToScreenSpace(m_camera, true);
-  // currently we only support 4 color bars, so grab the first 4 
-  int num_bars = std::min(int(field_names.size()),4); 
+  // currently we only support 4 color bars, so grab the first 4
+  int num_bars = std::min(int(field_names.size()),4);
   for(int i = 0; i < num_bars; ++i)
   {
     this->m_color_bar_annotation.SetRange(ranges[i], 5);

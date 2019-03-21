@@ -11,8 +11,8 @@ namespace vtkh
 class MarchingCubes : public Filter
 {
 public:
-  MarchingCubes(); 
-  virtual ~MarchingCubes(); 
+  MarchingCubes();
+  virtual ~MarchingCubes();
   std::string GetName() const override;
   void SetIsoValue(const double &iso_value);
   void SetIsoValues(const double *iso_values, const int &num_values);
@@ -23,7 +23,6 @@ protected:
   void PreExecute() override;
   void PostExecute() override;
   void DoExecute() override;
-  bool ContainsIsoValues(vtkm::cont::DataSet &dom);
 
   std::vector<double> m_iso_values;
   std::string m_field_name;
