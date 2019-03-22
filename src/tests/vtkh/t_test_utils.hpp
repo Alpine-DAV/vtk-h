@@ -244,7 +244,7 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   data_set.AddField(CreatePointScalarField<vtkm::Float64>(point_handle, "point_data_Float64"));
   data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
   data_set.AddField(CreateCellScalarField<vtkm::Float64>(num_cells, "cell_data_Float64"));
-
+  data_set.AddField(CreateGhostScalarField(cell_dims));
   return data_set;
 }
 

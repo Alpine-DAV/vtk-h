@@ -40,7 +40,7 @@ TEST(vtkh_ghost_stripper, vtkh_ghost_stripper)
 
   stripper.SetInput(&data_set);
   stripper.SetField("ghosts");
-  stripper.AddMapField("point_data");
+  stripper.AddMapField("point_data_Float32");
   stripper.Update();
 
   vtkh::DataSet *stripped_output = stripper.GetOutput();
@@ -63,7 +63,7 @@ TEST(vtkh_ghost_stripper, vtkh_ghost_stripper)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(stripped_output);
-  tracer.SetField("point_data");
+  tracer.SetField("point_data_Float32");
 
   scene.AddRenderer(&tracer);
   scene.Render();
