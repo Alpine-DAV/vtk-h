@@ -40,10 +40,16 @@ protected:
   void PostExecute() override;
   void DoExecute() override;
 
-  void PackOutgoing(vtkmRay &rays);               // pack outgoing rays into out q
+  void PackRays(vtkmRay &rays);                   // pack outgoing rays into out q
+  void PackOutgoing();                            // pack outgoing rays into out q
   void RouteOutgoing();                           // route out q to destinations
   void RouteIncoming(std::vector<Ray> &in_rays);  // route incoming rays to local domains
   void Recv();
+  void UnpackIncoming();
+  void Kill();
+
+  // utility functionns
+  int ActiveRays(); // get the number of rays in the domain q
 
   std::string m_field_name;
   vtkmCamera m_camera;
@@ -58,12 +64,23 @@ protected:
 
   int m_rank;
   int m_procs;
+  int m_total_rays;
+  bool m_killed;
+
+  void ForwardRays();
 
 #ifdef VTKH_PARALLEL
   RayMessenger m_messenger;
 #endif
 
   void CreateRays(vtkmRay &rays);
+
+  enum MessageType
+  {
+    DEATH,
+    KILL
+  };
+
 };
 
 } //namespace vtkh

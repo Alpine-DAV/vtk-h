@@ -10,6 +10,13 @@
 #include "Ray.hpp"
 #include "Messenger.hpp"
 
+// debuggin
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+//#define LOG_MESSAGES 1
+
 namespace vtkh
 {
 
@@ -19,12 +26,11 @@ class RayMessenger : public Messenger
 {
   public:
     RayMessenger(MPI_Comm comm);
-    ~RayMessenger() {}
+    ~RayMessenger();
 
     void RegisterMessages(int msgSize,
                           int numMsgRecvs,
-                          int numICRecvs,
-                          int numDSRecvs=0);
+                          int numICRecvs);
 
     void SendRays(int dst, std::vector<Ray> &rays);
 
@@ -43,6 +49,12 @@ class RayMessenger : public Messenger
                  bool blockAndWait);
 
   private:
+
+#ifdef LOG_MESSAGES
+    static int m_message_id;
+    std::ofstream m_log;
+#endif
+
     enum
     {
       MESSAGE_TAG = 0xbadbeef,

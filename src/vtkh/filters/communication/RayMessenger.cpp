@@ -4,24 +4,38 @@
 #include "DebugMeowMeow.hpp"
 #include "RayMessenger.hpp"
 
+
 using namespace std;
 namespace vtkh
 {
+#ifdef LOG_MESSAGES
+int RayMessenger::m_message_id = 0;
+#endif
 
 RayMessenger::RayMessenger(MPI_Comm comm)
   : Messenger(comm)
 {
+#ifdef LOG_MESSAGES
+  std::stringstream ss;
+  ss<<"msg_log_"<<this->rank<<".txt";
+  m_log.open(ss.str());
+#endif
+}
+
+RayMessenger::~RayMessenger()
+{
+#ifdef LOG_MESSAGES
+  m_log.close();
+#endif
 }
 
 void
 RayMessenger::RegisterMessages(int mSz,
                                int nMsgRecvs,
-                               int nICRecvs,
-                               int nDSRecvs)
+                               int nICRecvs)
 {
     numMsgRecvs = nMsgRecvs;
     numSLRecvs = nICRecvs;
-    numDSRecvs = nDSRecvs;
 
     // Msgs are handled as vector<int>.
     // Serialization of msg consists: size_t (num elements) +
@@ -35,7 +49,7 @@ RayMessenger::RegisterMessages(int mSz,
     //slSize = sizeof(Ray);
     //slsPerRecv = 64;
     //slsPerRecv = 640; //works
-    slsPerRecv = 639;
+    slsPerRecv = 10000;
 
     int dsSize = 2 * sizeof(int);
 
@@ -53,7 +67,11 @@ RayMessenger::SendMsg(int dst, vector<int> &msg)
     //Write data.
     vtkh::write(*buff, rank);
     vtkh::write(*buff, msg);
-
+#ifdef LOG_MESSAGES
+    vtkh::write(*buff, m_message_id);
+    m_log<<rank<<" "<<m_message_id<<"\n";
+    m_message_id++;
+#endif
     SendData(dst, RayMessenger::MESSAGE_TAG, buff);
 //    MsgCnt.value++;
 //    CommTime.value += visitTimer->StopTimer(timerHandle, "SendMsg");
@@ -104,6 +122,11 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
           vector<int> m;
           vtkh::read(*buffers[i].second, sendRank);
           vtkh::read(*buffers[i].second, m);
+#ifdef LOG_MESSAGES
+          int message_id;
+          vtkh::read(*buffers[i].second, message_id);
+          m_log<<sendRank<<" "<<message_id<<"\n";
+#endif
 
           MsgCommData msg(sendRank, m);
 
@@ -114,6 +137,12 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
           int num, sendRank;
           vtkh::read(*buffers[i].second, sendRank);
           vtkh::read(*buffers[i].second, num);
+#ifdef LOG_MESSAGES
+          int message_id;
+          vtkh::read(*buffers[i].second, message_id);
+          m_log<<sendRank<<" "<<message_id<<"\n";
+#endif
+
           rays->resize(num);
           for (int j = 0; j < num; j++)
           {
@@ -149,6 +178,13 @@ void RayMessenger::SendRays(int dst, std::vector<Ray> &rays)
     vtkh::write(*buff, rank);
     const int num = rays.size();
     vtkh::write(*buff, num);
+
+#ifdef LOG_MESSAGES
+    vtkh::write(*buff, m_message_id);
+    m_log<<rank<<" "<<m_message_id<<"\n";
+    m_message_id++;
+#endif
+
     for (auto &ray : rays)
     {
         //std::cout<<"writing "<<ray<<"\n";

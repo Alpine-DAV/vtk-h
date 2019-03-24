@@ -100,7 +100,6 @@ SpatialQuery::IntersectRays(vtkm::rendering::raytracing::Ray<vtkm::Float32> &ray
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,2>> min_max;
   min_max.Allocate(rays.NumRays);
 
-  std::cout<<"done\n";
   vtkm::worklet::DispatcherMapField<detail::ClosestCandidates>(detail::ClosestCandidates())
     .Invoke(rays.Dir, rays.Origin, rays.MinDistance, rays.MaxDistance, min_max, m_inner_nodes, m_leaf_nodes, aabb_data );
 
@@ -112,8 +111,6 @@ SpatialQuery::IntersectRays(vtkm::rendering::raytracing::Ray<vtkm::Float32> &ray
 
   vtkm::cont::ArrayHandle<vtkm::Id> offsets;
   vtkm::Id sum = vtkm::cont::Algorithm::ScanExclusive(counts, offsets);
-
-  std::cout<<"Sum "<<sum<<"\n";
 
   vtkm::cont::ArrayHandle<vtkm::Id> candidates;
   candidates.Allocate(sum);
