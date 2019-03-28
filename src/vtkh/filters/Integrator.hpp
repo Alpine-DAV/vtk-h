@@ -62,11 +62,11 @@ public:
     }
     */
 
-    int Advect(std::vector<Particle> &particles,
+    int Advect(std::vector<vtkh::Particle> &particles,
                const vtkm::Id &maxSteps,
-               std::list<Particle> &I,
-               std::list<Particle> &T,
-               std::list<Particle> &A,
+               std::list<vtkh::Particle> &I,
+               std::list<vtkh::Particle> &T,
+               std::list<vtkh::Particle> &A,
                std::vector<vtkm::worklet::ParticleAdvectionResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
@@ -115,11 +115,11 @@ public:
         return totalSteps;
     }
 
-    int Trace(std::vector<Particle> &particles,
+    int Trace(std::vector<vtkh::Particle> &particles,
               const vtkm::Id &maxSteps,
-              std::list<Particle> &I,
-              std::list<Particle> &T,
-              std::list<Particle> &A,
+              std::list<vtkh::Particle> &I,
+              std::list<vtkh::Particle> &T,
+              std::list<vtkh::Particle> &A,
               std::vector<vtkm::worklet::StreamlineResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
@@ -174,12 +174,12 @@ public:
 
 private:
 
-    void UpdateStatus(Particle &p,
+    void UpdateStatus(vtkh::Particle &p,
                       const vtkm::Id &status,
                       const vtkm::Id &maxSteps,
-                      std::list<Particle> &I,
-                      std::list<Particle> &T,
-                      std::list<Particle> &A)
+                      std::list<vtkh::Particle> &I,
+                      std::list<vtkh::Particle> &T,
+                      std::list<vtkh::Particle> &A)
     {
         /*
         p.status = Particle::TERMINATE;
@@ -189,22 +189,22 @@ private:
 
         if (p.nSteps >= maxSteps || status == vtkm::worklet::particleadvection::ParticleStatus::TERMINATED)
         {
-            p.status = Particle::TERMINATE;
+            p.status = vtkh::Particle::TERMINATE;
             T.push_back(p);
         }
         else if (status == vtkm::worklet::particleadvection::ParticleStatus::STATUS_OK)
         {
-            p.status = Particle::ACTIVE;
+            p.status = vtkh::Particle::ACTIVE;
             A.push_back(p);
         }
         else
         {
-            p.status = Particle::OUTOFBOUNDS;
+            p.status = vtkh::Particle::OUTOFBOUNDS;
             I.push_back(p);
         }
     }
 
-    int SeedPrep(const std::vector<Particle> &particles,
+    int SeedPrep(const std::vector<vtkh::Particle> &particles,
                  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType,3>> &seedArray,
                  vtkm::cont::ArrayHandle<vtkm::Id> &stepArray)
     {

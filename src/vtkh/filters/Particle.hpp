@@ -5,6 +5,10 @@
 #include <vector>
 #include <vtkm/Types.h>
 
+#include <vtkh/filters/communication/MemStream.h>
+namespace vtkh
+{
+
 class Particle
 {
 public:
@@ -31,8 +35,34 @@ inline std::ostream &operator<<(std::ostream &os, const Particle &p)
     if (p.status == Particle::ACTIVE) os<<"ACTIVE";
     else if (p.status == Particle::TERMINATE) os<<"TERM";
     else if (p.status == Particle::OUTOFBOUNDS) os<<"OOB";
-    os<<" bid= "<<p.blockId;
+    os<<" bid = "<<p.blockId;
     return os;
 }
 
+template<>
+struct Serialization<Particle>
+{
+  static void write(MemStream &memstream, const Particle &data)
+  {
+    vtkh::write(memstream, data.coords[0]);
+    vtkh::write(memstream, data.coords[1]);
+    vtkh::write(memstream, data.coords[2]);
+    vtkh::write(memstream, data.id);
+    vtkh::write(memstream, data.nSteps);
+    vtkh::write(memstream, data.status);
+    vtkh::write(memstream, data.blockId);
+  }
+
+  static void read(MemStream &memstream, Particle &data)
+  {
+    vtkh::read(memstream, data.coords[0]);
+    vtkh::read(memstream, data.coords[1]);
+    vtkh::read(memstream, data.coords[2]);
+    vtkh::read(memstream, data.id);
+    vtkh::read(memstream, data.nSteps);
+    vtkh::read(memstream, data.status);
+    vtkh::read(memstream, data.blockId);
+  }
+};
+} //namespace vtkh
 #endif

@@ -1,8 +1,6 @@
 #include <iostream>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkh/filters/ParticleAdvection.hpp>
-#include <vtkh/filters/Communicator.hpp>
-#include <vtkh/filters/util.hpp>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Error.hpp>
 
@@ -13,10 +11,12 @@
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
+#include <vtkh/filters/communication/avtParICAlgorithm.hpp>
 #endif
 
+#include <vtkh/filters/communication/util.hpp>
+#include <vtkh/filters/communication/DebugMeowMeow.hpp>
 
-#include <vtkh/filters/DebugMeowMeow.hpp>
 ofstream dbg;
 
 using namespace std;
@@ -73,12 +73,16 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
 {
 #ifdef VTKH_PARALLEL
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  cout<<rank<<" dom2rank: "<<domToRank<<endl;
+  //cout<<rank<<" dom2rank: "<<domToRank<<endl;
   cout<<rank<<": "<<totalNumSeeds<<" "<<active.size()<<endl;
 
   int N = totalNumSeeds;
   int cnt = 0;
-  MPICommunicator communicator(mpiComm, domToRank);
+
+  avtParICAlgorithm communicator(mpiComm);
+  communicator.RegisterMessages(2, numRanks, numRanks);
+  //MPICommunicator communicator(mpiComm, domToRank);
+
 
   while (N > 0)
   {
@@ -404,7 +408,8 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
       p.coords[2] = randRange(boxRange[4], boxRange[5]);
       seeds.push_back(p);
   }
-  cout<<rank<<" boxof seeds: "<<seeds.size()<<" "<<box<<" "<<seedMethod<<endl;
+  //cout<<rank<<" boxof seeds: "<<seeds.size()<<" "<<box<<" "<<seedMethod<<endl;
+  cout<<__FILE__<<" "<<__LINE__<<" FIX ME"<<endl;
 }
 
 void

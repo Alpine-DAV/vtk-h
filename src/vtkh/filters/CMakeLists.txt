@@ -14,24 +14,21 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
+  Particle.hpp
   ParticleAdvection.hpp
-  avtParICAlgorithm.hpp
-  avtParICAlgorithm.hxx
-  Communicator.hpp
-  CommData.hpp
-  MemStream.h
-  MemStream.hxx
   adapter.h
   Integrator.hpp
-  Particle.hpp
-  BoundsMap.hpp
-  DebugMeowMeow.hpp
   PointAverage.hpp
   Recenter.hpp
   Threshold.hpp
   Slice.hpp
   VectorMagnitude.hpp
-  util.hpp
+  communication/BoundsMap.hpp
+  communication/CommData.hpp
+  communication/Communicator.hpp
+  communication/DebugMeowMeow.hpp
+  communication/MemStream.h
+  communication/util.hpp
   )
 
 set(vtkh_filters_sources
@@ -52,6 +49,7 @@ set(vtkh_filters_sources
   Threshold.cpp
   Slice.cpp
   VectorMagnitude.cpp
+  communication/MemStream.cpp
   )
 
 set(vtkh_filters_deps vtkh_core vtkh_utils vtkm_compiled_filters)
@@ -88,6 +86,13 @@ install(FILES ${vtkh_filters_headers}
 if (MPI_FOUND)
 
   set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkm_compiled_filters)
+  set(vtkh_mpi_headers communication/Messenger.hpp
+                       communication/avtParICAlgorithm.hpp
+                       communication/RayMessenger.hpp)
+
+    set(vtkh_mpi_sources communication/Messenger.cpp
+                         communication/avtParICAlgorithm.cpp
+                         communication/RayMessenger.cpp)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
@@ -102,8 +107,8 @@ if (MPI_FOUND)
 
     blt_add_library(
       NAME vtkh_filters_mpi
-      SOURCES ${vtkh_filters_sources}
-      HEADERS ${vtkh_filters_headers}
+      SOURCES ${vtkh_filters_sources}  ${vtkh_mpi_sources}
+      HEADERS ${vtkh_filters_headers} ${vtkh_mpi_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
     if(ENABLE_OPENMP)
