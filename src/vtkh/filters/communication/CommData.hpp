@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <iostream>
-#include <vtkh/filters/communication/util.hpp>
+#include <vtkh/filters/util.hpp>
 
 class MsgCommData
 {

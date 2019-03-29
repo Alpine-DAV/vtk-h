@@ -27,17 +27,17 @@ public:
     int id, nSteps;
     int blockId;
     Status status;
-};
 
-inline std::ostream &operator<<(std::ostream &os, const Particle &p)
-{
-    os<<"P_"<<p.id<<": ["<<p.coords[0]<<" "<<p.coords[1]<<" "<<p.coords[2]<<"] #s "<<p.nSteps<<" ";
-    if (p.status == Particle::ACTIVE) os<<"ACTIVE";
-    else if (p.status == Particle::TERMINATE) os<<"TERM";
-    else if (p.status == Particle::OUTOFBOUNDS) os<<"OOB";
-    os<<" bid = "<<p.blockId;
-    return os;
-}
+    friend std::ostream &operator<<(std::ostream &os, const vtkh::Particle p)
+    {
+        os<<"P_"<<p.id<<": ["<<p.coords[0]<<" "<<p.coords[1]<<" "<<p.coords[2]<<"] #s "<<p.nSteps<<" ";
+        if (p.status == Particle::ACTIVE) os<<"ACTIVE";
+        else if (p.status == Particle::TERMINATE) os<<"TERM";
+        else if (p.status == Particle::OUTOFBOUNDS) os<<"OOB";
+        os<<" bid = "<<p.blockId;
+        return os;
+    }
+};
 
 template<>
 struct Serialization<Particle>

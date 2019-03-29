@@ -9,13 +9,14 @@
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/cont/Algorithm.h>
 
+#include <vtkh/filters/util.hpp>
+
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
 #include <vtkh/filters/communication/avtParICAlgorithm.hpp>
 #endif
 
-#include <vtkh/filters/communication/util.hpp>
-#include <vtkh/filters/communication/DebugMeowMeow.hpp>
+//#include <vtkh/filters/communication/DebugMeowMeow.hpp>
 
 ofstream dbg;
 
@@ -357,6 +358,7 @@ ParticleAdvection::Init()
   for (int i = 0; i < nDoms; i++)
       tmp[this->m_input->GetDomainIds()[i]] = rank;
   MPI_Allreduce(&tmp[0], &domToRank[0], totalNumDoms, MPI_INT, MPI_SUM, mpiComm);
+  if (rank == 0) cout<<"DOM->RANK: "<<domToRank[0]<<" "<<domToRank[1]<<endl;
 #endif
 }
 DataBlock *
@@ -377,6 +379,8 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
   float boxRange[6] = {(float)box.X.Min, (float)box.X.Max,
                        (float)box.Y.Min, (float)box.Y.Max,
                        (float)box.Z.Min, (float)box.Z.Max};
+  cout<<"BoxOfSeeds: "<<boxRange[0]<<" "<<boxRange[1]<<" "<<boxRange[2]<<" "<<boxRange[3]<<" "<<boxRange[4]<<" "<<boxRange[5]<<endl;
+  cout<<" numSeeds= "<<numSeeds<<endl;
   //shrink by 5%
   if (shrink)
   {
@@ -409,12 +413,17 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
       seeds.push_back(p);
   }
   //cout<<rank<<" boxof seeds: "<<seeds.size()<<" "<<box<<" "<<seedMethod<<endl;
+  cout<<rank<<" boxof seeds: "<<seeds.size()<<" BOX "<<seedMethod<<endl;
   cout<<__FILE__<<" "<<__LINE__<<" FIX ME"<<endl;
+  std::list<int> x;
+  std::cout<<x<<std::endl;
+  cout<<seeds[0]<<endl;
 }
 
 void
 ParticleAdvection::CreateSeeds()
 {
+    cout<<"CreateSeeds: "<<seedMethod<<endl;
     active.clear();
     inactive.clear();
     terminated.clear();

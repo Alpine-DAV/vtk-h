@@ -8,6 +8,7 @@
 
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
+#include <vtkh/filters/util.hpp>
 #include <vtkh/filters/ParticleAdvection.hpp>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/cont/DataSet.h>
@@ -58,6 +59,11 @@ TEST(vtkh_particle_advection, vtkh_serial_particle_advection)
   vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
 
   std::cout << "Running parallel Particle Advection, vtkh - with " << comm_size << " ranks" << std::endl;
+  std::vector<int> x;
+  std::list<int> y;
+  std::cout<<"Y= "<<y<<std::endl;
+  std::cout<<"X= "<<x<<std::endl;
+
 
   vtkh::DataSet data_set;
   const int base_size = 32;

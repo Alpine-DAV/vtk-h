@@ -28,7 +28,7 @@ set(vtkh_filters_headers
   communication/Communicator.hpp
   communication/DebugMeowMeow.hpp
   communication/MemStream.h
-  communication/util.hpp
+  util.hpp
   )
 
 set(vtkh_filters_sources

@@ -1,13 +1,35 @@
 #ifndef __UTIL_COMM_H
 #define __UTIL_COMM_H
 
+#include <list>
 #include <vector>
 #include <map>
 #include <iostream>
 #include <deque>
-#include <vtkm/Bounds.h>
+//#include <vtkm/Bounds.h>
 
-template <typename T>
+
+template<class T>
+inline std::ostream& operator<<(std::ostream& out,
+                                const std::vector<T> &v)
+{
+    typename std::vector<T>::const_iterator b = v.begin();
+    typename std::vector<T>::const_iterator e = v.end();
+
+    out<<"[";
+    while (b != e)
+    {
+        out<<*b;
+        std::advance(b,1);
+        if (b != e)
+            out<<" ";
+    }
+    out<<"]";
+    return out;
+}
+
+/*
+template <class T>
 inline std::ostream &operator<<(std::ostream &os, const std::list<T> &l)
 {
     os<<"{";
@@ -16,6 +38,7 @@ inline std::ostream &operator<<(std::ostream &os, const std::list<T> &l)
     os<<"}";
     return os;
 }
+*/
 
 template <typename T>
 inline std::ostream &operator<<(std::ostream &os, const std::deque<T> &l)
@@ -28,7 +51,7 @@ inline std::ostream &operator<<(std::ostream &os, const std::deque<T> &l)
 }
 
 template <typename T>
-inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
 {
     os<<"[";
     int n = v.size();
@@ -128,4 +151,4 @@ dumpStreamlines(const std::vector<std::vector<float> > &streamlines,
 }
 #endif
 
-#endif //__UTIL_H
+#endif //__UTIL_COMM_H
