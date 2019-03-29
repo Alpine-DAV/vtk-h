@@ -5,6 +5,9 @@
 #include <iostream>
 #include <vtkh/filters/util.hpp>
 
+namespace vtkh
+
+{
 class MsgCommData
 {
   public:
@@ -16,13 +19,13 @@ class MsgCommData
 
     int rank;
     std::vector<int> message;
-};
 
-inline std::ostream &operator<<(std::ostream &os, const MsgCommData &m)
-{
-    os<<"(msg: "<<m.rank<<" "<<m.message<<")";
-    return os;
-}
+    friend std::ostream &operator<<(std::ostream &os, const MsgCommData &m)
+    {
+        os<<"(msg: "<<m.rank<<" "<<m.message<<")";
+        return os;
+    }
+};
 
 template<class T>
 class ParticleCommData
@@ -36,14 +39,15 @@ class ParticleCommData
 
     int rank;
     T p;
+
+    friend
+    std::ostream &operator<<(std::ostream &os, const ParticleCommData<T> &p)
+    {
+        os<<"(pmsg: "<<p.rank<<" "<<p.p<<")";
+        return os;
+    }
 };
 
-template<class T>
-inline std::ostream &operator<<(std::ostream &os, const ParticleCommData<T> &p)
-{
-    os<<"(pmsg: "<<p.rank<<" "<<p.p<<")";
-    return os;
-}
 
 class DSCommData
 {
@@ -60,5 +64,6 @@ typedef long BlockIDType;
     void *ds;
 //    vtkDataSet *ds;
 };
+}
 
 #endif

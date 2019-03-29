@@ -16,11 +16,9 @@
 #include <vtkh/filters/communication/avtParICAlgorithm.hpp>
 #endif
 
-//#include <vtkh/filters/communication/DebugMeowMeow.hpp>
+#include <vtkh/filters/communication/DebugMeowMeow.hpp>
 
-ofstream dbg;
-
-using namespace std;
+std::ofstream dbg;
 
 namespace vtkh
 {
@@ -57,12 +55,27 @@ ParticleAdvection::ParticleAdvection()
 
 ParticleAdvection::~ParticleAdvection()
 {
-    cout<<"Streamline dtor"<<endl;
 }
 
 void ParticleAdvection::PreExecute()
 {
   Filter::PreExecute();
+
+  //Create the bounds map and dataBlocks list.
+  boundsMap.Clear();
+  const int nDoms = this->m_input->GetNumberOfDomains();
+  for(int i = 0; i < nDoms; i++)
+  {
+    vtkm::Id id;
+    vtkm::cont::DataSet dom;
+    this->m_input->GetDomain(i, dom, id);
+
+    dataBlocks.push_back(new DataBlock(id, dom, m_field_name, stepSize));
+
+    boundsMap.AddBlock(id, dom.GetCoordinateSystem().GetBounds());
+  }
+
+  boundsMap.Build();
 }
 
 void ParticleAdvection::PostExecute()
@@ -74,44 +87,44 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
 {
 #ifdef VTKH_PARALLEL
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  //cout<<rank<<" dom2rank: "<<domToRank<<endl;
-  cout<<rank<<": "<<totalNumSeeds<<" "<<active.size()<<endl;
+  std::cout<<rank<<": "<<totalNumSeeds<<" "<<active.size()<<std::endl;
 
   int N = totalNumSeeds;
   int cnt = 0;
 
   avtParICAlgorithm communicator(mpiComm);
   communicator.RegisterMessages(2, numRanks, numRanks);
-  //MPICommunicator communicator(mpiComm, domToRank);
-
 
   while (N > 0)
   {
-      DBG("**** Loop: N= "<<N<<" AIT: "<<active.size()<<" "<<inactive.size()<<" "<<terminated.size()<<endl);
+      DBG("**** Loop: N= "<<N<<" AIT: "<<active<<" "<<inactive<<" "<<terminated<<std::endl);
 
       vector<Particle> v;
-      list<Particle> I, T, A;
+      std::list<Particle> I, T, A;
       int numTerm = 0;
 
       if (GetActiveParticles(v))
       {
+          DBG("GetActiveParticles: "<<v<<std::endl);
           DataBlock *blk = GetBlock(v[0].blockId);
 
-          DBG("Integrate: "<<v.size()<<endl);
+          DBG("Integrate: "<<v<<std::endl);
+          blk->ds.PrintSummary(std::cout);
+
           blk->integrator.Trace(v, maxSteps, I, T, A, &traces);
-          DBG("  -----Integrate:  ITA: "<<I.size()<<" "<<T.size()<<" "<<A.size()<<endl);
-          DBG("                   I= "<<I<<endl);
+          DBG("--Integrate:  ITA: "<<I<<" "<<T<<" "<<A<<std::endl);
+          DBG("                   I= "<<I<<std::endl);
           numTerm = T.size();
           if (numTerm > 0)
               terminated.insert(terminated.end(), T.begin(), T.end());
       }
 
       bool haveActive = !active.empty();
-      list<Particle> in, term;
+      std::list<Particle> in, term;
       int totalTerm = communicator.Exchange(haveActive, I, in, term, boundsMap, numTerm);
       N -= (numTerm+totalTerm);
 
-      DBG(" Exchange done: in="<<in<<" numTerm: "<<numTerm<<" totalTerm: "<<totalTerm<<endl);
+      DBG(" Exchange done: in="<<in<<" numTerm: "<<numTerm<<" totalTerm: "<<totalTerm<<std::endl);
       if (!term.empty())
           terminated.insert(terminated.end(), term.begin(), term.end());
       if (!in.empty())
@@ -121,15 +134,15 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
       // no work available, take a snooze.
       if (active.empty())
       {
-          DBG("    sleep"<<endl);
+          DBG("    sleep"<<std::endl);
           //usleep(1000);
       }
-      DBG("   N --> "<<N<<endl);
-      DBG(endl<<endl<<endl);
+      DBG("   N --> "<<N<<std::endl);
+      DBG(std::endl<<std::endl<<std::endl);
   }
 //  DumpTraces(rank, traces);
-  cout<<rank<<": done tracing. # of traces= "<<traces.size()<<endl;
-  DBG("All done"<<endl);
+  std::cout<<rank<<": done tracing. # of traces= "<<traces.size()<<std::endl;
+  DBG("All done"<<std::endl);
 #endif
 }
 
@@ -258,12 +271,12 @@ ParticleAdvection::DumpSLOutput(const vtkm::cont::DataSet &ds, int domId)
   {
     ofstream output;
     output.open("ds.visit", ofstream::out);
-    output<<"!NBLOCKS "<<numRanks<<endl;
+    output<<"!NBLOCKS "<<numRanks<<std::endl;
     for (int i = 0; i < numRanks; i++)
     {
         char nm[128];
         sprintf(nm, "ds.%03d.vtk", i);
-        output<<nm<<endl;
+        output<<nm<<std::endl;
     }
   }
 }
@@ -291,12 +304,12 @@ ParticleAdvection::DumpDS()
   {
     ofstream output;
     output.open("dom.visit", ofstream::out);
-    output<<"!NBLOCKS "<<numRanks<<endl;
+    output<<"!NBLOCKS "<<numRanks<<std::endl;
     for (int i = 0; i < totalNumDoms; i++)
     {
       char nm[128];
       sprintf(nm, "dom.%03d.vtk", i);
-      output<<nm<<endl;
+      output<<nm<<std::endl;
     }
   }
 }
@@ -304,69 +317,19 @@ ParticleAdvection::DumpDS()
 void
 ParticleAdvection::Init()
 {
-#ifdef VTKH_PARALLEL
-    MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-#endif
-  int totalNumDoms = this->m_input->GetGlobalNumberOfDomains();
-  int nDoms = this->m_input->GetNumberOfDomains();
-
-  vector<double> domBounds(6*totalNumDoms, 0.0), locBounds(6*totalNumDoms, 0.0);
-  cout<<"TOTAL NUM DOMAINS= "<<totalNumDoms<<" nDoms= "<<nDoms<<endl;
-
-  for (int i = 0; i < nDoms; i++)
-  {
-    vtkm::Id domId;
-    vtkm::cont::DataSet dom;
-    this->m_input->GetDomain(i, dom, domId);
-    //dom.PrintSummary(cout);
-    dataBlocks.push_back(new DataBlock(domId, dom, m_field_name, stepSize));
-
-    vtkm::Bounds b = dom.GetCoordinateSystem().GetBounds();
-    cout<<i<<" domId= "<<domId<<endl;
-    cout<<i<<" bounds: ("<<b.X.Min<<" "<<b.Y.Min<<" "<<b.Z.Min<<") ("<<b.X.Max<<" "<<b.Y.Max<<" "<<b.Z.Max<<")"<<endl;
-
-    locBounds[domId*6 + 0] = b.X.Min;
-    locBounds[domId*6 + 1] = b.X.Max;
-    locBounds[domId*6 + 2] = b.Y.Min;
-    locBounds[domId*6 + 3] = b.Y.Max;
-    locBounds[domId*6 + 4] = b.Z.Min;
-    locBounds[domId*6 + 5] = b.Z.Max;
-  }
-
-#ifdef VTKH_PARALLEL
-  MPI_Allreduce(&locBounds[0], &domBounds[0], 6*totalNumDoms, MPI_DOUBLE, MPI_SUM, mpiComm);
-#endif
-
-  for (int i = 0; i < totalNumDoms; i++)
-  {
-    vtkm::Bounds b(domBounds[i*6 + 0],
-                   domBounds[i*6 + 1],
-                   domBounds[i*6 + 2],
-                   domBounds[i*6 + 3],
-                   domBounds[i*6 + 4],
-                   domBounds[i*6 + 5]);
-    boundsMap.AddBlock(i, b);
-    if (i == 0)
-        globalBounds = b;
-    else
-        globalBounds.Include(b);
-  }
-
-  domToRank.resize(totalNumDoms, 0);
-#ifdef VTKH_PARALLEL
-  vector<int> tmp(totalNumDoms, 0);
-  for (int i = 0; i < nDoms; i++)
-      tmp[this->m_input->GetDomainIds()[i]] = rank;
-  MPI_Allreduce(&tmp[0], &domToRank[0], totalNumDoms, MPI_INT, MPI_SUM, mpiComm);
-  if (rank == 0) cout<<"DOM->RANK: "<<domToRank[0]<<" "<<domToRank[1]<<endl;
-#endif
 }
+
 DataBlock *
 ParticleAdvection::GetBlock(int blockId)
 {
     for (auto &d : dataBlocks)
         if (d->id == blockId)
+        {
+            DBG("GetBlock: "<<blockId<<" "<<*d<<std::endl);
             return d;
+        }
+
+    DBG("GetBlock: "<<blockId<<" = NULL"<<std::endl);
     return NULL;
 }
 
@@ -379,8 +342,7 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
   float boxRange[6] = {(float)box.X.Min, (float)box.X.Max,
                        (float)box.Y.Min, (float)box.Y.Max,
                        (float)box.Z.Min, (float)box.Z.Max};
-  cout<<"BoxOfSeeds: "<<boxRange[0]<<" "<<boxRange[1]<<" "<<boxRange[2]<<" "<<boxRange[3]<<" "<<boxRange[4]<<" "<<boxRange[5]<<endl;
-  cout<<" numSeeds= "<<numSeeds<<endl;
+  DBG("Box of Seeds: N= "<<numSeeds<<" "<<box<<std::endl);
   //shrink by 5%
   if (shrink)
   {
@@ -412,18 +374,12 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
       p.coords[2] = randRange(boxRange[4], boxRange[5]);
       seeds.push_back(p);
   }
-  //cout<<rank<<" boxof seeds: "<<seeds.size()<<" "<<box<<" "<<seedMethod<<endl;
-  cout<<rank<<" boxof seeds: "<<seeds.size()<<" BOX "<<seedMethod<<endl;
-  cout<<__FILE__<<" "<<__LINE__<<" FIX ME"<<endl;
-  std::list<int> x;
-  std::cout<<x<<std::endl;
-  cout<<seeds[0]<<endl;
 }
 
 void
 ParticleAdvection::CreateSeeds()
 {
-    cout<<"CreateSeeds: "<<seedMethod<<endl;
+    std::cout<<"CreateSeeds: "<<seedMethod<<std::endl;
     active.clear();
     inactive.clear();
     terminated.clear();
@@ -442,7 +398,7 @@ ParticleAdvection::CreateSeeds()
         }
     }
     else if (seedMethod == RANDOM)
-        BoxOfSeeds(globalBounds, seeds);
+        BoxOfSeeds(boundsMap.globalBounds, seeds);
     else if (seedMethod == RANDOM_BOX)
         BoxOfSeeds(seedBox, seeds);
     else if (seedMethod == POINT)
@@ -481,20 +437,20 @@ ParticleAdvection::DumpTraces(int idx, const vector<vtkm::Vec<double,4>> &partic
     sprintf(nm, "output.%03d.txt", idx);
     output.open(nm, ofstream::out);
 
-    output<<"X,Y,Z,ID"<<endl;
+    output<<"X,Y,Z,ID"<<std::endl;
     for (auto &p : particleTraces)
-        output<<p[0]<<", "<<p[1]<<", "<<p[2]<<", "<<(int)p[3]<<endl;
+        output<<p[0]<<", "<<p[1]<<", "<<p[2]<<", "<<(int)p[3]<<std::endl;
 
     if (idx == 0)
     {
         ofstream output;
         output.open("output.visit", ofstream::out);
-        output<<"!NBLOCKS "<<numRanks<<endl;
+        output<<"!NBLOCKS "<<numRanks<<std::endl;
         for (int i = 0; i < numRanks; i++)
         {
             char nm[128];
             sprintf(nm, "output.%03d.txt", i);
-            output<<nm<<endl;
+            output<<nm<<std::endl;
         }
     }
 }

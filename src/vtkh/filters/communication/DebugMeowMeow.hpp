@@ -3,11 +3,10 @@
 
 #include <vtkh/filters/util.hpp>
 
-extern ofstream dbg;
+extern std::ofstream dbg;
 
 #ifdef TRACE_DEBUG
-//#define DBG(x) dbg<<x
-#define DBG(x)
+#define DBG(x) dbg<<x
 #else
 #define DBG(x)
 #endif

@@ -82,7 +82,6 @@ avtParICAlgorithm::RecvAny(vector<MsgCommData> *msgs,
     }
     if (recvICs)
     {
-        std::cout<<"looking to receive particle\n";
         tags.insert(avtParICAlgorithm::PARTICLE_TAG);
         recvICs->resize(0);
     }
@@ -232,17 +231,8 @@ avtParICAlgorithm::Exchange(bool haveWork,
                             list<vtkh::Particle> &term,
                             vtkh::BoundsMap &boundsMap,
                             int numTerm)
-/*
-size_t
-avtParICAlgorithm::Exchange(bool haveWork,
-                            list<Particle> &outData,
-                            list<Particle> &inData,
-                            list<Particle> &term,
-                            vtkh::BoundsMap &boundsMap,
-                            int numTerm)
-*/
 {
-    DBG(" ---Exchange: O="<<outData.size()<<" I="<<inData.size()<<" NT= "<<numTerm<<endl);
+    DBG("----Exchange: O="<<outData<<" I="<<inData<<" NT= "<<numTerm<<endl);
 
     map<int, list<Particle>> sendData;
 
@@ -267,6 +257,7 @@ avtParICAlgorithm::Exchange(bool haveWork,
             else
             {
                 int dst = boundsMap.GetRank(id);
+                DBG("---- boundsMap.GetRank("<<id<<")= "<<dst<<std::endl);
                 if(dst == -1) std::cout<<"COUND NOT FIND RANK for block "<<id<<"\n";
                 if (dst == rank)
                     inData.push_back(*lit);
@@ -289,7 +280,7 @@ avtParICAlgorithm::Exchange(bool haveWork,
     if (terminations > 0)
     {
         vector<int> msg = {MSG_TERMINATE, terminations};
-        DBG("   ---SendM: rank="<<termSendMap[rank]<<" msg="<<msg<<endl);
+        DBG("   ---SendAllMsg: msg="<<msg<<endl);
         SendAllMsg(msg);
     }
 

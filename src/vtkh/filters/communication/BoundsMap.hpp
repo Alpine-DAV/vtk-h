@@ -17,6 +17,8 @@
 #include <mpi.h>
 #endif
 
+#include "DebugMeowMeow.hpp"
+
 namespace vtkh
 {
 
@@ -38,7 +40,7 @@ public:
           bm[id] = bounds;
       else
           throw "Duplicate block";
-      m_rank_map[id] = 0;
+      m_rank_map[id] = -1;
   }
 
   template <template <typename, typename> class Container,
@@ -75,9 +77,9 @@ public:
     auto it = m_rank_map.find(block_id);
     int rank = -1;
     if(it != m_rank_map.end())
-    {
       rank = m_rank_map[block_id];
-    }
+
+    DBG("GetRank: "<<block_id<<" = "<<rank<<std::endl);
     return rank;
   }
 
@@ -173,6 +175,7 @@ public:
         std::cout<<"domain "<<dom_id<<" rank "<<rank_map[i]<<"\n";
       }
     }
+    DBG("BoundsMap::Build() "<<m_rank_map<<std::endl);
 
     delete[] dom_send_buff;
     delete[] dom_rec_buff;
@@ -184,12 +187,19 @@ public:
     delete[] box_counts;
     delete[] rank_map;
 #endif
+
+    //Get the global bounds.
+    for (auto &it : bm)
+        globalBounds.Include(it.second);
+    DBG("BoundsMap globalBounds: "<<globalBounds<<std::endl);
+
     // Placeholder for more complex representatoin like a bvh that needs to
     // be constructed
   }
 
   std::map<int, vtkm::Bounds> bm; // map<dom_id, bounds>
   std::map<int, int> m_rank_map;  // map<dom_id,rank>
+  vtkm::Bounds globalBounds;
 protected:
 
 };

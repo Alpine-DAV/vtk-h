@@ -6,29 +6,12 @@
 #include <map>
 #include <iostream>
 #include <deque>
+#include <vtkm/cont/DataSet.h>
 //#include <vtkm/Bounds.h>
 
-
-template<class T>
-inline std::ostream& operator<<(std::ostream& out,
-                                const std::vector<T> &v)
+namespace vtkh
 {
-    typename std::vector<T>::const_iterator b = v.begin();
-    typename std::vector<T>::const_iterator e = v.end();
 
-    out<<"[";
-    while (b != e)
-    {
-        out<<*b;
-        std::advance(b,1);
-        if (b != e)
-            out<<" ";
-    }
-    out<<"]";
-    return out;
-}
-
-/*
 template <class T>
 inline std::ostream &operator<<(std::ostream &os, const std::list<T> &l)
 {
@@ -38,7 +21,6 @@ inline std::ostream &operator<<(std::ostream &os, const std::list<T> &l)
     os<<"}";
     return os;
 }
-*/
 
 template <typename T>
 inline std::ostream &operator<<(std::ostream &os, const std::deque<T> &l)
@@ -78,6 +60,18 @@ template <typename T1, typename T2>
 inline std::ostream &operator<<(std::ostream &os, const std::pair<T1,T2> &p)
 {
     os<<"("<<p.first<<","<<p.second<<")";
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const vtkm::cont::DataSet &ds)
+{
+    ds.PrintSummary(os);
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const vtkm::Bounds &b)
+{
+    os<<"{("<<b.X.Min<<":"<<b.X.Max<<")("<<b.Y.Min<<":"<<b.Y.Max<<")("<<b.Z.Min<<":"<<b.Z.Max<<")}";
     return os;
 }
 
@@ -150,5 +144,6 @@ dumpStreamlines(const std::vector<std::vector<float> > &streamlines,
     dumpDS(pd, fname);
 }
 #endif
+}
 
 #endif //__UTIL_COMM_H

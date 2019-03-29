@@ -17,8 +17,6 @@
 
 #include <vtkh/filters/Particle.hpp>
 
-using namespace std;
-
 class Integrator
 {
     typedef WORKER_DEVICE_ADAPTER DeviceAdapter;

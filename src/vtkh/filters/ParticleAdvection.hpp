@@ -67,7 +67,7 @@ protected:
   void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult> &traces);
 
   DataBlock * GetBlock(int blockId);
-  int DomainToRank(int blockId) {return domToRank[blockId];}
+  int DomainToRank(int blockId) {return boundsMap.GetRank(blockId);}
   void BoxOfSeeds(const vtkm::Bounds &box,
                   std::vector<Particle> &seeds,
                   vtkm::Id domId=-1,
@@ -85,9 +85,7 @@ protected:
   float stepSize;
 
   BoundsMap boundsMap;
-  std::vector<int> domToRank;
   std::vector<DataBlock*> dataBlocks;
-  vtkm::Bounds globalBounds;
 
   //seed data
   std::list<Particle> active, inactive, terminated;
@@ -131,6 +129,15 @@ private:
     bool used;
     mutex m;
     */
+
+    friend std::ostream &operator<<(std::ostream &os, const DataBlock &d)
+    {
+        os<<"DataBlock {"<<std::endl;
+        os<<"  id="<<d.id<<std::endl;
+        d.ds.PrintSummary(os);
+        os<<"} DataBlock"<<std::endl;
+        return os;
+    }
 };
 
 
