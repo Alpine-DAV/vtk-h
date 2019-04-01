@@ -40,10 +40,10 @@ protected:
   void PostExecute() override;
   void DoExecute() override;
 
-  void PackRays(vtkmRay &rays);                   // pack outgoing rays into out q
-  void PackOutgoing();                            // pack outgoing rays into out q
-  void RouteOutgoing();                           // route out q to destinations
-  void RouteIncoming(std::vector<Ray> &in_rays);  // route incoming rays to local domains
+  void PackRays(vtkmRay &rays);                    // pack outgoing rays into out q
+  void PackOutgoing();                             // pack outgoing rays into out q
+  void Send();                                     // route out q to destinations
+  void RouteToDomains(std::vector<Ray> &in_rays);  // route incoming rays to local domains
   void Recv();
   void UnpackIncoming();
   void Kill();

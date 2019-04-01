@@ -181,20 +181,15 @@ void PathTrace::PostExecute()
 static int out = 0;
 static int total_death = 0;
 static int in = 0;
+
 void PathTrace::PackRays(vtkmRay &rays)
 {
   SpatialQuery::Result dests = m_spatial_query.IntersectRays(rays);
 
   std::vector<int> ray_dests(10); // destination for a single ray
-  int death_count = 0;
   for(int i = 0; i < rays.NumRays; ++i)
   {
     dests.GetDomains(i, ray_dests);
-    if(ray_dests.size() == 0)
-    {
-      death_count++;
-      continue;
-    }
 
     if(ray_dests.size() > 1) std::cout<<"spec ";
 
@@ -217,6 +212,11 @@ void PathTrace::PackRays(vtkmRay &rays)
     //ray.m_throughput[0] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 0);
     //ray.m_throughput[1] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 1);
     //ray.m_throughput[2] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 2);
+    if(ray_dests.size() == 0)
+    {
+      m_out_q[-1].push_back(ray);
+    }
+
     for(int d = 0; d < ray_dests.size(); ++d)
     {
       const int domain = ray_dests[d];
@@ -228,43 +228,20 @@ void PathTrace::PackRays(vtkmRay &rays)
     }
   }
 
-  if(death_count > 0) std::cout<<"["<<m_rank<<"] death "<<death_count<<"\n";
 
-  out += death_count;
-  total_death += death_count;
-  if(m_rank != 0)
-  {
-#ifdef VTKH_PARALLEL
-    if(death_count > 0)
-    {
-      std::vector<int> msg(2);
-      msg[0] = MessageType::DEATH;
-      msg[1] = death_count;
-      m_messenger.SendMsg(0, msg);
-    }
-#endif
-  }
-  else
-  {
-    if(death_count > 0)
-    {
-      m_total_rays -= death_count;
-      std::cout<<"["<<m_rank<<"]  remaining "<< m_total_rays<<"\n";
-    }
-  }
 }
 
 void PathTrace::PackOutgoing()
 {
   for(auto it = m_dom_rays.begin(); it != m_dom_rays.end(); ++it)
   {
-    vtkmRay &rays = it->second;;
+    vtkmRay &rays = it->second;
     PackRays(rays);
     rays.Resize(0);
   }
 }
 
-void PathTrace::RouteIncoming(std::vector<Ray> &in_rays)
+void PathTrace::RouteToDomains(std::vector<Ray> &in_rays)
 {
   const int size = in_rays.size();
   for(int i = 0; i < size; ++i)
@@ -294,8 +271,7 @@ void PathTrace::Recv()
   m_messenger.RecvRays(ray_data);
   if(ray_data.size() > 0 )
   {
-    in += ray_data.size();
-    RouteIncoming(ray_data);
+    RouteToDomains(ray_data);
   }
 
   if(m_rank == 0)
@@ -318,6 +294,7 @@ void PathTrace::Recv()
   }
   else
   {
+    // all other ranks check for control signals
     std::vector<MsgCommData> msgs;
     m_messenger.RecvMsg(msgs);
     if(msgs.size() != 0)
@@ -335,31 +312,56 @@ void PathTrace::Recv()
 #endif
 }
 
-void PathTrace::RouteOutgoing()
+void PathTrace::Send()
 {
   for(auto it = m_out_q.begin(); it != m_out_q.end(); ++it)
   {
     const int dest = it->first;
 
+    out += it->second.size();
+    // send death notices
+    if(dest == -1)
+    {
+      const int death_count = it->second.size();
+      if(death_count != 0)
+      {
+        if(m_rank != 0)
+        {
+#ifdef VTKH_PARALLEL
+          std::vector<int> msg(2);
+          msg[0] = MessageType::DEATH;
+          msg[1] = death_count;
+          m_messenger.SendMsg(0, msg);
+#endif
+        }
+        else
+        {
+          m_total_rays -= death_count;
+          std::cout<<"["<<m_rank<<"]  remaining "<< m_total_rays<<"\n";
+        }
+
+        std::cout<<"["<<m_rank<<"] death "<<death_count<<"\n";
+
+        total_death += death_count;
+      }
+
+    }
+    // route to self
     if(m_rank == dest)
     {
-      RouteIncoming(it->second);
-      it->second.clear();
-      continue;
+      RouteToDomains(it->second);
     }
-
 #ifdef VTKH_PARALLEL
-    if(it->second.size() > 0)
+    else if(it->second.size() > 0)
     {
       std::cout<<"["<<m_rank<<"] --> ["<<dest<<"] "<<it->second.size()<<"\n";
-      out += it->second.size();
       m_messenger.SendRays(dest, it->second);
-      it->second.clear();
     }
 #else
   // non-mpi should never get here
-  std::cout<<"Non-mpi: can't route to rank "<<dest<<"\n";
+    std::cout<<"Non-mpi: can't route to rank "<<dest<<"\n";
 #endif
+    it->second.clear();
   }
 }
 
@@ -383,6 +385,7 @@ void PathTrace::UnpackIncoming()
     {
       std::cout<<"["<<m_rank<<"] unpacking domain "<<domain_id<<" size "<<num_rays<<"\n";
     }
+    in += num_rays;
     for(int i = 0; i < num_rays; ++i)
     {
       Ray &ray = it->second[i];
@@ -427,15 +430,17 @@ void PathTrace::DoExecute()
   int t_ray = m_total_rays;
 
   PackRays(rays);
-  RouteOutgoing();
+  std::cout<<"init rays "<<rays.NumRays<<"\n";
+  Send();
+
+  in = 0;
+  out = 0;
 
   // TODO: filter spatial query for termination status
   // if a ray count is 0 it has exited the distrubuted mesh.
   // Add the light / background contribution and send the dead
   // ray home
 
-  in = 0;
-  out = 0;
 
   while(!m_killed)
   {
@@ -447,7 +452,7 @@ void PathTrace::DoExecute()
     ForwardRays(); // stand in for trace
 
     PackOutgoing();
-    RouteOutgoing();
+    Send();
 
     if(m_rank == 0 && m_total_rays < 1)
     {
