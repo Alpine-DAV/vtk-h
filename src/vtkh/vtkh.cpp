@@ -169,8 +169,7 @@ IsCUDAAvailable()
 bool
 IsSerialEnabled()
 {
-  vtkm::cont::RuntimeDeviceTracker device_tracker;
-  device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
   return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial());
 }
 
@@ -179,8 +178,7 @@ IsSerialEnabled()
 bool
 IsOpenMPEnabled()
 {
-  vtkm::cont::RuntimeDeviceTracker device_tracker;
-  device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
   return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP());
 }
 
@@ -188,8 +186,7 @@ IsOpenMPEnabled()
 bool
 IsCUDAEnabled()
 {
-  vtkm::cont::RuntimeDeviceTracker device_tracker;
-  device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
   return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda());
 }
 
@@ -255,8 +252,7 @@ SelectCUDADevice(int device_index)
 void
 ForceSerial()
 {
-  vtkm::cont::RuntimeDeviceTracker device_tracker;
-  device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
 }
 
@@ -264,8 +260,7 @@ ForceSerial()
 void
 ForceOpenMP()
 {
-  vtkm::cont::RuntimeDeviceTracker device_tracker;
-  device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
 }
 
@@ -273,8 +268,7 @@ ForceOpenMP()
 void
 ForceCUDA()
 {
-  vtkm::cont::RuntimeDeviceTracker device_tracker;
-  device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
 }
 
@@ -282,8 +276,7 @@ ForceCUDA()
 void
 ResetDevices()
 {
-  vtkm::cont::RuntimeDeviceTracker device_tracker;
-  device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.Reset();
 }
 
