@@ -1,5 +1,5 @@
-#ifndef VTKH_PAR_IC_ALGORITHM_H
-#define VTKH_PAR_IC_ALGORITHM_H
+#ifndef VTKH_PARTICLE_MESSENGER_H
+#define VTKH_PARTICLE_MESSENGER_H
 
 #include <mpi.h>
 #include <list>
@@ -16,19 +16,30 @@ namespace vtkh
 
 class MemStream;
 
-class avtParICAlgorithm : public Messenger
+class ParticleMessenger : public Messenger
 {
     const int MSG_TERMINATE = 1;
     const int MSG_DONE = 1;
 
   public:
-    avtParICAlgorithm(MPI_Comm comm);
-    ~avtParICAlgorithm() {}
+    ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm);
+    ~ParticleMessenger() {}
 
     void RegisterMessages(int msgSize,
                           int numMsgRecvs,
                           int numICRecvs,
                           int numDSRecvs=0);
+
+    void ExchangeParticles(std::list<vtkh::Particle> &outData,
+                           std::list<vtkh::Particle> &inData,
+                           std::list<vtkh::Particle> &term);
+
+    int ExchangeCounter(int increment);
+
+    int Exchange2(list<Particle> &outData,
+                  list<Particle> &inData,
+                  list<Particle> &term,
+                  int increment);
 
     size_t Exchange(bool haveWork,
                     list<Particle> &outData,
@@ -68,8 +79,9 @@ class avtParICAlgorithm : public Messenger
   private:
     template <typename P>
     bool DoSendICs(int dst, std::vector<P> &ics);
-
     bool done;
+
+    vtkh::BoundsMap boundsMap;
 
     enum
     {

@@ -77,7 +77,6 @@ class Messenger
     int numMsgRecvs, numSLRecvs, numDSRecvs;
     int slSize, slsPerRecv, msgSize;
     long msgID;
-
 };
 
 } // namespace vtkh

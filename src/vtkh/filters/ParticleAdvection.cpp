@@ -10,13 +10,18 @@
 #include <vtkm/cont/Algorithm.h>
 
 #include <vtkh/filters/util.hpp>
+#include <vector>
+#include <omp.h>
+#include <vtkh/filters/communication/ThreadSafeContainer.hpp>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
-#include <vtkh/filters/communication/avtParICAlgorithm.hpp>
+#include <vtkh/filters/communication/ParticleMessenger.hpp>
 #endif
 
 #include <vtkh/filters/communication/DebugMeowMeow.hpp>
+
+//#define VTKH_MULTI_THREAD_PARTICLE_ADVECTION
 
 std::ofstream dbg;
 
@@ -33,6 +38,235 @@ randRange(const float &a, const float &b)
 {
     return a + (b-a)*rand01();
 }
+
+class OpenMPLock
+{
+public:
+    OpenMPLock()
+    {
+        omp_init_lock(&lock);
+    }
+    ~OpenMPLock()
+    {
+        omp_destroy_lock(&lock);
+    }
+
+    void set() {omp_set_lock(&lock);}
+    void unset() {omp_unset_lock(&lock);}
+
+private:
+    omp_lock_t lock;
+};
+
+#ifdef VTKH_PARALLEL
+class Task
+{
+public:
+    Task(MPI_Comm comm, const vtkh::BoundsMap &bmap, ParticleAdvection *pa) :
+        managerThread(false), numWorkerThreads(-1), done(false), begin(false),
+        communicator(comm, bmap), boundsMap(bmap), filter(pa)
+    {
+        m_Rank = vtkh::GetMPIRank();
+        m_NumRanks = vtkh::GetMPISize();
+        communicator.RegisterMessages(2, m_NumRanks, m_NumRanks);
+    }
+
+    void Init(const std::list<Particle> &particles, int N)
+    {
+        managerThread = true;
+        numWorkerThreads = 1;
+        TotalNumParticles = N;
+        active.Assign(particles);
+        inactive.Clear();
+        terminated.Clear();
+    }
+
+    bool CheckDone()
+    {
+        bool val;
+        stateLock.set();
+        val = done;
+        stateLock.unset();
+        return val;
+    }
+    void SetDone()
+    {
+        stateLock.set();
+        done = true;
+        stateLock.unset();
+    }
+
+    bool GetBegin()
+    {
+        bool val;
+        stateLock.set();
+        val = begin;
+        stateLock.unset();
+        return val;
+    }
+
+    void SetBegin()
+    {
+        stateLock.set();
+        begin = true;
+        stateLock.unset();
+    }
+
+    void Go()
+    {
+        DBG("Go_bm: "<<boundsMap<<std::endl);
+        DBG("actives= "<<active<<std::endl);
+
+        #pragma omp parallel sections num_threads(2)
+        {
+            #pragma omp section
+            #pragma omp parallel num_threads(1)
+            {
+                this->Manage();
+            }
+
+            #pragma omp section
+            #pragma omp parallel num_threads(numWorkerThreads)
+            #pragma omp master
+            {
+                this->Work();
+            }
+        }
+    }
+
+    void Work()
+    {
+        vector<vtkm::worklet::StreamlineResult> traces;
+        DBG("work_bm: "<<boundsMap<<std::endl);
+
+        while (!CheckDone())
+        {
+            std::vector<Particle> particles;
+            if (active.Get(particles))
+            {
+                std::list<Particle> I, T, A;
+
+                DataBlock *blk = filter->GetBlock(particles[0].blockId);
+
+                blk->integrator.Trace(particles, filter->GetMaxSteps(), I, T, A, &traces);
+
+                terminated.Insert(T);
+                worker_active.Insert(A);
+                worker_inactive.Insert(I);
+            }
+            else
+            {
+                usleep(1000);
+            }
+        }
+        DBG("WORKER is DONE"<<std::endl);
+        results.Insert(traces);
+    }
+
+    void Manage_works()
+    {
+        DBG("manage_bm: "<<boundsMap<<std::endl);
+        int N = 0;
+
+        int prevTermCount = 0;
+
+        while (true)
+        {
+            DBG("MANAGE: termCount= "<<terminated.Size()<<std::endl<<std::endl);
+            std::list<Particle> out, in, term;
+            worker_inactive.Get(out);
+
+            if (!out.empty())
+                DBG("M-Send: "<<out<<std::endl);
+            communicator.ExchangeParticles(out, in, term);
+            if (!in.empty())
+                DBG("M-Recv: "<<in<<std::endl);
+
+            if (!in.empty())
+                active.Insert(in);
+            if (!term.empty())
+                terminated.Insert(term);
+
+            int numTerm = terminated.Size();
+            int dT = numTerm - prevTermCount;
+            int x = communicator.ExchangeCounter(dT);
+            dT += x;
+            N += dT;
+
+            prevTermCount = numTerm;
+
+            DBG("Manage: N= "<<N<<std::endl);
+            if (N >= TotalNumParticles)
+                break;
+
+            if (active.Empty())
+                usleep(1e6);
+        }
+        DBG("TIA: "<<terminated.Size()<<" "<<inactive.Size()<<" "<<active.Size()<<std::endl);
+        DBG("RESULTS= "<<results.Size()<<std::endl);
+
+        SetDone();
+    }
+
+
+    void Manage()
+    {
+        DBG("manage_bm: "<<boundsMap<<std::endl);
+
+        int N = 0;
+        int prevTermCount = 0;
+
+        while (true)
+        {
+            DBG("MANAGE: termCount= "<<terminated.Size()<<std::endl<<std::endl);
+            std::list<Particle> out, in, term;
+            worker_inactive.Get(out);
+
+            int numTerm = terminated.Size();
+            int dT = numTerm - prevTermCount;
+            int val = communicator.Exchange2(out, in, term, dT);
+
+            if (!in.empty())
+                active.Insert(in);
+            if (!term.empty())
+                terminated.Insert(term);
+
+            N += (dT+val);
+            prevTermCount = numTerm;
+
+            DBG("Manage: N= "<<N<<std::endl);
+            if (N >= TotalNumParticles)
+                break;
+
+            if (active.Empty())
+                usleep(1e6);
+        }
+        DBG("TIA: "<<terminated.Size()<<" "<<inactive.Size()<<" "<<active.Size()<<std::endl);
+        DBG("RESULTS= "<<results.Size()<<std::endl);
+
+        SetDone();
+    }
+
+    int m_Rank, m_NumRanks;
+    int TotalNumParticles;
+
+    using ParticleList = vtkh::ThreadSafeContainer<Particle, std::list, vtkh::OpenMPLock>;
+    using ResultsVec = vtkh::ThreadSafeContainer<vtkm::worklet::StreamlineResult, std::vector, vtkh::OpenMPLock>;
+
+    ParticleMessenger communicator;
+    ParticleList active, inactive, terminated;
+    ParticleList worker_active, worker_inactive;
+    ResultsVec results;
+
+    bool managerThread;
+    int numWorkerThreads;
+
+    bool done, begin;
+    vtkh::OpenMPLock stateLock;
+    BoundsMap boundsMap;
+    ParticleAdvection *filter;
+};
+#endif
 
 ParticleAdvection::ParticleAdvection()
     : rank(0), numRanks(1), seedMethod(RANDOM),
@@ -76,6 +310,7 @@ void ParticleAdvection::PreExecute()
   }
 
   boundsMap.Build();
+  DBG("PreExecute: "<<boundsMap<<std::endl);
 }
 
 void ParticleAdvection::PostExecute()
@@ -89,60 +324,78 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   std::cout<<rank<<": "<<totalNumSeeds<<" "<<active.size()<<std::endl;
 
-  int N = totalNumSeeds;
-  int cnt = 0;
+#ifdef VTKH_MULTI_THREAD_PARTICLE_ADVECTION
 
-  avtParICAlgorithm communicator(mpiComm);
+  Task *task = new Task(mpiComm, boundsMap, this);
+
+  std::cout<<boundsMap<<std::endl;
+
+  task->Init(active, totalNumSeeds);
+  task->Go();
+  task->results.Get(traces);
+  DBG("We have some results: "<<traces.size()<<std::endl);
+
+#else
+
+  ParticleMessenger communicator(mpiComm, boundsMap);
   communicator.RegisterMessages(2, numRanks, numRanks);
 
-  while (N > 0)
-  {
-      DBG("**** Loop: N= "<<N<<" AIT: "<<active<<" "<<inactive<<" "<<terminated<<std::endl);
+  int N = 0;
+  int prevTermCount = 0;
 
-      vector<Particle> v;
-      std::list<Particle> I, T, A;
-      int numTerm = 0;
+  while (true)
+  {
+      DBG("MANAGE: termCount= "<<terminated.size()<<std::endl<<std::endl);
+      std::vector<Particle> v;
+      std::list<Particle> I;
 
       if (GetActiveParticles(v))
       {
           DBG("GetActiveParticles: "<<v<<std::endl);
           DataBlock *blk = GetBlock(v[0].blockId);
-
           DBG("Integrate: "<<v<<std::endl);
-          blk->ds.PrintSummary(std::cout);
 
+          std::list<Particle> T, A;
           blk->integrator.Trace(v, maxSteps, I, T, A, &traces);
           DBG("--Integrate:  ITA: "<<I<<" "<<T<<" "<<A<<std::endl);
           DBG("                   I= "<<I<<std::endl);
-          numTerm = T.size();
-          if (numTerm > 0)
+          if (!T.empty())
               terminated.insert(terminated.end(), T.begin(), T.end());
+          if (!A.empty())
+              active.insert(active.end(), A.begin(), A.end());
       }
 
-      bool haveActive = !active.empty();
+      int numTerm = terminated.size();
+      int dT = numTerm - prevTermCount;
       std::list<Particle> in, term;
-      int totalTerm = communicator.Exchange(haveActive, I, in, term, boundsMap, numTerm);
-      N -= (numTerm+totalTerm);
+      int val = communicator.Exchange2(I, in, term, dT);
 
-      DBG(" Exchange done: in="<<in<<" numTerm: "<<numTerm<<" totalTerm: "<<totalTerm<<std::endl);
-      if (!term.empty())
-          terminated.insert(terminated.end(), term.begin(), term.end());
       if (!in.empty())
           active.insert(active.end(), in.begin(), in.end());
-      cnt++;
+      if (!term.empty())
+          terminated.insert(terminated.end(), term.begin(), term.end());
+      numTerm = terminated.size();
+      dT = numTerm - prevTermCount;
 
-      // no work available, take a snooze.
+      N += (dT+val);
+      prevTermCount = numTerm;
+
+      DBG("Manage: N= "<<N<<std::endl);
+      if (N >= totalNumSeeds)
+          break;
+
       if (active.empty())
-      {
-          DBG("    sleep"<<std::endl);
-          //usleep(1000);
-      }
-      DBG("   N --> "<<N<<std::endl);
-      DBG(std::endl<<std::endl<<std::endl);
+          usleep(1e6);
   }
+  DBG("TIA: "<<terminated.size()<<" "<<inactive.size()<<" "<<active.size()<<std::endl);
+  DBG("RESULTS= "<<traces.size()<<std::endl);
+
 //  DumpTraces(rank, traces);
   std::cout<<rank<<": done tracing. # of traces= "<<traces.size()<<std::endl;
   DBG("All done"<<std::endl);
+
+#endif
+
 #endif
 }
 
@@ -324,12 +577,8 @@ ParticleAdvection::GetBlock(int blockId)
 {
     for (auto &d : dataBlocks)
         if (d->id == blockId)
-        {
-            DBG("GetBlock: "<<blockId<<" "<<*d<<std::endl);
             return d;
-        }
 
-    DBG("GetBlock: "<<blockId<<" = NULL"<<std::endl);
     return NULL;
 }
 

@@ -30,11 +30,14 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const vtkh::Particle p)
     {
-        os<<"P_"<<p.id<<": ["<<p.coords[0]<<" "<<p.coords[1]<<" "<<p.coords[2]<<"] #s "<<p.nSteps<<" ";
+        os<<"(";
+        os<<"P_"<<p.id<<" ";
+        //os<<"["<<p.coords[0]<<" "<<p.coords[1]<<" "<<p.coords[2]<<"] #s "<<p.nSteps<<" ";
         if (p.status == Particle::ACTIVE) os<<"ACTIVE";
         else if (p.status == Particle::TERMINATE) os<<"TERM";
         else if (p.status == Particle::OUTOFBOUNDS) os<<"OOB";
         os<<" bid = "<<p.blockId;
+        os<<")";
         return os;
     }
 };

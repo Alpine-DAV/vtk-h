@@ -5,6 +5,7 @@
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/Particle.hpp>
+#include <vtkh/filters/util.hpp>
 
 #include <string>
 #include <vector>
@@ -26,7 +27,10 @@ class BoundsMap
 {
 public:
   BoundsMap() {}
-  BoundsMap(const BoundsMap &_bm) : bm(_bm.bm) {}
+  BoundsMap(const BoundsMap &_bm)
+      : bm(_bm.bm), m_rank_map(_bm.m_rank_map), globalBounds(_bm.globalBounds)
+  {
+  }
 
   void Clear()
   {
@@ -79,7 +83,6 @@ public:
     if(it != m_rank_map.end())
       rank = m_rank_map[block_id];
 
-    DBG("GetRank: "<<block_id<<" = "<<rank<<std::endl);
     return rank;
   }
 
@@ -175,7 +178,6 @@ public:
         std::cout<<"domain "<<dom_id<<" rank "<<rank_map[i]<<"\n";
       }
     }
-    DBG("BoundsMap::Build() "<<m_rank_map<<std::endl);
 
     delete[] dom_send_buff;
     delete[] dom_rec_buff;
@@ -191,7 +193,6 @@ public:
     //Get the global bounds.
     for (auto &it : bm)
         globalBounds.Include(it.second);
-    DBG("BoundsMap globalBounds: "<<globalBounds<<std::endl);
 
     // Placeholder for more complex representatoin like a bvh that needs to
     // be constructed
@@ -200,6 +201,14 @@ public:
   std::map<int, vtkm::Bounds> bm; // map<dom_id, bounds>
   std::map<int, int> m_rank_map;  // map<dom_id,rank>
   vtkm::Bounds globalBounds;
+
+
+  friend std::ostream &operator<<(std::ostream &os, const BoundsMap &b)
+  {
+    os<<"BoundsMap: "<<b.globalBounds<<" d->r "<<b.m_rank_map<<" d->b "<<b.bm;
+    return os;
+  }
+
 protected:
 
 };

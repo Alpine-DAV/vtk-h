@@ -28,6 +28,7 @@ set(vtkh_filters_headers
   communication/Communicator.hpp
   communication/DebugMeowMeow.hpp
   communication/MemStream.h
+  communication/ThreadSafeContainer.hpp
   util.hpp
   )
 
@@ -87,11 +88,11 @@ if (MPI_FOUND)
 
   set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkm_compiled_filters)
   set(vtkh_mpi_headers communication/Messenger.hpp
-                       communication/avtParICAlgorithm.hpp
+                       communication/ParticleMessenger.hpp
                        communication/RayMessenger.hpp)
 
     set(vtkh_mpi_sources communication/Messenger.cpp
-                         communication/avtParICAlgorithm.cpp
+                         communication/ParticleMessenger.cpp
                          communication/RayMessenger.cpp)
 
     # necessary b/c of how find_cuda works

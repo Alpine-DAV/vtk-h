@@ -56,6 +56,9 @@ public:
   void SetField(const std::string &field_name) {m_field_name = field_name;}
   void SetStepSize(const double &v) { stepSize = v;}
   void SetMaxSteps(const int &n) { maxSteps = n;}
+  int  GetMaxSteps() const { return maxSteps; }
+
+  DataBlock * GetBlock(int blockId);
 
 protected:
   void PreExecute() override;
@@ -66,7 +69,7 @@ protected:
   void CreateSeeds();
   void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult> &traces);
 
-  DataBlock * GetBlock(int blockId);
+//  DataBlock * GetBlock(int blockId);
   int DomainToRank(int blockId) {return boundsMap.GetRank(blockId);}
   void BoxOfSeeds(const vtkm::Bounds &box,
                   std::vector<Particle> &seeds,

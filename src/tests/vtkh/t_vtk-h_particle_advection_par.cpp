@@ -63,7 +63,7 @@ TEST(vtkh_particle_advection, vtkh_serial_particle_advection)
   vtkh::DataSet data_set;
   const int base_size = 32;
   const int blocks_per_rank = 1;
-  const int maxAdvSteps = 100;
+  const int maxAdvSteps = 1000;
   const int num_blocks = comm_size * blocks_per_rank;
 
   for(int i = 0; i < blocks_per_rank; ++i)
@@ -76,8 +76,8 @@ TEST(vtkh_particle_advection, vtkh_serial_particle_advection)
   streamline.SetInput(&data_set);
   streamline.SetField("vector_data_Float64");
   streamline.SetMaxSteps(maxAdvSteps);
-  streamline.SetStepSize(0.1);
-  streamline.SetSeedsRandomWhole(500);
+  streamline.SetStepSize(0.05);
+  streamline.SetSeedsRandomWhole(1000);
   streamline.Update();
   vtkh::DataSet *streamline_output = streamline.GetOutput();
 
