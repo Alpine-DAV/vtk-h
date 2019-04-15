@@ -21,8 +21,6 @@
 
 #include <vtkh/filters/communication/DebugMeowMeow.hpp>
 
-//#define VTKH_MULTI_THREAD_PARTICLE_ADVECTION
-
 std::ofstream dbg;
 
 namespace vtkh
@@ -63,19 +61,27 @@ class Task
 {
 public:
     Task(MPI_Comm comm, const vtkh::BoundsMap &bmap, ParticleAdvection *pa) :
-        managerThread(false), numWorkerThreads(-1), done(false), begin(false),
-        communicator(comm, bmap), boundsMap(bmap), filter(pa)
+        numWorkerThreads(-1),
+        done(false),
+        begin(false),
+        communicator(comm, bmap, pa->GetStats()),
+        boundsMap(bmap),
+        filter(pa),
+        stats(pa->GetStats()),
+        sleepUS(100)
     {
         m_Rank = vtkh::GetMPIRank();
         m_NumRanks = vtkh::GetMPISize();
         communicator.RegisterMessages(2, m_NumRanks, m_NumRanks);
+        stats->addTimer("worker_sleep");
+        stats->addCounter("worker_naps");
     }
 
-    void Init(const std::list<Particle> &particles, int N)
+    void Init(const std::list<Particle> &particles, int N, int _sleepUS)
     {
-        managerThread = true;
         numWorkerThreads = 1;
         TotalNumParticles = N;
+        sleepUS = _sleepUS;
         active.Assign(particles);
         inactive.Clear();
         terminated.Clear();
@@ -148,7 +154,10 @@ public:
 
                 DataBlock *blk = filter->GetBlock(particles[0].blockId);
 
-                blk->integrator.Trace(particles, filter->GetMaxSteps(), I, T, A, &traces);
+                stats->start("advect");
+                int n = blk->integrator.Trace(particles, filter->GetMaxSteps(), I, T, A, &traces);
+                stats->stop("advect");
+                stats->increment("advectSteps", n);
 
                 terminated.Insert(T);
                 worker_active.Insert(A);
@@ -156,58 +165,15 @@ public:
             }
             else
             {
-                usleep(1000);
+                stats->start("worker_sleep");
+                usleep(sleepUS);
+                stats->stop("worker_sleep");
+                stats->increment("worker_naps");
             }
         }
         DBG("WORKER is DONE"<<std::endl);
         results.Insert(traces);
     }
-
-    void Manage_works()
-    {
-        DBG("manage_bm: "<<boundsMap<<std::endl);
-        int N = 0;
-
-        int prevTermCount = 0;
-
-        while (true)
-        {
-            DBG("MANAGE: termCount= "<<terminated.Size()<<std::endl<<std::endl);
-            std::list<Particle> out, in, term;
-            worker_inactive.Get(out);
-
-            if (!out.empty())
-                DBG("M-Send: "<<out<<std::endl);
-            communicator.ExchangeParticles(out, in, term);
-            if (!in.empty())
-                DBG("M-Recv: "<<in<<std::endl);
-
-            if (!in.empty())
-                active.Insert(in);
-            if (!term.empty())
-                terminated.Insert(term);
-
-            int numTerm = terminated.Size();
-            int dT = numTerm - prevTermCount;
-            int x = communicator.ExchangeCounter(dT);
-            dT += x;
-            N += dT;
-
-            prevTermCount = numTerm;
-
-            DBG("Manage: N= "<<N<<std::endl);
-            if (N >= TotalNumParticles)
-                break;
-
-            if (active.Empty())
-                usleep(1e6);
-        }
-        DBG("TIA: "<<terminated.Size()<<" "<<inactive.Size()<<" "<<active.Size()<<std::endl);
-        DBG("RESULTS= "<<results.Size()<<std::endl);
-
-        SetDone();
-    }
-
 
     void Manage()
     {
@@ -224,7 +190,7 @@ public:
 
             int numTerm = terminated.Size();
             int dT = numTerm - prevTermCount;
-            int val = communicator.Exchange2(out, in, term, dT);
+            int val = communicator.Exchange(out, in, term, dT);
 
             if (!in.empty())
                 active.Insert(in);
@@ -239,7 +205,12 @@ public:
                 break;
 
             if (active.Empty())
-                usleep(1e6);
+            {
+                stats->start("sleep");
+                usleep(sleepUS);
+                stats->stop("sleep");
+                stats->increment("naps");
+            }
         }
         DBG("TIA: "<<terminated.Size()<<" "<<inactive.Size()<<" "<<active.Size()<<std::endl);
         DBG("RESULTS= "<<results.Size()<<std::endl);
@@ -258,13 +229,14 @@ public:
     ParticleList worker_active, worker_inactive;
     ResultsVec results;
 
-    bool managerThread;
     int numWorkerThreads;
+    int sleepUS;
 
     bool done, begin;
     vtkh::OpenMPLock stateLock;
     BoundsMap boundsMap;
     ParticleAdvection *filter;
+    StatisticsDB *stats;
 };
 #endif
 
@@ -272,7 +244,9 @@ ParticleAdvection::ParticleAdvection()
     : rank(0), numRanks(1), seedMethod(RANDOM),
       numSeeds(1000), totalNumSeeds(-1), randSeed(314),
       stepSize(.01),
-      maxSteps(1000)
+      maxSteps(1000),
+      useThreadedVersion(false),
+      sleepUS(1000)
 {
 #ifdef VTKH_PARALLEL
   rank = vtkh::GetMPIRank();
@@ -285,6 +259,59 @@ ParticleAdvection::ParticleAdvection()
   sprintf(nm, "%d.out", rank);
   dbg.open(nm, ofstream::out);
 #endif
+}
+
+void
+ParticleAdvection::InitStats()
+{
+  stats.addTimer("total");
+  stats.addTimer("sleep");
+  stats.addTimer("advect");
+  stats.addCounter("advectSteps");
+  stats.addCounter("naps");
+}
+
+void
+ParticleAdvection::DumpStats(const std::string &fname)
+{
+    stats.calcStats();
+
+    if (rank != 0)
+        return;
+
+    ostream out(nullptr);
+    ofstream fstr;
+
+    if (fname.size() == 0)
+        out.rdbuf(cerr.rdbuf());
+    else
+    {
+        fstr.open(fname, ofstream::out);
+        out.rdbuf(fstr.rdbuf());
+    }
+
+    out<<std::endl<<std::endl;
+    if (!stats.timers.empty())
+    {
+        out<<"TIMERS:"<<std::endl;
+        for (auto &ti : stats.timers)
+            out<<ti.first<<": "<<ti.second.GetTime()<<std::endl;
+        out<<std::endl;
+        out<<"TIMER_STATS"<<std::endl;
+        for (auto &ti : stats.timers)
+            out<<ti.first<<" "<<stats.timerStat(ti.first)<<std::endl;
+    }
+    if (!stats.counters.empty())
+    {
+        out<<std::endl;
+        out<<"COUNTERS:"<<std::endl;
+        for (auto &ci : stats.counters)
+            out<<ci.first<<" "<<stats.totalVal(ci.first)<<std::endl;
+        out<<std::endl;
+        out<<"COUNTER_STATS"<<std::endl;
+        for (auto &ci : stats.counters)
+            out<<ci.first<<" "<<stats.counterStat(ci.first)<<std::endl;
+    }
 }
 
 ParticleAdvection::~ParticleAdvection()
@@ -318,26 +345,25 @@ void ParticleAdvection::PostExecute()
   Filter::PostExecute();
 }
 
-void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &traces)
+void ParticleAdvection::TraceMultiThread(vector<vtkm::worklet::StreamlineResult> &traces)
 {
 #ifdef VTKH_PARALLEL
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  std::cout<<rank<<": "<<totalNumSeeds<<" "<<active.size()<<std::endl;
-
-#ifdef VTKH_MULTI_THREAD_PARTICLE_ADVECTION
 
   Task *task = new Task(mpiComm, boundsMap, this);
 
-  std::cout<<boundsMap<<std::endl;
-
-  task->Init(active, totalNumSeeds);
+  task->Init(active, totalNumSeeds, sleepUS);
   task->Go();
   task->results.Get(traces);
-  DBG("We have some results: "<<traces.size()<<std::endl);
+#endif
+}
 
-#else
+void ParticleAdvection::TraceSingleThread(vector<vtkm::worklet::StreamlineResult> &traces)
+{
+#ifdef VTKH_PARALLEL
+  MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
-  ParticleMessenger communicator(mpiComm, boundsMap);
+  ParticleMessenger communicator(mpiComm, boundsMap, GetStats());
   communicator.RegisterMessages(2, numRanks, numRanks);
 
   int N = 0;
@@ -356,7 +382,10 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
           DBG("Integrate: "<<v<<std::endl);
 
           std::list<Particle> T, A;
-          blk->integrator.Trace(v, maxSteps, I, T, A, &traces);
+          stats.start("advect");
+          int n = blk->integrator.Trace(v, maxSteps, I, T, A, &traces);
+          stats.stop("advect");
+          stats.increment("advectSteps", n);
           DBG("--Integrate:  ITA: "<<I<<" "<<T<<" "<<A<<std::endl);
           DBG("                   I= "<<I<<std::endl);
           if (!T.empty())
@@ -368,7 +397,7 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
       int numTerm = terminated.size();
       int dT = numTerm - prevTermCount;
       std::list<Particle> in, term;
-      int val = communicator.Exchange2(I, in, term, dT);
+      int val = communicator.Exchange(I, in, term, dT);
 
       if (!in.empty())
           active.insert(active.end(), in.begin(), in.end());
@@ -385,7 +414,12 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
           break;
 
       if (active.empty())
-          usleep(1e6);
+      {
+          stats.start("sleep");
+          usleep(sleepUS);
+          stats.stop("sleep");
+          stats.increment("naps");
+      }
   }
   DBG("TIA: "<<terminated.size()<<" "<<inactive.size()<<" "<<active.size()<<std::endl);
   DBG("RESULTS= "<<traces.size()<<std::endl);
@@ -395,8 +429,19 @@ void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &trac
   DBG("All done"<<std::endl);
 
 #endif
+}
 
-#endif
+void ParticleAdvection::TraceSeeds(vector<vtkm::worklet::StreamlineResult> &traces)
+{
+  stats.start("total");
+
+  if (useThreadedVersion)
+      TraceMultiThread(traces);
+  else
+      TraceSingleThread(traces);
+
+  stats.stop("total");
+  DumpStats("particleAdvection.stats.txt");
 }
 
 void ParticleAdvection::DoExecute()
@@ -570,6 +615,7 @@ ParticleAdvection::DumpDS()
 void
 ParticleAdvection::Init()
 {
+    InitStats();
 }
 
 DataBlock *
@@ -628,7 +674,6 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
 void
 ParticleAdvection::CreateSeeds()
 {
-    std::cout<<"CreateSeeds: "<<seedMethod<<std::endl;
     active.clear();
     inactive.clear();
     terminated.clear();

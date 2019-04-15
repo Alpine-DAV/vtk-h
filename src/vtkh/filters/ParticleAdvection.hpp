@@ -12,6 +12,7 @@
 #include <vtkh/filters/Particle.hpp>
 #include <vtkh/filters/communication/BoundsMap.hpp>
 #include <vtkh/filters/Integrator.hpp>
+#include <vtkh/filters/StatisticsDB.hpp>
 #include <vtkh/DataSet.hpp>
 
 #ifdef VTKH_PARALLEL
@@ -68,6 +69,9 @@ protected:
   void Init();
   void CreateSeeds();
   void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult> &traces);
+  void TraceMultiThread(std::vector<vtkm::worklet::StreamlineResult> &traces);
+  void TraceSingleThread(std::vector<vtkm::worklet::StreamlineResult> &traces);
+
 
 //  DataBlock * GetBlock(int blockId);
   int DomainToRank(int blockId) {return boundsMap.GetRank(blockId);}
@@ -76,6 +80,8 @@ protected:
                   vtkm::Id domId=-1,
                   bool shrink=true);
 
+  bool useThreadedVersion;
+  int sleepUS;
   int rank, numRanks;
   std::string m_field_name;
   int numSeeds, totalNumSeeds;
@@ -90,6 +96,11 @@ protected:
   BoundsMap boundsMap;
   std::vector<DataBlock*> dataBlocks;
 
+  StatisticsDB stats;
+  StatisticsDB * GetStats() { return &stats; }
+  void InitStats();
+  void DumpStats(const std::string &fname);
+
   //seed data
   std::list<Particle> active, inactive, terminated;
   bool GetActiveParticles(std::vector<Particle> &v);
@@ -97,6 +108,10 @@ protected:
   void DumpTraces(int idx, const vector<vtkm::Vec<double,4>> &particleTraces);
   void DumpDS();
   void DumpSLOutput(const vtkm::cont::DataSet &ds, int domId);
+
+#ifdef VTKH_PARALLEL
+  friend class Task;
+#endif
 };
 
 

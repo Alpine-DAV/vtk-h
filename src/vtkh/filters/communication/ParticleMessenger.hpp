@@ -7,9 +7,10 @@
 #include <set>
 #include <map>
 #include "CommData.hpp"
-#include "../Particle.hpp"
+#include <vtkh/filters/Particle.hpp>
 #include "Messenger.hpp"
 #include "BoundsMap.hpp"
+#include <vtkh/filters/StatisticsDB.hpp>
 
 namespace vtkh
 {
@@ -22,7 +23,7 @@ class ParticleMessenger : public Messenger
     const int MSG_DONE = 1;
 
   public:
-    ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm);
+    ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm, vtkh::StatisticsDB *pSDB=NULL);
     ~ParticleMessenger() {}
 
     void RegisterMessages(int msgSize,
@@ -30,23 +31,10 @@ class ParticleMessenger : public Messenger
                           int numICRecvs,
                           int numDSRecvs=0);
 
-    void ExchangeParticles(std::list<vtkh::Particle> &outData,
-                           std::list<vtkh::Particle> &inData,
-                           std::list<vtkh::Particle> &term);
-
-    int ExchangeCounter(int increment);
-
-    int Exchange2(list<Particle> &outData,
+    int Exchange(list<Particle> &outData,
                   list<Particle> &inData,
                   list<Particle> &term,
                   int increment);
-
-    size_t Exchange(bool haveWork,
-                    list<Particle> &outData,
-                    list<Particle> &inData,
-                    list<Particle> &term,
-                    vtkh::BoundsMap &boundsMap,
-                    int numTerm);
 
     // Send/Recv Integral curves.
     template <typename P, template <typename, typename> class Container,
@@ -82,6 +70,7 @@ class ParticleMessenger : public Messenger
     bool done;
 
     vtkh::BoundsMap boundsMap;
+    vtkh::StatisticsDB *stats;
 
     enum
     {

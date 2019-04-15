@@ -8,11 +8,18 @@ using namespace std;
 namespace vtkh
 {
 
-ParticleMessenger::ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm)
+ParticleMessenger::ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm, vtkh::StatisticsDB *pSDB)
     : Messenger(comm),
       boundsMap(bm),
-      done(false)
+      done(false),
+      stats(pSDB)
 {
+    if (stats)
+    {
+        stats->addTimer("communication");
+        stats->addCounter("particlesSent");
+        stats->addCounter("messagesSent");
+    }
 }
 
 void
@@ -54,8 +61,8 @@ ParticleMessenger::SendMsg(int dst, vector<int> &msg)
     vtkh::write(*buff, msg);
 
     SendData(dst, ParticleMessenger::MESSAGE_TAG, buff);
-//    MsgCnt.value++;
-//    CommTime.value += visitTimer->StopTimer(timerHandle, "SendMsg");
+
+    if (stats) stats->increment("messagesSent");
 }
 
 void
@@ -156,6 +163,8 @@ void ParticleMessenger::SendICs(int dst, Container<P, Allocator> &c)
     for (auto &p : c)
         vtkh::write(*buff, p);
     SendData(dst, ParticleMessenger::PARTICLE_TAG, buff);
+
+    if (stats) stats->increment("particlesSent", num);
     c.clear();
 }
 
@@ -215,112 +224,8 @@ bool ParticleMessenger::DoSendICs(int dst, vector<P> &ics)
     return true;
 }
 
-void
-ParticleMessenger::ExchangeParticles(std::list<vtkh::Particle> &outData,
-                                     std::list<vtkh::Particle> &inData,
-                                     std::list<vtkh::Particle> &term)
-{
-    DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
-    map<int, list<Particle>> sendData;
-
-    int earlyTerm = 0;
-    if (!outData.empty())
-    {
-        vector<int> blockIds;
-        boundsMap.FindBlockIDs(outData, blockIds);
-        DBG("-----O.blockIds: "<<outData<<" "<<blockIds<<endl);
-
-        auto bit = blockIds.begin();
-        for (auto lit = outData.begin(); lit != outData.end(); lit++, bit++)
-        {
-            int id = *bit;
-            lit->blockId = id;
-            if (id == -1)
-            {
-                term.push_back(*lit);
-                earlyTerm++;
-                DBG("-----earlyterm: "<<*lit<<" id= "<<id<<endl);
-            }
-            else
-            {
-                int dst = boundsMap.GetRank(id);
-                if(dst == -1)
-                    throw "Block ID not found";
-
-                if (dst == rank)
-                    inData.push_back(*lit);
-                else
-                    sendData[dst].push_back(*lit);
-            }
-        }
-
-        DBG("-----SendP: "<<sendData<<endl);
-        for (auto &i : sendData)
-            SendICs(i.first, i.second);
-    }
-
-    //Check if we have anything coming in.
-    std::list<ParticleCommData<Particle>> particleData;
-    int incomingTerm = 0;
-
-    DBG("-----RecvAny..."<<endl);
-    if (RecvAny(NULL, &particleData, NULL, false))
-    {
-        for (auto &p : particleData)
-            inData.push_back(p.p);
-    }
-    else
-    {
-        DBG("-----RecvAny --Nothing in the can"<<endl);
-    }
-
-
-    CheckPendingSendRequests();
-    DBG("----ExchangeParticles Done: I= "<<inData.size()<<" T= "<<term.size()<<endl<<endl);
-}
-
 int
-ParticleMessenger::ExchangeCounter(int increment)
-{
-    DBG("----ExchangeCounter: inc="<<increment<<std::endl);
-
-    if (increment > 0)
-    {
-        std::vector<int> msg = {MSG_TERMINATE, increment};
-        DBG("-----SendAllMsg: msg="<<msg<<endl);
-        SendAllMsg(msg);
-    }
-
-    int val = 0;
-    std::vector<MsgCommData> msgData;
-    if (RecvAny(&msgData, NULL, NULL, false))
-    {
-        DBG("-----Recv: M: "<<msgData<<std::endl);
-
-        for (auto &m : msgData)
-        {
-            if (m.message[0] == MSG_TERMINATE)
-            {
-                val += m.message[1];
-                DBG("-----TERMinate: Recv: "<<m.message[1]<<endl);
-            }
-            else if (m.message[0] == MSG_DONE)
-            {
-                DBG("-----DONE RECEIVED: "<<m.message[1]<<endl);
-                done = true;
-            }
-        }
-    }
-
-    CheckPendingSendRequests();
-
-    DBG("----ExchangeCounter DONE: val="<<val<<std::endl<<std::endl);
-
-    return val;
-}
-
-int
-ParticleMessenger::Exchange2(list<Particle> &outData,
+ParticleMessenger::Exchange(list<Particle> &outData,
                              list<Particle> &inData,
                              list<Particle> &term,
                              int increment)
@@ -328,6 +233,7 @@ ParticleMessenger::Exchange2(list<Particle> &outData,
     DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
     map<int, list<Particle>> sendData;
 
+    if (stats) stats->start("communication");
     int earlyTerm = 0;
     if (!outData.empty())
     {
@@ -403,130 +309,11 @@ ParticleMessenger::Exchange2(list<Particle> &outData,
         DBG("-----RecvAny --Nothing in the can"<<endl);
     }
 
-
     CheckPendingSendRequests();
     DBG("----ExchangeParticles Done: I= "<<inData.size()<<" T= "<<term.size()<<endl<<endl);
+    if (stats) stats->stop("communication");
 
     return val;
 }
 
-
-size_t
-ParticleMessenger::Exchange(bool haveWork,
-                            list<vtkh::Particle> &outData,
-                            list<vtkh::Particle> &inData,
-                            list<vtkh::Particle> &term,
-                            vtkh::BoundsMap &boundsMap,
-                            int numTerm)
-{
-    DBG("----Exchange: O="<<outData<<" I="<<inData<<" NT= "<<numTerm<<endl);
-
-    map<int, list<Particle>> sendData;
-
-    int earlyTerm = 0;
-    if (!outData.empty())
-    {
-        vector<int> blockIds;
-        boundsMap.FindBlockIDs(outData, blockIds);
-        DBG("-----O.blockIds: "<<outData<<" "<<blockIds<<endl);
-
-        auto bit = blockIds.begin();
-        for (auto lit = outData.begin(); lit != outData.end(); lit++, bit++)
-        {
-            int id = *bit;
-            lit->blockId = id;
-            if (id == -1)
-            {
-                term.push_back(*lit);
-                earlyTerm++;
-                DBG("-----earlyterm: "<<*lit<<" id= "<<id<<endl);
-            }
-            else
-            {
-                int dst = boundsMap.GetRank(id);
-                if(dst == -1)
-                    throw "Block ID not found";
-
-                if (dst == rank)
-                    inData.push_back(*lit);
-                else
-                    sendData[dst].push_back(*lit);
-            }
-        }
-
-        DBG("-----SendP: "<<sendData<<endl);
-        for (auto &i : sendData)
-            SendICs(i.first, i.second);
-//            sdb->increment("numMsgSent", sendData.size());
-    }
-//        if (earlyTerm > 0)
-//            sdb->increment("earlyTerm", earlyTerm);
-
-
-    int terminations = earlyTerm + numTerm;
-
-    if (terminations > 0)
-    {
-        vector<int> msg = {MSG_TERMINATE, terminations};
-        DBG("-----SendAllMsg: msg="<<msg<<endl);
-        SendAllMsg(msg);
-    }
-
-    //Check if we have anything coming in.
-    vector<MsgCommData> msgData;
-    list<ParticleCommData<Particle>> particleData;
-    int incomingTerm = 0;
-
-    bool blockAndWait = false;
-    DBG("-----RecvAny..."<<endl);
-    if (RecvAny(&msgData, &particleData, NULL, blockAndWait))
-    {
-        DBG("-----Recv: M: "<<msgData<<" P: "<<particleData<<endl);
-//            sdb->increment("numMsgRecv", msgData.size());
-
-        for (auto &m : msgData)
-        {
-            if (m.message[0] == MSG_TERMINATE)
-            {
-                incomingTerm += m.message[1];
-                //numTermReceived += m.message[1];
-                DBG("-----TERMinate: Recv: "<<m.message[1]<<endl);
-            }
-            else if (m.message[0] == MSG_DONE)
-            {
-                DBG("-----DONE RECEIVED: "<<m.message[1]<<endl);
-                done = true;
-            }
-        }
-        for (auto &p : particleData)
-            inData.push_back(p.p);
-/*
-  if (numTermReceived > 0)
-  {
-  if (rank == 0)
-  termCounter += numTermReceived;
-  else
-  {
-  vector<int> msg(2);
-  msg[0] = MSG_TERMINATE;
-  msg[1] = numTermReceived;
-  a.SendMsg(termSendMap[rank], msg);
-//                    sdb->increment("numTermSent");
-//                    sdb->increment("numMsgSent");
-}
-}
-*/
-    }
-    else
-    {
-        DBG("-----RecvAny --Nothing in the can"<<endl);
-    }
-
-
-    CheckPendingSendRequests();
-    int returnTerm = incomingTerm + earlyTerm;
-    DBG("----ExchangeDone: nt= "<<returnTerm<<" I= "<<inData.size()<<" T= "<<term.size()<<endl);
-
-    return returnTerm;
-}
 }
