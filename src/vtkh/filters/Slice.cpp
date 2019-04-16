@@ -6,6 +6,7 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkh
