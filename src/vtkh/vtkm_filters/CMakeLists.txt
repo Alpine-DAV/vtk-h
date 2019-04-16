@@ -41,6 +41,9 @@ if(CUDA_FOUND)
     list(APPEND vtkm_filters_deps cuda)
 endif()
 
+# Hack to bypass BLT issue where c++11 flags are not
+# propagated to the object lib
+set (CMAKE_CXX_STANDARD 11)
 
 blt_add_library(
   NAME vtkm_compiled_filters
@@ -51,7 +54,7 @@ blt_add_library(
   )
 
 if(CUDA_FOUND)
-  # defend against vtkm code cuda can't reseason about
+  # defend against vtkm code cuda can't reason about
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
   endif()
