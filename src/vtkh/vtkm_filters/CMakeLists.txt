@@ -41,10 +41,6 @@ if(CUDA_FOUND)
     list(APPEND vtkm_filters_deps cuda)
 endif()
 
-# Hack to bypass BLT issue where c++11 flags are not
-# propagated to the object lib
-set (CMAKE_CXX_STANDARD 11)
-
 blt_add_library(
   NAME vtkm_compiled_filters
   SOURCES ${vtkm_filters_sources}
