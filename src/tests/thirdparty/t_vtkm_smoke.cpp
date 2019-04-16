@@ -65,8 +65,11 @@ TEST(vtkm_smoke, headers_work)
 }
 
 //-----------------------------------------------------------------------------
-TEST(vtkm_smoke, basic_use)
+TEST(vtkm_smoke, basic_use_serial)
 {
+    vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::cont::DataSet data = maker.Make3DExplicitDataSet2();
     //
@@ -108,6 +111,102 @@ TEST(vtkm_smoke, basic_use)
     EXPECT_NEAR(coordsBounds.Z.Max, 1.0, 1e-3 );
 
 }
+#ifdef VTKH_FORCE_OPENMP
+TEST(vtkm_smoke, basic_use_openmp)
+{
+    vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
 
+    vtkm::cont::testing::MakeTestDataSet maker;
+    vtkm::cont::DataSet data = maker.Make3DExplicitDataSet2();
+    //
+    // work around for a problem adding scalar fields of size 1
+    // to Actors
+    //
+    std::vector<vtkm::Float32> scalars;
+    scalars.push_back(0);
+    scalars.push_back(1);
+    vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
+                                                           vtkm::cont::Field::Association::CELL_SET,
+                                                           "cell_set",
+                                                           scalars);
+
+    const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
+    vtkm::rendering::Actor actor(data.GetCellSet(),
+                                 data.GetCoordinateSystem(),
+                                 scalarField);
+
+    vtkm::Bounds coordsBounds; // Xmin,Xmax,Ymin..
+    coordsBounds = actor.GetSpatialBounds();
+
+    //should be [0,1,0,1,0,1];
+
+    std::cout <<  coordsBounds.X.Min << " " <<
+                  coordsBounds.X.Max << " " <<
+                  coordsBounds.Y.Min << " " <<
+                  coordsBounds.Y.Max << " " <<
+                  coordsBounds.Z.Min << " " <<
+                  coordsBounds.Z.Max << std::endl;
+
+    EXPECT_NEAR(coordsBounds.X.Min, 0.0, 1e-3 );
+    EXPECT_NEAR(coordsBounds.X.Max, 1.0, 1e-3 );
+
+    EXPECT_NEAR(coordsBounds.Y.Min, 0.0, 1e-3 );
+    EXPECT_NEAR(coordsBounds.Y.Max, 1.0, 1e-3 );
+
+    EXPECT_NEAR(coordsBounds.Z.Min, 0.0, 1e-3 );
+    EXPECT_NEAR(coordsBounds.Z.Max, 1.0, 1e-3 );
+
+}
+#endif
+
+#ifdef VTKH_FORCE_CUDA
+TEST(vtkm_smoke, basic_use_cuda)
+{
+    vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
+
+    vtkm::cont::testing::MakeTestDataSet maker;
+    vtkm::cont::DataSet data = maker.Make3DExplicitDataSet2();
+    //
+    // work around for a problem adding scalar fields of size 1
+    // to Actors
+    //
+    std::vector<vtkm::Float32> scalars;
+    scalars.push_back(0);
+    scalars.push_back(1);
+    vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
+                                                           vtkm::cont::Field::Association::CELL_SET,
+                                                           "cell_set",
+                                                           scalars);
+
+    const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
+    vtkm::rendering::Actor actor(data.GetCellSet(),
+                                 data.GetCoordinateSystem(),
+                                 scalarField);
+
+    vtkm::Bounds coordsBounds; // Xmin,Xmax,Ymin..
+    coordsBounds = actor.GetSpatialBounds();
+
+    //should be [0,1,0,1,0,1];
+
+    std::cout <<  coordsBounds.X.Min << " " <<
+                  coordsBounds.X.Max << " " <<
+                  coordsBounds.Y.Min << " " <<
+                  coordsBounds.Y.Max << " " <<
+                  coordsBounds.Z.Min << " " <<
+                  coordsBounds.Z.Max << std::endl;
+
+    EXPECT_NEAR(coordsBounds.X.Min, 0.0, 1e-3 );
+    EXPECT_NEAR(coordsBounds.X.Max, 1.0, 1e-3 );
+
+    EXPECT_NEAR(coordsBounds.Y.Min, 0.0, 1e-3 );
+    EXPECT_NEAR(coordsBounds.Y.Max, 1.0, 1e-3 );
+
+    EXPECT_NEAR(coordsBounds.Z.Min, 0.0, 1e-3 );
+    EXPECT_NEAR(coordsBounds.Z.Max, 1.0, 1e-3 );
+
+}
+#endif
 
 
