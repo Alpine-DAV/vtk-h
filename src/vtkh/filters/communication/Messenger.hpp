@@ -18,7 +18,7 @@ class Messenger
 {
   public:
     Messenger(MPI_Comm comm);
-    virtual ~Messenger() {}
+    virtual ~Messenger() {Cleanup();}
 
     //Message headers.
     typedef struct
