@@ -388,12 +388,13 @@ public:
   using ControlSignature = void(FieldIn,
                                 FieldIn,
                                 FieldIn,
+                                FieldIn,
                                 FieldOut,
                                 WholeArrayIn,
                                 WholeArrayIn,
                                 ExecObject);
 
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
 
   template <typename Precision,
@@ -403,12 +404,19 @@ public:
   VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& dir,
                             const vtkm::Vec<Precision, 3>& origin,
                             const vtkm::Vec<Precision,2>& min_max,
+                            const vtkm::UInt8& status,
                             vtkm::Id& count,
                             const BVHType& bvh,
                             const LeafType& leafs,
                             const AABBType &aabbs) const
   {
     count = 0;
+
+    if(status != RAY_ACTIVE)
+    {
+      return;
+    }
+
     Precision closestDistance = min_max[1];
     Precision minDistance = min_max[0];
 

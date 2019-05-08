@@ -34,6 +34,29 @@ public:
   }
 };
 
+class RayResult
+{
+public:
+  vtkm::Vec<vtkm::Float32,3> m_color;
+  vtkm::Int32 m_pixel_id;
+};
+
+template<>
+struct Serialization<RayResult>
+{
+  static void write(MemStream &memstream, const RayResult &data)
+  {
+    vtkh::write(memstream, data.m_color);
+    vtkh::write(memstream, data.m_pixel_id);
+  }
+
+  static void read(MemStream &memstream, RayResult &data)
+  {
+    vtkh::read(memstream, data.m_color);
+    vtkh::read(memstream, data.m_pixel_id);
+  }
+};
+
 template<>
 struct Serialization<Ray>
 {

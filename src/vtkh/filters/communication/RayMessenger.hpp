@@ -15,7 +15,7 @@
 #include <fstream>
 #include <sstream>
 
-//#define LOG_MESSAGES 1
+#define LOG_MESSAGES 1
 
 namespace vtkh
 {
@@ -32,20 +32,21 @@ class RayMessenger : public Messenger
                           int numMsgRecvs,
                           int numICRecvs);
 
-    void SendRays(int dst, std::vector<Ray> &rays);
-
     void SendRays(std::map<int, std::vector<Ray>> &ray_map);
-
+    void SendRays(int dst, std::vector<Ray> &rays);
     bool RecvRays(std::vector<Ray> &rays);
+
+    void SendResults(int dst, std::vector<RayResult> &results);
+    bool RecvResults(std::vector<RayResult> &results);
 
     // Send/Recv messages.
     void SendMsg(int dst, std::vector<int> &msg);
     void SendAllMsg(std::vector<int> &msg);
     bool RecvMsg(std::vector<MsgCommData> &msgs);
 
-    // Send/Recv datasets.
     bool RecvAny(std::vector<MsgCommData> *msgs,
                  std::vector<Ray> *rays,
+                 std::vector<RayResult> *results,
                  bool blockAndWait);
 
   private:
@@ -58,7 +59,8 @@ class RayMessenger : public Messenger
     enum
     {
       MESSAGE_TAG = 0xbadbeef,
-      RAY_TAG = 0xfeebdab
+      RAY_TAG = 0xfeebdab,
+      RESULT_TAG = 0xbadbad
     };
 
     //Message headers.

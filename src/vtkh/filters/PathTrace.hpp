@@ -1,6 +1,7 @@
 #ifndef VTK_H_PATH_TRACE_HPP
 #define VTK_H_PATH_TRACE_HPP
 
+
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -12,10 +13,14 @@
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/Camera.h>
 
+#include <vtkm/rendering/raytracing/ResidualTracker.h>
+
 #ifdef VTKH_PARALLEL
 #include <vtkh/filters/communication/RayMessenger.hpp>
 #endif
 
+
+#include <fstream>
 namespace vtkh
 {
 
@@ -26,6 +31,7 @@ public:
   using vtkmCamera = vtkm::rendering::Camera;
   using IncomingQueue = std::map<int, std::vector<Ray>>;
   using OutgoingQueue = std::map<int, std::vector<Ray>>;
+  using ResultsQueue = std::vector<RayResult>;
   using DomainQueue = std::map<int, std::vector<Ray>>;
   using DomainRays = std::map<int, vtkmRay>;
 
@@ -60,6 +66,7 @@ protected:
 
   OutgoingQueue m_out_q;
   IncomingQueue m_in_q;
+  ResultsQueue  m_result_q;
   DomainRays    m_dom_rays;
 
   int m_rank;
@@ -69,11 +76,17 @@ protected:
 
   void ForwardRays();
 
+  std::ofstream m_log;
+
+  std::vector<vtkm::rendering::raytracing::ResidualTracker> m_trackers;
+
 #ifdef VTKH_PARALLEL
   RayMessenger m_messenger;
 #endif
 
   void CreateRays(vtkmRay &rays);
+
+  void TraceRays();
 
   enum MessageType
   {

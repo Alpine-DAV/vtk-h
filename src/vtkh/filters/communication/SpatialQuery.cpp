@@ -107,7 +107,7 @@ SpatialQuery::IntersectRays(vtkm::rendering::raytracing::Ray<vtkm::Float32> &ray
   counts.Allocate(rays.NumRays);
 
   vtkm::worklet::DispatcherMapField<detail::CountCandidates>(detail::CountCandidates())
-    .Invoke(rays.Dir, rays.Origin, min_max, counts, m_inner_nodes, m_leaf_nodes, aabb_data);
+    .Invoke(rays.Dir, rays.Origin, min_max, rays.Status, counts, m_inner_nodes, m_leaf_nodes, aabb_data);
 
   vtkm::cont::ArrayHandle<vtkm::Id> offsets;
   vtkm::Id sum = vtkm::cont::Algorithm::ScanExclusive(counts, offsets);

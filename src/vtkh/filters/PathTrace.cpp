@@ -3,12 +3,26 @@
 
 #include <vtkm/rendering/raytracing/Camera.h>
 
+#include <vtkm/cont/ArrayCopy.h>
+#include <vtkm/cont/ColorTable.hxx>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
+
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
 #endif
+
+
+
+#include <vtkh/filters/communication/DebugMeowMeow.hpp>
+
+#ifdef  DEBUG_LOG
+#define DLOG(x) m_log<<x
+#else
+#define DLOG(x)
+#endif
+
 
 namespace vtkh
 {
@@ -131,11 +145,14 @@ PathTrace::PathTrace()
   MPI_Comm_size(comm, &m_procs);
   m_messenger.RegisterMessages(2, m_procs, m_procs);
 #endif
+  std::stringstream logname;
+  logname<<"log_"<<m_rank<<".log";
+  m_log.open(logname.str().c_str(), std::ofstream::out);
 }
 
 PathTrace::~PathTrace()
 {
-
+  m_log.close();
 }
 
 void
@@ -154,9 +171,41 @@ void PathTrace::PreExecute()
 {
   Filter::PreExecute();
 
+  vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
+  int num_components = ranges.GetPortalControl().GetNumberOfValues();
+
+  //
+  // current vtkm renderers only supports single component scalar fields
+  //
+  assert(num_components == 1);
+  vtkm::Range global_range = ranges.GetPortalControl().Get(0);
+
   // Build the bounds map so we can ask questions
   m_bounds_map.Clear();
   const int num_domains = this->m_input->GetNumberOfDomains();
+  m_trackers.resize(num_domains);
+
+  // color table
+  vtkm::cont::ColorTable ct("cool to warm");
+  constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> temp;
+  ct.Sample(1024, temp);
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4>> color_map;
+  color_map.Allocate(1024);
+  auto portal = color_map.GetPortalControl();
+  auto colorPortal = temp.GetPortalConstControl();
+  for (vtkm::Id i = 0; i < 1024; ++i)
+  {
+    auto color = colorPortal.Get(i);
+    vtkm::Vec<vtkm::Float32, 4> t(color[0] * conversionToFloatSpace,
+                                  color[1] * conversionToFloatSpace,
+                                  color[2] * conversionToFloatSpace,
+                                  color[3] * conversionToFloatSpace);
+    portal.Set(i, t);
+  }
+
+
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -164,6 +213,14 @@ void PathTrace::PreExecute()
     this->m_input->GetDomain(i, dom, domain_id);
     vtkm::Bounds bounds = dom.GetCoordinateSystem().GetBounds();
     m_bounds_map.AddBlock(domain_id, bounds);
+
+    auto cellset = dom.GetCellSet();
+    auto coords = dom.GetCoordinateSystem();
+    vtkm::cont::Field field = dom.GetField(m_field_name);
+
+    m_trackers[i].SetData(coords, cellset.Cast<vtkm::cont::CellSetStructured<3>>());
+    m_trackers[i].SetScalarField(field, global_range);
+    m_trackers[i].SetColorMap(color_map);
   }
 
   m_bounds_map.Build();
@@ -182,16 +239,42 @@ static int out = 0;
 static int total_death = 0;
 static int in = 0;
 
+struct CompletedFunctor
+{
+  VTKM_EXEC_CONT
+  template< typename T>
+  bool operator()(const T& dests)
+  {
+    bool is_complete = false;
+    if(dests == 0)
+    {
+      is_complete = true;
+    }
+    return is_complete;
+  }
+
+};
+
 void PathTrace::PackRays(vtkmRay &rays)
 {
   SpatialQuery::Result dests = m_spatial_query.IntersectRays(rays);
 
+  vtkmRay completed_rays = rays.CopyIf(dests.m_counts,CompletedFunctor());
+
   std::vector<int> ray_dests(10); // destination for a single ray
+  int scount = 0;
+  int tcount = 0;
   for(int i = 0; i < rays.NumRays; ++i)
   {
     dests.GetDomains(i, ray_dests);
 
     if(ray_dests.size() > 1) std::cout<<"spec ";
+    if(ray_dests.size() == 0)
+    {
+      tcount++;
+      continue;
+    }
+    scount++;
 
     Ray ray;
 
@@ -201,6 +284,7 @@ void PathTrace::PackRays(vtkmRay &rays)
     ray.m_color[0] = rays.Buffers.at(0).Buffer.GetPortalConstControl().Get(c_offset + 0);
     ray.m_color[1] = rays.Buffers.at(0).Buffer.GetPortalConstControl().Get(c_offset + 1);
     ray.m_color[2] = rays.Buffers.at(0).Buffer.GetPortalConstControl().Get(c_offset + 2);
+    ray.m_color[3] = 1.f;
 
     ray.m_status = rays.Status.GetPortalConstControl().Get(i);
     //ray.m_depth = rays.;
@@ -208,24 +292,47 @@ void PathTrace::PackRays(vtkmRay &rays)
     ray.m_max_distance = rays.MaxDistance.GetPortalConstControl().Get(i);
     ray.m_pixel_id = rays.PixelIdx.GetPortalConstControl().Get(i);
 
-    //const vtkm::Id t_offset = i * 3;
-    //ray.m_throughput[0] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 0);
-    //ray.m_throughput[1] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 1);
-    //ray.m_throughput[2] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 2);
-    if(ray_dests.size() == 0)
-    {
-      m_out_q[-1].push_back(ray);
-    }
+    const vtkm::Id t_offset = i * 3;
+    ray.m_throughput[0] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 0);
+    ray.m_throughput[1] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 1);
+    ray.m_throughput[2] = rays.GetBuffer("throughput").Buffer.GetPortalControl().Get(t_offset + 2);
 
     for(int d = 0; d < ray_dests.size(); ++d)
     {
       const int domain = ray_dests[d];
       ray.m_dest_dom = domain;
       int dest_rank = m_bounds_map.m_rank_map[domain];
-      //std::cout<<"Dest rank "<<dest_rank<<" domain "<<domain<<"\n";
       if(dest_rank < 0 || dest_rank >= m_procs) std::cout<<"Error: bad rank "<<dest_rank<<"\n";
       m_out_q[dest_rank].push_back(ray);
+      DLOG("sending "<<ray.m_pixel_id<<" "<<dest_rank<<"\n");
     }
+  }
+
+  std::cout<<"Total "<<rays.NumRays<<" Completed rays "<<completed_rays.NumRays<<" active "<<scount<<"\n";
+  std::cout<<"tcout "<<tcount<<"\n";
+  if(completed_rays.NumRays > 0)
+  {
+    vtkm::Vec<vtkm::Float32, 3> bg_color(1.f, 1.f, 1.f);
+    assert(m_trackers.size() > 0);
+    // All trackers have the same lights
+    m_trackers[0].AddLightContribution(completed_rays, bg_color);
+  }
+
+  for(int i = 0; i < completed_rays.NumRays; ++i)
+  {
+    RayResult res;
+    //std::cout<<" "<<ray_dests.size();
+    //std::cout<<" "<<(int)completed_rays.Status.GetPortalConstControl().Get(i);
+
+    const vtkm::Id c_offset = i * 4;
+    res.m_color[0] = completed_rays.Buffers.at(0).Buffer.GetPortalConstControl().Get(c_offset + 0);
+    res.m_color[1] = completed_rays.Buffers.at(0).Buffer.GetPortalConstControl().Get(c_offset + 1);
+    res.m_color[2] = completed_rays.Buffers.at(0).Buffer.GetPortalConstControl().Get(c_offset + 2);
+
+    res.m_pixel_id = completed_rays.PixelIdx.GetPortalConstControl().Get(i);
+
+    m_result_q.push_back(res);
+    DLOG("sending "<<res.m_pixel_id<<" "<<"-1"<<"\n");
   }
 
 
@@ -241,12 +348,39 @@ void PathTrace::PackOutgoing()
   }
 }
 
+void PathTrace::TraceRays()
+{
+  const int num_domains = this->m_input->GetNumberOfDomains();
+
+  for(int i = 0; i < num_domains; ++i)
+  {
+    vtkm::Id domain_id;
+    vtkm::cont::DataSet dom;
+    this->m_input->GetDomain(i, dom, domain_id);
+
+    vtkmRay &rays = m_dom_rays[domain_id];
+    if(rays.NumRays > 0)
+    {
+      vtkm::rendering::raytracing::ResidualTracker::RandomState rngs;
+      rngs.Allocate(rays.NumRays);
+      vtkm::rendering::raytracing::seedRng(rngs, true);
+
+      m_trackers[i].Trace(rays, rngs);
+    }
+
+  }
+  //ForwardRays();
+}
+
 void PathTrace::RouteToDomains(std::vector<Ray> &in_rays)
 {
   const int size = in_rays.size();
   for(int i = 0; i < size; ++i)
   {
     const int dom = in_rays[i].m_dest_dom;
+
+    DLOG("recieved "<<in_rays[i].m_pixel_id<<"\n");
+
     m_in_q[dom].push_back(in_rays[i]);
   }
 }
@@ -276,20 +410,28 @@ void PathTrace::Recv()
 
   if(m_rank == 0)
   {
-    // check death signals
-    std::vector<MsgCommData> msgs;
-    m_messenger.RecvMsg(msgs);
-    if(msgs.size() != 0)
+    //// check signals
+    //std::vector<MsgCommData> msgs;
+    //m_messenger.RecvMsg(msgs);
+    //if(msgs.size() != 0)
+    //{
+    //  for(int i = 0; i < msgs.size(); ++i)
+    //  {
+    //    if(msgs[i].message[0] == MessageType::DEATH)
+    //    {
+    //      const int count = msgs[i].message[1];
+    //      m_total_rays -= count;
+    //      DPRINT("[0] Death message "<<count<<" remaining "<<m_total_rays<<"\n");
+    //    }
+    //  }
+    //}
+    // check signals
+    std::vector<RayResult> results;
+    m_messenger.RecvResults(results);
+    if(results.size() != 0)
     {
-      for(int i = 0; i < msgs.size(); ++i)
-      {
-        if(msgs[i].message[0] == MessageType::DEATH)
-        {
-          const int count = msgs[i].message[1];
-          m_total_rays -= count;
-          std::cout<<"[0] Death message "<<count<<" remaining "<<m_total_rays<<"\n";
-        }
-      }
+      m_total_rays -= results.size();
+      DPRINT("[0] Death message "<<results.size()<<" remaining "<<m_total_rays<<"\n");
     }
   }
   else
@@ -319,33 +461,6 @@ void PathTrace::Send()
     const int dest = it->first;
 
     out += it->second.size();
-    // send death notices
-    if(dest == -1)
-    {
-      const int death_count = it->second.size();
-      if(death_count != 0)
-      {
-        if(m_rank != 0)
-        {
-#ifdef VTKH_PARALLEL
-          std::vector<int> msg(2);
-          msg[0] = MessageType::DEATH;
-          msg[1] = death_count;
-          m_messenger.SendMsg(0, msg);
-#endif
-        }
-        else
-        {
-          m_total_rays -= death_count;
-          std::cout<<"["<<m_rank<<"]  remaining "<< m_total_rays<<"\n";
-        }
-
-        std::cout<<"["<<m_rank<<"] death "<<death_count<<"\n";
-
-        total_death += death_count;
-      }
-
-    }
     // route to self
     if(m_rank == dest)
     {
@@ -354,7 +469,7 @@ void PathTrace::Send()
 #ifdef VTKH_PARALLEL
     else if(it->second.size() > 0)
     {
-      std::cout<<"["<<m_rank<<"] --> ["<<dest<<"] "<<it->second.size()<<"\n";
+      DPRINT("["<<m_rank<<"] --> ["<<dest<<"] "<<it->second.size()<<"\n");
       m_messenger.SendRays(dest, it->second);
     }
 #else
@@ -362,6 +477,34 @@ void PathTrace::Send()
     std::cout<<"Non-mpi: can't route to rank "<<dest<<"\n";
 #endif
     it->second.clear();
+  }
+
+  // send death notices
+  const int death_count = m_result_q.size();
+  if(death_count != 0)
+  {
+    out += death_count;
+    for(int i =0; i < death_count; ++i)
+    {
+      DLOG("death "<<m_result_q[i].m_pixel_id<<"\n");
+    }
+    if(m_rank != 0)
+    {
+#ifdef VTKH_PARALLEL
+      m_messenger.SendResults(0, m_result_q);
+      std::cout<<"SEND death\n";
+#endif
+   }
+    else
+    {
+      m_total_rays -= death_count;
+      //std::cout<<"["<<m_rank<<"]  remaining "<< m_total_rays<<"\n";
+    }
+
+    DPRINT("["<<m_rank<<"] death "<<death_count<<"\n");
+
+    total_death += death_count;
+    m_result_q.clear();
   }
 }
 
@@ -378,17 +521,17 @@ void PathTrace::UnpackIncoming()
     const int num_rays = it->second.size();
     vtkmRay &rays = m_dom_rays[domain_id];
     rays.Resize(num_rays);
-    // TODO: add throughput buffer
-    // or setup buffers at the begging and let
-    //i resize take care of it
+    rays.AddBuffer(3, "throughput");
+
     if(num_rays > 0)
     {
-      std::cout<<"["<<m_rank<<"] unpacking domain "<<domain_id<<" size "<<num_rays<<"\n";
+      DPRINT("["<<m_rank<<"] unpacking domain "<<domain_id<<" size "<<num_rays<<"\n");
     }
     in += num_rays;
     for(int i = 0; i < num_rays; ++i)
     {
       Ray &ray = it->second[i];
+
       rays.Origin.GetPortalControl().Set(i, ray.m_origin);
       rays.Dir.GetPortalControl().Set(i, ray.m_dir);
 
@@ -396,6 +539,12 @@ void PathTrace::UnpackIncoming()
       rays.Buffers.at(0).Buffer.GetPortalControl().Set(c_offset + 0, ray.m_color[0]);
       rays.Buffers.at(0).Buffer.GetPortalControl().Set(c_offset + 1, ray.m_color[1]);
       rays.Buffers.at(0).Buffer.GetPortalControl().Set(c_offset + 2, ray.m_color[2]);
+      rays.Buffers.at(0).Buffer.GetPortalControl().Set(c_offset + 3, 1.f);
+
+      const vtkm::Id t_offset = i * 3;
+      rays.GetBuffer("throughput").Buffer.GetPortalControl().Set(t_offset + 0, ray.m_throughput[0]);
+      rays.GetBuffer("throughput").Buffer.GetPortalControl().Set(t_offset + 1, ray.m_throughput[1]);
+      rays.GetBuffer("throughput").Buffer.GetPortalControl().Set(t_offset + 2, ray.m_throughput[2]);
 
       rays.Status.GetPortalControl().Set(i, ray.m_status);
       rays.Distance.GetPortalControl().Set(i, ray.m_distance);
@@ -426,13 +575,31 @@ void PathTrace::DoExecute()
     CreateRays(rays);
   }
 
+  rays.AddBuffer(3, "throughput");
+  rays.GetBuffer("throughput").InitConst(1.f);
+  rays.Buffers.at(0).InitConst(0.f);
+
   m_total_rays = rays.NumRays;
   int t_ray = m_total_rays;
 
   PackRays(rays);
-  std::cout<<"init rays "<<rays.NumRays<<"\n";
+  DPRINT("init rays "<<rays.NumRays<<"\n");
+  if(m_rank == 0)
+  {
+    std::ofstream outrays("init_rays", std::ofstream::out);
+    for(auto it = m_out_q.begin(); it != m_out_q.end(); ++it)
+    {
+      const int dest = it->first;
+      for(int i = 0; i < it->second.size(); ++i)
+      {
+        outrays<<it->second[i].m_pixel_id<<"\n";
+      }
+    }
+    outrays.close();
+  }
   Send();
 
+  DPRINT("BEGIN\n");
   in = 0;
   out = 0;
 
@@ -448,8 +615,13 @@ void PathTrace::DoExecute()
     Recv();
     UnpackIncoming();
 
-    if(ActiveRays() > 0) std::cout<<"["<<m_rank<<"] tracing "<<ActiveRays()<<"\n";
-    ForwardRays(); // stand in for trace
+    if(ActiveRays() > 0)
+    {
+      DPRINT("["<<m_rank<<"] tracing "<<ActiveRays()<<"\n");
+    }
+
+    //ForwardRays(); // stand in for trace
+    TraceRays();
 
     PackOutgoing();
     Send();
@@ -459,18 +631,22 @@ void PathTrace::DoExecute()
       Kill();
     }
 
-    if(m_rank == 0)
-    {
-      static int stagnation = 0;
-      static int count = 0;
-      if(m_total_rays == count)
-      {
-        stagnation++;
-      }
-      count = m_total_rays;
-      if(stagnation > 10000) Kill();
-      //std::cout<<" ***** outstanding "<<m_total_rays<<"\n";
-    }
+    //if(m_rank == 0)
+    //{
+    //  static int stagnation = 0;
+    //  static int count = 0;
+    //  if(m_total_rays == count)
+    //  {
+    //    stagnation++;
+    //  }
+    //  count = m_total_rays;
+    //  if(stagnation > 10000)
+    //  {
+    //    std::cout<<"Stagnation!!!\n";
+    //    Kill();
+    //  }
+    //  //std::cout<<" ***** outstanding "<<m_total_rays<<"\n";
+    //}
   }
 
   if(in != out)
@@ -516,12 +692,14 @@ void PathTrace::DoExecute()
 void PathTrace::CreateRays(vtkmRay &rays)
 {
   vtkm::rendering::raytracing::Camera camera;
-  int height = 100;
-  int width = 100;
+  int height = 1024;
+  int width = 1024;
+  //int height = 512;
+  //int width = 512;
   vtkm::rendering::CanvasRayTracer canvas(width, height);
   camera.SetParameters(m_camera, canvas);
   camera.CreateRays(rays, m_bounds);
-  std::cout<<"created rays\n";
+
 }
 
 std::string

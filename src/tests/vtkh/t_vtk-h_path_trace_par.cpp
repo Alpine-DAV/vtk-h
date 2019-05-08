@@ -37,6 +37,8 @@ TEST(vtkh_marching_cubes_par, vtkh_parallel_marching_cubes)
     data_set.AddDomain(CreateTestData(domain_id, num_blocks, base_size), domain_id);
   }
 
+  //data_set.PrintSummary(std::cout);
+
   vtkh::PathTrace tracer;
   tracer.SetInput(&data_set);
   tracer.SetField("point_data");

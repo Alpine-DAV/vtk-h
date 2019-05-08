@@ -91,6 +91,7 @@ RayMessenger::SendAllMsg(vector<int> &msg)
 bool
 RayMessenger::RecvAny(vector<MsgCommData> *msgs,
                       std::vector<Ray> *rays,
+                      std::vector<RayResult> *results,
                       bool blockAndWait)
 {
     set<int> tags;
@@ -103,6 +104,11 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
     {
       tags.insert(RayMessenger::RAY_TAG);
       rays->resize(0);
+    }
+    if(results)
+    {
+      tags.insert(RayMessenger::RESULT_TAG);
+      results->resize(0);
     }
 
     if (tags.empty())
@@ -142,13 +148,43 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
           vtkh::read(*buffers[i].second, message_id);
           m_log<<sendRank<<" "<<message_id<<"\n";
 #endif
-
-          rays->resize(num);
+          // TODO: loop through before and allocate mem
+          // TODO: read entire buffer at once
+          //rays->resize(num + rays->size());
+          DPRINT("["<<rank<<"] <-- ["<<sendRank<<"] "<<num<<"\n");
+          //std::cout<<"["<<rank<<"] <-- ["<<sendRank<<"] ";
           for (int j = 0; j < num; j++)
           {
-            vtkh::read(*(buffers[i].second), (*rays)[j]);
+            Ray ray;
+            vtkh::read(*(buffers[i].second), ray);
+            rays->push_back(ray);
+            //std::cout<<(*rays)[j].m_pixel_id<<" ";
           }
-          std::cout<<"["<<rank<<"] <-- ["<<sendRank<<"] "<<rays->size()<<"\n";
+          //std::cout<<"\n";
+        }
+        else if (buffers[i].first == RayMessenger::RESULT_TAG)
+        {
+          int num, sendRank;
+          vtkh::read(*buffers[i].second, sendRank);
+          vtkh::read(*buffers[i].second, num);
+#ifdef LOG_MESSAGES
+          int message_id;
+          vtkh::read(*buffers[i].second, message_id);
+          m_log<<sendRank<<" "<<message_id<<"\n";
+#endif
+          // TODO: loop through before and allocate mem
+          // TODO: read entire buffer at once
+          //rays->resize(num + rays->size());
+          DPRINT("["<<rank<<"] <-- ["<<sendRank<<"] RES "<<num<<"\n");
+          //std::cout<<"["<<rank<<"] <-- ["<<sendRank<<"] ";
+          for (int j = 0; j < num; j++)
+          {
+            RayResult result;
+            vtkh::read(*(buffers[i].second), result);
+            results->push_back(result);
+            //std::cout<<(*rays)[j].m_pixel_id<<" ";
+          }
+          //std::cout<<"\n";
         }
 
         delete buffers[i].second;
@@ -161,7 +197,7 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
 bool
 RayMessenger::RecvMsg(vector<MsgCommData> &msgs)
 {
-    return RecvAny(&msgs, NULL, false);
+    return RecvAny(&msgs, NULL, NULL, false);
 }
 
 void RayMessenger::SendRays(int dst, std::vector<Ray> &rays)
@@ -194,6 +230,35 @@ void RayMessenger::SendRays(int dst, std::vector<Ray> &rays)
     rays.clear();
 }
 
+void RayMessenger::SendResults(int dst, std::vector<RayResult> &results)
+{
+    if (dst == rank)
+    {
+        cerr<<"Error. Sending result to yourself"<<endl;
+        return;
+    }
+    if (results.empty())
+        return;
+
+    MemStream *buff = new MemStream;
+    vtkh::write(*buff, rank);
+    const int num = results.size();
+    vtkh::write(*buff, num);
+
+#ifdef LOG_MESSAGES
+    vtkh::write(*buff, m_message_id);
+    m_log<<rank<<" "<<m_message_id<<"\n";
+    m_message_id++;
+#endif
+
+    for (auto &result: results)
+    {
+        vtkh::write(*buff, result);
+    }
+    SendData(dst, RayMessenger::RESULT_TAG, buff);
+    results.clear();
+}
+
 void RayMessenger::SendRays(std::map<int, std::vector<Ray>> &ray_map)
 {
     for (auto mit = ray_map.begin(); mit != ray_map.end(); mit++)
@@ -203,7 +268,12 @@ void RayMessenger::SendRays(std::map<int, std::vector<Ray>> &ray_map)
 
 bool RayMessenger::RecvRays(std::vector<Ray> &rays)
 {
-    return RecvAny(NULL, &rays, false);
+    return RecvAny(NULL, &rays, NULL, false);
+}
+
+bool RayMessenger::RecvResults(std::vector<RayResult> &results)
+{
+    return RecvAny(NULL, NULL, &results, false);
 }
 
 } // namespace vtkh
