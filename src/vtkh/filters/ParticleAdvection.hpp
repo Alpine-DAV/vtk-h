@@ -81,6 +81,7 @@ protected:
                   bool shrink=true);
 
   bool useThreadedVersion;
+  bool dumpOutputFiles;
   int sleepUS;
   int rank, numRanks;
   std::string m_field_name;
@@ -107,7 +108,7 @@ protected:
 
   void DumpTraces(int idx, const vector<vtkm::Vec<double,4>> &particleTraces);
   void DumpDS();
-  void DumpSLOutput(const vtkm::cont::DataSet &ds, int domId);
+  void DumpSLOutput(vtkm::cont::DataSet *ds, int domId);
 
 #ifdef VTKH_PARALLEL
   friend class Task;

@@ -17,6 +17,7 @@ ParticleMessenger::ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm, v
     if (stats)
     {
         stats->addTimer("communication");
+        stats->addTimer("gridLocator");
         stats->addCounter("particlesSent");
         stats->addCounter("messagesSent");
     }
@@ -225,10 +226,10 @@ bool ParticleMessenger::DoSendICs(int dst, vector<P> &ics)
 }
 
 int
-ParticleMessenger::Exchange(list<Particle> &outData,
-                             list<Particle> &inData,
-                             list<Particle> &term,
-                             int increment)
+ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
+                            std::list<vtkh::Particle> &inData,
+                            std::list<vtkh::Particle> &term,
+                            int increment)
 {
     DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
     map<int, list<Particle>> sendData;
@@ -237,25 +238,32 @@ ParticleMessenger::Exchange(list<Particle> &outData,
     int earlyTerm = 0;
     if (!outData.empty())
     {
-        vector<int> blockIds;
+        std::vector<std::vector<int>> blockIds;
         boundsMap.FindBlockIDs(outData, blockIds);
         DBG("-----O.blockIds: "<<outData<<" "<<blockIds<<endl);
 
         auto bit = blockIds.begin();
         for (auto lit = outData.begin(); lit != outData.end(); lit++, bit++)
         {
-            int id = *bit;
-            lit->blockId = id;
-            if (id == -1)
+            int lastDom = (*lit).blockIds[0];
+            //filter out the domain I was just inside.
+            auto it = std::find((*bit).begin(), (*bit).end(), lastDom);
+            if (it != (*bit).end())
+                (*bit).erase(it);
+
+            //No domains. it terminated.
+            (*lit).blockIds = *bit;
+            if ((*bit).empty())
             {
                 term.push_back(*lit);
+                (*lit).status = vtkh::Particle::TERMINATE;
                 earlyTerm++;
-                DBG("-----earlyterm: "<<*lit<<" id= "<<id<<endl);
+                DBG("-----earlyterm: "<<*lit<<std::endl);
             }
             else
             {
-                int dst = boundsMap.GetRank(id);
-                if(dst == -1)
+                int dst = boundsMap.GetRank((*bit)[0]);
+                if (dst == -1)
                     throw "Block ID not found";
 
                 if (dst == rank)
@@ -264,18 +272,6 @@ ParticleMessenger::Exchange(list<Particle> &outData,
                     sendData[dst].push_back(*lit);
             }
         }
-
-        DBG("-----SendP: "<<sendData<<endl);
-        for (auto &i : sendData)
-            SendICs(i.first, i.second);
-    }
-    increment += earlyTerm;
-
-    if (increment > 0)
-    {
-        std::vector<int> msg = {MSG_TERMINATE, increment};
-        DBG("-----SendAllMsg: msg="<<msg<<endl);
-        SendAllMsg(msg);
     }
 
     //Check if we have anything coming in.
@@ -286,9 +282,40 @@ ParticleMessenger::Exchange(list<Particle> &outData,
     DBG("-----RecvAny..."<<endl);
     if (RecvAny(&msgData, &particleData, NULL, false))
     {
-        DBG("-----Recv: M: "<<msgData.size()<<" P: "<<particleData.size()<<std::endl);
+        //DBG("-----Recv: M: "<<msgData.size()<<" P: "<<particleData.size()<<std::endl);
+        DBG("-----Recv: M: "<<msgData<<" P: "<<particleData<<std::endl);
         for (auto &p : particleData)
-            inData.push_back(p.p);
+        {
+            if (stats) stats->start("gridLocator");
+            auto loc = gridLocators[p.p.blockIds[0]];
+            vtkm::cont::ArrayHandle<vtkm::Id> cellId;
+            vtkm::cont::ArrayHandle<vtkm::Vec<double,3>> point, pcoord;
+            std::vector<vtkm::Vec<double,3>> pt = {p.p.coords};
+            point = vtkm::cont::make_ArrayHandle(pt);
+            loc.FindCells(point, cellId, pcoord);
+            auto cellPortal = cellId.GetPortalConstControl();
+            if (stats) stats->stop("gridLocator");
+
+            //point NOT in this domain.
+            if (cellPortal.Get(0) == -1)
+            {
+                if (p.p.blockIds.size() == 1)
+                {
+                    p.p.blockIds.erase(p.p.blockIds.begin());
+                    p.p.status = vtkh::Particle::TERMINATE;
+                    term.push_back(p.p);
+                    earlyTerm++;
+                }
+                else
+                {
+                    p.p.blockIds.erase(p.p.blockIds.begin());
+                    int dst = p.p.blockIds[0];
+                    sendData[dst].push_back(p.p);
+                }
+            }
+            else
+                inData.push_back(p.p);
+        }
 
         for (auto &m : msgData)
         {
@@ -309,8 +336,23 @@ ParticleMessenger::Exchange(list<Particle> &outData,
         DBG("-----RecvAny --Nothing in the can"<<endl);
     }
 
+    //Do all the sending...
+    increment += earlyTerm;
+    if (increment > 0)
+    {
+        std::vector<int> msg = {MSG_TERMINATE, increment};
+        DBG("-----SendAllMsg: msg="<<msg<<endl);
+        SendAllMsg(msg);
+    }
+    DBG("-----SendP: "<<sendData<<std::endl);
+    if (!sendData.empty())
+    {
+        for (auto &i : sendData)
+            SendICs(i.first, i.second);
+    }
+
     CheckPendingSendRequests();
-    DBG("----ExchangeParticles Done: I= "<<inData.size()<<" T= "<<term.size()<<endl<<endl);
+    DBG("----ExchangeParticles Done: I= "<<inData<<" T= "<<term<<std::endl<<std::endl);
     if (stats) stats->stop("communication");
 
     return val;

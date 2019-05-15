@@ -152,7 +152,7 @@ public:
             {
                 std::list<Particle> I, T, A;
 
-                DataBlock *blk = filter->GetBlock(particles[0].blockId);
+                DataBlock *blk = filter->GetBlock(particles[0].blockIds[0]);
 
                 stats->start("advect");
                 int n = blk->integrator.Trace(particles, filter->GetMaxSteps(), I, T, A, &traces);
@@ -246,7 +246,8 @@ ParticleAdvection::ParticleAdvection()
       stepSize(.01),
       maxSteps(1000),
       useThreadedVersion(false),
-      sleepUS(1000)
+      dumpOutputFiles(false),
+      sleepUS(100)
 {
 #ifdef VTKH_PARALLEL
   rank = vtkh::GetMPIRank();
@@ -365,6 +366,14 @@ void ParticleAdvection::TraceSingleThread(vector<vtkm::worklet::StreamlineResult
 
   ParticleMessenger communicator(mpiComm, boundsMap, GetStats());
   communicator.RegisterMessages(2, numRanks, numRanks);
+  const int nDoms = this->m_input->GetNumberOfDomains();
+  for (int i = 0; i < nDoms; i++)
+  {
+    vtkm::Id id;
+    vtkm::cont::DataSet ds;
+    this->m_input->GetDomain(i, ds, id);
+    communicator.AddLocator(id, ds);
+  }
 
   int N = 0;
   int prevTermCount = 0;
@@ -378,7 +387,7 @@ void ParticleAdvection::TraceSingleThread(vector<vtkm::worklet::StreamlineResult
       if (GetActiveParticles(v))
       {
           DBG("GetActiveParticles: "<<v<<std::endl);
-          DataBlock *blk = GetBlock(v[0].blockId);
+          DataBlock *blk = GetBlock(v[0].blockIds[0]);
           DBG("Integrate: "<<v<<std::endl);
 
           std::list<Particle> T, A;
@@ -528,8 +537,13 @@ void ParticleAdvection::DoExecute()
       ds.AddCoordinateSystem(outputCoords);
       ds.AddCellSet(polyLines);
       this->m_output->AddDomain(ds, rank);
-
-      this->DumpSLOutput(ds, rank);
+      if (this->dumpOutputFiles)
+          this->DumpSLOutput(&ds, rank);
+  }
+  else
+  {
+      if (this->dumpOutputFiles)
+          this->DumpSLOutput(NULL, rank);
   }
 }
 
@@ -541,7 +555,6 @@ ParticleAdvection::GetActiveParticles(std::vector<Particle> &v)
     if (active.empty())
         return false;
 
-    int blockId = active.front().blockId;
     while (!active.empty())
     {
         Particle p = active.front();
@@ -559,12 +572,15 @@ ParticleAdvection::GetName() const
 }
 
 void
-ParticleAdvection::DumpSLOutput(const vtkm::cont::DataSet &ds, int domId)
+ParticleAdvection::DumpSLOutput(vtkm::cont::DataSet *ds, int domId)
 {
   char nm[128];
-  sprintf(nm, "ds.%03d.vtk", domId);
-  vtkm::io::writer::VTKDataSetWriter writer(nm);
-  writer.WriteDataSet(ds);
+  if (ds)
+  {
+      sprintf(nm, "ds.%03d.vtk", domId);
+      vtkm::io::writer::VTKDataSetWriter writer(nm);
+      writer.WriteDataSet(*ds);
+  }
   if (rank == 0)
   {
     ofstream output;
@@ -574,6 +590,37 @@ ParticleAdvection::DumpSLOutput(const vtkm::cont::DataSet &ds, int domId)
     {
         char nm[128];
         sprintf(nm, "ds.%03d.vtk", i);
+        output<<nm<<std::endl;
+    }
+  }
+
+  sprintf(nm, "pts.%03d.txt", domId);
+  ofstream pout;
+  pout.open(nm, ofstream::out);
+
+  if (ds)
+  {
+      int nPts = ds->GetCoordinateSystem(0).GetNumberOfPoints();
+      auto portal = ds->GetCoordinateSystem(0).GetData().GetPortalConstControl();
+      for (int i = 0; i < nPts; i++)
+      {
+          vtkm::Vec<float,3> pt;
+          pt = portal.Get(i);
+          pout<<pt[0]<<","<<pt[1]<<","<<pt[2]<<","<<i<<std::endl;
+      }
+  }
+  else
+      pout<<"-12,-12,-12,-1"<<std::endl;
+
+  if (rank == 0)
+  {
+    ofstream output;
+    output.open("pts.visit", ofstream::out);
+    output<<"!NBLOCKS "<<numRanks<<std::endl;
+    for (int i = 0; i < numRanks; i++)
+    {
+        char nm[128];
+        sprintf(nm, "pts.%03d.txt", i);
         output<<nm<<std::endl;
     }
   }
@@ -592,10 +639,11 @@ ParticleAdvection::DumpDS()
     this->m_input->GetDomain(i, dom, domId);
 
     char nm[128];
-    sprintf(nm, "dom.%03lld.vtk", domId);
+    sprintf(nm, "dom.%03d.vtk", domId);
 
     vtkm::io::writer::VTKDataSetWriter writer(nm);
     writer.WriteDataSet(dom);
+
   }
 
   if (rank == 0)
@@ -641,9 +689,10 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
   //shrink by 5%
   if (shrink)
   {
-    float d[3] = {(boxRange[1]-boxRange[0]) * 0.025f,
-                  (boxRange[3]-boxRange[2]) * 0.025f,
-                  (boxRange[5]-boxRange[4]) * 0.025f};
+    const float factor = 0.025;
+    float d[3] = {(boxRange[1]-boxRange[0]) * factor,
+                  (boxRange[3]-boxRange[2]) * factor,
+                  (boxRange[5]-boxRange[4]) * factor};
     boxRange[0] += d[0];
     boxRange[1] -= d[0];
     boxRange[2] += d[1];
@@ -662,11 +711,24 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
           id = rank*N+i;
 
       Particle p;
-      p.blockId = domId;
       p.id = id;
       p.coords[0] = randRange(boxRange[0], boxRange[1]);
       p.coords[1] = randRange(boxRange[2], boxRange[3]);
       p.coords[2] = randRange(boxRange[4], boxRange[5]);
+
+      /*
+      if (N == 1)
+      {
+          p.coords[0] = -1.0;
+          p.coords[1] = -3.0;
+          p.coords[2] = -5.0;
+
+          p.coords[0] = -1.0;
+          p.coords[1] = -0.6;
+          p.coords[2] =  0.1;
+      }
+      */
+
       seeds.push_back(p);
   }
 }
@@ -701,18 +763,18 @@ ParticleAdvection::CreateSeeds()
         seeds.push_back(p);
     }
 
-    if (seedMethod == RANDOM_BLOCK)
-        active.insert(active.end(), seeds.begin(), seeds.end());
-    else
+    //Set the blockIds for each seed.
+    std::vector<std::vector<int>> domainIds;
+    boundsMap.FindBlockIDs(seeds, domainIds);
+    for (int i = 0; i < seeds.size(); i++)
     {
-        vector<int> domainIds;
-        boundsMap.FindBlockIDs(seeds, domainIds);
-        for (int i = 0; i < seeds.size(); i++)
-            if (DomainToRank(domainIds[i]) == rank)
-            {
-                seeds[i].blockId = domainIds[i];
-                active.push_back(seeds[i]);
-            }
+        if (!domainIds[i].empty() && DomainToRank(domainIds[i][0]) == rank)
+        {
+            seeds[i].blockIds = domainIds[i];
+            active.push_back(seeds[i]);
+            if (domainIds[i].size() > 1) DBG("WE have a DUP: "<<seeds[i]<<std::endl);
+
+        }
     }
 
     totalNumSeeds = active.size() + inactive.size();

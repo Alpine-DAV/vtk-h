@@ -11,6 +11,8 @@
 #include "Messenger.hpp"
 #include "BoundsMap.hpp"
 #include <vtkh/filters/StatisticsDB.hpp>
+#include <vtkm/worklet/particleadvection/GridEvaluators.h>
+#include <vtkm/cont/CellLocatorTwoLevelUniformGrid.h>
 
 namespace vtkh
 {
@@ -31,10 +33,10 @@ class ParticleMessenger : public Messenger
                           int numICRecvs,
                           int numDSRecvs=0);
 
-    int Exchange(list<Particle> &outData,
-                  list<Particle> &inData,
-                  list<Particle> &term,
-                  int increment);
+    int Exchange(std::list<vtkh::Particle> &outData,
+                 std::list<vtkh::Particle> &inData,
+                 std::list<vtkh::Particle> &term,
+                 int increment);
 
     // Send/Recv Integral curves.
     template <typename P, template <typename, typename> class Container,
@@ -64,6 +66,15 @@ class ParticleMessenger : public Messenger
                  std::vector<DSCommData> *ds,
                  bool blockAndWait);
 
+  void AddLocator(int domain, vtkm::cont::DataSet &ds)
+  {
+      vtkm::cont::CellLocatorTwoLevelUniformGrid locator;
+      locator.SetCoordinates(ds.GetCoordinateSystem());
+      locator.SetCellSet(ds.GetCellSet());
+      locator.Build();
+      gridLocators.insert(std::pair<int,vtkm::cont::CellLocatorTwoLevelUniformGrid>(domain, locator));
+  }
+
   private:
     template <typename P>
     bool DoSendICs(int dst, std::vector<P> &ics);
@@ -74,8 +85,8 @@ class ParticleMessenger : public Messenger
 
     enum
     {
-        MESSAGE_TAG = 0xbadbeef,
-        PARTICLE_TAG = 0xfeebdab
+        MESSAGE_TAG = 0x42000,
+        PARTICLE_TAG = 0x42001
     };
 
     //Message headers.
@@ -83,6 +94,8 @@ class ParticleMessenger : public Messenger
     {
         int rank, id, tag, numPackets, packet, packetSz, dataSz;
     } Header;
+
+    std::map<int, vtkm::cont::CellLocatorTwoLevelUniformGrid> gridLocators;
 };
 } //namespace vtkh
 #endif

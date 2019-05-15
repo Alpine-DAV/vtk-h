@@ -49,7 +49,7 @@ public:
 
   template <template <typename, typename> class Container,
             typename Allocator=std::allocator<Particle>>
-  void FindBlockIDs(const Container<Particle, Allocator> &particles, std::vector<int> &blockIDs) const
+  void FindBlockIDs(const Container<Particle, Allocator> &particles, std::vector<std::vector<int>> &blockIDs) const
   {
       size_t sz = particles.size();
       blockIDs.resize(sz);
@@ -59,8 +59,9 @@ public:
           *oit = FindBlock(pit->coords);
   }
 
-  int FindBlock(const vtkm::Vec<float,3> &pt) const
+  std::vector<int> FindBlock(const vtkm::Vec<float,3> &pt) const
   {
+      std::vector<int> res;
       for (auto it = bm.begin(); it != bm.end(); it++)
       {
           if (pt[0] >= it->second.X.Min &&
@@ -70,10 +71,10 @@ public:
               pt[2] >= it->second.Z.Min &&
               pt[2] < it->second.Z.Max)
           {
-              return it->first;
+              res.push_back(it->first);
           }
       }
-      return -1;
+      return res;
   }
 
   int GetRank(const int &block_id)
@@ -98,13 +99,6 @@ public:
     int *dom_counts = new int[procs];
     int *box_counts = new int[procs];
     MPI_Allgather(&size, 1, MPI_INT, dom_counts, 1, MPI_INT, comm);
-    if(rank == 0)
-    {
-      for(int i = 0; i < procs; ++i)
-      {
-        std::cout<<"rank "<<i<<" has "<<dom_counts[i]<<" boxes\n";
-      }
-    }
 
     // prefix sum to build incoming buffers offsets
     int *box_offsets = new int[procs];
@@ -173,10 +167,6 @@ public:
       bounds.Z.Max = box_rec_buff[offset + 5];
 
       m_rank_map[dom_id] = rank_map[i];
-      if(rank == 0)
-      {
-        std::cout<<"domain "<<dom_id<<" rank "<<rank_map[i]<<"\n";
-      }
     }
 
     delete[] dom_send_buff;

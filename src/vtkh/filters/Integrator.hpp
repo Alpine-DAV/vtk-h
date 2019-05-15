@@ -179,12 +179,6 @@ private:
                       std::list<vtkh::Particle> &T,
                       std::list<vtkh::Particle> &A)
     {
-        /*
-        p.status = Particle::TERMINATE;
-        T.push_back(p);
-        return;
-        */
-
         if (p.nSteps >= maxSteps || status == vtkm::worklet::particleadvection::ParticleStatus::TERMINATED)
         {
             p.status = vtkh::Particle::TERMINATE;
