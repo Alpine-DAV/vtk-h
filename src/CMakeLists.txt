@@ -66,6 +66,11 @@ set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
 # Init BLT
 ################################
 set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+
+if (NOT BLT_CXX_STD)
+  set(BLT_CXX_STD "c++11" CACHE STRING "")
+endif()
+
 include(blt/SetupBLT.cmake)
 
 

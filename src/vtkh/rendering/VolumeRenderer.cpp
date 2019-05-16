@@ -180,40 +180,14 @@ VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera,
                                  const vtkm::Bounds &bounds) const
 {
 
-  vtkm::Matrix<vtkm::Float32,4,4> view_matrix = camera.CreateViewMatrix();
-
-  //
-  // z's should both be negative since the camera is
-  // looking down the neg z-axis
-  //
-  double x[2], y[2], z[2];
-
-  x[0] = bounds.X.Min;
-  x[1] = bounds.X.Max;
-  y[0] = bounds.Y.Min;
-  y[1] = bounds.Y.Max;
-  z[0] = bounds.Z.Min;
-  z[1] = bounds.Z.Max;
-
-  float minz;
-  minz = std::numeric_limits<float>::max();
-  vtkm::Vec<vtkm::Float32,4> extent_point;
-
-  for(int i = 0; i < 2; i++)
-      for(int j = 0; j < 2; j++)
-          for(int k = 0; k < 2; k++)
-          {
-              extent_point[0] = static_cast<vtkm::Float32>(x[i]);
-              extent_point[1] = static_cast<vtkm::Float32>(y[j]);
-              extent_point[2] = static_cast<vtkm::Float32>(z[k]);
-              extent_point[3] = 1.f;
-              extent_point = vtkm::MatrixMultiply(view_matrix, extent_point);
-              // perform the perspective divide
-              extent_point[2] = extent_point[2] / extent_point[3];
-              minz = std::min(minz, -extent_point[2]);
-          }
-
-  return minz;
+  vtkm::Vec<vtkm::Float64,3> center = bounds.Center();
+  vtkm::Vec<vtkm::Float64,3> fcenter;
+  fcenter[0] = static_cast<vtkm::Float32>(center[0]);
+  fcenter[1] = static_cast<vtkm::Float32>(center[1]);
+  fcenter[2] = static_cast<vtkm::Float32>(center[2]);
+  vtkm::Vec<vtkm::Float32,3> pos = camera.GetPosition();
+  vtkm::Float32 dist = vtkm::Magnitude(fcenter - pos);
+  return dist;
 }
 
 void
