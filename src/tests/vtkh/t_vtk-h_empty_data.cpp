@@ -41,7 +41,7 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkm)
   iso_range.Min = -100.;
   iso_range.Max = -10.;
   iso.SetRange(iso_range);
-  iso.SetField("point_data");
+  iso.SetField("point_data_Float32");
   iso.SetInput(&data_set);
   iso.Update();
 
@@ -54,11 +54,11 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkm)
   iso_vals[1] = (float)base_size * (float)num_blocks * 0.5f;
 
   vtkh::MarchingCubes marcher;
-  marcher.SetField("point_data");
+  marcher.SetField("point_data_Float32");
   marcher.SetInput(iso_output);
   marcher.SetIsoValues(iso_vals, num_vals);
-  marcher.AddMapField("point_data");
-  marcher.AddMapField("cell_data");
+  marcher.AddMapField("point_data_Float32");
+  marcher.AddMapField("cell_data_Float32");
   marcher.Update();
 
   vtkh::DataSet *contour_output = marcher.GetOutput();
@@ -79,7 +79,7 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkm)
 
   vtkh::Threshold thresher;
   thresher.SetInput(clip_output);
-  thresher.SetField("point_data");
+  thresher.SetField("point_data_Float32");
 
   double upper_bound = 1.;
   double lower_bound = 0.;
@@ -107,7 +107,7 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkm)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("point_data");
+  tracer.SetField("point_data_Float32");
 
   scene.AddRenderer(&tracer);
   scene.Render();
@@ -130,9 +130,8 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkh)
   iso_range.Min = -100.;
   iso_range.Max = -10.;
   iso.SetRange(iso_range);
-  iso.SetField("point_data");
+  iso.SetField("point_data_Float32");
   iso.SetInput(&data_set);
-
   bool got_error = false;
   try
   {

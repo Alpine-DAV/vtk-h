@@ -130,29 +130,29 @@ void VolumeRenderer::CorrectOpacity()
   for(int i = 0; i < num_points; i++)
   {
     vtkm::Vec<vtkm::Float64,4> point;
-    corrected.GetPointAlpha(i,point); 
-    point[1] = 1. - vtkm::Pow((1. - point[1]), double(ratio)); 
-    corrected.UpdatePointAlpha(i,point); 
+    corrected.GetPointAlpha(i,point);
+    point[1] = 1. - vtkm::Pow((1. - point[1]), double(ratio));
+    corrected.UpdatePointAlpha(i,point);
   }
 
   this->m_color_table = corrected;
 }
 
-void 
-VolumeRenderer::PreExecute() 
+void
+VolumeRenderer::PreExecute()
 {
   Renderer::PreExecute();
 
-  vtkm::Vec<vtkm::Float32,3> extent; 
+  vtkm::Vec<vtkm::Float32,3> extent;
   extent[0] = static_cast<vtkm::Float32>(this->m_bounds.X.Length());
   extent[1] = static_cast<vtkm::Float32>(this->m_bounds.Y.Length());
   extent[2] = static_cast<vtkm::Float32>(this->m_bounds.Z.Length());
-  vtkm::Float32 dist = vtkm::Magnitude(extent) / m_num_samples; 
+  vtkm::Float32 dist = vtkm::Magnitude(extent) / m_num_samples;
   m_tracer->SetSampleDistance(dist);
 }
 
-void 
-VolumeRenderer::PostExecute() 
+void
+VolumeRenderer::PostExecute()
 {
   int total_renders = static_cast<int>(m_renders.size());
   if(m_do_composite)
@@ -165,40 +165,40 @@ void
 VolumeRenderer::SetNumberOfSamples(const int num_samples)
 {
   assert(num_samples > 0);
-  m_num_samples = num_samples; 
+  m_num_samples = num_samples;
   CorrectOpacity();
 }
 
-Renderer::vtkmCanvasPtr 
+Renderer::vtkmCanvasPtr
 VolumeRenderer::GetNewCanvas(int width, int height)
 {
   return std::make_shared<vtkm::rendering::CanvasRayTracer>(width, height);
 }
 
-float 
-VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera, 
+float
+VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera,
                                  const vtkm::Bounds &bounds) const
 {
-  
+
   vtkm::Matrix<vtkm::Float32,4,4> view_matrix = camera.CreateViewMatrix();
-  
+
   //
-  // z's should both be negative since the camera is 
+  // z's should both be negative since the camera is
   // looking down the neg z-axis
   //
   double x[2], y[2], z[2];
-   
+
   x[0] = bounds.X.Min;
   x[1] = bounds.X.Max;
   y[0] = bounds.Y.Min;
   y[1] = bounds.Y.Max;
   z[0] = bounds.Z.Min;
   z[1] = bounds.Z.Max;
-  
+
   float minz;
   minz = std::numeric_limits<float>::max();
   vtkm::Vec<vtkm::Float32,4> extent_point;
-  
+
   for(int i = 0; i < 2; i++)
       for(int j = 0; j < 2; j++)
           for(int k = 0; k < 2; k++)
@@ -216,14 +216,14 @@ VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera,
   return minz;
 }
 
-void 
+void
 VolumeRenderer::Composite(const int &num_images)
 {
   const int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
 
   m_compositor->SetCompositeMode(Compositor::VIS_ORDER_BLEND);
 
-  FindVisibilityOrdering(); 
+  FindVisibilityOrdering();
 
   for(int i = 0; i < num_images; ++i)
   {
@@ -231,8 +231,8 @@ VolumeRenderer::Composite(const int &num_images)
 
     for(int dom = 0; dom < num_canvases; ++dom)
     {
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0]; 
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer()); 
+      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0];
+      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer());
       int height = m_renders[i].GetCanvas(dom)->GetHeight();
       int width = m_renders[i].GetCanvas(dom)->GetWidth();
 
@@ -249,7 +249,7 @@ VolumeRenderer::Composite(const int &num_images)
     if(vtkh::GetMPIRank() == 0)
     {
 #endif
-      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true); 
+      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
 #ifdef VTKH_PARALLEL
     }
 #endif
@@ -257,8 +257,8 @@ VolumeRenderer::Composite(const int &num_images)
   } // for image
 }
 
-void 
-VolumeRenderer::DepthSort(int num_domains, 
+void
+VolumeRenderer::DepthSort(int num_domains,
                           std::vector<float> &min_depths,
                           std::vector<int> &local_vis_order)
 {
@@ -269,15 +269,15 @@ VolumeRenderer::DepthSort(int num_domains,
   MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   int num_ranks = vtkh::GetMPISize();
   int rank = vtkh::GetMPIRank();
-  int *domain_counts = NULL; 
-  int *domain_offsets = NULL; 
-  int *vis_order = NULL; 
+  int *domain_counts = NULL;
+  int *domain_offsets = NULL;
+  int *vis_order = NULL;
   float *depths = NULL;
 
   if(rank == root)
   {
-    domain_counts = new int[num_ranks]; 
-    domain_offsets = new int[num_ranks]; 
+    domain_counts = new int[num_ranks];
+    domain_offsets = new int[num_ranks];
   }
 
   MPI_Gather(&num_domains,
@@ -296,7 +296,7 @@ VolumeRenderer::DepthSort(int num_domains,
     domain_offsets[0] = 0;
     for(int i = 1; i < num_ranks; ++i)
     {
-      domain_offsets[i] = domain_offsets[i - 1] + domain_counts[i - 1]; 
+      domain_offsets[i] = domain_offsets[i - 1] + domain_counts[i - 1];
     }
 
     for(int i = 0; i < num_ranks; ++i)
@@ -305,9 +305,9 @@ VolumeRenderer::DepthSort(int num_domains,
     }
 
     depths = new float[depths_size];
-                 
+
   }
-  
+
   MPI_Gatherv(&min_depths[0],
               num_domains,
               MPI_FLOAT,
@@ -327,29 +327,29 @@ VolumeRenderer::DepthSort(int num_domains,
     {
       for(int c = 0; c < domain_counts[i]; ++c)
       {
-        int index = domain_offsets[i] + c;    
+        int index = domain_offsets[i] + c;
         order[index].m_rank = i;
         order[index].m_domain_index = c;
         order[index].m_minz = depths[index];
       }
     }
-    
+
     std::sort(order.begin(), order.end(), detail::DepthOrder());
-    
+
     for(int i = 0; i < depths_size; ++i)
     {
       order[i].m_order = i;
     }
 
     std::sort(order.begin(), order.end(), detail::RankOrder());
-        
+
     vis_order = new int[depths_size];
     for(int i = 0; i < depths_size; ++i)
     {
       vis_order[i] = order[i].m_order;
     }
   }
-  
+
   MPI_Scatterv(vis_order,
                domain_counts,
                domain_offsets,
@@ -379,14 +379,14 @@ VolumeRenderer::DepthSort(int num_domains,
       order[i].m_minz = min_depths[i];
   }
   std::sort(order.begin(), order.end(), detail::DepthOrder());
-  
+
   for(int i = 0; i < num_domains; ++i)
   {
     order[i].m_order = i;
   }
 
   std::sort(order.begin(), order.end(), detail::RankOrder());
-   
+
   for(int i = 0; i < num_domains; ++i)
   {
     local_vis_order[i] = order[i].m_order;
@@ -405,15 +405,15 @@ VolumeRenderer::FindVisibilityOrdering()
   {
     m_visibility_orders[i].resize(num_domains);
   }
-  
+
   //
   // In order for parallel volume rendering to composite correctly,
   // we nee to establish a visibility ordering to pass to IceT.
   // We will transform the data extents into camera space and
-  // take the minimum z value. Then sort them while keeping 
+  // take the minimum z value. Then sort them while keeping
   // track of rank, then pass the list in.
   //
-  std::vector<float> min_depths;     
+  std::vector<float> min_depths;
   min_depths.resize(num_domains);
 
   for(int i = 0; i < num_cameras; ++i)
@@ -424,8 +424,8 @@ VolumeRenderer::FindVisibilityOrdering()
       vtkm::Bounds bounds = this->m_input->GetDomainBounds(dom);
       min_depths[dom] = FindMinDepth(camera, bounds);
     }
-      
-    DepthSort(num_domains, min_depths, m_visibility_orders[i]); 
+
+    DepthSort(num_domains, min_depths, m_visibility_orders[i]);
 
   } // for each camera
 }

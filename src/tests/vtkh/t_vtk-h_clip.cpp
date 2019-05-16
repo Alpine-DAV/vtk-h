@@ -44,12 +44,13 @@ TEST(vtkh_clip, vtkh_box_clip)
 
   clipper.SetBoxClip(clip_bounds);
   clipper.SetInput(&data_set);
-  clipper.AddMapField("point_data");
-  //clipper.AddMapField("cell_data");
+  clipper.AddMapField("point_data_Float32");
+  clipper.AddMapField("cell_data_Float32");
   clipper.Update();
 
   vtkh::DataSet *clip_output = clipper.GetOutput();
 
+  clip_output->PrintSummary(std::cout);
   vtkm::Bounds bounds = clip_output->GetGlobalBounds();
 
   vtkm::rendering::Camera camera;
@@ -68,13 +69,14 @@ TEST(vtkh_clip, vtkh_box_clip)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(clip_output);
-  tracer.SetField("point_data");
+  tracer.SetField("point_data_Float32");
 
   scene.AddRenderer(&tracer);
   scene.Render();
 
   delete clip_output;
 }
+
 #if 0
 TEST(vtkh_clip, vtkh_sphere_clip)
 {
@@ -100,8 +102,8 @@ TEST(vtkh_clip, vtkh_sphere_clip)
 
   clipper.SetSphereClip(center, radius);
   clipper.SetInput(&data_set);
-  clipper.AddMapField("point_data");
-  clipper.AddMapField("cell_data");
+  clipper.AddMapField("point_data_Float32");
+  clipper.AddMapField("cell_data_Float32");
   clipper.Update();
 
   vtkh::DataSet *clip_output = clipper.GetOutput();
@@ -123,7 +125,7 @@ TEST(vtkh_clip, vtkh_sphere_clip)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(clip_output);
-  tracer.SetField("point_data");
+  tracer.SetField("point_data_Float32");
 
   scene.AddRenderer(&tracer);
   scene.Render();

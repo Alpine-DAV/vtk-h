@@ -14,9 +14,9 @@ namespace vtkh
 class Threshold: public Filter
 {
 public:
-  Threshold(); 
-  virtual ~Threshold(); 
-  std::string GetName() const override; 
+  Threshold();
+  virtual ~Threshold();
+  std::string GetName() const override;
   void SetUpperThreshold(const double &value);
   void SetLowerThreshold(const double &value);
   void SetField(const std::string &field_name);

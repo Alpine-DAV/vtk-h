@@ -1,5 +1,5 @@
 #include <vtkh/filters/CellAverage.hpp>
-#include <vtkm/filter/CellAverage.h>
+#include <vtkh/vtkm_filters/vtkmCellAverage.hpp>
 
 namespace vtkh
 {
@@ -56,12 +56,11 @@ void CellAverage::DoExecute()
       continue;
     }
 
-    vtkm::filter::CellAverage avg;
-    avg.SetOutputFieldName(m_output_field_name);
-    avg.SetFieldsToPass(this->GetFieldSelection());
-    avg.SetActiveField(m_field_name);
-
-    auto dataset = avg.Execute(dom);
+    vtkh::vtkmCellAverage avg;
+    auto dataset = avg.Run(dom,
+                           m_field_name,
+                           m_output_field_name,
+                           this->GetFieldSelection());
     m_output->AddDomain(dataset, domain_id);
   }
 }

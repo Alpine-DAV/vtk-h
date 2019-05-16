@@ -17,23 +17,23 @@ public:
 
   void Update() override;
   virtual void SetColorTable(const vtkm::cont::ColorTable &color_table) override;
-protected:  
+protected:
   virtual void Composite(const int &num_images) override;
   virtual void PreExecute() override;
   virtual void PostExecute() override;
 
   void CorrectOpacity();
   void FindVisibilityOrdering();
-  void DepthSort(int num_domains, 
+  void DepthSort(int num_domains,
                  std::vector<float> &min_depths,
                  std::vector<int> &local_vis_order);
-  float FindMinDepth(const vtkm::rendering::Camera &camera, 
+  float FindMinDepth(const vtkm::rendering::Camera &camera,
                      const vtkm::Bounds &bounds) const;
   void RecordTime(const std::string &nm, double time);
-  
+
   int m_num_samples;
   std::shared_ptr<vtkm::rendering::MapperVolume> m_tracer;
-  vtkm::cont::ColorTable m_uncorrected_color_table;;
+  vtkm::cont::ColorTable m_uncorrected_color_table;
   std::vector<std::vector<int>> m_visibility_orders;
 
 };
