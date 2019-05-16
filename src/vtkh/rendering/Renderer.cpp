@@ -10,6 +10,11 @@
 #endif
 
 #include <assert.h>
+#include <stdio.h>
+#include <chrono>
+#include <sys/time.h>
+
+using namespace std;
 
 namespace vtkh {
 
