@@ -73,6 +73,14 @@ public:
         m_Rank = vtkh::GetMPIRank();
         m_NumRanks = vtkh::GetMPISize();
         communicator.RegisterMessages(2, m_NumRanks, m_NumRanks);
+        int nDoms = pa->m_input->GetNumberOfDomains();
+        for (int i = 0; i < nDoms; i++)
+        {
+            vtkm::Id id;
+            vtkm::cont::DataSet ds;
+            pa->m_input->GetDomain(i, ds, id);
+            communicator.AddLocator(id, ds);
+        }
         stats->addTimer("worker_sleep");
         stats->addCounter("worker_naps");
     }
