@@ -55,6 +55,10 @@ blt_add_library(
   DEPENDS_ON ${vtkh_rendering_deps}
   )
 
+if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
+  set_target_properties(vtkh_rendering PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+endif()
+
 #if(ENABLE_OPENMP)
 #  if(CUDA_FOUND)
 #    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-Xcompiler" "${OpenMP_CXX_FLAGS}")
@@ -123,6 +127,10 @@ if (MPI_FOUND)
         HEADERS ${vtkh_rendering_headers} ${vtkh_rendering_mpi_headers}
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
+
+if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
+  set_target_properties(vtkh_rendering_mpi PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+endif()
 
     if(ENABLE_OPENMP)
       blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-DVTKH_USE_OPENMP")

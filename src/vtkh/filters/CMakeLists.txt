@@ -59,6 +59,10 @@ blt_add_library(
   DEPENDS_ON ${vtkh_filters_deps}
   )
 
+if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
+  set_target_properties(vtkh_filters PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+endif()
+
 # Install libraries
 install(TARGETS vtkh_filters
   EXPORT ${VTKh_EXPORT_NAME}
@@ -91,6 +95,10 @@ if (MPI_FOUND)
       HEADERS ${vtkh_filters_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
+
+if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
+  set_target_properties(vtkh_filters_mpi PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+endif()
 
     blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL")
 
