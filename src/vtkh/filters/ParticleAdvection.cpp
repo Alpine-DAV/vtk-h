@@ -529,6 +529,7 @@ void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
 
 //  DumpTraces(rank, traces);
 //  std::cout<<rank<<": done tracing. # of traces= "<<traces.size()<<std::endl;
+  MPI_Barrier(mpiComm);
   DBG("All done"<<std::endl);
 
 if(0)
