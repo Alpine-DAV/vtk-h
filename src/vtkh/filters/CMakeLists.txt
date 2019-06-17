@@ -8,6 +8,7 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  Gradient.hpp
   GhostStripper.hpp
   Log.hpp
   IsoVolume.hpp
@@ -27,6 +28,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  Gradient.cpp
   GhostStripper.cpp
   Log.cpp
   IsoVolume.cpp

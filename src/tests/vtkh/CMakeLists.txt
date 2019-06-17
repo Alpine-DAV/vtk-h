@@ -56,6 +56,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_clip_field
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
+                t_vtk-h_gradient
                 t_vtk-h_ghost_stripper
                 t_vtk-h_iso_volume
                 t_vtk-h_no_op

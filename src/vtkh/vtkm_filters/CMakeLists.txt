@@ -8,6 +8,7 @@ set(vtkm_filters_headers
   vtkmCleanGrid.hpp
   vtkmClipWithField.hpp
   vtkmExtractStructured.hpp
+  vtkmGradient.hpp
   vtkmLagrangian.hpp
   vtkmMarchingCubes.hpp
   vtkmPointAverage.hpp
@@ -21,6 +22,7 @@ set(vtkm_filters_sources
   vtkmCleanGrid.cpp
   vtkmClipWithField.cpp
   vtkmExtractStructured.cpp
+  vtkmGradient.cpp
   vtkmLagrangian.cpp
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
