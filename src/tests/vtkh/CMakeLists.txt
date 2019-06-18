@@ -58,6 +58,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_empty_data
                 t_vtk-h_gradient
                 t_vtk-h_ghost_stripper
+                t_vtk-h_histogram
                 t_vtk-h_iso_volume
                 t_vtk-h_no_op
                 t_vtk-h_marching_cubes
@@ -80,6 +81,7 @@ set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_dataset_par
               t_vtk-h_no_op_par
               t_vtk-h_marching_cubes_par
+              t_vtk-h_histogram_par
               t_vtk-h_multi_render_par
               t_vtk-h_raytracer_par
               t_vtk-h_volume_renderer_par

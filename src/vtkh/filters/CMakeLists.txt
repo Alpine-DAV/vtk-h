@@ -11,6 +11,7 @@ set(vtkh_filters_headers
   Gradient.hpp
   GhostStripper.hpp
   Log.hpp
+  Histogram.hpp
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
@@ -31,6 +32,7 @@ set(vtkh_filters_sources
   Gradient.cpp
   GhostStripper.cpp
   Log.cpp
+  Histogram.cpp
   IsoVolume.cpp
   NoOp.cpp
   Lagrangian.cpp
