@@ -61,3 +61,7 @@ if(CUDA_FOUND)
     blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
   endif()
 endif()
+
+# Install headers
+install(FILES ${vtkm_filters_headers}
+  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/vtkm_filters)
