@@ -9,6 +9,7 @@ set(vtkh_filters_headers
   Clip.hpp
   ClipField.hpp
   GhostStripper.hpp
+  HistSampling.hpp
   Log.hpp
   IsoVolume.hpp
   NoOp.hpp
@@ -28,6 +29,7 @@ set(vtkh_filters_sources
   Clip.cpp
   ClipField.cpp
   GhostStripper.cpp
+  HistSampling.cpp
   Log.cpp
   IsoVolume.cpp
   NoOp.cpp
