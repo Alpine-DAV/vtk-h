@@ -58,6 +58,11 @@ public:
   {
     useThreadedVersion = useThreaded;
   }
+  
+  void SetGatherTraces(bool gTraces)
+  {
+    gatherTraces = gTraces;
+  }
 
   void SetDumpOutputFiles(bool dumpOutput)
   {
@@ -100,6 +105,7 @@ protected:
                   bool shrink=true);
 
   bool useThreadedVersion;
+  bool gatherTraces;
   bool dumpOutputFiles;
   int sleepUS;
   int rank, numRanks;

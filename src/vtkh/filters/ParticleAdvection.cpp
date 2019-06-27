@@ -268,6 +268,7 @@ ParticleAdvection::ParticleAdvection()
       stepSize(.01),
       maxSteps(1000),
       useThreadedVersion(false),
+      gatherTraces(true),
       dumpOutputFiles(false),
       sleepUS(100)
 {
@@ -454,7 +455,9 @@ void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
   ParticleMessenger communicator(mpiComm, boundsMap, GetStats());
-  communicator.RegisterMessages(2, numRanks, numRanks);
+  communicator.RegisterMessages(2, 64, 64);
+  //Trying smaller number as to not overwhelm system at larger scale
+  //communicator.RegisterMessages(2, numRanks, numRanks);
   const int nDoms = this->m_input->GetNumberOfDomains();
   for (int i = 0; i < nDoms; i++)
   {
@@ -585,7 +588,6 @@ void ParticleAdvection::DoExecute()
   if (this->dumpOutputFiles)
     this->DumpDS();
 
-  bool gatherTraces = true;
   if(!gatherTraces)
   {
     vector<vtkm::worklet::ParticleAdvectionResult> particleTraces;
