@@ -2,6 +2,7 @@
 #include <vtkh/Error.hpp>
 
 #include <vtkm/Math.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkh
