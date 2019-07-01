@@ -33,6 +33,16 @@ set(vtkh_filters_headers
   util.hpp
   )
 
+set(vtkh_comm_filters_headers
+  communication/BoundsMap.hpp
+  communication/CommData.hpp
+  communication/Communicator.hpp
+  communication/DebugMeowMeow.hpp
+  communication/MemStream.h
+  communication/ThreadSafeContainer.hpp
+  util.hpp
+  )
+
 set(vtkh_filters_sources
   Filter.cpp
   CellAverage.cpp
@@ -54,6 +64,11 @@ set(vtkh_filters_sources
   communication/MemStream.cpp
   )
 
+set(vtkh_comm_filters_sources
+  communication/MemStream.cpp
+  )
+
+
 set(vtkh_filters_deps vtkh_core vtkh_utils vtkm_compiled_filters)
 
 if(CUDA_FOUND)
@@ -68,8 +83,8 @@ endif()
 
 blt_add_library(
   NAME vtkh_filters
-  SOURCES ${vtkh_filters_sources}
-  HEADERS ${vtkh_filters_headers}
+  SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources}
+  HEADERS ${vtkh_filters_headers} ${vtkh_comm_filters_headers}
   DEPENDS_ON ${vtkh_filters_deps}
   )
 
@@ -88,6 +103,11 @@ install(TARGETS vtkh_filters
 # Install headers
 install(FILES ${vtkh_filters_headers}
   DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
+
+# Install headers
+install(FILES ${vtkh_comm_filters_headers}
+  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters/communication)
+
 
 if (MPI_FOUND)
 
@@ -113,8 +133,8 @@ if (MPI_FOUND)
 
     blt_add_library(
       NAME vtkh_filters_mpi
-      SOURCES ${vtkh_filters_sources}  ${vtkh_mpi_sources}
-      HEADERS ${vtkh_filters_headers} ${vtkh_mpi_headers}
+      SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources} ${vtkh_mpi_sources}
+      HEADERS ${vtkh_filters_headers} ${vtkh_comm_filters_headers} ${vtkh_mpi_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
     if(ENABLE_OPENMP)

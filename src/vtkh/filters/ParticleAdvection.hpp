@@ -53,7 +53,21 @@ public:
     numSeeds = n;
     seedBox = box;
   }
+ 
+  void SetUseThreadedVersion(bool useThreaded)
+  {
+    useThreadedVersion = useThreaded;
+  }
+  
+  void SetGatherTraces(bool gTraces)
+  {
+    gatherTraces = gTraces;
+  }
 
+  void SetDumpOutputFiles(bool dumpOutput)
+  {
+    dumpOutputFiles = dumpOutput;
+  }
   void SetField(const std::string &field_name) {m_field_name = field_name;}
   void SetStepSize(const double &v) { stepSize = v;}
   void SetMaxSteps(const int &n) { maxSteps = n;}
@@ -68,10 +82,20 @@ protected:
 
   void Init();
   void CreateSeeds();
-  void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult> &traces);
-  void TraceMultiThread(std::vector<vtkm::worklet::StreamlineResult> &traces);
-  void TraceSingleThread(std::vector<vtkm::worklet::StreamlineResult> &traces);
 
+  template <typename ResultT>
+  void TraceSeeds(std::vector<ResultT> &traces);
+  template <typename ResultT>
+  void TraceMultiThread(std::vector<ResultT> &traces);
+  template <typename ResultT>
+  void TraceSingleThread(std::vector<ResultT> &traces);
+  template <typename ResultT> int InternalIntegrate(DataBlock &blk,
+                                     std::vector<Particle> &v, 
+                                     std::list<Particle> &I,
+                                     std::list<Particle> &T,
+                                     std::list<Particle> &A,
+                                     vector<ResultT> &traces
+                                     );
 
 //  DataBlock * GetBlock(int blockId);
   int DomainToRank(int blockId) {return boundsMap.GetRank(blockId);}
@@ -81,6 +105,7 @@ protected:
                   bool shrink=true);
 
   bool useThreadedVersion;
+  bool gatherTraces;
   bool dumpOutputFiles;
   int sleepUS;
   int rank, numRanks;
@@ -119,7 +144,7 @@ protected:
 class DataBlock
 {
 public:
-    DataBlock(int _id, vtkm::cont::DataSet &_ds, const std::string &fieldName, float advectStep)
+    DataBlock(int _id, vtkm::cont::DataSet *_ds, const std::string &fieldName, float advectStep)
         : id(_id), ds(_ds),
           integrator(_ds, fieldName, advectStep)
           //refCount(0), used(false)
@@ -130,7 +155,7 @@ public:
     ~DataBlock() {}//{ds=NULL; delete ds;}//cout<<"Delete datablock id= "<<id<<" cnt= "<<ds.use_count()<<endl;}
 
     int id;
-    vtkm::cont::DataSet ds;
+    vtkm::cont::DataSet *ds;
     Integrator integrator;
 
     /*
@@ -153,7 +178,7 @@ private:
     {
         os<<"DataBlock {"<<std::endl;
         os<<"  id="<<d.id<<std::endl;
-        d.ds.PrintSummary(os);
+        d.ds->PrintSummary(os);
         os<<"} DataBlock"<<std::endl;
         return os;
     }

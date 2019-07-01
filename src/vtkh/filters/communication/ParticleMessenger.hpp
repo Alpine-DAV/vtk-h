@@ -83,6 +83,14 @@ class ParticleMessenger : public Messenger
     vtkh::BoundsMap boundsMap;
     vtkh::StatisticsDB *stats;
 
+    void 
+    CheckAllBlocks(Particle &p,
+                  std::list<vtkh::Particle> &outData,
+                  std::list<vtkh::Particle> &inData,
+                  std::list<vtkh::Particle> &term,
+                  int *earlyTerm,
+                  map<int, list<Particle>> &sendData);
+
     enum
     {
         MESSAGE_TAG = 0x42000,

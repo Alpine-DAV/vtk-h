@@ -29,6 +29,7 @@ protected:
                  std::vector<int> &local_vis_order);
   float FindMinDepth(const vtkm::rendering::Camera &camera,
                      const vtkm::Bounds &bounds) const;
+  void RecordTime(const std::string &nm, double time);
 
   int m_num_samples;
   std::shared_ptr<vtkm::rendering::MapperVolume> m_tracer;

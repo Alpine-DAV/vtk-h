@@ -16,6 +16,10 @@
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 #include <vtkh/filters/Particle.hpp>
+#include <vtkh/filters/StatisticsDB.hpp>
+
+#include <chrono>
+#include <sys/time.h>
 
 class Integrator
 {
@@ -28,12 +32,19 @@ class Integrator
     using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
 public:
-    Integrator(vtkm::cont::DataSet &ds, const string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
+    Integrator(vtkm::cont::DataSet *ds, const string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
     {
-        vecField = ds.GetField(fieldName).GetData().Cast<FieldHandle>();
+        //auto startT = std::chrono::steady_clock::now();
+        vecField = ds->GetField(fieldName).GetData().Cast<FieldHandle>();
+        //cerr << "ParticleAdevection-getField" << std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count() << endl;
 
-        gridEval = GridEvalType(ds.GetCoordinateSystem(), ds.GetCellSet(), vecField);
+        //startT = std::chrono::steady_clock::now();
+        gridEval = GridEvalType(ds->GetCoordinateSystem(), ds->GetCellSet(), vecField);
+        //cerr << "ParticleAdevection-CreateGridEval" << std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count() << endl;
+
+        //startT = std::chrono::steady_clock::now();
         rk4 = RK4Type(gridEval, stepSize);
+        //cerr << "ParticleAdevection-CreateRK4Integrator" << std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count() << endl;
     }
 
     ~Integrator()
@@ -118,6 +129,7 @@ public:
               std::list<vtkh::Particle> &I,
               std::list<vtkh::Particle> &T,
               std::list<vtkh::Particle> &A,
+              vtkh::StatisticsDB *stats,
               std::vector<vtkm::worklet::StreamlineResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
@@ -128,8 +140,9 @@ public:
 
         vtkm::worklet::Streamline streamline;
         vtkm::worklet::StreamlineResult result;
+        stats->start("VTKmAdvect");
         result = streamline.Run(rk4, seedArray, stepsTakenArray, maxSteps);
-
+        stats->stop("VTKmAdvect");
         auto posPortal = result.positions.GetPortalConstControl();
         auto statusPortal = result.status.GetPortalConstControl();
         auto stepsPortal = result.stepsTaken.GetPortalConstControl();
@@ -143,7 +156,8 @@ public:
             auto idPortal = ids.GetPortalConstControl();
             vtkm::Id nPts = idPortal.GetNumberOfValues();
 
-            particles[i].coords = posPortal.Get(idPortal.Get(nPts-1));
+            if(nPts > 0)
+              particles[i].coords = posPortal.Get(idPortal.Get(nPts-1));
             particles[i].nSteps = stepsPortal.Get(i);
             steps1 += stepsPortal.Get(i);
             UpdateStatus(particles[i], statusPortal.Get(i), maxSteps, I,T,A);

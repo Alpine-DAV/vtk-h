@@ -11,6 +11,11 @@
 #include <mpi.h>
 #endif
 
+#include <stdio.h>
+#include <chrono>
+#include <sys/time.h>
+
+using namespace std;
 
 #define VTKH_OPACITY_CORRECTION 10.f
 
@@ -70,12 +75,41 @@ VolumeRenderer::~VolumeRenderer()
 {
 }
 
-void
+static std::ofstream *timingInfo = NULL; 
+void 
+VolumeRenderer::RecordTime(const std::string &nm, double time)
+{
+    int rank = 0, numRanks = 0;
+#ifdef VTKH_PARALLEL
+    rank =  vtkh::GetMPIRank();
+    numRanks = vtkh::GetMPISize();
+#endif
+    
+    if (timingInfo == NULL)
+    {
+        timingInfo = new ofstream;
+        char nm[32];
+        sprintf(nm, "vtkh.timing.%d.out", rank);
+        timingInfo->open(nm, ofstream::out);
+    }
+    (*timingInfo)<<this->m_input->GetCycle()<<", VTKHTiming"<<"_"<<rank<<"_"<<numRanks<<", "<<nm<<", "<<time<<endl;
+    //cout<<nm<<" rank "<<rank<<" time "<<time<<endl;
+}
+
+void 
 VolumeRenderer::Update()
 {
+  auto startT = std::chrono::steady_clock::now();
   PreExecute();
-  Renderer::DoExecute();
+  RecordTime("PreExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
+  
+  startT = std::chrono::steady_clock::now();
+  DoExecute();
+  RecordTime("DoExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
+ 
+  startT = std::chrono::steady_clock::now();
   PostExecute();
+  RecordTime("Composite", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
 }
 
 void VolumeRenderer::SetColorTable(const vtkm::cont::ColorTable &color_table)
