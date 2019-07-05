@@ -32,6 +32,8 @@ public:
   virtual ~ParticleAdvection();
   std::string GetName() const override;
 
+  DataSet * GetInput() const {return m_input;}
+
   void SetSeedPoint(const vtkm::Vec<double,3> &pt)
   {
     seedMethod = POINT;
@@ -53,12 +55,12 @@ public:
     numSeeds = n;
     seedBox = box;
   }
- 
+
   void SetUseThreadedVersion(bool useThreaded)
   {
     useThreadedVersion = useThreaded;
   }
-  
+
   void SetGatherTraces(bool gTraces)
   {
     gatherTraces = gTraces;
@@ -75,6 +77,16 @@ public:
 
   DataBlock * GetBlock(int blockId);
 
+  StatisticsDB * GetStats() { return &stats; }
+
+  template <typename ResultT>
+  int InternalIntegrate(DataBlock &blk,
+                        std::vector<Particle> &v,
+                        std::list<Particle> &I,
+                        std::list<Particle> &T,
+                        std::list<Particle> &A,
+                        vector<ResultT> &traces);
+
 protected:
   void PreExecute() override;
   void PostExecute() override;
@@ -89,13 +101,6 @@ protected:
   void TraceMultiThread(std::vector<ResultT> &traces);
   template <typename ResultT>
   void TraceSingleThread(std::vector<ResultT> &traces);
-  template <typename ResultT> int InternalIntegrate(DataBlock &blk,
-                                     std::vector<Particle> &v, 
-                                     std::list<Particle> &I,
-                                     std::list<Particle> &T,
-                                     std::list<Particle> &A,
-                                     vector<ResultT> &traces
-                                     );
 
 //  DataBlock * GetBlock(int blockId);
   int DomainToRank(int blockId) {return boundsMap.GetRank(blockId);}
@@ -123,7 +128,6 @@ protected:
   std::vector<DataBlock*> dataBlocks;
 
   StatisticsDB stats;
-  StatisticsDB * GetStats() { return &stats; }
   void InitStats();
   void DumpStats(const std::string &fname);
 
@@ -136,7 +140,8 @@ protected:
   void DumpSLOutput(vtkm::cont::DataSet *ds, int domId);
 
 #ifdef VTKH_PARALLEL
-  friend class Task;
+//  template <typename ResultT>
+//  friend class Task; //<ResultT>;
 #endif
 };
 

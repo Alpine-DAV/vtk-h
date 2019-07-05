@@ -22,7 +22,7 @@ class MsgCommData
 
     friend std::ostream &operator<<(std::ostream &os, const MsgCommData &m)
     {
-        os<<"(msg: "<<m.rank<<" "<<m.message<<")";
+        os<<"(msg: from= "<<m.rank<<" msg="<<m.message<<")";
         return os;
     }
 };
@@ -43,7 +43,7 @@ class ParticleCommData
     friend
     std::ostream &operator<<(std::ostream &os, const ParticleCommData<T> &p)
     {
-        os<<"(pmsg: "<<p.rank<<" "<<p.p<<")";
+        os<<"(pmsg: from= "<<p.rank<<" "<<p.p<<")";
         return os;
     }
 };

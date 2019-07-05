@@ -35,8 +35,7 @@ class ParticleMessenger : public Messenger
 
     int Exchange(std::list<vtkh::Particle> &outData,
                  std::list<vtkh::Particle> &inData,
-                 std::list<vtkh::Particle> &term,
-                 int increment);
+                 std::list<vtkh::Particle> &term);
 
     // Send/Recv Integral curves.
     template <typename P, template <typename, typename> class Container,
@@ -83,7 +82,7 @@ class ParticleMessenger : public Messenger
     vtkh::BoundsMap boundsMap;
     vtkh::StatisticsDB *stats;
 
-    void 
+    void
     CheckAllBlocks(Particle &p,
                   std::list<vtkh::Particle> &outData,
                   std::list<vtkh::Particle> &inData,

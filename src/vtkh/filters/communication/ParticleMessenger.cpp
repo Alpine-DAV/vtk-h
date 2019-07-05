@@ -284,12 +284,10 @@ ParticleMessenger::CheckAllBlocks(Particle &p,
 }
 
 
-
 int
 ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
                             std::list<vtkh::Particle> &inData,
-                            std::list<vtkh::Particle> &term,
-                            int increment)
+                            std::list<vtkh::Particle> &term)
 {
     DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
     map<int, list<Particle>> sendData;
@@ -347,6 +345,7 @@ ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
         DBG("-----Recv: M: "<<msgData<<" P: "<<particleData<<std::endl);
         for (auto &p : particleData)
         {
+            int x = earlyTerm;
             CheckAllBlocks(p.p, outData, inData, term, &earlyTerm, sendData);
  /*           if (stats) stats->start("gridLocator");
             auto loc = gridLocators[p.p.blockIds[0]];
@@ -404,7 +403,7 @@ ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
     if (stats) stats->increment("earlyTerm", earlyTerm);
 
     //Do all the sending...
-    increment += earlyTerm;
+    int increment = term.size();
     if (increment > 0)
     {
         std::vector<int> msg = {MSG_TERMINATE, increment};
