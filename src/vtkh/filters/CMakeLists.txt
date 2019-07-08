@@ -22,7 +22,6 @@ set(vtkh_filters_headers
   Recenter.hpp
   Threshold.hpp
   Slice.hpp
-  StatisticsDB.hpp
   VectorMagnitude.hpp
   communication/BoundsMap.hpp
   communication/CommData.hpp
