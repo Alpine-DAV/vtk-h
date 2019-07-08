@@ -2,9 +2,7 @@
 #include <string.h>
 #include "MemStream.h"
 #include "Messenger.hpp"
-#include "DebugMeowMeow.hpp"
 
-using namespace std;
 namespace vtkh
 {
 
@@ -20,18 +18,16 @@ void
 Messenger::RegisterTag(int tag, int num_recvs, int size)
 {
   if(messageTagInfo.find(tag) != messageTagInfo.end())
-  {
-    std::cout<<"Warning tag "<<tag<<" already registerd. Overriting\n";
-  }
+    std::cout<<"Warning tag "<<tag<<" already registerd. Overwriting\n";
 
-  messageTagInfo[tag] = pair<int,int>(num_recvs, size);
+  messageTagInfo[tag] = std::pair<int,int>(num_recvs, size);
 }
 
 void
 Messenger::InitializeBuffers()
 {
     //Setup receive buffers.
-    map<int, pair<int, int> >::const_iterator it;
+    std::map<int, std::pair<int, int> >::const_iterator it;
     for (it = messageTagInfo.begin(); it != messageTagInfo.end(); it++)
     {
         int tag = it->first, num = it->second.first;
@@ -43,7 +39,7 @@ Messenger::InitializeBuffers()
 void
 Messenger::CleanupRequests(int tag)
 {
-    vector<RequestTagPair> delKeys;
+    std::vector<RequestTagPair> delKeys;
     for (bufferIterator i = recvBuffers.begin(); i != recvBuffers.end(); i++)
     {
         if (tag == -1 || tag == i->first.second)
@@ -52,7 +48,7 @@ Messenger::CleanupRequests(int tag)
 
     if (! delKeys.empty())
     {
-        vector<RequestTagPair>::const_iterator it;
+        std::vector<RequestTagPair>::const_iterator it;
         for (it = delKeys.begin(); it != delKeys.end(); it++)
         {
             RequestTagPair v = *it;
@@ -68,7 +64,7 @@ Messenger::CleanupRequests(int tag)
 void
 Messenger::PostRecv(int tag)
 {
-    map<int, pair<int, int> >::const_iterator it = messageTagInfo.find(tag);
+    std::map<int, std::pair<int, int> >::const_iterator it = messageTagInfo.find(tag);
     if (it != messageTagInfo.end())
         PostRecv(tag, it->second.second);
 }
@@ -88,16 +84,14 @@ Messenger::PostRecv(int tag, int sz, int src)
 
     RequestTagPair entry(req, tag);
     recvBuffers[entry] = buff;
-
-    //cerr<<"PostRecv: ("<<req<<", "<<tag<<") buff= "<<(void*)buff<<" sz= "<<sz<<endl;
 }
 
 void
 Messenger::CheckPendingSendRequests()
 {
     bufferIterator it;
-    vector<MPI_Request> req, copy;
-    vector<int> tags;
+    std::vector<MPI_Request> req, copy;
+    std::vector<int> tags;
 
     for (it = sendBuffers.begin(); it != sendBuffers.end(); it++)
     {
@@ -115,7 +109,7 @@ Messenger::CheckPendingSendRequests()
     int err = MPI_Testsome(req.size(), &req[0], &num, indices, status);
     if (err != MPI_SUCCESS)
     {
-        cerr << "Err with MPI_Testsome in PARIC algorithm" << endl;
+        std::cerr << "Err with MPI_Testsome in PARIC algorithm" << std::endl;
     }
     for (int i = 0; i < num; i++)
     {
@@ -146,9 +140,9 @@ Messenger::PacketCompare(const unsigned char *a, const unsigned char *b)
 }
 
 void
-Messenger::PrepareForSend(int tag, MemStream *buff, vector<unsigned char *> &buffList)
+Messenger::PrepareForSend(int tag, MemStream *buff, std::vector<unsigned char *> &buffList)
 {
-    map<int, pair<int, int> >::const_iterator it = messageTagInfo.find(tag);
+    std::map<int, std::pair<int, int> >::const_iterator it = messageTagInfo.find(tag);
     if (it == messageTagInfo.end())
         throw "message tag not found";
 
@@ -198,7 +192,7 @@ Messenger::PrepareForSend(int tag, MemStream *buff, vector<unsigned char *> &buf
 void
 Messenger::SendData(int dst, int tag, MemStream *buff)
 {
-    vector<unsigned char *> bufferList;
+    std::vector<unsigned char *> bufferList;
 
     //Add headers, break into multiple buffers if needed.
     PrepareForSend(tag, buff, bufferList);
@@ -212,9 +206,8 @@ Messenger::SendData(int dst, int tag, MemStream *buff)
                             tag, m_mpi_comm, &req);
         if (err != MPI_SUCCESS)
         {
-            cerr << "Err with MPI_Isend in PARIC algorithm" << endl;
+            std::cerr << "Err with MPI_Isend in SendData algorithm" << std::endl;
         }
-        //BytesCnt.value += header.packetSz;
 
         //Add it to sendBuffers
         RequestTagPair entry(req, tag);
@@ -244,14 +237,14 @@ Messenger::RecvData(int tag, std::vector<MemStream *> &buffers,
 
 bool
 Messenger::RecvData(set<int> &tags,
-                    vector<pair<int, MemStream *> > &buffers,
+                    std::vector<std::pair<int, MemStream *> > &buffers,
                     bool blockAndWait)
 {
     buffers.resize(0);
 
     //Find all recv of type tag.
-    vector<MPI_Request> req, copy;
-    vector<int> reqTags;
+    std::vector<MPI_Request> req, copy;
+    std::vector<int> reqTags;
     for (bufferIterator i = recvBuffers.begin(); i != recvBuffers.end(); i++)
     {
         if (tags.find(i->first.second) != tags.end())
@@ -279,7 +272,7 @@ Messenger::RecvData(set<int> &tags,
         return false;
     }
 
-    vector<unsigned char *> incomingBuffers(num);
+    std::vector<unsigned char *> incomingBuffers(num);
     for (int i = 0; i < num; i++)
     {
         RequestTagPair entry(copy[indices[i]], reqTags[indices[i]]);
@@ -307,8 +300,8 @@ Messenger::RecvData(set<int> &tags,
 }
 
 void
-Messenger::ProcessReceivedBuffers(vector<unsigned char*> &incomingBuffers,
-                                  vector<pair<int, MemStream *> > &buffers)
+Messenger::ProcessReceivedBuffers(std::vector<unsigned char*> &incomingBuffers,
+                                  std::vector<std::pair<int, MemStream *> > &buffers)
 {
     for (size_t i = 0; i < incomingBuffers.size(); i++)
     {
@@ -323,7 +316,7 @@ Messenger::ProcessReceivedBuffers(vector<unsigned char*> &incomingBuffers,
         {
             MemStream *b = new MemStream(header.dataSz, (buff + sizeof(header)));
             b->rewind();
-            pair<int, MemStream*> entry(header.tag, b);
+            std::pair<int, MemStream*> entry(header.tag, b);
             buffers.push_back(entry);
             delete [] buff;
         }
@@ -365,7 +358,7 @@ Messenger::ProcessReceivedBuffers(vector<unsigned char*> &incomingBuffers,
                     }
 
                     mergedBuff->rewind();
-                    pair<int, MemStream*> entry(header.tag, mergedBuff);
+                    std::pair<int, MemStream*> entry(header.tag, mergedBuff);
                     buffers.push_back(entry);
                     recvPackets.erase(i2);
                 }

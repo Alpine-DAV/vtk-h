@@ -11,7 +11,6 @@
 
 #include <vtkh/filters/util.hpp>
 #include <vector>
-#include <omp.h>
 #include <vtkh/filters/communication/ThreadSafeContainer.hpp>
 
 #ifdef VTKH_PARALLEL
@@ -19,10 +18,18 @@
 #include <vtkh/filters/communication/ParticleMessenger.hpp>
 #endif
 
-#include <vtkh/filters/communication/DebugMeowMeow.hpp>
+#define VTKH_OPENMP
+//#define VTKH_STD_THREAD
 
-std::ofstream dbg;
-std::ofstream wdbg;
+#ifdef VTKH_OPENMP
+#include <omp.h>
+#endif
+#ifdef VTKH_STD_THREAD
+#include <thread>
+#include <mutex>
+#endif
+
+#include <vtkh/utils/Logger.hpp>
 
 namespace vtkh
 {
@@ -38,24 +45,31 @@ randRange(const float &a, const float &b)
     return a + (b-a)*rand01();
 }
 
+#ifdef VTKH_STD_THREAD
+class MutexLock
+{
+public:
+    MutexLock() {}
+    ~MutexLock() {}
+    void Lock() {lock.lock();};
+    void Unlock() {lock.unlock();};
+private:
+    std::mutex lock;
+};
+#endif //VTKH_STD_THREAD
+
+#ifdef VTKH_OPENMP
 class OpenMPLock
 {
 public:
-    OpenMPLock()
-    {
-        omp_init_lock(&lock);
-    }
-    ~OpenMPLock()
-    {
-        omp_destroy_lock(&lock);
-    }
-
-    void set() {omp_set_lock(&lock);}
-    void unset() {omp_unset_lock(&lock);}
-
+    OpenMPLock() { omp_init_lock(&lock); }
+    ~OpenMPLock() { omp_destroy_lock(&lock); }
+    void Lock() {omp_set_lock(&lock);}
+    void Unlock() {omp_unset_lock(&lock);}
 private:
     omp_lock_t lock;
 };
+#endif //VTKH_OPENMP
 
 #ifdef VTKH_PARALLEL
 
@@ -87,6 +101,13 @@ public:
         stats->addTimer("worker_sleep");
         stats->addCounter("worker_naps");
     }
+    ~Task()
+    {
+#ifdef VTKH_STD_THREAD
+      for (auto &w : workerThreads)
+        w.join();
+#endif
+    }
 
     void Init(const std::list<Particle> &particles, int N, int _sleepUS)
     {
@@ -101,32 +122,32 @@ public:
     bool CheckDone()
     {
         bool val;
-        stateLock.set();
+        stateLock.Lock();
         val = done;
-        stateLock.unset();
+        stateLock.Unlock();
         return val;
     }
     void SetDone()
     {
-        stateLock.set();
+        stateLock.Lock();
         done = true;
-        stateLock.unset();
+        stateLock.Unlock();
     }
 
     bool GetBegin()
     {
         bool val;
-        stateLock.set();
+        stateLock.Lock();
         val = begin;
-        stateLock.unset();
+        stateLock.Unlock();
         return val;
     }
 
     void SetBegin()
     {
-        stateLock.set();
+        stateLock.Lock();
         begin = true;
-        stateLock.unset();
+        stateLock.Unlock();
     }
 
     void Go()
@@ -134,6 +155,7 @@ public:
         DBG("Go_bm: "<<boundsMap<<std::endl);
         DBG("actives= "<<active<<std::endl);
 
+#if defined(VTKH_OPENMP)
         #pragma omp parallel sections num_threads(2)
         {
             #pragma omp section
@@ -149,12 +171,23 @@ public:
                 this->Work();
             }
         }
+#elif defined(VTKH_STD_THREAD)
+        workerThreads.push_back(std::thread(Task::Worker, this));
+        this->Manage();
+#endif
     }
+
+#ifdef VTKH_STD_THREAD
+    static void Worker(Task *t)
+    {
+      std::cout<<"Create work thread"<<std::endl;
+      t->Work();
+    }
+#endif
 
     void Work()
     {
         vector<ResultT> traces;
-        WDBG("work_bm: "<<boundsMap<<std::endl);
 
         while (!CheckDone())
         {
@@ -196,7 +229,6 @@ public:
 
         DBG("Begin TIA: "<<terminated<<" "<<inactive<<" "<<active<<std::endl);
         MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-        MPI_Barrier(mpiComm);
 
         while (true)
         {
@@ -236,15 +268,21 @@ public:
         DBG("TIA: "<<terminated<<" "<<inactive<<" "<<active<<" WI= "<<worker_inactive<<std::endl);
         DBG("RESULTS= "<<results.Size()<<std::endl);
         DBG("DONE_"<<m_Rank<<" "<<terminated<<" "<<active<<" "<<inactive<<std::endl);
-        //   MPI_Barrier(mpiComm);
         SetDone();
     }
 
     int m_Rank, m_NumRanks;
     int TotalNumParticles;
 
-    using ParticleList = vtkh::ThreadSafeContainer<Particle, std::list, vtkh::OpenMPLock>;
-    using ResultsVec = vtkh::ThreadSafeContainer<ResultT, std::vector, vtkh::OpenMPLock>;
+#if defined(VTKH_OPENMP)
+    using MutexType = vtkh::OpenMPLock;
+#elif defined(VTKH_STD_THREAD)
+    std::vector<std::thread> workerThreads;
+    using MutexType = vtkh::MutexLock;
+#endif
+
+    using ParticleList = vtkh::ThreadSafeContainer<Particle, std::list, MutexType>;
+    using ResultsVec = vtkh::ThreadSafeContainer<ResultT, std::vector, MutexType>;
 
     ParticleMessenger communicator;
     ParticleList active, inactive, terminated;
@@ -255,7 +293,7 @@ public:
     int sleepUS;
 
     bool done, begin;
-    vtkh::OpenMPLock stateLock;
+    MutexType stateLock;
     BoundsMap boundsMap;
     ParticleAdvection *filter;
     StatisticsDB *stats;
@@ -263,26 +301,6 @@ public:
 #endif
 
 static int currentStep = 0;
-static std::ofstream *timingInfo = NULL;
-void RecordTime(const std::string &nm, double time)
-{
-    int rank = 0, numRanks = 0;
-#ifdef VTKH_PARALLEL
-    rank = vtkh::GetMPIRank();
-    numRanks = vtkh::GetMPISize();
-#endif
-
-    if (timingInfo == NULL)
-    {
-        timingInfo = new ofstream;
-        char nm[32];
-        sprintf(nm, "timing.vtkh.%d.out", rank);
-        timingInfo->open(nm, ofstream::out);
-    }
-    (*timingInfo)<<currentStep<<", VTKHTiming_"<<rank<<"_"<<numRanks<<", "<<nm<<", "<<time<<endl;
-    //cout<<nm<<" rank "<<rank<<" time "<<time<<endl;
-}
-
 
 ParticleAdvection::ParticleAdvection()
     : rank(0), numRanks(1), seedMethod(RANDOM),
@@ -297,17 +315,6 @@ ParticleAdvection::ParticleAdvection()
 #ifdef VTKH_PARALLEL
   rank = vtkh::GetMPIRank();
   numRanks = vtkh::GetMPISize();
-#endif
-
-#ifdef TRACE_DEBUG
-  dbg = ofstream();
-  char nm[32];
-  sprintf(nm, "%d.ts%d.out", rank, currentStep);
-  dbg.open(nm, ofstream::out);
-
-  wdbg = ofstream();
-  sprintf(nm, "%d.ts%d.wout", rank, currentStep);
-  wdbg.open(nm, ofstream::out);
 #endif
 }
 
@@ -379,49 +386,21 @@ void ParticleAdvection::PreExecute()
 
   Filter::PreExecute();
 
-  //RecordTime("ParticleAdevection-FilterPreExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
-
-  //startT = std::chrono::steady_clock::now();
   //Create the bounds map and dataBlocks list.
   boundsMap.Clear();
-  //RecordTime("ParticleAdevection-ClearBoundsMapPreExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
-
-  //startT = std::chrono::steady_clock::now();
   const int nDoms = this->m_input->GetNumberOfDomains();
-  //RecordTime("ParticleAdevection-GetNumDomainsPreExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
 
-  auto s = std::chrono::steady_clock::now();
-  //double getCount = 0;
-  //double dataBlockCount = 0;
-  //double boundsMapAddCount = 0;
   for(int i = 0; i < nDoms; i++)
   {
-    s = std::chrono::steady_clock::now();
     vtkm::Id id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, id);
-    //getCount += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-s).count();
 
-    s = std::chrono::steady_clock::now();
     dataBlocks.push_back(new DataBlock(id, &dom, m_field_name, stepSize));
-    //dataBlockCount += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-s).count();
-
-    s = std::chrono::steady_clock::now();
     boundsMap.AddBlock(id, dom.GetCoordinateSystem().GetBounds());
-    //boundsMapAddCount += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-s).count();
   }
 
-  //RecordTime("ParticleAdevection-AddingBlocksFilterPreExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
-
-//RecordTime("ParticleAdevection-GetCountFilterPreExecute", getCount);
-//RecordTime("ParticleAdevection-DataBlockCountFilterPreExecute", dataBlockCount);
-//RecordTime("ParticleAdevection-BoundsMapAddCountFilterPreExecute", boundsMapAddCount);
-
-  //startT = std::chrono::steady_clock::now();
   boundsMap.Build();
-  DBG("PreExecute: "<<boundsMap<<std::endl);
-
-  RecordTime("PreExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
 }
 
 void ParticleAdvection::PostExecute()
@@ -429,10 +408,7 @@ void ParticleAdvection::PostExecute()
   auto startT = std::chrono::steady_clock::now();
 
   Filter::PostExecute();
-
-  RecordTime("PostExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
 }
-
 
 template <typename ResultT>
 void ParticleAdvection::TraceMultiThread(vector<ResultT> &traces)
@@ -481,18 +457,15 @@ void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
   ParticleMessenger communicator(mpiComm, boundsMap, GetStats());
-  communicator.RegisterMessages(2, numRanks-1, numRanks-1);
-  //Trying smaller number as to not overwhelm system at larger scale
-  //communicator.RegisterMessages(2, numRanks, numRanks);
+  communicator.RegisterMessages(2, std::min(64, numRanks-1), std::min(64, numRanks-1));
+
   const int nDoms = this->m_input->GetNumberOfDomains();
   for (int i = 0; i < nDoms; i++)
   {
     vtkm::Id id;
     vtkm::cont::DataSet ds;
     this->m_input->GetDomain(i, ds, id);
-//auto startT = std::chrono::steady_clock::now();
     communicator.AddLocator(id, ds);
-//RecordTime("TraceSingleThread-AddLocator", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
   }
 
   int N = 0;
@@ -547,36 +520,7 @@ void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
   DBG("RESULTS= "<<traces.size()<<std::endl);
 
 //  DumpTraces(rank, traces);
-//  std::cout<<rank<<": done tracing. # of traces= "<<traces.size()<<std::endl;
-  MPI_Barrier(mpiComm);
   DBG("All done"<<std::endl);
-
-if(0)
-{
-//save number of steps for each individual particle
-  vector<int> outStuff(totalNumSeeds, 0);
-  vector<int> inStuff(totalNumSeeds, 0);
-  std::list<Particle>::iterator listIt = terminated.begin();
-  while (listIt != terminated.end())
-  {
-    outStuff[(*listIt).id] = (*listIt).nSteps;
-    listIt++;
-  }
-  MPI_Reduce(outStuff.data(), inStuff.data(), totalNumSeeds, MPI_INT, MPI_SUM, 0, mpiComm);
-
-  if(rank == 0)
-  {
-    ofstream output;
-    char nm[128];
-    sprintf(nm, "stepCounts.ts%03i.txt", currentStep);
-    output.open(nm, ofstream::out);
-    output << "seed id's and counts" << endl;
-    for(int i = 0; i < totalNumSeeds; i++)
-    {
-      output<<"["<<i<<"] "<<inStuff[i] << endl;
-    }
-  }
-}
 #endif
 }
 
@@ -698,8 +642,6 @@ void ParticleAdvection::DoExecute()
             this->DumpSLOutput(NULL, rank);
     }
   }
-
-  RecordTime("DoExecute", std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-startT).count());
 }
 
 
@@ -879,25 +821,8 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
       p.coords[0] = randRange(boxRange[0], boxRange[1]);
       p.coords[1] = randRange(boxRange[2], boxRange[3]);
       p.coords[2] = randRange(boxRange[4], boxRange[5]);
-
-      /*
-      if (N == 1)
-      {
-          p.coords[0] = -1.0;
-          p.coords[1] = -3.0;
-          p.coords[2] = -5.0;
-
-          p.coords[0] = -1.0;
-          p.coords[1] = -0.6;
-          p.coords[2] =  0.1;
-      }
-      */
-
       seeds.push_back(p);
   }
-  DBG("Seeds: "<<seeds<<std::endl);
-  if (rank == 0)
-    std::cout<<"Seeds= "<<seeds<<std::endl;
 }
 
 void

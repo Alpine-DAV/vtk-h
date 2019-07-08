@@ -16,7 +16,7 @@
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 #include <vtkh/filters/Particle.hpp>
-#include <vtkh/filters/StatisticsDB.hpp>
+#include <vtkh/utils/StatisticsDB.hpp>
 
 #include <chrono>
 #include <sys/time.h>

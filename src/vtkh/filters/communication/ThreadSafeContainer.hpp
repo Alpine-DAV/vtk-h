@@ -40,23 +40,23 @@ public:
 
  bool Empty()
  {
-     lock.set();
+     lock.Lock();
      bool val = data.empty();
-     lock.unset();
+     lock.Unlock();
      return val;
  }
  size_t Size()
  {
-     lock.set();
+     lock.Lock();
      size_t sz = data.size();
-     lock.unset();
+     lock.Unlock();
      return sz;
  }
  void Clear()
  {
-     lock.set();
+     lock.Lock();
      data.clear();
-     lock.unset();
+     lock.Unlock();
  }
 
  //Add/set elements
@@ -67,29 +67,29 @@ public:
      if (c.empty())
          return;
 
-     lock.set();
+     lock.Lock();
      data.insert(data.end(), c.begin(), c.end());
-     lock.unset();
+     lock.Unlock();
  }
 
  template <template <typename, typename> class C,
            typename Allocator=std::allocator<T>>
  void Assign(const C<T, Allocator> &c)
  {
-     lock.set();
+     lock.Lock();
      data.clear();
      data.insert(data.end(), c.begin(), c.end());
-     lock.unset();
+     lock.Unlock();
  }
 
  template <template <typename, typename> class C,
            typename Allocator=std::allocator<T>>
  Container<T, std::allocator<T>>& operator=(const C<T, Allocator> &c)
  {
-     lock.set();
+     lock.Lock();
      data.clear();
      data.insert(data.end(), c.begin(), c.end());
-     lock.unset();
+     lock.Unlock();
      return *this;
  }
 
@@ -98,10 +98,10 @@ public:
            typename Allocator=std::allocator<T>>
  bool Get(C<T, Allocator> &c)
  {
-     lock.set();
+     lock.Lock();
      c.insert(c.end(), data.begin(), data.end());
      data.clear();
-     lock.unset();
+     lock.Unlock();
 
      return !c.empty();
  }
@@ -111,11 +111,11 @@ public:
            typename Allocator=std::allocator<T>>
  bool Get(C<T, Allocator> &c, std::size_t N)
  {
-     lock.set();
+     lock.Lock();
      std::size_t n = std::min(N, data.size());
      c.insert(c.end(), data.begin(), data.begin()+n);
      data.erase(data.begin(), data.begin()+n);
-     lock.unset();
+     lock.Unlock();
 
      return !c.empty();
  }
@@ -127,17 +127,17 @@ public:
      if (c.empty())
          return;
 
-     lock.set();
+     lock.Lock();
      data.insert(data.end(), c.begin(), c.end());
-     lock.unset();
+     lock.Unlock();
  }
 
  friend std::ostream &
  operator<<(std::ostream &os, ThreadSafeContainer<T, Container, Lock> &c)
  {
-    c.lock.set();
+    c.lock.Lock();
     os<<"ts_(("<<c.data<<"))";
-    c.lock.unset();
+    c.lock.Unlock();
     return os;
  }
 

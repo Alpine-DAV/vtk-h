@@ -1,10 +1,9 @@
 #include <iostream>
 #include <string.h>
-#include "MemStream.h"
-#include "DebugMeowMeow.hpp"
-#include "ParticleMessenger.hpp"
+#include <vtkh/utils/Logger.hpp>
+#include <vtkh/filters/communication/MemStream.h>
+#include <vtkh/filters/communication/ParticleMessenger.hpp>
 
-using namespace std;
 namespace vtkh
 {
 
@@ -54,7 +53,7 @@ ParticleMessenger::RegisterMessages(int mSz,
 }
 
 void
-ParticleMessenger::SendMsg(int dst, vector<int> &msg)
+ParticleMessenger::SendMsg(int dst, std::vector<int> &msg)
 {
     MemStream *buff = new MemStream;
 
@@ -68,7 +67,7 @@ ParticleMessenger::SendMsg(int dst, vector<int> &msg)
 }
 
 void
-ParticleMessenger::SendAllMsg(vector<int> &msg)
+ParticleMessenger::SendAllMsg(std::vector<int> &msg)
 {
     for (int i = 0; i < nProcs; i++)
         if (i != rank)
@@ -79,9 +78,9 @@ ParticleMessenger::SendAllMsg(vector<int> &msg)
 }
 
 bool
-ParticleMessenger::RecvAny(vector<MsgCommData> *msgs,
+ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
                            list<ParticleCommData<Particle>> *recvICs,
-                           vector<DSCommData> *ds,
+                           std::vector<DSCommData> *ds,
                            bool blockAndWait)
 {
     set<int> tags;
@@ -99,18 +98,16 @@ ParticleMessenger::RecvAny(vector<MsgCommData> *msgs,
     if (tags.empty())
         return false;
 
-    vector<pair<int, MemStream *> > buffers;
+    std::vector<pair<int, MemStream *> > buffers;
     if (! RecvData(tags, buffers, blockAndWait))
         return false;
-
-//    int timerHandle = visitTimer->StartTimer();
 
     for (size_t i = 0; i < buffers.size(); i++)
     {
         if (buffers[i].first == ParticleMessenger::MESSAGE_TAG)
         {
             int sendRank;
-            vector<int> m;
+            std::vector<int> m;
             vtkh::read(*buffers[i].second, sendRank);
             vtkh::read(*buffers[i].second, m);
 
@@ -136,12 +133,11 @@ ParticleMessenger::RecvAny(vector<MsgCommData> *msgs,
         delete buffers[i].second;
     }
 
-//    CommTime.value += visitTimer->StopTimer(timerHandle, "RecvAny");
     return true;
 }
 
 bool
-ParticleMessenger::RecvMsg(vector<MsgCommData> &msgs)
+ParticleMessenger::RecvMsg(std::vector<MsgCommData> &msgs)
 {
     return RecvAny(&msgs, NULL, NULL, false);
 }
@@ -152,7 +148,7 @@ void ParticleMessenger::SendICs(int dst, Container<P, Allocator> &c)
 {
     if (dst == rank)
     {
-        cerr<<"Error. Sending IC to yourself"<<endl;
+        std::cerr<<"Error. Sending IC to yourself"<<std::endl;
         return;
     }
     if (c.empty())
@@ -202,14 +198,10 @@ bool ParticleMessenger::RecvICs(Container<P, Allocator> &recvICs)
 }
 
 template <typename P>
-bool ParticleMessenger::DoSendICs(int dst, vector<P> &ics)
+bool ParticleMessenger::DoSendICs(int dst, std::vector<P> &ics)
 {
     if (dst == rank)
-    {
-        cerr << "Error in ParticleMessenger::DoSendICs() Sending ICs to yourself" << endl;
-        for (size_t i = 0; i < ics.size(); i++)
-            cerr << "Proc " << rank << "  "<<ics[i]<<endl;
-    }
+        std::cerr << "Error in ParticleMessenger::DoSendICs() Sending ICs to yourself" << std::endl;
 
     if (ics.empty())
         return false;
@@ -218,7 +210,6 @@ bool ParticleMessenger::DoSendICs(int dst, vector<P> &ics)
     vtkh::write(*buff,rank);
     int num = ics.size();
     vtkh::write(*buff,num);
-    //cout<<" ********************* DOSENDICS: "<<ics[0]<<endl;
     for (size_t i = 0; i < ics.size(); i++)
         vtkh::write(*buff,ics[i]);
     SendData(dst, ParticleMessenger::PARTICLE_TAG, buff);
@@ -234,7 +225,7 @@ ParticleMessenger::CheckAllBlocks(Particle &p,
                                   std::list<vtkh::Particle> &inData,
                                   std::list<vtkh::Particle> &term,
                                   int *earlyTerm,
-                                  map<int, list<Particle>> &sendData)
+                                  std::map<int, list<Particle>> &sendData)
 {
   while(!p.blockIds.empty())
   {
@@ -290,7 +281,7 @@ ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
                             std::list<vtkh::Particle> &term)
 {
     DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
-    map<int, list<Particle>> sendData;
+    std::map<int, list<Particle>> sendData;
 
     if (stats) stats->start("communication");
     int earlyTerm = 0;

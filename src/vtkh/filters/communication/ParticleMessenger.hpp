@@ -8,9 +8,9 @@
 #include <map>
 #include "CommData.hpp"
 #include <vtkh/filters/Particle.hpp>
-#include "Messenger.hpp"
-#include "BoundsMap.hpp"
-#include <vtkh/filters/StatisticsDB.hpp>
+#include <vtkh/filters/communication/Messenger.hpp>
+#include <vtkh/filters/communication/BoundsMap.hpp>
+#include <vtkh/utils/StatisticsDB.hpp>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/cont/CellLocatorTwoLevelUniformGrid.h>
 

@@ -18,8 +18,6 @@
 #include <mpi.h>
 #endif
 
-#include "DebugMeowMeow.hpp"
-
 namespace vtkh
 {
 

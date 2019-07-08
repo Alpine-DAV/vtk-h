@@ -27,7 +27,6 @@ set(vtkh_filters_headers
   communication/BoundsMap.hpp
   communication/CommData.hpp
   communication/Communicator.hpp
-  communication/DebugMeowMeow.hpp
   communication/MemStream.h
   communication/ThreadSafeContainer.hpp
   util.hpp
@@ -37,7 +36,6 @@ set(vtkh_comm_filters_headers
   communication/BoundsMap.hpp
   communication/CommData.hpp
   communication/Communicator.hpp
-  communication/DebugMeowMeow.hpp
   communication/MemStream.h
   communication/ThreadSafeContainer.hpp
   util.hpp

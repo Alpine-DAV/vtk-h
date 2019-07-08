@@ -20,6 +20,7 @@
 #include <numeric>
 #include <chrono>
 #include <ratio>
+#include <chrono>
 
 #include <vtkh/filters/util.hpp>
 
@@ -34,13 +35,13 @@ public:
 
     void Start()
     {
-        startTime = chrono::high_resolution_clock::now();
+        startTime = std::chrono::high_resolution_clock::now();
         isRunning = true;
     }
 
     double Stop()
     {
-        endTime = chrono::high_resolution_clock::now();
+        endTime = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> timeDiff = endTime-startTime;
         double dt = timeDiff.count();
         t += dt;
@@ -58,7 +59,7 @@ private:
     bool isRunning, keepHistory;
     double t;
     std::chrono::high_resolution_clock::time_point startTime, endTime;
-    vector<double> history;
+    std::vector<double> history;
 };
 
 
@@ -80,7 +81,7 @@ public:
     }
 
     void begin() {ts = getTime()-t0;}
-    void end() {history.push_back(make_pair(ts, getTime()-t0));}
+    void end() {history.push_back(std::make_pair(ts, getTime()-t0));}
 
     void Normalize(float tmin, float tmax)
     {
@@ -108,7 +109,7 @@ public:
     struct statValue
     {
         statValue() {}
-        statValue(vector<T> vals)
+        statValue(std::vector<T> vals)
         {
             if (vals.empty())
             {
@@ -146,10 +147,10 @@ public:
         int minI, maxI;
         T min,max, med, sum;
         float mean, std_dev;
-        vector<T> values;
+        std::vector<T> values;
 
-        friend ostream &
-        operator<<(ostream &os, const statValue<T> &s)
+        friend std::ostream &
+        operator<<(std::ostream &os, const statValue<T> &s)
         {
             return os<<"AVG: "<<s.mean<<" MED: "<<s.med<<" ("<<s.min<<","<<s.max<<":"<<s.std_dev<<")";
         }
@@ -168,7 +169,7 @@ public:
         counterStats = s.counterStats;
     }
 
-    void insert(const vector<StatisticsDB> &v)
+    void insert(const std::vector<StatisticsDB> &v)
     {
         statsComputed = false;
         for (int i = 0; i < v.size(); i++)
@@ -200,47 +201,47 @@ public:
     ~StatisticsDB() {}
 
     //Timers.
-    void addTimer(const string &nm, bool keepHistory=false)
+    void addTimer(const std::string &nm, bool keepHistory=false)
     {
         if (timers.find(nm) != timers.end())
             throw nm + " timer already exists!";
         timers[nm] = StopWatch(keepHistory);
         timers[nm].Reset();
     }
-    void start(const string &nm) {vt(nm); timers[nm].Start();}
-    float stop(const string &nm) {vt(nm); return timers[nm].Stop();}
-    float time(const string &nm) {vt(nm); return timers[nm].GetTime();}
-    void reset(const string &nm) {vt(nm); timers[nm].Reset();}
+    void start(const std::string &nm) {vt(nm); timers[nm].Start();}
+    float stop(const std::string &nm) {vt(nm); return timers[nm].Stop();}
+    float time(const std::string &nm) {vt(nm); return timers[nm].GetTime();}
+    void reset(const std::string &nm) {vt(nm); timers[nm].Reset();}
 
     //Counters.
-    void addCounter(const string &nm)
+    void addCounter(const std::string &nm)
     {
         if (counters.find(nm) != counters.end())
             throw nm + " counter already exists!";
         counters[nm] = 0;
     }
-    void increment(const string &nm) {vc(nm); counters[nm]++;}
-    void increment(const string &nm, unsigned long val) {vc(nm); counters[nm]+=val;}
-    unsigned long val(const string &nm) {vc(nm); return counters[nm];}
+    void increment(const std::string &nm) {vc(nm); counters[nm]++;}
+    void increment(const std::string &nm, unsigned long val) {vc(nm); counters[nm]+=val;}
+    unsigned long val(const std::string &nm) {vc(nm); return counters[nm];}
 
     //Events.
-    void addEvent(const string &nm)
+    void addEvent(const std::string &nm)
     {
         if (events.find(nm) != events.end())
             throw nm + " event already exists!";
         events[nm] = EventHistory();
     }
-    void begin(const string &nm) {ve(nm); events[nm].begin();}
-    void end(const string &nm) {ve(nm); events[nm].end();}
+    void begin(const std::string &nm) {ve(nm); events[nm].begin();}
+    void end(const std::string &nm) {ve(nm); events[nm].end();}
     void SetEventT0(double t0)
     {
         for (auto it = events.begin(); it != events.end(); it++)
             it->second.SetT0(t0);
     }
 
-    statValue<float> timerStat(const string &nm) {cs(); return timerStats[nm];}
-    statValue<unsigned long> counterStat(const string &nm) {cs(); return counterStats[nm];}
-    unsigned long totalVal(const string &nm) {cs(); return counterStats[nm].sum;}
+    statValue<float> timerStat(const std::string &nm) {cs(); return timerStats[nm];}
+    statValue<unsigned long> counterStat(const std::string &nm) {cs(); return counterStats[nm];}
+    unsigned long totalVal(const std::string &nm) {cs(); return counterStats[nm].sum;}
 
     void cs() {calcStats();}
     void calcStats()
@@ -258,20 +259,20 @@ public:
         sz = timers.size();
         if (sz > 0)
         {
-            vector<float> vals(sz);
-            map<string,StopWatch>::iterator it = timers.begin();
+            std::vector<float> vals(sz);
+            std::map<std::string,StopWatch>::iterator it = timers.begin();
             for (int i = 0; it != timers.end(); it++, i++)
                 vals[i] = it->second.GetTime();
 
             it = timers.begin();
             for (int i = 0; i < sz; i++, it++)
             {
-                vector<float> res(nProcs, 0.0);
+                std::vector<float> res(nProcs, 0.0);
                 if (nProcs == 1)
                     res[0] = vals[i];
                 else
                 {
-                    vector<float>tmp(nProcs,0.0);
+                    std::vector<float>tmp(nProcs,0.0);
                     tmp[rank] = vals[i];
                     MPI_Reduce(&tmp[0], &res[0], nProcs, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
                 }
@@ -283,20 +284,20 @@ public:
         sz = counters.size();
         if (sz > 0)
         {
-            vector<unsigned long> vals(sz);
-            map<string,unsigned long>::iterator it = counters.begin();
+            std::vector<unsigned long> vals(sz);
+            std::map<std::string,unsigned long>::iterator it = counters.begin();
             for (int i = 0; it != counters.end(); it++, i++)
                 vals[i] = it->second;
 
             it = counters.begin();
             for (int i = 0; i < sz; i++, it++)
             {
-                vector<unsigned long> res(nProcs,0);
+                std::vector<unsigned long> res(nProcs,0);
                 if (nProcs == 1)
                     res[0] = vals[i];
                 else
                 {
-                    vector<unsigned long> tmp(nProcs,0);
+                    std::vector<unsigned long> tmp(nProcs,0);
                     tmp[rank] = vals[i];
                     MPI_Reduce(&tmp[0], &res[0], nProcs, MPI_UNSIGNED_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
                 }
@@ -309,7 +310,7 @@ public:
         if (sz > 0)
         {
             //Normalize all the values.
-            vector<float> vals0(nProcs,0.0f), valsN(nProcs, 0.0f);
+            std::vector<float> vals0(nProcs,0.0f), valsN(nProcs, 0.0f);
 
             //find min/max per rank.
             float myMin = std::numeric_limits<float>::max();
@@ -348,7 +349,7 @@ public:
                     eventStats.resize(nProcs);
                     for (int i = 0; i < nProcs; i++) eventStats[i][it->first] = EventHistory();
 
-                    vector<float> buff(buffSz);
+                    std::vector<float> buff(buffSz);
                     for (int i = 1; i < nProcs; i++)
                     {
                         MPI_Status status;
@@ -362,7 +363,7 @@ public:
                 }
                 else
                 {
-                    vector<float> evData(buffSz, 0.0f);
+                    std::vector<float> evData(buffSz, 0.0f);
                     int sz = it->second.history.size();
 
                     evData[0] = sz*2;
@@ -381,44 +382,44 @@ public:
     }
 
 private:
-    void vt(const string &nm)
+    void vt(const std::string &nm)
     {
         if (timers.find(nm) == timers.end())
         {
-            string msg = nm + " timer not found.";
-            cerr<<"Error: "<<msg<<endl;
+            std::string msg = nm + " timer not found.";
+            std::cerr<<"Error: "<<msg<<std::endl;
             throw msg;
         }
     }
 
-    void vc(const string &nm)
+    void vc(const std::string &nm)
     {
         if (counters.find(nm) == counters.end())
         {
-            string msg = nm + " counter not found.";
-            cerr<<"Error: "<<msg<<endl;
+            std::string msg = nm + " counter not found.";
+            std::cerr<<"Error: "<<msg<<std::endl;
             throw msg;
         }
     }
 
-    void ve(const string &nm)
+    void ve(const std::string &nm)
     {
         if (events.find(nm) == events.end())
         {
-            string msg = nm + " event not found.";
-            cerr<<"Error: "<<msg<<endl;
+            std::string msg = nm + " event not found.";
+            std::cerr<<"Error: "<<msg<<std::endl;
             throw msg;
         }
     }
 public:
-    map<string, StopWatch> timers;
-    map<string, EventHistory> events;
-    map<string, unsigned long> counters;
+    std::map<std::string, StopWatch> timers;
+    std::map<std::string, EventHistory> events;
+    std::map<std::string, unsigned long> counters;
 
     bool statsComputed;
-    map<string, statValue<float> > timerStats;
-    map<string, statValue<unsigned long> > counterStats;
-    vector<map<string,EventHistory>> eventStats;
+    std::map<std::string, statValue<float> > timerStats;
+    std::map<std::string, statValue<unsigned long> > counterStats;
+    std::vector<std::map<std::string,EventHistory>> eventStats;
 };
 
 }

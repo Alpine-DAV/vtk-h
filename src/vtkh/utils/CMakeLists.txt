@@ -2,12 +2,14 @@
 # See License.txt
 #==============================================================================
 set(vtkh_utils_headers
+  Logger.hpp
   PNGEncoder.hpp
   vtkm_array_utils.hpp
   vtkm_dataset_info.hpp
   )
 
 set(vtkh_utils_sources
+  Logger.cpp
   PNGEncoder.cpp
   vtkm_dataset_info.cpp
   )
@@ -71,5 +73,3 @@ endif()
       RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
       )
 endif()
-
-

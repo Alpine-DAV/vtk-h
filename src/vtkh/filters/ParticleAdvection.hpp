@@ -8,11 +8,12 @@
 #include <algorithm>
 
 #include <vtkh/vtkh.hpp>
+#include <vtkh/utils/StatisticsDB.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/filters/Particle.hpp>
 #include <vtkh/filters/communication/BoundsMap.hpp>
 #include <vtkh/filters/Integrator.hpp>
-#include <vtkh/filters/StatisticsDB.hpp>
+#include <vtkh/utils/StatisticsDB.hpp>
 #include <vtkh/DataSet.hpp>
 
 #ifdef VTKH_PARALLEL

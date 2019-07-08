@@ -1,9 +1,8 @@
 #include <iostream>
 #include <string.h>
-#include "MemStream.h"
-#include "DebugMeowMeow.hpp"
-#include "RayMessenger.hpp"
-
+#include <vtkh/utils/Logger.hpp>
+#include <vtkh/filters/communication/MemStream.h>
+#include <vtkh/filters/communication/RayMessenger.hpp>
 
 using namespace std;
 namespace vtkh
