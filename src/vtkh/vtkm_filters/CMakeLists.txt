@@ -49,10 +49,6 @@ blt_add_library(
   OBJECT TRUE
   )
 
-if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
-  set_target_properties(vtkm_compiled_filters PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-endif()
-
 if(CUDA_FOUND)
   # defend against vtkm code cuda can't reason about
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
