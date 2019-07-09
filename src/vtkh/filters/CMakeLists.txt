@@ -123,11 +123,9 @@ if (MPI_FOUND)
          list(APPEND vtkh_filters_mpi_deps cuda)
     endif()
 
-
     if(ENABLE_OPENMP)
          list(APPEND vtkh_filters_mpi_deps openmp)
     endif()
-
     blt_add_library(
       NAME vtkh_filters_mpi
       SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources} ${vtkh_mpi_sources}
