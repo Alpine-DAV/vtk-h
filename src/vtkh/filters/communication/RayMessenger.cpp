@@ -72,8 +72,6 @@ RayMessenger::SendMsg(int dst, vector<int> &msg)
     m_message_id++;
 #endif
     SendData(dst, RayMessenger::MESSAGE_TAG, buff);
-//    MsgCnt.value++;
-//    CommTime.value += visitTimer->StopTimer(timerHandle, "SendMsg");
 }
 
 void
@@ -81,10 +79,7 @@ RayMessenger::SendAllMsg(vector<int> &msg)
 {
     for (int i = 0; i < nProcs; i++)
         if (i != rank)
-        {
-            DBG("          ***************** SendMsg to "<<i<<" "<<msg<<endl);
             SendMsg(i, msg);
-        }
 }
 
 bool
@@ -110,8 +105,6 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
     vector<pair<int, MemStream *> > buffers;
     if (! RecvData(tags, buffers, blockAndWait))
         return false;
-
-//    int timerHandle = visitTimer->StartTimer();
 
     for (size_t i = 0; i < buffers.size(); i++)
     {
@@ -153,7 +146,6 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
         delete buffers[i].second;
     }
 
-//    CommTime.value += visitTimer->StopTimer(timerHandle, "RecvAny");
     return true;
 }
 

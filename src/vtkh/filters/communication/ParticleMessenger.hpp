@@ -25,7 +25,7 @@ class ParticleMessenger : public Messenger
     const int MSG_DONE = 1;
 
   public:
-    ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm, vtkh::StatisticsDB *pSDB=NULL);
+    ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm);
     ~ParticleMessenger() {}
 
     void RegisterMessages(int msgSize,
@@ -33,9 +33,10 @@ class ParticleMessenger : public Messenger
                           int numICRecvs,
                           int numDSRecvs=0);
 
-    int Exchange(std::list<vtkh::Particle> &outData,
-                 std::list<vtkh::Particle> &inData,
-                 std::list<vtkh::Particle> &term);
+    void Exchange(std::list<vtkh::Particle> &outData,
+                  std::list<vtkh::Particle> &inData,
+                  std::list<vtkh::Particle> &term,
+                  int &numTerminateMessages);
 
     // Send/Recv Integral curves.
     template <typename P, template <typename, typename> class Container,
@@ -77,17 +78,16 @@ class ParticleMessenger : public Messenger
   private:
     template <typename P>
     bool DoSendICs(int dst, std::vector<P> &ics);
-    bool done;
 
+    bool done;
     vtkh::BoundsMap boundsMap;
-    vtkh::StatisticsDB *stats;
 
     void
     CheckAllBlocks(Particle &p,
                   std::list<vtkh::Particle> &outData,
                   std::list<vtkh::Particle> &inData,
                   std::list<vtkh::Particle> &term,
-                  int *earlyTerm,
+                  int &earlyTerm,
                   map<int, list<Particle>> &sendData);
 
     enum

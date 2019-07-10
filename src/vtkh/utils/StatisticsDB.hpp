@@ -6,7 +6,6 @@
 #endif
 
 #include <math.h>
-
 #include <time.h>
 #include <sys/time.h>
 #include <sys/timeb.h>
@@ -20,7 +19,6 @@
 #include <numeric>
 #include <chrono>
 #include <ratio>
-#include <chrono>
 
 #include <vtkh/filters/util.hpp>
 
@@ -201,43 +199,46 @@ public:
     ~StatisticsDB() {}
 
     //Timers.
-    void addTimer(const std::string &nm, bool keepHistory=false)
+    void AddTimer(const std::string &nm, bool keepHistory=false)
     {
         if (timers.find(nm) != timers.end())
             throw nm + " timer already exists!";
         timers[nm] = StopWatch(keepHistory);
         timers[nm].Reset();
     }
-    void start(const std::string &nm) {vt(nm); timers[nm].Start();}
-    float stop(const std::string &nm) {vt(nm); return timers[nm].Stop();}
-    float time(const std::string &nm) {vt(nm); return timers[nm].GetTime();}
-    void reset(const std::string &nm) {vt(nm); timers[nm].Reset();}
+    void Start(const std::string &nm) {vt(nm); timers[nm].Start();}
+    float Stop(const std::string &nm) {vt(nm); return timers[nm].Stop();}
+    float Time(const std::string &nm) {vt(nm); return timers[nm].GetTime();}
+    void Reset(const std::string &nm) {vt(nm); timers[nm].Reset();}
 
     //Counters.
-    void addCounter(const std::string &nm)
+    void AddCounter(const std::string &nm)
     {
         if (counters.find(nm) != counters.end())
             throw nm + " counter already exists!";
         counters[nm] = 0;
     }
-    void increment(const std::string &nm) {vc(nm); counters[nm]++;}
-    void increment(const std::string &nm, unsigned long val) {vc(nm); counters[nm]+=val;}
+    void Increment(const std::string &nm) {vc(nm); counters[nm]++;}
+    void Increment(const std::string &nm, unsigned long val) {vc(nm); counters[nm]+=val;}
     unsigned long val(const std::string &nm) {vc(nm); return counters[nm];}
 
     //Events.
-    void addEvent(const std::string &nm)
+    void AddEvent(const std::string &nm)
     {
         if (events.find(nm) != events.end())
             throw nm + " event already exists!";
         events[nm] = EventHistory();
     }
-    void begin(const std::string &nm) {ve(nm); events[nm].begin();}
-    void end(const std::string &nm) {ve(nm); events[nm].end();}
+    void Begin(const std::string &nm) {ve(nm); events[nm].begin();}
+    void End(const std::string &nm) {ve(nm); events[nm].end();}
     void SetEventT0(double t0)
     {
         for (auto it = events.begin(); it != events.end(); it++)
             it->second.SetT0(t0);
     }
+
+    //Output to file
+    void DumpStats(const std::string &fname, const std::string &preamble="", bool append=false);
 
     statValue<float> timerStat(const std::string &nm) {cs(); return timerStats[nm];}
     statValue<unsigned long> counterStat(const std::string &nm) {cs(); return counterStats[nm];}
@@ -411,7 +412,6 @@ private:
             throw msg;
         }
     }
-public:
     std::map<std::string, StopWatch> timers;
     std::map<std::string, EventHistory> events;
     std::map<std::string, unsigned long> counters;
@@ -420,8 +420,28 @@ public:
     std::map<std::string, statValue<float> > timerStats;
     std::map<std::string, statValue<unsigned long> > counterStats;
     std::vector<std::map<std::string,EventHistory>> eventStats;
+
+    std::ofstream outputStream;
 };
 
+extern vtkh::StatisticsDB stats;
+#ifdef ENABLE_STATISTICS
+#define ADD_COUNTER(nm) stats.AddCounter(nm)
+#define COUNTER_INC(nm, val) stats.Increment(nm, val)
+
+#define ADD_TIMER(nm) stats.AddTimer(nm)
+#define TIMER_START(nm) stats.Start(nm)
+#define TIMER_STOP(nm) stats.Stop(nm)
+#define DUMP_STATS(fname) stats.DumpStats(fname)
+#else
+#define ADD_COUNTER(nm)
+#define COUNTER_INC(nm, val)
+
+#define ADD_TIMER(nm)
+#define TIMER_START(nm)
+#define TIMER_STOP(nm)
+#define DUMP_STATS(fname)
+#endif
 }
 
 #endif //__STATISTICS_DB_H

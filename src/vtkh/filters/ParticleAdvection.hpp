@@ -78,8 +78,6 @@ public:
 
   DataBlock * GetBlock(int blockId);
 
-  StatisticsDB * GetStats() { return &stats; }
-
   template <typename ResultT>
   int InternalIntegrate(DataBlock &blk,
                         std::vector<Particle> &v,
@@ -103,7 +101,6 @@ protected:
   template <typename ResultT>
   void TraceSingleThread(std::vector<ResultT> &traces);
 
-//  DataBlock * GetBlock(int blockId);
   int DomainToRank(int blockId) {return boundsMap.GetRank(blockId);}
   void BoxOfSeeds(const vtkm::Bounds &box,
                   std::vector<Particle> &seeds,
@@ -128,22 +125,13 @@ protected:
   BoundsMap boundsMap;
   std::vector<DataBlock*> dataBlocks;
 
-  StatisticsDB stats;
-  void InitStats();
-  void DumpStats(const std::string &fname);
-
   //seed data
   std::list<Particle> active, inactive, terminated;
   bool GetActiveParticles(std::vector<Particle> &v);
 
-  void DumpTraces(int idx, const vector<vtkm::Vec<double,4>> &particleTraces);
-  void DumpDS();
-  void DumpSLOutput(vtkm::cont::DataSet *ds, int domId);
-
-#ifdef VTKH_PARALLEL
-//  template <typename ResultT>
-//  friend class Task; //<ResultT>;
-#endif
+  void DumpTraces(int ts, const vector<vtkm::Vec<double,4>> &particleTraces);
+  void DumpDS(int ts);
+  void DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts);
 };
 
 

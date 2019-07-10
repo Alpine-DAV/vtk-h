@@ -1,5 +1,5 @@
 #include <vtkh/vtkh.hpp>
-#include "Logger.hpp"
+#include <vtkh/utils/Logger.hpp>
 
 namespace vtkh
 {
@@ -7,13 +7,14 @@ std::map<std::string, Logger*> Logger::Loggers;
 
 Logger::Logger(const std::string& name)
 {
-  std::stringstream log_name;
-  log_name<<name;
+  std::stringstream logName;
+  logName<<name;
 #ifdef VTKH_PARALLEL
-  log_name<<"."<<vtkh::GetMPIRank();
+  logName<<"."<<vtkh::GetMPIRank();
 #endif
-  log_name<<".log";
-  Stream.open(log_name.str().c_str(), std::ofstream::out);
+  logName<<".log";
+
+  Stream.open(logName.str().c_str(), std::ofstream::out);
   if(!Stream.is_open())
     std::cout<<"Warning: could not open the vtkh log file\n";
 }
@@ -33,7 +34,7 @@ Logger* Logger::GetInstance(const std::string& name)
 }
 
 void
-Logger::write(const int level, const std::string &message, const char *file, int line)
+Logger::Write(const int level, const std::string &message, const char *file, int line)
 {
   if(level == 0)
     Stream<<"<Info> \n";

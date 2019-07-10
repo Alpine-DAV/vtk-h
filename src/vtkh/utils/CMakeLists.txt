@@ -3,7 +3,10 @@
 #==============================================================================
 set(vtkh_utils_headers
   Logger.hpp
+  Mutex.hpp
   PNGEncoder.hpp
+  StatisticsDB.hpp
+  ThreadSafeContainer.hpp
   vtkm_array_utils.hpp
   vtkm_dataset_info.hpp
   )
@@ -11,6 +14,7 @@ set(vtkh_utils_headers
 set(vtkh_utils_sources
   Logger.cpp
   PNGEncoder.cpp
+  StatisticsDB.cpp
   vtkm_dataset_info.cpp
   )
 
@@ -64,6 +68,8 @@ if (MPI_FOUND)
 if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
   set_target_properties(vtkh_utils_mpi PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 endif()
+
+    blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_PARALLEL")
 
     # Install libraries
     install(TARGETS vtkh_utils_mpi

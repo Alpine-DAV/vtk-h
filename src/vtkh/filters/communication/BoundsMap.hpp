@@ -47,27 +47,32 @@ public:
 
   template <template <typename, typename> class Container,
             typename Allocator=std::allocator<Particle>>
-  void FindBlockIDs(const Container<Particle, Allocator> &particles, std::vector<std::vector<int>> &blockIDs) const
+  void FindBlockIDs(const Container<Particle, Allocator> &particles,
+                    std::vector<std::vector<int>> &blockIDs,
+                    bool ignoreCurrentBlock=true) const
   {
       size_t sz = particles.size();
       blockIDs.resize(sz);
       auto pit = particles.begin();
       auto oit = blockIDs.begin();
       for ( ; pit != particles.end(); pit++, oit++)
-          *oit = FindBlock(pit->coords);
+          *oit = FindBlock(*pit, ignoreCurrentBlock && !pit->blockIds.empty());
   }
 
-  std::vector<int> FindBlock(const vtkm::Vec<float,3> &pt) const
+    std::vector<int> FindBlock(const vtkh::Particle &p,
+                               bool ignoreCurrentBlock) const
   {
       std::vector<int> res;
       for (auto it = bm.begin(); it != bm.end(); it++)
       {
-          if (pt[0] >= it->second.X.Min &&
-              pt[0] < it->second.X.Max &&
-              pt[1] >= it->second.Y.Min &&
-              pt[1] < it->second.Y.Max &&
-              pt[2] >= it->second.Z.Min &&
-              pt[2] < it->second.Z.Max)
+          if (ignoreCurrentBlock && p.blockIds[0] == it->first)
+              continue;
+          if (p.coords[0] >= it->second.X.Min &&
+              p.coords[0] < it->second.X.Max &&
+              p.coords[1] >= it->second.Y.Min &&
+              p.coords[1] < it->second.Y.Max &&
+              p.coords[2] >= it->second.Z.Min &&
+              p.coords[2] < it->second.Z.Max)
           {
               res.push_back(it->first);
           }

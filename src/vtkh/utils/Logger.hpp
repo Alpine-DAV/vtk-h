@@ -14,7 +14,7 @@ public:
   static Logger *GetInstance(const std::string& name);
 
   ~Logger();
-  void write(const int level, const std::string &message, const char *file, int line);
+  void Write(const int level, const std::string &message, const char *file, int line);
   std::ofstream & GetStream() { return Stream; }
 
 protected:
@@ -49,35 +49,19 @@ protected:
   std::stack<std::string> Entries;
 };
 
-#ifdef TRACE_DEBUG
-#define DBG(msg) vtkh::Logger::GetInstance("out")->GetStream()<<msg
-#define WDBG(msg) vtkh::Logger::GetInstance("wout")->GetStream()<<msg
-#else
-#define DBG(msg)
-#define WDBG(msg)
-#endif
-
-#ifdef ROVER_ENABLE_LOGGING
-#define ROVER_INFO(msg) rover::Logger::GetInstance()->GetStream() <<"<Info>\n" \
-  <<"  message: "<< msg <<"\n  file: " <<__FILE__<<"\n  line:  "<<__LINE__<<std::endl;
-#define ROVER_WARN(msg) rover::Logger::GetInstance()->GetStream() <<"<Warn>\n" \
-  <<"  message: "<< msg <<"\n  file: " <<__FILE__<<"\n  line:  "<<__LINE__<<std::endl;
-#define ROVER_ERROR(msg) rover::Logger::GetInstance()->GetStream() <<"<Error>\n" \
-  <<"  message: "<< msg <<"\n  file: " <<__FILE__<<"\n  line:  "<<__LINE__<<std::endl;
-
-#define ROVER_DATA_OPEN(name) rover::DataLogger::GetInstance()->OpenLogEntry(name);
-#define ROVER_DATA_CLOSE(time) rover::DataLogger::GetInstance()->CloseLogEntry(time);
-#define ROVER_DATA_ADD(key,value) rover::DataLogger::GetInstance()->AddLogData(key, value);
+#ifdef ENABLE_LOGGING
+#define VTKH_INFO(msg) vtkh::Logger::GetInstance("info")->GetStream()<<msg<<std::endl;
+#define VTKH_WARN(msg) vtkh::Logger::GetInstance("warning")->GetStream()<<msg<<std::endl;
+#define VTKH_ERROR(msg) vtkh::Logger::GetInstance("error")->GetStream()<<msg<<std::endl;
+#define VTKH_DATA_ADD(key,value) vtkh::DataLogger::GetInstance()->AddLogData(key, value);
 
 #else
-#define ROVER_INFO(msg)
-#define ROVER_WARN(msg)
-#define ROVER_ERROR(msg)
-
-#define ROVER_DATA_OPEN(name)
-#define ROVER_DATA_CLOSE(name)
-#define ROVER_DATA_ADD(key,value)
+#define VTKH_INFO(msg)
+#define VTKH_WARN(msg)
+#define VTKH_ERROR(msg)
+#define VTKH_DATA_ADD(key,value)
 #endif
+
 }; // namespace vtkh
 
 #endif //VTK_H_LOGGER_HPP
