@@ -35,7 +35,7 @@ ParticleMessenger::RegisterMessages(int mSz,
                                     int nDSRecvs)
 {
     numMsgRecvs = nMsgRecvs;
-    numSLRecvs = nParticleRecvs;
+    numSLRecvs = nParticlesRecvs;
     numDSRecvs = nDSRecvs;
 
     // Msgs are handled as vector<int>.
@@ -48,6 +48,8 @@ ParticleMessenger::RegisterMessages(int mSz,
     //During particle advection, the IC state is only serialized.
     slSize = 256;
     slsPerRecv = 64;
+
+//    Generalize_this_stuff();
 
     this->RegisterTag(ParticleMessenger::MESSAGE_TAG, numMsgRecvs, msgSize);
     this->RegisterTag(ParticleMessenger::PARTICLE_TAG, numSLRecvs, slSize * slsPerRecv);
@@ -185,7 +187,7 @@ template <typename P, template <typename, typename> class Container,
           typename Allocator>
 bool ParticleMessenger::RecvParticles(Container<ParticleCommData<P>, Allocator> &recvParticles)
 {
-    return RecvAny(NULL, &recvICs, NULL, false);
+  return RecvAny(NULL, &recvParticles, NULL, false);
 }
 
 template <typename P, template <typename, typename> class Container,
