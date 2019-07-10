@@ -30,7 +30,7 @@ class ParticleMessenger : public Messenger
 
     void RegisterMessages(int msgSize,
                           int numMsgRecvs,
-                          int numICRecvs,
+                          int numParticleRecvs,
                           int numDSRecvs=0);
 
     void Exchange(std::list<vtkh::Particle> &outData,
@@ -41,28 +41,24 @@ class ParticleMessenger : public Messenger
     // Send/Recv Integral curves.
     template <typename P, template <typename, typename> class Container,
               typename Allocator=std::allocator<P>>
-    void SendICs(int dst, Container<P, Allocator> &c);
+    void SendParticles(int dst, const Container<P, Allocator> &c);
 
     template <typename P, template <typename, typename> class Container,
               typename Allocator=std::allocator<P>>
-    void SendICs(std::map<int, Container<P, Allocator>> &m);
+    void SendParticles(const std::map<int, Container<P, Allocator>> &m);
 
     template <typename P, template <typename, typename> class Container,
               typename Allocator=std::allocator<P>>
-    bool RecvICs(Container<P, Allocator> &recvICs);
-
-    template <typename P, template <typename, typename> class Container,
-              typename Allocator=std::allocator<P>>
-    bool RecvICs(Container<ParticleCommData<P>, Allocator> &recvICs);
+    bool RecvParticles(Container<P, Allocator> &recvICs);
 
     // Send/Recv messages.
-    void SendMsg(int dst, std::vector<int> &msg);
-    void SendAllMsg(std::vector<int> &msg);
+    void SendMsg(int dst, const std::vector<int> &msg);
+    void SendAllMsg(const std::vector<int> &msg);
     bool RecvMsg(std::vector<MsgCommData> &msgs);
 
     // Send/Recv datasets.
     bool RecvAny(std::vector<MsgCommData> *msgs,
-                 std::list<ParticleCommData<Particle>> *recvICs,
+                 std::list<ParticleCommData<Particle>> *recvParticles,
                  std::vector<DSCommData> *ds,
                  bool blockAndWait);
 
@@ -76,19 +72,18 @@ class ParticleMessenger : public Messenger
   }
 
   private:
-    template <typename P>
-    bool DoSendICs(int dst, std::vector<P> &ics);
-
     bool done;
     vtkh::BoundsMap boundsMap;
 
+    template <typename P, template <typename, typename> class Container,
+              typename Allocator=std::allocator<P>>
+    bool RecvParticles(Container<ParticleCommData<P>, Allocator> &recvICs);
+
     void
-    CheckAllBlocks(Particle &p,
-                  std::list<vtkh::Particle> &outData,
-                  std::list<vtkh::Particle> &inData,
-                  std::list<vtkh::Particle> &term,
-                  int &earlyTerm,
-                  map<int, list<Particle>> &sendData);
+    ParticleBlockSorter(vtkh::Particle &p,
+                        std::list<vtkh::Particle> &inData,
+                        std::list<vtkh::Particle> &term,
+                        std::map<int, std::list<Particle>> &sendData);
 
     enum
     {

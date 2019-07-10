@@ -71,6 +71,7 @@ public:
   {
     dumpOutputFiles = dumpOutput;
   }
+
   void SetField(const std::string &field_name) {m_field_name = field_name;}
   void SetStepSize(const double &v) { stepSize = v;}
   void SetMaxSteps(const int &n) { maxSteps = n;}
