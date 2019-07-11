@@ -42,10 +42,6 @@ randRange(const float &a, const float &b)
     return a + (b-a)*rand01();
 }
 
-#ifdef VTKH_PARALLEL
-
-#endif
-
 ParticleAdvection::ParticleAdvection()
     : rank(0), numRanks(1), seedMethod(RANDOM),
       numSeeds(1000), totalNumSeeds(-1), randSeed(314),

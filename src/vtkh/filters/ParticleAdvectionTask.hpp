@@ -4,6 +4,7 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/utils/StatisticsDB.hpp>
 #include <vtkh/utils/ThreadSafeContainer.hpp>
+#include <vtkh/filters/ParticleAdvection.hpp>
 #include <vtkh/filters/communication/BoundsMap.hpp>
 
 #ifdef ENABLE_LOGGING

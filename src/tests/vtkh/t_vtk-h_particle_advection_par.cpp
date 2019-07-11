@@ -58,7 +58,8 @@ TEST(vtkh_particle_advection, vtkh_serial_particle_advection)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
 
-  std::cout << "Running parallel Particle Advection, vtkh - with " << comm_size << " ranks" << std::endl;
+  if (rank == 0)
+    std::cout << "Running parallel Particle Advection, vtkh - with " << comm_size << " ranks" << std::endl;
 
   vtkh::DataSet data_set;
   const int base_size = 32;
@@ -83,7 +84,7 @@ TEST(vtkh_particle_advection, vtkh_serial_particle_advection)
   vtkh::DataSet *streamline_output = streamline.GetOutput();
 
   checkValidity(streamline_output, maxAdvSteps);
-  writeDataSet(streamline_output, "advection_SeedsRandomWhole", rank);
+  //writeDataSet(streamline_output, "advection_SeedsRandomWhole", rank);
 
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
