@@ -67,7 +67,8 @@ TEST(vtkm_smoke, headers_work)
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, basic_use_serial)
 {
-    vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    vtkm::cont::RuntimeDeviceTracker device_tracker
+      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
     device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
 
     vtkm::cont::testing::MakeTestDataSet maker;
@@ -114,7 +115,8 @@ TEST(vtkm_smoke, basic_use_serial)
 #ifdef VTKH_FORCE_OPENMP
 TEST(vtkm_smoke, basic_use_openmp)
 {
-    vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    vtkm::cont::RuntimeDeviceTracker device_tracker
+      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
     device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
 
     vtkm::cont::testing::MakeTestDataSet maker;
@@ -163,7 +165,8 @@ TEST(vtkm_smoke, basic_use_openmp)
 #ifdef VTKH_FORCE_CUDA
 TEST(vtkm_smoke, basic_use_cuda)
 {
-    vtkm::cont::RuntimeDeviceTracker &device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    vtkm::cont::RuntimeDeviceTracker device_tracker
+      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
     device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
 
     vtkm::cont::testing::MakeTestDataSet maker;

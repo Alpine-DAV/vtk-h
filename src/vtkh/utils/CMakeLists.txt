@@ -35,10 +35,6 @@ blt_add_library(
   DEPENDS_ON ${vtkh_utils_thirdparty_libs}
   )
 
-if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
-  set_target_properties(vtkh_utils PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-endif()
-
 if(ENABLE_OPENMP)
     blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
     list(APPEND vtkh_utils_thirdparty_libs openmp)
@@ -64,10 +60,6 @@ if (MPI_FOUND)
       HEADERS ${vtkh_utils_headers}
       DEPENDS_ON ${vtkh_utils_thirdparty_libs} mpi
       )
-
-if(CUDA_FOUND AND NOT ENABLE_SHARED_LIBS)
-  set_target_properties(vtkh_utils_mpi PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-endif()
 
     blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_PARALLEL")
 
