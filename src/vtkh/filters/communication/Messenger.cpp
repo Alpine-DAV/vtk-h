@@ -14,6 +14,19 @@ Messenger::Messenger(MPI_Comm comm)
     msgID = 0;
 }
 
+int
+Messenger::CalcMessageBufferSize(int msgSz)
+{
+    MemStream buff;
+    int rank = 0;
+
+    std::vector<int> m(msgSz);
+    vtkh::write(buff, rank);
+    vtkh::write(buff, m);
+
+    return buff.len();
+}
+
 void
 Messenger::RegisterTag(int tag, int num_recvs, int size)
 {

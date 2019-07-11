@@ -58,7 +58,7 @@ public:
     {
         m_Rank = vtkh::GetMPIRank();
         m_NumRanks = vtkh::GetMPISize();
-        communicator.RegisterMessages(2, m_NumRanks, m_NumRanks);
+        communicator.RegisterMessages(2, std::min(64, m_NumRanks-1), 128, std::min(64, m_NumRanks-1));
         int nDoms = pa->GetInput()->GetNumberOfDomains();
         for (int i = 0; i < nDoms; i++)
         {
@@ -356,7 +356,7 @@ void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
   ParticleMessenger communicator(mpiComm, boundsMap);
-  communicator.RegisterMessages(2, std::min(64, numRanks-1), std::min(64, numRanks-1));
+  communicator.RegisterMessages(2, std::min(64, numRanks-1), 128, std::min(64, numRanks-1));
 
   const int nDoms = this->m_input->GetNumberOfDomains();
   for (int i = 0; i < nDoms; i++)

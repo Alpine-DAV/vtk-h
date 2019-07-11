@@ -30,13 +30,14 @@ class RayMessenger : public Messenger
 
     void RegisterMessages(int msgSize,
                           int numMsgRecvs,
-                          int numICRecvs);
+                          int nRays,
+                          int nRaysRecvs);
 
-    void SendRays(int dst, std::vector<Ray> &rays);
+    void SendRays(int dst, std::vector<vtkh::Ray> &rays);
 
-    void SendRays(std::map<int, std::vector<Ray>> &ray_map);
+    void SendRays(std::map<int, std::vector<vtkh::Ray>> &ray_map);
 
-    bool RecvRays(std::vector<Ray> &rays);
+    bool RecvRays(std::vector<vtkh::Ray> &rays);
 
     // Send/Recv messages.
     void SendMsg(int dst, std::vector<int> &msg);
@@ -45,7 +46,7 @@ class RayMessenger : public Messenger
 
     // Send/Recv datasets.
     bool RecvAny(std::vector<MsgCommData> *msgs,
-                 std::vector<Ray> *rays,
+                 std::vector<vtkh::Ray> *rays,
                  bool blockAndWait);
 
   private:
@@ -61,11 +62,7 @@ class RayMessenger : public Messenger
       RAY_TAG = 0xfeebdab
     };
 
-    //Message headers.
-    typedef struct
-    {
-        int rank, id, tag, numPackets, packet, packetSz, dataSz;
-    } Header;
+    static int CalcRayBufferSize(int nRays);
 };
 
 } //namespace vtkh

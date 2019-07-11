@@ -28,10 +28,10 @@ class ParticleMessenger : public Messenger
     ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm);
     ~ParticleMessenger() {}
 
-    void RegisterMessages(int msgSize,
-                          int numMsgRecvs,
-                          int numParticleRecvs,
-                          int numDSRecvs=0);
+    void RegisterMessages(int msgSz,
+                          int nMsgRecvs,
+                          int nParticles,
+                          int nParticlesRecvs);
 
     void Exchange(std::list<vtkh::Particle> &outData,
                   std::list<vtkh::Particle> &inData,
@@ -91,11 +91,7 @@ class ParticleMessenger : public Messenger
         PARTICLE_TAG = 0x42001
     };
 
-    //Message headers.
-    typedef struct
-    {
-        int rank, id, tag, numPackets, packet, packetSz, dataSz;
-    } Header;
+    static int CalcParticleBufferSize(int nParticles, int numBlockIds=2);
 
     std::map<int, vtkm::cont::CellLocatorTwoLevelUniformGrid> gridLocators;
 };

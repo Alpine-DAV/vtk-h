@@ -74,9 +74,9 @@ class Messenger
 
     // Maps MPI_TAG to pair(num buffers, data size).
     std::map<int, std::pair<int, int>> messageTagInfo;
-    int numMsgRecvs, numSLRecvs, numDSRecvs;
-    int slSize, slsPerRecv, msgSize;
     long msgID;
+
+    static int CalcMessageBufferSize(int msgSz);
 };
 
 } // namespace vtkh

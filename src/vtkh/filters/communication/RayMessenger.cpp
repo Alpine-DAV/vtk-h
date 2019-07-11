@@ -28,32 +28,29 @@ RayMessenger::~RayMessenger()
 #endif
 }
 
-void
-RayMessenger::RegisterMessages(int mSz,
-                               int nMsgRecvs,
-                               int nICRecvs)
+int
+RayMessenger::CalcRayBufferSize(int nRays)
 {
-    numMsgRecvs = nMsgRecvs;
-    numSLRecvs = nICRecvs;
+    MemStream buff;
+    int rank = 0;
+    std::vector<vtkh::Ray> v(nRays);
+    vtkh::write(buff, rank);
+    vtkh::write(buff, v);
 
-    // Msgs are handled as vector<int>.
-    // Serialization of msg consists: size_t (num elements) +
-    // sender rank + message size.
-    int msgSize = sizeof(size_t);
-    msgSize += sizeof(int); // sender rank.
-    msgSize += (mSz * sizeof(int));
+    return buff.len();
+}
 
-    //During particle advection, the IC state is only serialized.
-    slSize = 256; // avoids splitting send buffer into multiple chunks
-    //slSize = sizeof(Ray);
-    //slsPerRecv = 64;
-    //slsPerRecv = 640; //works
-    slsPerRecv = 10000;
+void
+RayMessenger::RegisterMessages(int msgSize,
+                               int numMsgRecvs,
+                               int nRays,
+                               int nRaysRecvs)
+{
+    int messageBuffSz = CalcMessageBufferSize(msgSize);
+    int rayBuffSz = CalcRayBufferSize(nRays);
 
-    int dsSize = 2 * sizeof(int);
-
-    this->RegisterTag(RayMessenger::MESSAGE_TAG, numMsgRecvs, msgSize);
-    this->RegisterTag(RayMessenger::RAY_TAG, numSLRecvs, slSize * slsPerRecv);
+    this->RegisterTag(RayMessenger::MESSAGE_TAG, numMsgRecvs, messageBuffSz);
+    this->RegisterTag(RayMessenger::RAY_TAG, nRaysRecvs, rayBuffSz);
 
     this->InitializeBuffers();
 }
@@ -84,7 +81,7 @@ RayMessenger::SendAllMsg(vector<int> &msg)
 
 bool
 RayMessenger::RecvAny(vector<MsgCommData> *msgs,
-                      std::vector<Ray> *rays,
+                      std::vector<vtkh::Ray> *rays,
                       bool blockAndWait)
 {
     set<int> tags;
@@ -155,7 +152,7 @@ RayMessenger::RecvMsg(vector<MsgCommData> &msgs)
     return RecvAny(&msgs, NULL, false);
 }
 
-void RayMessenger::SendRays(int dst, std::vector<Ray> &rays)
+void RayMessenger::SendRays(int dst, std::vector<vtkh::Ray> &rays)
 {
     if (dst == rank)
     {
@@ -185,14 +182,14 @@ void RayMessenger::SendRays(int dst, std::vector<Ray> &rays)
     rays.clear();
 }
 
-void RayMessenger::SendRays(std::map<int, std::vector<Ray>> &ray_map)
+void RayMessenger::SendRays(std::map<int, std::vector<vtkh::Ray>> &ray_map)
 {
     for (auto mit = ray_map.begin(); mit != ray_map.end(); mit++)
         if (! mit->second.empty())
             SendRays(mit->first, mit->second);
 }
 
-bool RayMessenger::RecvRays(std::vector<Ray> &rays)
+bool RayMessenger::RecvRays(std::vector<vtkh::Ray> &rays)
 {
     return RecvAny(NULL, &rays, false);
 }

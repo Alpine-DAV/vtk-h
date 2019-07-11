@@ -28,31 +28,37 @@ ParticleMessenger::ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm)
     ADD_COUNTER("messagesSent");
 }
 
-void
-ParticleMessenger::RegisterMessages(int mSz,
-                                    int nMsgRecvs,
-                                    int nParticlesRecvs,
-                                    int nDSRecvs)
+int
+ParticleMessenger::CalcParticleBufferSize(int nParticles, int numBlockIds)
 {
-    numMsgRecvs = nMsgRecvs;
-    numSLRecvs = nParticlesRecvs;
-    numDSRecvs = nDSRecvs;
+    MemStream buff;
+    int rank = 0;
 
-    // Msgs are handled as vector<int>.
-    // Serialization of msg consists: size_t (num elements) +
-    // sender rank + message size.
-    int msgSize = sizeof(size_t);
-    msgSize += sizeof(int); // sender rank.
-    msgSize += (mSz * sizeof(int));
+    //Make a vector of particles where each particle has 'numBlockIds' in the blockId array.
+    std::vector<vtkh::Particle> v(nParticles);
+    vtkh::Particle p;
+    p.blockIds.resize(numBlockIds);
+    for (int i = 0; i < nParticles; i++)
+        v[i] = p;
 
-    //During particle advection, the IC state is only serialized.
-    slSize = 256;
-    slsPerRecv = 64;
+    vtkh::write(buff, rank);
+    vtkh::write(buff, v);
 
-//    Generalize_this_stuff();
+    return buff.len();
+}
 
-    this->RegisterTag(ParticleMessenger::MESSAGE_TAG, numMsgRecvs, msgSize);
-    this->RegisterTag(ParticleMessenger::PARTICLE_TAG, numSLRecvs, slSize * slsPerRecv);
+void
+ParticleMessenger::RegisterMessages(int msgSz,
+                                    int nMsgRecvs,
+                                    int nParticles,
+                                    int nParticlesRecvs)
+{
+    //Determine buffer size for msg and particle tags.
+    int messageBuffSz = CalcMessageBufferSize(msgSz);
+    int particleBuffSz = CalcParticleBufferSize(nParticles);
+
+    this->RegisterTag(ParticleMessenger::MESSAGE_TAG, nMsgRecvs, messageBuffSz);
+    this->RegisterTag(ParticleMessenger::PARTICLE_TAG, nParticlesRecvs, particleBuffSz);
 
     this->InitializeBuffers();
 }
@@ -60,13 +66,11 @@ ParticleMessenger::RegisterMessages(int mSz,
 void
 ParticleMessenger::SendMsg(int dst, const std::vector<int> &msg)
 {
-    static const int SZ = sizeof(int);
-    MemStream *buff = new MemStream(SZ*(msg.size()+1));
+    MemStream *buff = new MemStream();
 
     //Write data.
     vtkh::write(*buff, rank);
     vtkh::write(*buff, msg);
-
     SendData(dst, ParticleMessenger::MESSAGE_TAG, buff);
 
     COUNTER_INC("messagesSent", 1);
@@ -76,11 +80,8 @@ void
 ParticleMessenger::SendAllMsg(const std::vector<int> &msg)
 {
     for (int i = 0; i < nProcs; i++)
-        if (i != rank)
-        {
-            DBG("          ***************** SendMsg to "<<i<<" "<<msg<<std::endl);
-            SendMsg(i, msg);
-        }
+      if (i != rank)
+        SendMsg(i, msg);
 }
 
 bool
@@ -160,18 +161,12 @@ void ParticleMessenger::SendParticles(int dst, const Container<P, Allocator> &c)
     if (c.empty())
         return;
 
-    static const int SZP = sizeof(P);
-    static const int SZM = 2*sizeof(int);
-
-    int num = c.size();
-    MemStream *buff = new MemStream(SZM + num*SZP);
+    MemStream *buff = new MemStream();
     vtkh::write(*buff, rank);
-    vtkh::write(*buff, num);
-    for (auto &p : c)
-        vtkh::write(*buff, p);
+    vtkh::write(*buff, c);
     SendData(dst, ParticleMessenger::PARTICLE_TAG, buff);
 
-    COUNTER_INC("particlesSent", num);
+    COUNTER_INC("particlesSent", c.size());
 }
 
 template <typename P, template <typename, typename> class Container,
