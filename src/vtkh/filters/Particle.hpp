@@ -46,9 +46,9 @@ public:
 };
 
 template<>
-struct Serialization<Particle>
+struct Serialization<vtkh::Particle>
 {
-  static void write(MemStream &memstream, const Particle &data)
+  static void write(MemStream &memstream, const vtkh::Particle &data)
   {
     vtkh::write(memstream, data.coords[0]);
     vtkh::write(memstream, data.coords[1]);
@@ -59,7 +59,7 @@ struct Serialization<Particle>
     vtkh::write(memstream, data.blockIds);
   }
 
-  static void read(MemStream &memstream, Particle &data)
+  static void read(MemStream &memstream, vtkh::Particle &data)
   {
     vtkh::read(memstream, data.coords[0]);
     vtkh::read(memstream, data.coords[1]);

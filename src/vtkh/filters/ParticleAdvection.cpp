@@ -17,6 +17,7 @@
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
 #include <vtkh/filters/communication/ParticleMessenger.hpp>
+#include <vtkh/filters/ParticleAdvectionTask.hpp>
 #endif
 
 #ifdef ENABLE_LOGGING
@@ -43,221 +44,6 @@ randRange(const float &a, const float &b)
 
 #ifdef VTKH_PARALLEL
 
-template <typename ResultT>
-class Task
-{
-public:
-    Task(MPI_Comm comm, const vtkh::BoundsMap &bmap, ParticleAdvection *pa) :
-        numWorkerThreads(-1),
-        done(false),
-        begin(false),
-        communicator(comm, bmap),
-        boundsMap(bmap),
-        filter(pa),
-        sleepUS(100)
-    {
-        m_Rank = vtkh::GetMPIRank();
-        m_NumRanks = vtkh::GetMPISize();
-        communicator.RegisterMessages(2, std::min(64, m_NumRanks-1), 128, std::min(64, m_NumRanks-1));
-        int nDoms = pa->GetInput()->GetNumberOfDomains();
-        for (int i = 0; i < nDoms; i++)
-        {
-            vtkm::Id id;
-            vtkm::cont::DataSet ds;
-            pa->GetInput()->GetDomain(i, ds, id);
-            communicator.AddLocator(id, ds);
-        }
-        ADD_TIMER("worker_sleep");
-        ADD_COUNTER("worker_naps");
-    }
-    ~Task()
-    {
-#ifndef ENABLE_OPENMP
-      for (auto &w : workerThreads)
-        w.join();
-#endif
-    }
-
-    void Init(const std::list<Particle> &particles, int N, int _sleepUS)
-    {
-        numWorkerThreads = 1;
-        TotalNumParticles = N;
-        sleepUS = _sleepUS;
-        active.Assign(particles);
-        inactive.Clear();
-        terminated.Clear();
-    }
-
-    bool CheckDone()
-    {
-        bool val;
-        stateLock.Lock();
-        val = done;
-        stateLock.Unlock();
-        return val;
-    }
-    void SetDone()
-    {
-        stateLock.Lock();
-        done = true;
-        stateLock.Unlock();
-    }
-
-    bool GetBegin()
-    {
-        bool val;
-        stateLock.Lock();
-        val = begin;
-        stateLock.Unlock();
-        return val;
-    }
-
-    void SetBegin()
-    {
-        stateLock.Lock();
-        begin = true;
-        stateLock.Unlock();
-    }
-
-    void Go()
-    {
-        DBG("Go_bm: "<<boundsMap<<std::endl);
-        DBG("actives= "<<active<<std::endl);
-
-#ifdef ENABLE_OPENMP
-        #pragma omp parallel sections num_threads(2)
-        {
-            #pragma omp section
-            #pragma omp parallel num_threads(1)
-            {
-                this->Manage();
-            }
-
-            #pragma omp section
-            #pragma omp parallel num_threads(numWorkerThreads)
-            #pragma omp master
-            {
-                this->Work();
-            }
-        }
-#else
-        workerThreads.push_back(std::thread(Task::Worker, this));
-        this->Manage();
-#endif
-    }
-
-#ifndef ENABLE_OPENMP
-    static void Worker(Task *t)
-    {
-      t->Work();
-    }
-#endif
-
-    void Work()
-    {
-        vector<ResultT> traces;
-
-        while (!CheckDone())
-        {
-            std::vector<Particle> particles;
-            if (active.Get(particles))
-            {
-                std::list<Particle> I, T, A;
-
-                DataBlock *blk = filter->GetBlock(particles[0].blockIds[0]);
-
-                TIMER_START("advect");
-                WDBG("WORKER: Integrate "<<particles<<" --> "<<std::endl);
-                int n = filter->InternalIntegrate<ResultT>(*blk, particles, I, T, A, traces);
-                TIMER_STOP("advect");
-                COUNTER_INC("advectSteps", n);
-                WDBG("TIA: "<<T<<" "<<I<<" "<<A<<std::endl<<std::endl);
-
-                worker_terminated.Insert(T);
-                worker_active.Insert(A);
-                worker_inactive.Insert(I);
-            }
-            else
-            {
-                TIMER_START("worker_sleep");
-                usleep(sleepUS);
-                TIMER_STOP("worker_sleep");
-                COUNTER_INC("worker_naps", 1);
-            }
-        }
-        WDBG("WORKER is DONE"<<std::endl);
-        results.Insert(traces);
-    }
-
-    void Manage()
-    {
-        DBG("manage_bm: "<<boundsMap<<std::endl);
-
-        int N = 0;
-
-        DBG("Begin TIA: "<<terminated<<" "<<inactive<<" "<<active<<std::endl);
-        MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-
-        while (true)
-        {
-            DBG("MANAGE TIA: "<<terminated<<" "<<worker_inactive<<" "<<active<<std::endl<<std::endl);
-            std::list<Particle> out, in, term;
-            worker_inactive.Get(out);
-            worker_terminated.Get(term);
-
-            int numTermMessages;
-            communicator.Exchange(out, in, term, numTermMessages);
-            int numTerm = term.size() + numTermMessages;
-
-            if (!in.empty())
-                active.Insert(in);
-            if (!term.empty())
-                terminated.Insert(term);
-
-            N += numTerm;
-            if (N > TotalNumParticles)
-                throw "Particle count error";
-            if (N == TotalNumParticles)
-                break;
-
-            if (active.Empty())
-            {
-                TIMER_START("sleep");
-                usleep(sleepUS);
-                TIMER_STOP("sleep");
-                COUNTER_INC("naps", 1);
-                communicator.CheckPendingSendRequests();
-            }
-        }
-        DBG("TIA: "<<terminated<<" "<<inactive<<" "<<active<<" WI= "<<worker_inactive<<std::endl);
-        DBG("RESULTS= "<<results.Size()<<std::endl);
-        DBG("DONE_"<<m_Rank<<" "<<terminated<<" "<<active<<" "<<inactive<<std::endl);
-        SetDone();
-    }
-
-    int m_Rank, m_NumRanks;
-    int TotalNumParticles;
-
-#ifndef ENABLE_OPENMP
-    std::vector<std::thread> workerThreads;
-#endif
-
-    using ParticleList = vtkh::ThreadSafeContainer<Particle, std::list>;
-    using ResultsVec = vtkh::ThreadSafeContainer<ResultT, std::vector>;
-
-    ParticleMessenger communicator;
-    ParticleList active, inactive, terminated;
-    ParticleList worker_active, worker_inactive, worker_terminated;
-    ResultsVec results;
-
-    int numWorkerThreads;
-    int sleepUS;
-
-    bool done, begin;
-    vtkh::Mutex stateLock;
-    BoundsMap boundsMap;
-    ParticleAdvection *filter;
-};
 #endif
 
 ParticleAdvection::ParticleAdvection()
@@ -297,7 +83,7 @@ void ParticleAdvection::PreExecute()
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, id);
 
-    dataBlocks.push_back(new DataBlock(id, &dom, m_field_name, stepSize));
+    dataBlocks.push_back(new DataBlockIntegrator(id, &dom, m_field_name, stepSize));
     boundsMap.AddBlock(id, dom.GetCoordinateSystem().GetBounds());
   }
 
@@ -315,7 +101,7 @@ void ParticleAdvection::TraceMultiThread(vector<ResultT> &traces)
 #ifdef VTKH_PARALLEL
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
-  Task<ResultT> *task = new Task<ResultT>(mpiComm, boundsMap, this);
+  vtkh::ParticleAdvectionTask<ResultT> *task = new vtkh::ParticleAdvectionTask<ResultT>(mpiComm, boundsMap, this);
 
   task->Init(active, totalNumSeeds, sleepUS);
   task->Go();
@@ -325,7 +111,7 @@ void ParticleAdvection::TraceMultiThread(vector<ResultT> &traces)
 
 template<>
 int
-ParticleAdvection::InternalIntegrate<vtkm::worklet::ParticleAdvectionResult>(DataBlock &blk,
+ParticleAdvection::InternalIntegrate<vtkm::worklet::ParticleAdvectionResult>(DataBlockIntegrator &blk,
                                      std::vector<Particle> &v,
                                      std::list<Particle> &I,
                                      std::list<Particle> &T,
@@ -338,7 +124,7 @@ ParticleAdvection::InternalIntegrate<vtkm::worklet::ParticleAdvectionResult>(Dat
 
 template<>
 int
-ParticleAdvection::InternalIntegrate<vtkm::worklet::StreamlineResult>(DataBlock &blk,
+ParticleAdvection::InternalIntegrate<vtkm::worklet::StreamlineResult>(DataBlockIntegrator &blk,
                                      std::vector<Particle> &v,
                                      std::list<Particle> &I,
                                      std::list<Particle> &T,
@@ -378,7 +164,7 @@ void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
       {
           COUNTER_INC("myParticles", v.size());
           DBG("GetActiveParticles: "<<v<<std::endl);
-          DataBlock *blk = GetBlock(v[0].blockIds[0]);
+          DataBlockIntegrator *blk = GetBlock(v[0].blockIds[0]);
           DBG("Integrate: "<<v<<std::endl);
           DBG("Loading Block: "<<v[0].blockIds[0]<<std::endl);
 
@@ -677,7 +463,7 @@ ParticleAdvection::Init()
 
 }
 
-DataBlock *
+DataBlockIntegrator *
 ParticleAdvection::GetBlock(int blockId)
 {
     for (auto &d : dataBlocks)

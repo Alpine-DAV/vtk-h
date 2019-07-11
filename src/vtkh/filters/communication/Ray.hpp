@@ -23,7 +23,7 @@ public:
   vtkm::Int32                m_pixel_id;
   vtkm::Int32                m_dest_dom;
 
-  friend std::ostream &operator<<(std::ostream &os, const Ray &r)
+  friend std::ostream &operator<<(std::ostream &os, const vtkh::Ray &r)
   {
     os<<"Ray("<<r.m_pixel_id<<"):\n";
     os<<"  Origin     "<<r.m_origin[0]<<", "<<r.m_origin[1]<<", "<<r.m_origin[0]<<"\n";
@@ -35,9 +35,9 @@ public:
 };
 
 template<>
-struct Serialization<Ray>
+struct Serialization<vtkh::Ray>
 {
-  static void write(MemStream &memstream, const Ray &data)
+  static void write(MemStream &memstream, const vtkh::Ray &data)
   {
     vtkh::write(memstream, data.m_origin);
     vtkh::write(memstream, data.m_dir);
@@ -50,7 +50,7 @@ struct Serialization<Ray>
     vtkh::write(memstream, data.m_dest_dom);
   }//
 
-  static void read(MemStream &memstream, Ray &data)
+  static void read(MemStream &memstream, vtkh::Ray &data)
   {
     vtkh::read(memstream, data.m_origin);
     vtkh::read(memstream, data.m_dir);

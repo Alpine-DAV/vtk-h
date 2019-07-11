@@ -17,12 +17,12 @@
 #include <vtkh/DataSet.hpp>
 
 #ifdef VTKH_PARALLEL
-  #include <mpi.h>
+#include <mpi.h>
 #endif
 
 namespace vtkh
 {
-class DataBlock;
+class DataBlockIntegrator;
 
 class ParticleAdvection : public Filter
 {
@@ -77,10 +77,10 @@ public:
   void SetMaxSteps(const int &n) { maxSteps = n;}
   int  GetMaxSteps() const { return maxSteps; }
 
-  DataBlock * GetBlock(int blockId);
+  DataBlockIntegrator * GetBlock(int blockId);
 
   template <typename ResultT>
-  int InternalIntegrate(DataBlock &blk,
+  int InternalIntegrate(DataBlockIntegrator &blk,
                         std::vector<Particle> &v,
                         std::list<Particle> &I,
                         std::list<Particle> &T,
@@ -124,7 +124,7 @@ protected:
   float stepSize;
 
   BoundsMap boundsMap;
-  std::vector<DataBlock*> dataBlocks;
+  std::vector<DataBlockIntegrator*> dataBlocks;
 
   //seed data
   std::list<Particle> active, inactive, terminated;
@@ -136,45 +136,26 @@ protected:
 };
 
 
-class DataBlock
+class DataBlockIntegrator
 {
 public:
-    DataBlock(int _id, vtkm::cont::DataSet *_ds, const std::string &fieldName, float advectStep)
+    DataBlockIntegrator(int _id, vtkm::cont::DataSet *_ds, const std::string &fieldName, float advectStep)
         : id(_id), ds(_ds),
           integrator(_ds, fieldName, advectStep)
-          //refCount(0), used(false)
-
     {
-        //dbg<<"DB ctor: "<<ds.use_count()<<endl;
     }
-    ~DataBlock() {}//{ds=NULL; delete ds;}//cout<<"Delete datablock id= "<<id<<" cnt= "<<ds.use_count()<<endl;}
+    ~DataBlockIntegrator() {}
 
     int id;
     vtkm::cont::DataSet *ds;
     Integrator integrator;
 
-    /*
-    void getRefUsed(int &r, bool &u) {m.lock(); r=refCount; u=used; m.unlock();}
-    bool getUsed() {bool v; m.lock(); v=used; m.unlock(); return v;}
-    int getRefCount() {int v; m.lock(); v=refCount; m.unlock(); return v;}
-
-    void addUsed() {m.lock(); used=true; m.unlock();}
-
-    void addRef() {m.lock(); refCount++; m.unlock();}
-    void release() {m.lock(); refCount--;  m.unlock(); if(refCount<0) throw std::runtime_error("Negative ref cnt");}
-
-private:
-    int refCount;
-    bool used;
-    mutex m;
-    */
-
-    friend std::ostream &operator<<(std::ostream &os, const DataBlock &d)
+    friend std::ostream &operator<<(std::ostream &os, const DataBlockIntegrator &d)
     {
-        os<<"DataBlock {"<<std::endl;
+        os<<"DataBlockIntegrator {"<<std::endl;
         os<<"  id="<<d.id<<std::endl;
         d.ds->PrintSummary(os);
-        os<<"} DataBlock"<<std::endl;
+        os<<"} DataBlockIntegrator"<<std::endl;
         return os;
     }
 };
