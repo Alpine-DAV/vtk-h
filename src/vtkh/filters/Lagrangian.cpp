@@ -9,7 +9,6 @@ namespace vtkh
 
 Lagrangian::Lagrangian()
 {
-
 }
 
 Lagrangian::~Lagrangian()
@@ -95,6 +94,7 @@ void Lagrangian::DoExecute()
     {
       throw Error("Domain does not contain specified vector field for Lagrangian analysis.");
     }
+
     vtkm::cont::DataSet extractedBasis = lagrangianFilter.Run(dom,
                                                               m_field_name,
                                                               m_step_size,
