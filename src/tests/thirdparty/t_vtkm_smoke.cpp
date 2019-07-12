@@ -67,8 +67,9 @@ TEST(vtkm_smoke, headers_work)
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, basic_use_serial)
 {
-    vtkm::cont::RuntimeDeviceTracker device_tracker
-      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+    auto& device_tracker = vtkm::cont::GetRuntimeDeviceTracker();
+//    vtkm::cont::RuntimeDeviceTracker device_tracker
+//      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
     device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
 
     vtkm::cont::testing::MakeTestDataSet maker;
@@ -211,5 +212,3 @@ TEST(vtkm_smoke, basic_use_cuda)
 
 }
 #endif
-
-

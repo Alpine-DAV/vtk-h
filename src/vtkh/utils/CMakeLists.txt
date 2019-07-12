@@ -2,13 +2,20 @@
 # See License.txt
 #==============================================================================
 set(vtkh_utils_headers
+  Logger.hpp
+  Mutex.hpp
   PNGEncoder.hpp
+  StatisticsDB.hpp
+  StreamUtil.hpp
+  ThreadSafeContainer.hpp
   vtkm_array_utils.hpp
   vtkm_dataset_info.hpp
   )
 
 set(vtkh_utils_sources
+  Logger.cpp
   PNGEncoder.cpp
+  StatisticsDB.cpp
   vtkm_dataset_info.cpp
   )
 
@@ -55,6 +62,8 @@ if (MPI_FOUND)
       DEPENDS_ON ${vtkh_utils_thirdparty_libs} mpi
       )
 
+    blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_PARALLEL")
+
     # Install libraries
     install(TARGETS vtkh_utils_mpi
       EXPORT ${VTKh_EXPORT_NAME}
@@ -63,5 +72,3 @@ if (MPI_FOUND)
       RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
       )
 endif()
-
-
