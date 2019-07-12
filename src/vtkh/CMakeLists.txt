@@ -36,6 +36,8 @@ blt_add_library(
   DEPENDS_ON ${vtkh_core_deps}
   )
 
+#vtkm_add_target_information(vtkh_core DEVICE_SOURCES ${vtkh_core_sources})
+
 # Install libraries
 install(TARGETS vtkh_core
   EXPORT ${VTKh_EXPORT_NAME}
@@ -64,6 +66,7 @@ if(MPI_FOUND)
       DEPENDS_ON ${vtkh_core_mpi_deps} mpi
       )
 
+    #vtkm_add_target_information(vtkh_core_mpi DEVICE_SOURCES ${vtkh_core_sources})
   blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-DVTKH_PARALLEL")
 
   # Install libraries

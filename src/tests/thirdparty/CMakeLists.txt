@@ -61,7 +61,12 @@ endforeach()
 # Add our VTKm Unit Tests
 ################################
 foreach(TEST ${VTKM_TESTS})
-  add_cpp_test(TEST ${TEST} SOURCE ${TEST} DEPENDS_ON vtkm)
+  if(ENABLE_CUDA)
+    add_cpp_test(TEST ${TEST} SOURCE ${TEST} DEPENDS_ON vtkm cuda)
+    vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
+  else()
+    add_cpp_test(TEST ${TEST} SOURCE ${TEST} DEPENDS_ON vtkm)
+  endif()
   target_compile_definitions(${TEST} PRIVATE "VTKH_FORCE_SERIAL")
   if (ENABLE_OPENMP)
     target_compile_definitions(${TEST} PRIVATE "VTKH_FORCE_OPENMP")
