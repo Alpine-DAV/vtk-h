@@ -116,7 +116,7 @@ if (MPI_FOUND)
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
 
-  vtkm_add_target_information(vtkh_rendering_mpi DEVICE_SOURCES ${vtkh_rendering_sources})
+    vtkm_add_target_information(vtkh_rendering_mpi DEVICE_SOURCES ${vtkh_rendering_sources})
 
     if(ENABLE_OPENMP)
       blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-DVTKH_USE_OPENMP")
