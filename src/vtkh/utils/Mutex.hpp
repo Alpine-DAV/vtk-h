@@ -16,7 +16,7 @@ class Mutex
 {
 
 //openMP version
-#ifdef ENABLE_OPENMP
+#ifdef VTKH_USE_OPENMP
 public:
   Mutex() { omp_init_lock(&lock); }
   ~Mutex() { omp_destroy_lock(&lock); }
