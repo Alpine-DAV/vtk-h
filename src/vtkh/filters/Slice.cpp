@@ -151,7 +151,7 @@ public:
     {}
 
     template<typename T, typename S>
-    void operator()(const vtkm::cont::ArrayHandle<T,S> &field) const
+    void operator()(const vtkm::cont::ArrayHandle<T,S> &vtkmNotUsed(field)) const
     {
       //check to see if this is a supported field ;
       const vtkm::cont::Field &scalar_field = m_in_data_sets[0].GetField(m_field_index);

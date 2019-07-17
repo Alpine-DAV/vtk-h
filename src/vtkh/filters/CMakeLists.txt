@@ -80,6 +80,8 @@ blt_add_library(
   DEPENDS_ON ${vtkh_filters_deps}
   )
 
+vtkm_add_target_information(vtkh_filters DEVICE_SOURCES ${vtkh_filter_sources})
+
 # Install libraries
 install(TARGETS vtkh_filters
   EXPORT ${VTKh_EXPORT_NAME}
@@ -131,6 +133,8 @@ if (MPI_FOUND)
           endif()
     endif()
 
+
+    vtkm_add_target_information(vtkh_filters_mpi DEVICE_SOURCES ${vtkh_filter_sources})
 
     blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL")
 
