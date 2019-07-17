@@ -49,10 +49,12 @@ endif()
 
 blt_add_library(
   NAME vtkh_rendering
-  SOURCES ${vtkh_rendering_headers}
-  HEADERS ${vtkh_rendering_sources}
+  SOURCES ${vtkh_rendering_sources}
+  HEADERS ${vtkh_rendering_headers}
   DEPENDS_ON ${vtkh_rendering_deps}
   )
+
+vtkm_add_target_information(vtkh_rendering DEVICE_SOURCES ${vtkh_rendering_sources})
 
 if(ENABLE_OPENMP)
     blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-DVTKH_USE_OPENMP")
@@ -113,6 +115,8 @@ if (MPI_FOUND)
         HEADERS ${vtkh_rendering_headers} ${vtkh_rendering_mpi_headers}
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
+
+    vtkm_add_target_information(vtkh_rendering_mpi DEVICE_SOURCES ${vtkh_rendering_sources})
 
     if(ENABLE_OPENMP)
       blt_add_target_compile_flags(TO vtkh_rendering_mpi FLAGS "-DVTKH_USE_OPENMP")

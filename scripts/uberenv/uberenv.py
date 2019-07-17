@@ -132,6 +132,13 @@ def parse_args():
                       default=False,
                       help="Only clone spack and exit")
 
+    # flag to use insecure curl + git
+    parser.add_option("--verbose",
+                      action="store_true",
+                      dest="verbose",
+                      default=False,
+                      help="more verbose spack output")
+
     ###############
     # parse args
     ###############
@@ -415,6 +422,8 @@ def main():
         install_cmd = "spack/bin/spack "
         if opts["ignore_ssl_errors"]:
             install_cmd += "-k "
+        if opts["verbose"]:
+            install_cmd += "-v "
         install_cmd += "install " + uberenv_pkg_name + opts["spec"]
         res = sexe(install_cmd, echo=True)
 

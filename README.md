@@ -6,7 +6,7 @@ bring together several projects like VTK-m and DIY2 to provide a toolkit with hy
 
 VTK-m Version:
 ==============
-Both Ascent and VTK-h use a specific version of VTK-m. Currently that version is the commit `cbe9b261` on the master branch.
+Both Ascent and VTK-h use a specific version of VTK-m. Currently that version is the commit `c80c1d09c043b9af04839a92cd46b12ac673fc98` on the master branch.
 
 Source Repo
 =================
