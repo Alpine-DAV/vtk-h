@@ -80,6 +80,11 @@ blt_add_library(
   DEPENDS_ON ${vtkh_filters_deps}
   )
 
+
+if(ENABLE_OPENMP)
+    blt_add_target_compile_flags(TO vtkh_filters FLAGS "-DVTKH_USE_OPENMP")
+endif()
+
 vtkm_add_target_information(vtkh_filters DEVICE_SOURCES ${vtkh_filter_sources})
 
 # Install libraries
@@ -126,6 +131,7 @@ if (MPI_FOUND)
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
     if(ENABLE_OPENMP)
+          blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-DVTKH_USE_OPENMP")
           if(CUDA_FOUND)
               blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
           else()

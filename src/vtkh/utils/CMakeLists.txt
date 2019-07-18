@@ -15,6 +15,7 @@ set(vtkh_utils_headers
 set(vtkh_utils_sources
   Logger.cpp
   PNGEncoder.cpp
+  Mutex.cpp
   StatisticsDB.cpp
   vtkm_dataset_info.cpp
   )
@@ -29,6 +30,11 @@ if(ENABLE_OPENMP)
   list(APPEND vtkh_utils_thirdparty_libs openmp)
 endif()
 
+if(ENABLE_OPENMP)
+    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
+    list(APPEND vtkh_utils_thirdparty_libs openmp)
+endif()
+
 blt_add_library(
   NAME vtkh_utils
   SOURCES ${vtkh_utils_sources}
@@ -38,8 +44,8 @@ blt_add_library(
 
 if(ENABLE_OPENMP)
     blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
-    list(APPEND vtkh_utils_thirdparty_libs openmp)
 endif()
+
 
 # Install libraries
 install(TARGETS vtkh_utils
@@ -63,6 +69,10 @@ if (MPI_FOUND)
       )
 
     blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_PARALLEL")
+
+    if(ENABLE_OPENMP)
+        blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_USE_OPENMP")
+    endif()
 
     # Install libraries
     install(TARGETS vtkh_utils_mpi

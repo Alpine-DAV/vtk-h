@@ -46,7 +46,7 @@ public:
     }
     ~ParticleAdvectionTask()
     {
-#ifndef ENABLE_OPENMP
+#ifndef VTKH_USE_OPENMP
       for (auto &w : workerThreads)
         w.join();
 #endif
@@ -98,7 +98,7 @@ public:
         DBG("Go_bm: "<<boundsMap<<std::endl);
         DBG("actives= "<<active<<std::endl);
 
-#ifdef ENABLE_OPENMP
+#ifdef VTKH_USE_OPENMP
         #pragma omp parallel sections num_threads(2)
         {
             #pragma omp section
@@ -120,7 +120,7 @@ public:
 #endif
     }
 
-#ifndef ENABLE_OPENMP
+#ifndef VTKH_USE_OPENMP
     static void Worker(ParticleAdvectionTask *t)
     {
       t->Work();
@@ -212,7 +212,7 @@ public:
     int m_Rank, m_NumRanks;
     int TotalNumParticles;
 
-#ifndef ENABLE_OPENMP
+#ifndef VTKH_USE_OPENMP
     std::vector<std::thread> workerThreads;
 #endif
 
