@@ -54,6 +54,9 @@ option(ENABLE_TESTS       "Build tests"               ON)
 option(ENABLE_CUDA        "Enable CUDA Support"       OFF)
 option(ENABLE_MPI         "Build MPI Support"         ON)
 
+if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "Static libraries are required when building with CUDA")
+endif()
 
 ################################
 # Set BLT Options
