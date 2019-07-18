@@ -86,6 +86,8 @@ source files with custom allocators.*/
 #include <string>
 #endif /*LODEPNG_COMPILE_CPP*/
 
+namespace vtkh
+{
 #ifdef LODEPNG_COMPILE_PNG
 /*The PNG color types (also used for raw).*/
 typedef enum LodePNGColorType
@@ -1754,3 +1756,4 @@ Account: lode dot vandevenne.
 
 Copyright (c) 2005-2016 Lode Vandevenne
 */
+} //namespace vtkh

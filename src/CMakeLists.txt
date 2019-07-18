@@ -2,8 +2,6 @@
 # See License.txt
 #==============================================================================
 
-cmake_minimum_required(VERSION 3.9)
-
 ################################
 # cmake policy selections
 ################################
@@ -58,6 +56,12 @@ if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
   message(FATAL_ERROR "Static libraries are required when building with CUDA")
 endif()
 
+# enforce the version after the ENABLE Cuda option
+if(ENABLE_CUDA)
+  cmake_minimum_required(VERSION 3.14)
+else()
+  cmake_minimum_required(VERSION 3.9)
+endif()
 ################################
 # Set BLT Options
 ################################
@@ -68,8 +72,6 @@ set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
 ################################
 # Init BLT
 ################################
-set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
-
 if (NOT BLT_CXX_STD)
   set(BLT_CXX_STD "c++11" CACHE STRING "")
 endif()
