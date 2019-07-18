@@ -31,7 +31,6 @@ if(ENABLE_OPENMP)
 endif()
 
 if(ENABLE_OPENMP)
-    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
     list(APPEND vtkh_utils_thirdparty_libs openmp)
 endif()
 
