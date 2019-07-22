@@ -211,5 +211,3 @@ TEST(vtkm_smoke, basic_use_cuda)
 
 }
 #endif
-
-
