@@ -19,12 +19,12 @@
 //----------------------------------------------------------------------------
 TEST(vtkh_volume_renderer, vtkh_parallel_render)
 {
-  
+
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
   const int num_blocks = 2;
-  
+
   for(int i = 0; i < num_blocks; ++i)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
@@ -38,21 +38,21 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
   pos[1]+=.1;
   camera.SetPosition(pos);
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         data_set, 
-                                         "volume");  
-  
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         data_set,
+                                         "volume");
 
-  vtkm::cont::ColorTable color_map("Cool to Warm"); 
+
+  vtkm::cont::ColorTable color_map("Cool to Warm");
   color_map.AddPointAlpha(0.0, .05);
   color_map.AddPointAlpha(1.0, .5);
 
   vtkh::VolumeRenderer tracer;
   tracer.SetColorTable(color_map);
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data"); 
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);

@@ -32,7 +32,7 @@ TEST(vtkh_marching_cubes, vtkh_serial_marching_cubes)
 
   vtkh::MarchingCubes marcher;
   marcher.SetInput(&data_set);
-  marcher.SetField("point_data");
+  marcher.SetField("point_data_Float64");
 
   const int num_vals = 2;
   double iso_vals [num_vals];
@@ -40,8 +40,8 @@ TEST(vtkh_marching_cubes, vtkh_serial_marching_cubes)
   iso_vals[1] = (float)base_size * (float)num_blocks * 0.5f;
 
   marcher.SetIsoValues(iso_vals, num_vals);
-  marcher.AddMapField("point_data");
-  marcher.AddMapField("cell_data");
+  marcher.AddMapField("point_data_Float64");
+  marcher.AddMapField("cell_data_Float64");
   marcher.Update();
 
   vtkh::DataSet *iso_output = marcher.GetOutput();
@@ -58,7 +58,7 @@ TEST(vtkh_marching_cubes, vtkh_serial_marching_cubes)
                                           bg_color);
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("cell_data");
+  tracer.SetField("cell_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRenderer(&tracer);
@@ -83,7 +83,7 @@ TEST(vtkh_marching_cubes, vtkh_empty)
 
   vtkh::MarchingCubes marcher;
   marcher.SetInput(&data_set);
-  marcher.SetField("point_data");
+  marcher.SetField("point_data_Float64");
 
   const int num_vals = 2;
   double iso_vals [num_vals];
@@ -91,8 +91,8 @@ TEST(vtkh_marching_cubes, vtkh_empty)
   iso_vals[1] = -2;
 
   marcher.SetIsoValues(iso_vals, num_vals);
-  marcher.AddMapField("point_data");
-  marcher.AddMapField("cell_data");
+  marcher.AddMapField("point_data_Float64");
+  marcher.AddMapField("cell_data_Float64");
   marcher.Update();
 
   vtkh::DataSet *iso_output = marcher.GetOutput();
@@ -109,7 +109,7 @@ TEST(vtkh_marching_cubes, vtkh_empty)
                                           bg_color);
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("cell_data");
+  tracer.SetField("cell_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRenderer(&tracer);
@@ -133,15 +133,15 @@ TEST(vtkh_marching_cubes, vtkh_marching_cubes_recenter)
 
   vtkh::MarchingCubes marcher;
   marcher.SetInput(&data_set);
-  marcher.SetField("cell_data");
+  marcher.SetField("cell_data_Float64");
 
   const int num_vals = 1;
   double iso_vals [num_vals];
   iso_vals[0] = 0.5f;
 
   marcher.SetIsoValues(iso_vals, num_vals);
-  marcher.AddMapField("point_data");
-  marcher.AddMapField("cell_data");
+  marcher.AddMapField("point_data_Float64");
+  marcher.AddMapField("cell_data_Float64");
   marcher.Update();
 
   vtkh::DataSet *iso_output = marcher.GetOutput();
@@ -158,7 +158,7 @@ TEST(vtkh_marching_cubes, vtkh_marching_cubes_recenter)
                                           bg_color);
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("point_data");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRenderer(&tracer);

@@ -20,10 +20,10 @@
 TEST(vtkh_raytracer, vtkh_serial_render)
 {
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
-  const int num_blocks = 2; 
-  
+  const int num_blocks = 2;
+
   for(int i = 0; i < num_blocks; ++i)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
@@ -34,15 +34,15 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   vtkm::rendering::Camera camera;
   camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         data_set, 
-                                         "ray_tracer");  
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         data_set,
+                                         "ray_tracer");
   vtkh::RayTracer tracer;
-   
+
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data"); 
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);

@@ -31,8 +31,8 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 
   const int base_size = 32;
   const int blocks_per_rank = 2;
-  const int num_blocks = comm_size * blocks_per_rank; 
-  
+  const int num_blocks = comm_size * blocks_per_rank;
+
   for(int i = 0; i < blocks_per_rank; ++i)
   {
     int domain_id = rank * blocks_per_rank + i;
@@ -41,7 +41,7 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 
   vtkh::MarchingCubes marcher;
   marcher.SetInput(&data_set);
-  marcher.SetField("point_data"); 
+  marcher.SetField("point_data_Float64");
 
   const int num_vals = 2;
   double iso_vals [num_vals];
@@ -49,8 +49,8 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   iso_vals[1] = (float)base_size * (float)num_blocks * 0.5f;
 
   marcher.SetIsoValues(iso_vals, num_vals);
-  marcher.AddMapField("point_data");
-  marcher.AddMapField("cell_data");
+  marcher.AddMapField("point_data_Float64");
+  marcher.AddMapField("cell_data_Float64");
   marcher.Update();
 
   vtkh::DataSet *iso_output = marcher.GetOutput();
@@ -59,23 +59,23 @@ TEST(vtkh_raytracer, vtkh_serial_render)
 
   vtkm::rendering::Camera camera;
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         data_set, 
-                                         "multi_par");  
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         data_set,
+                                         "multi_par");
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("cell_data"); 
+  tracer.SetField("cell_data_Float64");
 
-  vtkm::cont::ColorTable color_map("Cool to Warm"); 
+  vtkm::cont::ColorTable color_map("Cool to Warm");
   color_map.AddPointAlpha(0.0, .1);
   color_map.AddPointAlpha(1.0, .3);
 
   vtkh::VolumeRenderer v_tracer;
   v_tracer.SetColorTable(color_map);
   v_tracer.SetInput(&data_set);
-  v_tracer.SetField("point_data"); 
+  v_tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -83,6 +83,6 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   scene.AddRenderer(&tracer);
   scene.Render();
 
-  delete iso_output; 
+  delete iso_output;
   MPI_Finalize();
 }

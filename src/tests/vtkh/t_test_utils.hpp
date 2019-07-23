@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderRectilinear.h>
 
 #define BASE_SIZE 32
 typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformCoords;
@@ -101,18 +102,20 @@ SpatialDivision GetBlock(int block, int num_blocks, SpatialDivision total_size)
   return divs.at(block);
 }
 
-vtkm::cont::Field CreateCellScalarField(int size)
+template <typename FieldType>
+vtkm::cont::Field CreateCellScalarField(int size, const char* fieldName)
 {
-  vtkm::cont::ArrayHandle<vtkm::Float32> data;
+  vtkm::cont::ArrayHandle<FieldType> data;
   data.Allocate(size);
 
   for(int i = 0; i < size; ++i)
   {
-    vtkm::Float32 val = i / vtkm::Float32(size);
+    FieldType val = i / FieldType(size);
     data.GetPortalControl().Set(i, val);
   }
 
-  vtkm::cont::Field field("cell_data",
+
+  vtkm::cont::Field field(fieldName,
                           vtkm::cont::Field::Association::CELL_SET,
                           "cells",
                           data);
@@ -144,42 +147,44 @@ vtkm::cont::Field CreateGhostScalarField(vtkm::Id3 dims)
   return field;
 }
 
-vtkm::cont::Field CreatePointScalarField(UniformCoords coords)
+template <typename FieldType>
+vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* fieldName)
+
 {
   const int size = coords.GetPortalConstControl().GetNumberOfValues();
-  vtkm::cont::ArrayHandle<vtkm::Float32> data;
+  vtkm::cont::ArrayHandle<FieldType> data;
   data.Allocate(size);
   auto portal = coords.GetPortalConstControl();
   for(int i = 0; i < size; ++i)
   {
-    vtkm::Vec<vtkm::FloatDefault,3> point = portal.Get(i);
+    vtkm::Vec<FieldType,3> point = portal.Get(i);
 
-    vtkm::Float32 val = vtkm::Magnitude(point) + 1.f;
-
+    FieldType val = vtkm::Magnitude(point) + 1.f;
     data.GetPortalControl().Set(i, val);
   }
 
-  vtkm::cont::Field field("point_data",
+  vtkm::cont::Field field(fieldName,
                           vtkm::cont::Field::Association::POINTS,
                           data);
   return field;
 }
 
-vtkm::cont::Field CreatePointVecField(int size)
+template <typename FieldType>
+vtkm::cont::Field CreatePointVecField(int size, const char* fieldName)
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3>> data;
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType,3>> data;
   data.Allocate(size);
 
   for(int i = 0; i < size; ++i)
   {
-    vtkm::Float32 val = i / vtkm::Float32(size);
+    FieldType val = i / FieldType(size);
 
-    vtkm::Vec<vtkm::Float32, 3> vec(val, -val, val);
+    vtkm::Vec<FieldType, 3> vec(val, -val, val);
 
     data.GetPortalControl().Set(i, vec);
   }
 
-  vtkm::cont::Field field("vector_data",
+  vtkm::cont::Field field(fieldName,
                           vtkm::cont::Field::Association::POINTS,
                           data);
   return field;
@@ -233,10 +238,72 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   int num_points = point_dims[0] * point_dims[1] * point_dims[2];
   int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];
 
-  data_set.AddField(CreatePointScalarField(point_handle));
-  data_set.AddField(CreatePointVecField(num_points));
-  data_set.AddField(CreateCellScalarField(num_cells));
+  data_set.AddField(CreatePointScalarField<vtkm::Float32>(point_handle, "point_data_Float32"));
+  data_set.AddField(CreatePointVecField<vtkm::Float32>(num_points, "vector_data_Float32"));
+  data_set.AddField(CreateCellScalarField<vtkm::Float32>(num_cells, "cell_data_Float32"));
+  data_set.AddField(CreatePointScalarField<vtkm::Float64>(point_handle, "point_data_Float64"));
+  data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
+  data_set.AddField(CreateCellScalarField<vtkm::Float64>(num_cells, "cell_data_Float64"));
   data_set.AddField(CreateGhostScalarField(cell_dims));
+  return data_set;
+}
+
+vtkm::cont::DataSet CreateTestDataRectilinear(int block, int num_blocks, int base_size)
+{
+  SpatialDivision mesh_size;
+
+  mesh_size.m_mins[0] = 0;
+  mesh_size.m_mins[1] = 0;
+  mesh_size.m_mins[2] = 0;
+
+  mesh_size.m_maxs[0] = num_blocks * base_size - 1;
+  mesh_size.m_maxs[1] = num_blocks * base_size - 1;
+  mesh_size.m_maxs[2] = num_blocks * base_size - 1;
+
+  SpatialDivision local_block = GetBlock(block, num_blocks, mesh_size);
+
+  vtkm::Vec<vtkm::Float32,3> origin;
+  origin[0] = local_block.m_mins[0];
+  origin[1] = local_block.m_mins[1];
+  origin[2] = local_block.m_mins[2];
+
+  vtkm::Vec<vtkm::Float32,3> spacing(1.f, 1.f, 1.f);
+
+  vtkm::Id3 point_dims;
+  point_dims[0] = local_block.m_maxs[0] - local_block.m_mins[0] + 2;
+  point_dims[1] = local_block.m_maxs[1] - local_block.m_mins[1] + 2;
+  point_dims[2] = local_block.m_maxs[2] - local_block.m_mins[2] + 2;
+
+
+  vtkm::Id3 cell_dims;
+  cell_dims[0] = point_dims[0] - 1;
+  cell_dims[1] = point_dims[1] - 1;
+  cell_dims[2] = point_dims[2] - 1;
+
+  std::vector<vtkm::Float64> xvals, yvals, zvals;
+  xvals.resize((size_t)point_dims[0]);
+  xvals[0] = static_cast<vtkm::Float64>(local_block.m_mins[0]);
+  for (size_t i = 1; i < (size_t)point_dims[0]; i++)
+    xvals[i] = xvals[i - 1] + spacing[0];
+
+  yvals.resize((size_t)point_dims[1]);
+  yvals[0] = static_cast<vtkm::Float64>(local_block.m_mins[1]);
+  for (size_t i = 1; i < (size_t)point_dims[1]; i++)
+    yvals[i] = yvals[i - 1] + spacing[1];
+
+  zvals.resize((size_t)point_dims[2]);
+  zvals[0] = static_cast<vtkm::Float64>(local_block.m_mins[2]);
+  for (size_t i = 1; i < (size_t)point_dims[2]; i++)
+    zvals[i] = zvals[i - 1] + spacing[2];
+
+  vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
+  vtkm::cont::DataSet data_set = dataSetBuilder.Create(xvals, yvals, zvals);
+
+  int num_points = point_dims[0] * point_dims[1] * point_dims[2];
+  int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];
+
+  data_set.AddField(CreatePointVecField<vtkm::Float32>(num_points, "vector_data_Float32"));
+  data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
 
   return data_set;
 }
