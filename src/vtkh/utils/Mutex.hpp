@@ -1,12 +1,6 @@
 #ifndef VTK_H_MUTEX_HPP
 #define VTK_H_MUTEX_HPP
-
-#ifdef ENABLE_OPENMP
-#include <omp.h>
-#else
-#include <thread>
-#include <mutex>
-#endif
+#include <memory>
 
 namespace vtkh
 {
@@ -15,29 +9,15 @@ namespace vtkh
 class Mutex
 {
 
-//openMP version
-#ifdef ENABLE_OPENMP
 public:
-  Mutex() { omp_init_lock(&lock); }
-  ~Mutex() { omp_destroy_lock(&lock); }
-  void Lock() {omp_set_lock(&lock);}
-  void Unlock() {omp_unset_lock(&lock);}
+  Mutex();
+  ~Mutex();
+  void Lock();
+  void Unlock();
 private:
-  omp_lock_t lock;
-
-//std::mutex version
-#else
-public:
-  Mutex() {}
-  ~Mutex() {}
-  void Lock() {lock.lock();}
-  void Unlock() {lock.unlock();}
-private:
-  std::mutex lock;
+  struct InternalsType;
+  std::shared_ptr<InternalsType> m_internals;
 };
-
-#endif
-
 
 } //namespace vtkh
 
