@@ -21,10 +21,10 @@
 TEST(vtkh_vector_magnitude, vtkh_vector_magnitude)
 {
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
-  const int num_blocks = 2; 
-  
+  const int num_blocks = 2;
+
   for(int i = 0; i < num_blocks; ++i)
   {
     data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
@@ -32,11 +32,11 @@ TEST(vtkh_vector_magnitude, vtkh_vector_magnitude)
 
   vtkh::VectorMagnitude mag;
   mag.SetInput(&data_set);
-  mag.SetField("vector_data"); 
+  mag.SetField("vector_data_Float64");
 
   mag.SetResultName("mag");
-  mag.AddMapField("point_data");
-  mag.AddMapField("cell_data");
+  mag.AddMapField("point_data_Float64");
+  mag.AddMapField("cell_data_Float64");
   mag.Update();
 
   vtkh::DataSet *mag_output = mag.GetOutput();
@@ -46,20 +46,20 @@ TEST(vtkh_vector_magnitude, vtkh_vector_magnitude)
   vtkm::rendering::Camera camera;
   camera.Azimuth(70.f);
   camera.ResetToBounds(bounds);
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         *mag_output, 
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         *mag_output,
                                          "magnitude",
-                                          bg_color);  
+                                          bg_color);
   vtkh::RayTracer tracer;
   tracer.SetInput(mag_output);
-  tracer.SetField("mag"); 
+  tracer.SetField("mag");
 
   vtkh::Scene scene;
   scene.AddRenderer(&tracer);
   scene.AddRender(render);
   scene.Render();
 
-  delete mag_output; 
+  delete mag_output;
 }

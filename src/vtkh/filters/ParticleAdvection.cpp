@@ -13,6 +13,7 @@
 #include <vtkh/utils/ThreadSafeContainer.hpp>
 
 #include <vector>
+#include <thread>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
