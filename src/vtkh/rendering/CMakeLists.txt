@@ -36,7 +36,7 @@ set(vtkh_rendering_sources
   )
 
 
-set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
+set(vtkh_rendering_deps vtkh_core vtkh_utils)
 
 if(VTKm_CUDA_FOUND)
     # triggers cuda compile

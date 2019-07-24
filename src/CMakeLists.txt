@@ -55,7 +55,7 @@ option(ENABLE_MPI         "Build MPI Support"         ON)
 if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
   message(FATAL_ERROR "Static libraries are required when building with CUDA")
 endif()
-
+set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
 # enforce the version after the ENABLE Cuda option
 if(ENABLE_CUDA)
   cmake_minimum_required(VERSION 3.14)
