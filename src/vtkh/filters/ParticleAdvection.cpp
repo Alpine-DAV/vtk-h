@@ -93,7 +93,7 @@ void ParticleAdvection::PostExecute()
 }
 
 template <typename ResultT>
-void ParticleAdvection::TraceMultiThread(vector<ResultT> &traces)
+void ParticleAdvection::TraceMultiThread(std::vector<ResultT> &traces)
 {
 #ifdef VTKH_PARALLEL
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
@@ -113,7 +113,7 @@ ParticleAdvection::InternalIntegrate<vtkm::worklet::ParticleAdvectionResult>(Dat
                                      std::list<Particle> &I,
                                      std::list<Particle> &T,
                                      std::list<Particle> &A,
-                                     vector<vtkm::worklet::ParticleAdvectionResult> &traces
+                                     std::vector<vtkm::worklet::ParticleAdvectionResult> &traces
                                      )
 {
   return blk.integrator.Advect(v, maxSteps, I, T, A, &traces);
@@ -126,14 +126,14 @@ ParticleAdvection::InternalIntegrate<vtkm::worklet::StreamlineResult>(DataBlockI
                                      std::list<Particle> &I,
                                      std::list<Particle> &T,
                                      std::list<Particle> &A,
-                                     vector<vtkm::worklet::StreamlineResult> &traces
+                                     std::vector<vtkm::worklet::StreamlineResult> &traces
                                      )
 {
   return blk.integrator.Trace(v, maxSteps, I, T, A, &traces);
 }
 
 template <typename ResultT>
-void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
+void ParticleAdvection::TraceSingleThread(std::vector<ResultT> &traces)
 {
 #ifdef VTKH_PARALLEL
   MPI_Comm mpiComm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
@@ -210,7 +210,7 @@ void ParticleAdvection::TraceSingleThread(vector<ResultT> &traces)
 }
 
 template <typename ResultT>
-void ParticleAdvection::TraceSeeds(vector<ResultT> &traces)
+void ParticleAdvection::TraceSeeds(std::vector<ResultT> &traces)
 {
   TIMER_START("total");
 
@@ -232,13 +232,13 @@ void ParticleAdvection::DoExecute()
 
   if(!gatherTraces)
   {
-    vector<vtkm::worklet::ParticleAdvectionResult> particleTraces;
+    std::vector<vtkm::worklet::ParticleAdvectionResult> particleTraces;
     this->TraceSeeds<vtkm::worklet::ParticleAdvectionResult>(particleTraces);
     this->m_output = new DataSet();
   }
   else
   {
-    vector<vtkm::worklet::StreamlineResult> particleTraces;
+    std::vector<vtkm::worklet::StreamlineResult> particleTraces;
     this->TraceSeeds<vtkm::worklet::StreamlineResult>(particleTraces);
 
     this->m_output = new DataSet();
@@ -372,8 +372,8 @@ ParticleAdvection::DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts)
   }
   if (rank == 0)
   {
-    ofstream output;
-    output.open("ds.visit", ofstream::out);
+    std::ofstream output;
+    output.open("ds.visit", std::ofstream::out);
     output<<"!NBLOCKS "<<numRanks<<std::endl;
     for (int i = 0; i < numRanks; i++)
     {
@@ -384,8 +384,8 @@ ParticleAdvection::DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts)
   }
 
   sprintf(nm, "pts.ts%03i.block%03d.txt", ts, domId);
-  ofstream pout;
-  pout.open(nm, ofstream::out);
+  std::ofstream pout;
+  pout.open(nm, std::ofstream::out);
 
   if (ds)
   {
@@ -401,8 +401,8 @@ ParticleAdvection::DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts)
 
   if (rank == 0)
   {
-    ofstream output;
-    output.open("pts.visit", ofstream::out);
+    std::ofstream output;
+    output.open("pts.visit", std::ofstream::out);
     output<<"!NBLOCKS "<<numRanks<<std::endl;
     for (int i = 0; i < numRanks; i++)
     {
@@ -435,8 +435,8 @@ ParticleAdvection::DumpDS(int ts)
 
   if (rank == 0)
   {
-    ofstream output;
-    output.open("dom.visit", ofstream::out);
+    std::ofstream output;
+    output.open("dom.visit", std::ofstream::out);
     output<<"!NBLOCKS "<<totalNumDoms<<std::endl;
     for (int i = 0; i < totalNumDoms; i++)
     {
@@ -566,12 +566,12 @@ ParticleAdvection::CreateSeeds()
 }
 
 void
-ParticleAdvection::DumpTraces(int ts, const vector<vtkm::Vec<double,4>> &particleTraces)
+ParticleAdvection::DumpTraces(int ts, const std::vector<vtkm::Vec<double,4>> &particleTraces)
 {
-    ofstream output;
+    std::ofstream output;
     char nm[128];
     sprintf(nm, "output.ts%03i.block%03d.txt", ts, rank);
-    output.open(nm, ofstream::out);
+    output.open(nm, std::ofstream::out);
 
     output<<"X,Y,Z,ID"<<std::endl;
     for (auto &p : particleTraces)
@@ -579,8 +579,8 @@ ParticleAdvection::DumpTraces(int ts, const vector<vtkm::Vec<double,4>> &particl
 
     if (rank == 0)
     {
-        ofstream output;
-        output.open("output.visit", ofstream::out);
+        std::ofstream output;
+        output.open("output.visit", std::ofstream::out);
         output<<"!NBLOCKS "<<numRanks<<std::endl;
         for (int i = 0; i < numRanks; i++)
         {

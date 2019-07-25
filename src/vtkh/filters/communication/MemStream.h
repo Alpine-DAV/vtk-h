@@ -7,8 +7,6 @@
 #include <list>
 #include <cstring>
 
-using namespace std;
-//extern ofstream dbg;
 namespace vtkh
 {
 

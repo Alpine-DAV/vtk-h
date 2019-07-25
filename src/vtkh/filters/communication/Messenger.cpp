@@ -249,7 +249,7 @@ Messenger::RecvData(int tag, std::vector<MemStream *> &buffers,
 }
 
 bool
-Messenger::RecvData(set<int> &tags,
+Messenger::RecvData(std::set<int> &tags,
                     std::vector<std::pair<int, MemStream *> > &buffers,
                     bool blockAndWait)
 {
@@ -343,7 +343,7 @@ Messenger::ProcessReceivedBuffers(std::vector<unsigned char*> &incomingBuffers,
             //First packet. Create a new list and add it.
             if (i2 == recvPackets.end())
             {
-                list<unsigned char *> l;
+                std::list<unsigned char *> l;
                 l.push_back(buff);
                 recvPackets[k] = l;
             }
@@ -358,7 +358,7 @@ Messenger::ProcessReceivedBuffers(std::vector<unsigned char*> &incomingBuffers,
                     i2->second.sort(Messenger::PacketCompare);
 
                     MemStream *mergedBuff = new MemStream;
-                    list<unsigned char *>::iterator listIt;
+                    std::list<unsigned char *>::iterator listIt;
 
                     for (listIt = i2->second.begin(); listIt != i2->second.end(); listIt++)
                     {

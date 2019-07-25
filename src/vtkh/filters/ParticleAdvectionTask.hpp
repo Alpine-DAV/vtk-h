@@ -129,7 +129,7 @@ public:
 
     void Work()
     {
-        vector<ResultT> traces;
+      std::vector<ResultT> traces;
 
         while (!CheckDone())
         {
