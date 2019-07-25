@@ -26,7 +26,7 @@ class Integrator
     using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
 
 public:
-    Integrator(vtkm::cont::DataSet *ds, const string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
+    Integrator(vtkm::cont::DataSet *ds, const std::string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
     {
         vecField = ds->GetField(fieldName).GetData().Cast<FieldHandle>();
         gridEval = GridEvalType(ds->GetCoordinateSystem(), ds->GetCellSet(), vecField);

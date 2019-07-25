@@ -86,11 +86,11 @@ ParticleMessenger::SendAllMsg(const std::vector<int> &msg)
 
 bool
 ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
-                           list<ParticleCommData<Particle>> *recvParticles,
+                           std::list<ParticleCommData<Particle>> *recvParticles,
                            std::vector<DSCommData> *ds,
                            bool blockAndWait)
 {
-    set<int> tags;
+    std::set<int> tags;
     if (msgs)
     {
         tags.insert(ParticleMessenger::MESSAGE_TAG);
@@ -105,7 +105,7 @@ ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
     if (tags.empty())
         return false;
 
-    std::vector<pair<int, MemStream *> > buffers;
+    std::vector<std::pair<int, MemStream *> > buffers;
     if (! RecvData(tags, buffers, blockAndWait))
         return false;
 
@@ -189,7 +189,7 @@ template <typename P, template <typename, typename> class Container,
           typename Allocator>
 bool ParticleMessenger::RecvParticles(Container<P, Allocator> &recvParticles)
 {
-    list<ParticleCommData<P>> incoming;
+    std::list<ParticleCommData<P>> incoming;
 
     if (RecvParticles(incoming))
     {
@@ -206,7 +206,7 @@ void
 ParticleMessenger::ParticleBlockSorter(Particle &p,
                                        std::list<vtkh::Particle> &inData,
                                        std::list<vtkh::Particle> &term,
-                                       std::map<int, list<Particle>> &sendData)
+                                       std::map<int, std::list<Particle>> &sendData)
 {
   std::vector<int> bids;
   //Examine each blockID for inclusion in MY blocks.
@@ -263,7 +263,7 @@ ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
                             int &numTerminatedMessages)
 {
   DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
-  std::map<int, list<Particle>> sendData;
+  std::map<int, std::list<Particle>> sendData;
 
   TIMER_START("communication");
   if (!outData.empty())
