@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string.h>
-#include <vtkh/utils/Logger.hpp>
+#include <vtkh/Logger.hpp>
 #include <vtkh/filters/communication/MemStream.h>
 #include <vtkh/filters/communication/RayMessenger.hpp>
 

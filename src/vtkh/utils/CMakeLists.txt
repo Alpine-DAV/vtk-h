@@ -2,10 +2,8 @@
 # See License.txt
 #==============================================================================
 set(vtkh_utils_headers
-  Logger.hpp
   Mutex.hpp
   PNGEncoder.hpp
-  StatisticsDB.hpp
   StreamUtil.hpp
   ThreadSafeContainer.hpp
   vtkm_array_utils.hpp
@@ -13,10 +11,8 @@ set(vtkh_utils_headers
   )
 
 set(vtkh_utils_sources
-  Logger.cpp
   PNGEncoder.cpp
   Mutex.cpp
-  StatisticsDB.cpp
   vtkm_dataset_info.cpp
   )
 

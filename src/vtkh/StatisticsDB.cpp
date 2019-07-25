@@ -1,5 +1,5 @@
 #include <vtkh/vtkh.hpp>
-#include <vtkh/utils/StatisticsDB.hpp>
+#include <vtkh/StatisticsDB.hpp>
 
 namespace vtkh
 {

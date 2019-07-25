@@ -85,8 +85,10 @@ if(ENABLE_OPENMP)
     blt_add_target_compile_flags(TO vtkh_filters FLAGS "-DVTKH_USE_OPENMP")
 endif()
 
+if(ENABLE_CUDA)
+    set_target_properties(vtkh_filters PROPERTIES LINKER_LANGUAGE CUDA)
+endif()
 vtkm_add_target_information(vtkh_filters DEVICE_SOURCES ${vtkh_filter_sources})
-set_target_properties(vtkh_filters PROPERTIES LINKER_LANGUAGE CUDA)
 
 # Install libraries
 install(TARGETS vtkh_filters
@@ -143,7 +145,9 @@ if (MPI_FOUND)
 
 
     vtkm_add_target_information(vtkh_filters_mpi DEVICE_SOURCES ${vtkh_filter_sources})
-    set_target_properties(vtkh_filters_mpi PROPERTIES LINKER_LANGUAGE CUDA)
+    if(ENABLE_CUDA)
+        set_target_properties(vtkh_filters_mpi PROPERTIES LINKER_LANGUAGE CUDA)
+    endif()
 
     blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-D VTKH_PARALLEL")
 

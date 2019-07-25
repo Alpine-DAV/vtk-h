@@ -8,7 +8,7 @@
 
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Error.hpp>
-#include <vtkh/utils/Logger.hpp>
+#include <vtkh/Logger.hpp>
 #include <vtkh/utils/StreamUtil.hpp>
 #include <vtkh/utils/ThreadSafeContainer.hpp>
 
@@ -31,6 +31,7 @@
 
 namespace vtkh
 {
+
 static inline float
 rand01()
 {
