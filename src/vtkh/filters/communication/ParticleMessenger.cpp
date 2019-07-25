@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string.h>
-#include <vtkh/utils/Logger.hpp>
-#include <vtkh/utils/StatisticsDB.hpp>
+#include <vtkh/Logger.hpp>
+#include <vtkh/StatisticsDB.hpp>
 #include <vtkh/filters/communication/MemStream.h>
 #include <vtkh/filters/communication/ParticleMessenger.hpp>
 

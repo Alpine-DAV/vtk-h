@@ -7,11 +7,15 @@ add_subdirectory(thirdparty_builtin)
 set(vtkh_core_headers
   DataSet.hpp
   Error.hpp
+  Logger.hpp
+  StatisticsDB.hpp
   vtkh.hpp
   )
 
 set(vtkh_core_sources
   DataSet.cpp
+  Logger.cpp
+  StatisticsDB.cpp
   vtkh.cpp
   )
 

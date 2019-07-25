@@ -3,15 +3,15 @@
 #==============================================================================
 
 ################################
+# VTK-h
+################################
+project(VTKh)
+
+################################
 # cmake policy selections
 ################################
 # avoid warnings for project commands w/o VERSION
 cmake_policy(SET CMP0048 NEW)
-
-################################
-# VTK-h
-################################
-project(VTKh)
 
 set(VTKh_EXPORT_NAME "VTKhTargets")
 if (NOT DEFINED VTKh_INSTALL_INCLUDE_DIR)

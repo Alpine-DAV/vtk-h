@@ -2,7 +2,7 @@
 #define VTK_H_PARTICLE_ADVECTION_TASK_HPP
 
 #include <vtkh/vtkh.hpp>
-#include <vtkh/utils/StatisticsDB.hpp>
+#include <vtkh/StatisticsDB.hpp>
 #include <vtkh/utils/ThreadSafeContainer.hpp>
 #include <vtkh/filters/ParticleAdvection.hpp>
 #include <vtkh/filters/communication/BoundsMap.hpp>

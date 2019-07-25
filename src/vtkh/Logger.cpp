@@ -1,5 +1,5 @@
 #include <vtkh/vtkh.hpp>
-#include <vtkh/utils/Logger.hpp>
+#include <vtkh/Logger.hpp>
 
 namespace vtkh
 {
