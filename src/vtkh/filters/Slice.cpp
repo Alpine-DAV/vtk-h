@@ -6,6 +6,7 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkh
@@ -150,7 +151,7 @@ public:
     {}
 
     template<typename T, typename S>
-    void operator()(const vtkm::cont::ArrayHandle<T,S> &field) const
+    void operator()(const vtkm::cont::ArrayHandle<T,S> &vtkmNotUsed(field)) const
     {
       //check to see if this is a supported field ;
       const vtkm::cont::Field &scalar_field = m_in_data_sets[0].GetField(m_field_index);

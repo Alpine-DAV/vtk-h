@@ -2,18 +2,16 @@
 # See License.txt
 #==============================================================================
 
-cmake_minimum_required(VERSION 3.9)
+################################
+# VTK-h
+################################
+project(VTKh)
 
 ################################
 # cmake policy selections
 ################################
 # avoid warnings for project commands w/o VERSION
 cmake_policy(SET CMP0048 NEW)
-
-################################
-# VTK-h
-################################
-project(VTKh)
 
 set(VTKh_EXPORT_NAME "VTKhTargets")
 if (NOT DEFINED VTKh_INSTALL_INCLUDE_DIR)
@@ -54,7 +52,16 @@ option(ENABLE_TESTS       "Build tests"               ON)
 option(ENABLE_CUDA        "Enable CUDA Support"       OFF)
 option(ENABLE_MPI         "Build MPI Support"         ON)
 
-
+if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "Static libraries are required when building with CUDA")
+endif()
+set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+# enforce the version after the ENABLE Cuda option
+if(ENABLE_CUDA)
+  cmake_minimum_required(VERSION 3.14)
+else()
+  cmake_minimum_required(VERSION 3.9)
+endif()
 ################################
 # Set BLT Options
 ################################
@@ -65,9 +72,17 @@ set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
 ################################
 # Init BLT
 ################################
-set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
-include(blt/SetupBLT.cmake)
+if (NOT BLT_CXX_STD)
+  set(BLT_CXX_STD "c++11" CACHE STRING "")
+endif()
 
+# if BLT_SOURCE_DIR is not set - use "blt" as default
+if(NOT BLT_SOURCE_DIR)
+    set(BLT_SOURCE_DIR "blt")
+endif()
+
+# init blt using BLT_SOURCE_DIR
+include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 
 ################################
 # Basic CMake Setup

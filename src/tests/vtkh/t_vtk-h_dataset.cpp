@@ -18,17 +18,17 @@
 TEST(vtkh_dataset, vtkh_range)
 {
   vtkh::DataSet data_set;
- 
+
   const int base_size = 32;
-  const int num_blocks = 2; 
+  const int num_blocks = 2;
 
   data_set.AddDomain(CreateTestData(0, num_blocks, base_size), 0);
   data_set.AddDomain(CreateTestData(1, num_blocks, base_size), 1);
 
   vtkm::Bounds data_bounds = data_set.GetBounds();
-  
+
   const double max_val = base_size * num_blocks;
-  const double min_val = 0.; 
+  const double min_val = 0.;
 
   std::cout<<data_bounds<<"\n";
 
@@ -41,18 +41,18 @@ TEST(vtkh_dataset, vtkh_range)
   EXPECT_EQ(data_bounds.Z.Max, max_val);
 
   vtkm::cont::ArrayHandle<vtkm::Range> vec_range;
-  vec_range = data_set.GetGlobalRange("vector_data");
+  vec_range = data_set.GetGlobalRange("vector_data_Float64");
 
   EXPECT_EQ(3, vec_range.GetPortalControl().GetNumberOfValues());
-  
+
 
   vtkm::cont::ArrayHandle<vtkm::Range> scalar_range;
-  scalar_range = data_set.GetGlobalRange("point_data");
+  scalar_range = data_set.GetGlobalRange("point_data_Float64");
   EXPECT_EQ(1, scalar_range.GetPortalControl().GetNumberOfValues());
 
   vtkm::Float64 min_coord = 0.;
   vtkm::Float64 max_coord = vtkm::Float64(base_size * num_blocks);
- 
+
   vtkm::Bounds bounds  = data_set.GetBounds();
   EXPECT_EQ(min_coord, bounds.X.Min);
   EXPECT_EQ(min_coord, bounds.Y.Min);
@@ -63,5 +63,5 @@ TEST(vtkh_dataset, vtkh_range)
   int topo_dims;
   EXPECT_EQ(true, data_set.IsStructured(topo_dims));
   EXPECT_EQ(3, topo_dims);
-  
+
 }

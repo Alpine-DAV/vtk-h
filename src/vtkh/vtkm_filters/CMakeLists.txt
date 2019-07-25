@@ -41,7 +41,6 @@ if(CUDA_FOUND)
     list(APPEND vtkm_filters_deps cuda)
 endif()
 
-
 blt_add_library(
   NAME vtkm_compiled_filters
   SOURCES ${vtkm_filters_sources}
@@ -50,8 +49,10 @@ blt_add_library(
   OBJECT TRUE
   )
 
+vtkm_add_target_information(vtkm_compiled_filters DEVICE_SOURCES ${vtkm_filter_sources})
+
 if(CUDA_FOUND)
-  # defend against vtkm code cuda can't reseason about
+  # defend against vtkm code cuda can't reason about
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
     blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
   endif()

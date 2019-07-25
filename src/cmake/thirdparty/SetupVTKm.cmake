@@ -67,7 +67,7 @@ endif()
 
 set(VTKM_FOUND TRUE)
 
-set(VTKM_TARGETS vtkm_cont vtkm_rendering)
+set(VTKM_TARGETS vtkm_cont vtkm_filter vtkm_rendering)
 
 blt_register_library(NAME vtkm
                      LIBRARIES ${VTKM_TARGETS}

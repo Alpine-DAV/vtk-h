@@ -7,7 +7,7 @@ namespace vtkh
 vtkm::cont::DataSet
 vtkmLagrangian::Run(vtkm::cont::DataSet &input,
                          std::string field_name,
-                         int step_size,
+                         double step_size,
                          int write_frequency,
                          int rank,
                          int cust_res,

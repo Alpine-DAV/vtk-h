@@ -4,125 +4,296 @@
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
+
+#ifdef VTKM_CUDA
+#include <cuda.h>
+#endif
+
 #include <sstream>
+
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#endif
 
 namespace vtkh
 {
-#ifdef PARALLEL
 
-static MPI_Comm g_mpi_comm = MPI_COMM_NULL;
+static int g_mpi_comm_id = -1;
 
-void CheckCommHandle()
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+#ifdef VTKH_PARALLEL // mpi case
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+void
+CheckCommHandle()
 {
-  if(g_mpi_comm == MPI_COMM_NULL)
+  if(g_mpi_comm_id == -1)
   {
     std::stringstream msg;
-    msg<<"VTK-h internal error. There is no valid MPI comm availible. ";
-    msg<<"It is likely that VTKH.Open(MPI_Comm) was not called.";
+    msg<<"VTK-h internal error. There is no valid MPI comm available. ";
+    msg<<"It is likely that VTKH.SetMPICommHandle(int) was not called.";
     throw Error(msg.str());
   }
 }
 
-void 
-SetMPIComm(MPI_Comm mpi_comm)
+//---------------------------------------------------------------------------//
+void
+SetMPICommHandle(int mpi_comm_id)
 {
-  g_mpi_comm = mpi_comm;
+  g_mpi_comm_id = mpi_comm_id;
 }
 
-MPI_Comm 
-GetMPIComm()
+//---------------------------------------------------------------------------//
+int
+GetMPICommHandle()
 {
   CheckCommHandle();
-  return g_mpi_comm;
+  return g_mpi_comm_id;
 }
 
-int 
+//---------------------------------------------------------------------------//
+int
 GetMPIRank()
 {
-  CheckCommHandle();
   int rank;
-  MPI_Comm comm = GetMPIComm(); 
+  MPI_Comm comm = MPI_Comm_f2c(GetMPICommHandle());
   MPI_Comm_rank(comm, &rank);
   return rank;
 }
 
-int 
+//---------------------------------------------------------------------------//
+int
 GetMPISize()
 {
-  CheckCommHandle();
   int size;
-  MPI_Comm comm = GetMPIComm(); 
+  MPI_Comm comm = MPI_Comm_f2c(GetMPICommHandle());
   MPI_Comm_size(comm, &size);
   return size;
 }
 
-#else
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+#else // non-mpi case
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
-int 
-GetMPIRank()
+//---------------------------------------------------------------------------//
+void
+CheckCommHandle()
 {
-  return 1;
+  std::stringstream msg;
+  msg<<"VTK-h internal error. Trying to access MPI comm in non-mpi vtkh lib.";
+  msg<<"Are you using the right library (vtkh vs vtkh_mpi)?";
+  throw Error(msg.str());
 }
 
-int 
+//---------------------------------------------------------------------------//
+void
+SetMPICommHandle(int mpi_comm_id)
+{
+  std::stringstream msg;
+  msg<<"VTK-h internal error. Trying to set MPI comm handle in non-mpi vtkh lib.";
+  msg<<"Are you using the right library (vtkh vs vtkh_mpi)?";
+  throw Error(msg.str());
+}
+
+//---------------------------------------------------------------------------//
+int
+GetMPICommHandle()
+{
+  std::stringstream msg;
+  msg<<"VTK-h internal error. Trying to get MPI comm handle in non-mpi vtkh lib.";
+  msg<<"Are you using the right library (vtkh vs vtkh_mpi)?";
+  throw Error(msg.str());
+  return g_mpi_comm_id;
+}
+
+//---------------------------------------------------------------------------//
+int
+GetMPIRank()
+{
+  return 0;
+}
+
+//---------------------------------------------------------------------------//
+int
 GetMPISize()
 {
   return 1;
 }
+//---------------------------------------------------------------------------//
+#endif
+//---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+bool
+IsMPIEnabled()
+{
+#ifdef VTKH_PARALLEL
+  return true;
+#else
+  return false;
+#endif
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsSerialAvailable()
+{
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagSerial());
+}
+
+
+//---------------------------------------------------------------------------//
+bool
+IsOpenMPAvailable()
+{
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagOpenMP());
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsCUDAAvailable()
+{
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagCuda());
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsSerialEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagSerial());
+}
+
+
+//---------------------------------------------------------------------------//
+bool
+IsOpenMPEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP());
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsCUDAEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda());
+}
+
+//---------------------------------------------------------------------------//
+int
+CUDADeviceCount()
+{
+    int device_count = 0;
+#ifdef VTKM_CUDA
+    cudaError_t res = cudaGetDeviceCount(&device_count);
+    if(res != cudaSuccess)
+    {
+        std::stringstream msg;
+        msg << "Failed to get CUDA device count" << std::endl
+            << "CUDA Error Message: "
+            << cudaGetErrorString(res);
+        throw Error(msg.str());
+    }
+    return device_count;
+
+#else
+    throw Error("Cannot fetch CUDA device count: VTK-m lacks CUDA support");
+#endif
+    return device_count;
+}
+
+//---------------------------------------------------------------------------//
+void
+SelectCUDADevice(int device_index)
+{
+#ifdef VTKM_CUDA
+    int device_count = CUDADeviceCount();
+    // make sure index is ok
+    if(device_index >= 0 && device_index < device_count)
+    {
+        cudaError_t res = cudaSetDevice(device_index);
+        if(res != cudaSuccess)
+        {
+            std::stringstream msg;
+            msg << "Failed to set CUDA device (device index = "
+                << device_index << ")" << std::endl
+                << "CUDA Error Message: "
+                << cudaGetErrorString(res);
+            throw Error(msg.str());
+        }
+    }
+    else
+    {
+        std::stringstream msg;
+        msg << "Invalid CUDA device index: "
+            << device_index
+            << " (number of devices = "
+            << device_index << ")";
+        throw Error(msg.str());
+    }
+#else
+    throw Error("Cannot set CUDA device: VTK-m lacks CUDA support");
 #endif
 
-
-bool IsSerialEnabled()
-{
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagSerial> serial;
-  return serial.Exists();
 }
 
-bool IsTBBEnabled()
+//---------------------------------------------------------------------------//
+void
+ForceSerial()
 {
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagTBB> tbb;
-  return tbb.Exists();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
 }
 
-bool IsCUDAEnabled()
+//---------------------------------------------------------------------------//
+void
+ForceOpenMP()
 {
-  vtkm::cont::RuntimeDeviceInformation<vtkm::cont::DeviceAdapterTagCuda> cuda;
-  return cuda.Exists();
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
 }
 
-void ForceSerial()
+//---------------------------------------------------------------------------//
+void
+ForceCUDA()
 {
-  vtkm::cont::RuntimeDeviceTracker global_tracker;
-  global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  global_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
 }
 
-void ForceTBB()
+//---------------------------------------------------------------------------//
+void
+ResetDevices()
 {
-  vtkm::cont::RuntimeDeviceTracker global_tracker;
-  global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  global_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB());
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  device_tracker.Reset();
 }
 
-void ForceCUDA()
-{
-  vtkm::cont::RuntimeDeviceTracker global_tracker;
-  global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  global_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
-}
-
-void ResetDevices()
-{
-  vtkm::cont::RuntimeDeviceTracker global_tracker;
-  global_tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
-  global_tracker.Reset();
-}
-
-std::string AboutVTKH()
+//---------------------------------------------------------------------------//
+std::string
+AboutVTKH()
 {
   std::stringstream msg;
   msg<<"---------------- VTK-h -------------------\n";
-#ifdef PARALLEL
+#ifdef VTKH_PARALLEL
   int version, subversion;
   MPI_Get_version(&version, &subversion);
   msg<<"MPI version: "<<version<<"."<<subversion<<"\n";
@@ -131,19 +302,44 @@ std::string AboutVTKH()
 #endif
   msg<<"VTK-m adapters: ";
 
-  if(IsCUDAEnabled())
+  if(IsCUDAAvailable())
   {
-    msg<<"Cuda ";
+    msg<<"Cuda (";
+    if(IsCUDAEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
+
   }
 
-  if(IsTBBEnabled())
+  if(IsOpenMPAvailable())
   {
-    msg<<"TBB ";
+    msg<<"OpenMP (";
+    if(IsOpenMPEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
   }
 
-  if(IsSerialEnabled())
+  if(IsSerialAvailable())
   {
-    msg<<"Serial ";
+    msg<<"Serial (";
+    if(IsSerialEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
   }
   msg<<"\n";
  msg<<"------------------------------------------\n";

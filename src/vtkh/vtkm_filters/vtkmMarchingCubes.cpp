@@ -13,7 +13,7 @@ vtkmMarchingCubes::Run(vtkm::cont::DataSet &input,
 
   marcher.SetFieldsToPass(map_fields);
   marcher.SetIsoValues(iso_values);
-  marcher.SetMergeDuplicatePoints(true);
+  marcher.SetMergeDuplicatePoints(false);
   marcher.SetActiveField(field_name);
 
   auto output = marcher.Execute(input);

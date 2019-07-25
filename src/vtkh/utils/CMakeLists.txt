@@ -2,13 +2,17 @@
 # See License.txt
 #==============================================================================
 set(vtkh_utils_headers
+  Mutex.hpp
   PNGEncoder.hpp
+  StreamUtil.hpp
+  ThreadSafeContainer.hpp
   vtkm_array_utils.hpp
   vtkm_dataset_info.hpp
   )
 
 set(vtkh_utils_sources
   PNGEncoder.cpp
+  Mutex.cpp
   vtkm_dataset_info.cpp
   )
 
@@ -22,6 +26,10 @@ if(ENABLE_OPENMP)
   list(APPEND vtkh_utils_thirdparty_libs openmp)
 endif()
 
+if(ENABLE_OPENMP)
+    list(APPEND vtkh_utils_thirdparty_libs openmp)
+endif()
+
 blt_add_library(
   NAME vtkh_utils
   SOURCES ${vtkh_utils_sources}
@@ -31,8 +39,8 @@ blt_add_library(
 
 if(ENABLE_OPENMP)
     blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
-    list(APPEND vtkh_utils_thirdparty_libs openmp)
 endif()
+
 
 # Install libraries
 install(TARGETS vtkh_utils
@@ -55,6 +63,12 @@ if (MPI_FOUND)
       DEPENDS_ON ${vtkh_utils_thirdparty_libs} mpi
       )
 
+    blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_PARALLEL")
+
+    if(ENABLE_OPENMP)
+        blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_USE_OPENMP")
+    endif()
+
     # Install libraries
     install(TARGETS vtkh_utils_mpi
       EXPORT ${VTKh_EXPORT_NAME}
@@ -63,5 +77,3 @@ if (MPI_FOUND)
       RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
       )
 endif()
-
-

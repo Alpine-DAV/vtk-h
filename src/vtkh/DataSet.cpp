@@ -400,7 +400,7 @@ DataSet::GetGlobalRange(const std::string &field_name) const
       else
       {
         local_min = std::numeric_limits<vtkm::Float64>::max();
-        local_max = std::numeric_limits<vtkm::Float64>::min();
+        local_max = std::numeric_limits<vtkm::Float64>::lowest();
       }
 
       vtkm::Float64 global_min = 0;

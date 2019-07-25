@@ -80,6 +80,7 @@ set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_no_op_par
               t_vtk-h_marching_cubes_par
               t_vtk-h_multi_render_par
+              t_vtk-h_particle_advection_par
               t_vtk-h_raytracer_par
               t_vtk-h_volume_renderer_par
               )
@@ -90,12 +91,18 @@ set(MPI_TESTS t_vtk-h_smoke_par
 ################################
 message(STATUS "Adding vtk-h lib unit tests")
 foreach(TEST ${BASIC_TESTS})
-    add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+    if(ENABLE_CUDA)
+      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
+      vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
+      set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CUDA)
+    else()
+      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+    endif()
 endforeach()
 
 if(CUDA_FOUND)
   foreach(TEST ${CUDA_TESTS})
-      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
   endforeach()
 endif()
 
@@ -106,7 +113,12 @@ if(MPI_FOUND AND ENABLE_MPI)
     message(STATUS "MPI enabled: Adding related unit tests")
     foreach(TEST ${MPI_TESTS})
         # this uses 2 procs
+      if(ENABLE_CUDA)
+        add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi cuda)
+        vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
+      else()
         add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi)
+      endif()
     endforeach()
 else()
     message(STATUS "MPI disabled: Skipping related tests")
