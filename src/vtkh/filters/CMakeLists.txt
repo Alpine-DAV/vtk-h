@@ -136,11 +136,6 @@ if (MPI_FOUND)
       )
     if(ENABLE_OPENMP)
           blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-DVTKH_USE_OPENMP")
-          if(CUDA_FOUND)
-              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "-Xcompiler ${OpenMP_CXX_FLAGS}")
-          else()
-              blt_add_target_compile_flags(TO vtkh_filters_mpi FLAGS "${OpenMP_CXX_FLAGS}")
-          endif()
     endif()
 
 
