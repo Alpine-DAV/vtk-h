@@ -1,4 +1,3 @@
-//#include <vtkm/filter/your_vtkm_filter.h>
 #include <vtkh/filters/HistSampling.hpp>
 #include <vtkh/filters/GhostStripper.hpp>
 #include <vtkm/filter/internal/CreateResult.h>
@@ -33,7 +32,7 @@
 #endif
 #include <iostream>
 
-namespace vtkh 
+namespace vtkh
 {
 
 HistSampling::HistSampling()
@@ -46,13 +45,13 @@ HistSampling::~HistSampling()
 
 }
 
-void 
+void
 HistSampling::SetField(const std::string &field_name)
 {
   m_field_name = field_name;
 }
 
-void HistSampling::PreExecute() 
+void HistSampling::PreExecute()
 {
   Filter::PreExecute();
 }
@@ -139,7 +138,7 @@ void HistSampling::DoExecute()
 
   vtkh::DataSet *stripped_output = stripper.GetOutput();
 
-  
+
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
@@ -159,24 +158,8 @@ void HistSampling::DoExecute()
       continue;
     }
 
-    // vtkm::filter::RandomSampling sampler;
-    // sampler.SetActiveField(m_field_name);
-    // vtkm::cont::DataSet sampled = sampler.Execute(dom);
-
-    // // end interesting stuff
-
-    // m_output->AddDomain(sampled, domain_id);
-
-    // vtkm::filter::InverseDistributionBasedSampling valsampler;
-    // valsampler.SetActiveField(m_field_name);
-    // vtkm::cont::DataSet valsampled = valsampler.Execute(dom);
-
-    // new code
-    // get the min max
-    // #ifdef VTKH_PARALLEL
 
     // try to strip of ghost layers
-
 
 
     // std::cout << "Here:" << std::endl;
@@ -198,7 +181,7 @@ void HistSampling::DoExecute()
     vtkm::Float64 local_max = statinfo.maximum;
     vtkm::Float64 global_max = -999999999;
 
-  
+
     // std::cout << "Here 4" << std::endl;
     MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
@@ -433,7 +416,7 @@ void HistSampling::DoExecute()
 
     // vtkm::cont::ArrayHandleImplicit<randArraygen> randArray (randArraygen(),tot_points);
     //vtkm::cont::ArrayHandleImplicit<randArraygen2> randArray (randArraygen2(),tot_points);
-   
+
     vtkm::cont::ArrayHandle<vtkm::Float32> randArray;
 
    randArray.Allocate(tot_points);
@@ -444,7 +427,7 @@ void HistSampling::DoExecute()
    {
 	randArraygen2 randgen;
 	randPortal.Set(i, randgen(i));
-   } 
+   }
 
     auto stencil = vtkm::cont:: make_ArrayHandleZip(binIndex , randArray);
 
@@ -457,7 +440,7 @@ void HistSampling::DoExecute()
     vtkm::cont:: ArrayHandle <vtkm::Float32 > probArray = vtkm::cont:: make_ArrayHandle(acceptanceProbsVec);
 
     vtkm::cont:: ArrayHandle <vtkm::UInt8> stencilBool;
-    
+
     vtkm::worklet::DispatcherMapField<LookupWorklet> dispatcher;
     dispatcher.Invoke(stencil2, stencilBool, probArray);
 
