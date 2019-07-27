@@ -214,7 +214,18 @@ public:
     {
       auto cell_set = doms[dom].GetCellSet();
 
-      if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+      // In the past, we were making assumptions that the output of contour
+      // was a cell set single type. Because of difficult vtkm reasons, the output
+      // of contour is now explicit cell set,but we can still assume that
+      // this output will be all triangles.
+      // this becomes more complicated if we want to support mixed types
+      //if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+      if(!cell_set.IsSameType(vtkm::cont::CellSetExplicit<>()))
+      {
+        std::cout<<"expected explicit cell set as the result of contour\n";
+
+        continue;
+      }
 
       cell_offsets[dom] = num_cells;
       num_cells += cell_set.GetNumberOfCells();
@@ -241,10 +252,18 @@ public:
     for(size_t dom = 0; dom < doms.size(); ++dom)
     {
       auto cell_set = doms[dom].GetCellSet();
-      if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+
+      //if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+      if(!cell_set.IsSameType(vtkm::cont::CellSetExplicit<>()))
+      {
+        std::cout<<"expected explicit cell set as the result of contour\n";
+        continue;
+      }
 
       // grab the connectivity and copy it into the larger array
-      vtkm::cont::CellSetSingleType<> single_type = cell_set.Cast<vtkm::cont::CellSetSingleType<>>();
+      //vtkm::cont::CellSetSingleType<> single_type = cell_set.Cast<vtkm::cont::CellSetSingleType<>>();
+      vtkm::cont::CellSetExplicit<> single_type =
+        cell_set.Cast<vtkm::cont::CellSetExplicit<>>();
       const vtkm::cont::ArrayHandle<vtkm::Id> dconn = single_type.GetConnectivityArray(
         vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
@@ -400,11 +419,17 @@ Slice::DoExecute()
     marcher.Update();
     slices.push_back(marcher.GetOutput());
   } // each slice
-
+  for(int i = 0; i < slices.size(); ++i)
+  {
+    std::cout<<"**************************************\n";
+    slices[i]->PrintSummary(std::cout);
+  }
   if(slices.size() > 1)
   {
     detail::MergeContours merger(slices, fname);
     this->m_output = merger.Merge();
+    std::cout<<"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n";
+    this->m_output->PrintSummary(std::cout);
   }
   else
   {
