@@ -14,7 +14,7 @@
 #include "t_test_utils.hpp"
 
 #include <iostream>
-
+#if 0
 TEST(vtkh_slice, vtkh_slice)
 {
   vtkh::DataSet data_set;
@@ -57,6 +57,7 @@ TEST(vtkh_slice, vtkh_slice)
 
   delete slice;
 }
+#endif
 
 TEST(vtkh_slice, vtkh_mulit_slice)
 {
@@ -77,9 +78,9 @@ TEST(vtkh_slice, vtkh_mulit_slice)
   // add the first slice
   vtkh::Slice slicer1;
 
-  vtkm::Vec<vtkm::Float32,3> normal1(1.0f,1.f,.0f);
+  vtkm::Vec<vtkm::Float32,3> normal1(.0f,5.f,.5f);
   vtkm::Vec<vtkm::Float32,3> point1(16.f,16.f,16.f);
-  vtkm::Vec<vtkm::Float32,3> normal2(1.f,.0f,.0f);
+  vtkm::Vec<vtkm::Float32,3> normal2(.5f,.5f,.5f);
   vtkm::Vec<vtkm::Float32,3> point2(16.f,16.f,16.f);
   slicer1.AddPlane(point1, normal1);
   slicer1.AddPlane(point2, normal2);
