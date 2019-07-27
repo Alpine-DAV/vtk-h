@@ -14,7 +14,7 @@
 #include "t_test_utils.hpp"
 
 #include <iostream>
-#if 0
+
 TEST(vtkh_slice, vtkh_slice)
 {
   vtkh::DataSet data_set;
@@ -57,7 +57,6 @@ TEST(vtkh_slice, vtkh_slice)
 
   delete slice;
 }
-#endif
 
 TEST(vtkh_slice, vtkh_mulit_slice)
 {
