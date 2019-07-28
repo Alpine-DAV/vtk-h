@@ -177,9 +177,9 @@ void HistSampling::DoExecute()
     PrintStatInfo(statinfo);
 
     vtkm::Float64 local_min = statinfo.minimum;
-    vtkm::Float64 global_min = 999999999;
+    vtkm::Float64 global_min = vtkm::Infinity64();
     vtkm::Float64 local_max = statinfo.maximum;
-    vtkm::Float64 global_max = -999999999;
+    vtkm::Float64 global_max = vtkm::NegativeInfinity64();
 
 
     // std::cout << "Here 4" << std::endl;
