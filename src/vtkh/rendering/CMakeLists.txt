@@ -35,44 +35,44 @@ set(vtkh_rendering_sources
   compositing/PartialCompositor.cpp
   )
 
-
-set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
-
-if(VTKm_CUDA_FOUND)
-    # triggers cuda compile
-    list(APPEND vtkh_rendering_deps cuda)
+if (ENABLE_SERIAL)
+    set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
+    
+    if(VTKm_CUDA_FOUND)
+        # triggers cuda compile
+        list(APPEND vtkh_rendering_deps cuda)
+    endif()
+    
+    if(ENABLE_OPENMPJ)
+        list(APPEND vtkh_rendering_deps openmp)
+    endif()
+    
+    blt_add_library(
+      NAME vtkh_rendering
+      SOURCES ${vtkh_rendering_sources}
+      HEADERS ${vtkh_rendering_headers}
+      DEPENDS_ON ${vtkh_rendering_deps}
+      )
+    
+    vtkm_add_target_information(vtkh_rendering DEVICE_SOURCES ${vtkh_rendering_sources})
+    
+    if(ENABLE_OPENMP)
+        blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-DVTKH_USE_OPENMP")
+    endif()
+    
+    
+    # Install libraries
+    install(TARGETS vtkh_rendering
+      EXPORT ${VTKh_EXPORT_NAME}
+      ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
+      LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
+      RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
+      )
+    
+    # Install headers
+    install(FILES ${vtkh_rendering_headers}
+      DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/rendering)
 endif()
-
-if(ENABLE_OPENMPJ)
-    list(APPEND vtkh_rendering_deps openmp)
-endif()
-
-blt_add_library(
-  NAME vtkh_rendering
-  SOURCES ${vtkh_rendering_sources}
-  HEADERS ${vtkh_rendering_headers}
-  DEPENDS_ON ${vtkh_rendering_deps}
-  )
-
-vtkm_add_target_information(vtkh_rendering DEVICE_SOURCES ${vtkh_rendering_sources})
-
-if(ENABLE_OPENMP)
-    blt_add_target_compile_flags(TO vtkh_rendering FLAGS "-DVTKH_USE_OPENMP")
-endif()
-
-
-# Install libraries
-install(TARGETS vtkh_rendering
-  EXPORT ${VTKh_EXPORT_NAME}
-  ARCHIVE DESTINATION ${VTKh_INSTALL_LIB_DIR}
-  LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
-  RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
-  )
-
-# Install headers
-install(FILES ${vtkh_rendering_headers}
-  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/rendering)
-
 
 #------------------------------------------------------------------------------
 # Handle parallel library
