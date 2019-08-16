@@ -91,21 +91,23 @@ set(MPI_TESTS t_vtk-h_smoke_par
 ################################
 # Add main tests
 ################################
-message(STATUS "Adding vtk-h lib unit tests")
-foreach(TEST ${BASIC_TESTS})
-    if(ENABLE_CUDA)
-      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
-      vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
-      set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CUDA)
-    else()
-      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+if (ENABLE_SERIAL)
+    message(STATUS "Adding vtk-h lib unit tests")
+    foreach(TEST ${BASIC_TESTS})
+        if(ENABLE_CUDA)
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
+          vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
+          set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CUDA)
+        else()
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+        endif()
+    endforeach()
+    
+    if(CUDA_FOUND)
+      foreach(TEST ${CUDA_TESTS})
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
+      endforeach()
     endif()
-endforeach()
-
-if(CUDA_FOUND)
-  foreach(TEST ${CUDA_TESTS})
-      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
-  endforeach()
 endif()
 
 ################################
