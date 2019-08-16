@@ -43,7 +43,7 @@ if (ENABLE_SERIAL)
         list(APPEND vtkh_rendering_deps cuda)
     endif()
     
-    if(ENABLE_OPENMPJ)
+    if(ENABLE_OPENMP)
         list(APPEND vtkh_rendering_deps openmp)
     endif()
     
