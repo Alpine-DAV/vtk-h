@@ -10,7 +10,6 @@
 #include <vtkh/filters/Particle.hpp>
 #include <vtkh/filters/communication/Messenger.hpp>
 #include <vtkh/filters/communication/BoundsMap.hpp>
-#include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/cont/CellLocatorUniformBins.h>
 
 namespace vtkh

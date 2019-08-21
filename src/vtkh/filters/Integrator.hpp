@@ -168,12 +168,15 @@ private:
                       std::list<vtkh::Particle> &T,
                       std::list<vtkh::Particle> &A)
     {
-        if (p.nSteps >= maxSteps || status == vtkm::worklet::particleadvection::ParticleStatus::TERMINATED)
+
+        vtkm::worklet::particleadvection::ParticleStatus p_status =
+        (vtkm::worklet::particleadvection::ParticleStatus)status;
+        if (p.nSteps >= maxSteps || p_status == vtkm::worklet::particleadvection::ParticleStatus::TERMINATED)
         {
             p.status = vtkh::Particle::TERMINATE;
             T.push_back(p);
         }
-        else if (status == vtkm::worklet::particleadvection::ParticleStatus::STATUS_OK)
+        else if (p_status == vtkm::worklet::particleadvection::ParticleStatus::SUCCESS)
         {
             p.status = vtkh::Particle::ACTIVE;
             A.push_back(p);

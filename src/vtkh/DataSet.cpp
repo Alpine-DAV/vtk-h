@@ -665,10 +665,6 @@ DataSet::GetFieldAssociation(const std::string field_name, bool &valid_field) co
         {
           assoc_id = 3;
         }
-        else if ( local_assoc == vtkm::cont::Field::Association::LOGICAL_DIM)
-        {
-          assoc_id = 4;
-        }
         break;
       }
     }
@@ -730,13 +726,9 @@ DataSet::GetFieldAssociation(const std::string field_name, bool &valid_field) co
   {
     assoc = vtkm::cont::Field::Association::CELL_SET;
   }
-  else if ( assoc_id == 4)
-  {
-    assoc = vtkm::cont::Field::Association::LOGICAL_DIM;
-  }
   else
   {
-    throw Error("Get association: unknow association");
+    throw Error("Get association: unknown association");
   }
   return assoc;
 }

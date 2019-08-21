@@ -75,7 +75,7 @@ vtkmThreshold::Run(vtkm::cont::DataSet &input,
   thresholder.SetActiveField(field_name);
   thresholder.SetFieldsToPass(map_fields);
   auto output = thresholder.Execute(input);
-  vtkh::StripPermutation(output);
+  //vtkh::StripPermutation(output);
   return output;
 }
 

@@ -265,7 +265,9 @@ public:
       vtkm::cont::CellSetExplicit<> single_type =
         cell_set.Cast<vtkm::cont::CellSetExplicit<>>();
       const vtkm::cont::ArrayHandle<vtkm::Id> dconn = single_type.GetConnectivityArray(
-        vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        //vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        vtkm::TopologyElementTagCell(),
+        vtkm::TopologyElementTagPoint());
 
       vtkm::Id copy_size = dconn.GetNumberOfValues();
       vtkm::Id start = 0;

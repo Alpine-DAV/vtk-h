@@ -239,7 +239,8 @@ VTKMDataSetInfo::IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set, v
     {
       vtkm::cont::CellSetExplicit<> exp = cell_set.Cast<vtkm::cont::CellSetExplicit<>>();
       const vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = exp.GetShapesArray(
-        vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        vtkm::TopologyElementTagCell(),
+        vtkm::TopologyElementTagPoint());
 
       vtkm::UInt8 init_min = 255;
       vtkm::UInt8 min = vtkm::cont::Algorithm::Reduce(shapes, init_min, vtkm::Minimum());
