@@ -117,6 +117,8 @@ public:
 #else
         workerThreads.push_back(std::thread(ParticleAdvectionTask::Worker, this));
         this->Manage();
+        for (auto &t : workerThreads)
+            t.join();
 #endif
     }
 
