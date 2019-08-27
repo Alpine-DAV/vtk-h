@@ -162,7 +162,6 @@ private:
                       std::vector<vtkh::Particle> &T,
                       std::vector<vtkh::Particle> &A)
     {
-
         if (p.nSteps >= maxSteps || Terminated(status))
         {
             p.status = vtkh::Particle::TERMINATE;
