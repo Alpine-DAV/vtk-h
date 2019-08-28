@@ -70,9 +70,15 @@ void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
           branchParent);             // (output)
 
   // create explicit representation of the branch decompostion from the array representation
+#ifdef WITH_MPI
+      bool dataFieldIsSorted = true;
+#else
+      bool dataFieldIsSorted = false;
+#endif
 
   ValueArray vtkmValues = inDataSet.GetField(fieldName).GetData().Cast<ValueArray>();
-  BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition(
+  // TODO: fix this properly
+  BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
           filter.GetContourTree().superparents,
           filter.GetContourTree().supernodes,
           whichBranch,
@@ -81,7 +87,8 @@ void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
           branchSaddle,
           branchParent,
           filter.GetSortOrder(),
-          vtkmValues
+          vtkmValues,
+          dataFieldIsSorted
     );
 
   // Simplify the contour tree of the branch decompostion
