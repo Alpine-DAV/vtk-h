@@ -70,7 +70,8 @@ void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
           branchParent);             // (output)
 
   // create explicit representation of the branch decompostion from the array representation
-  ValueArray vtkmValues = inDataSet.GetField(fieldName).GetData().CastToTypeStorage<DataValueType, vtkm::cont::StorageTagBasic>();
+
+  ValueArray vtkmValues = inDataSet.GetField(fieldName).GetData().Cast<ValueArray>();
   BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition(
           filter.GetContourTree().superparents,
           filter.GetContourTree().supernodes,
