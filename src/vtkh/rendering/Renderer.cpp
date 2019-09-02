@@ -5,9 +5,6 @@
 #include <vtkh/utils/vtkm_dataset_info.hpp>
 #include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
-#ifdef VTKH_PARALLEL
-#include "compositing/DIYCompositor.hpp"
-#endif
 
 #include <assert.h>
 
@@ -19,13 +16,7 @@ Renderer::Renderer()
     m_field_index(0),
     m_has_color_table(true)
 {
-  m_compositor  = NULL;
-#ifdef VTKH_PARALLEL
-  m_compositor  = new DIYCompositor();
-#else
   m_compositor  = new Compositor();
-#endif
-
 }
 
 Renderer::~Renderer()
