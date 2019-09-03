@@ -77,10 +77,10 @@ class ParticleMessenger : public Messenger
     bool RecvParticles(Container<ParticleCommData<P>, Allocator> &recvICs);
 
     void
-    ParticleBlockSorter(vtkh::Particle &p,
-                        std::list<vtkh::Particle> &inData,
-                        std::list<vtkh::Particle> &term,
-                        std::map<int, std::list<Particle>> &sendData);
+    ParticleSorter(std::list<vtkh::Particle> &outData,
+                   std::list<vtkh::Particle> &inData,
+                   std::list<vtkh::Particle> &term,
+                   std::map<int, std::list<Particle>> &sendData);
 
     enum
     {

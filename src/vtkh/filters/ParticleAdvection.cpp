@@ -427,7 +427,7 @@ ParticleAdvection::DumpDS(int ts)
     this->m_input->GetDomain(i, dom, domId);
 
     char nm[128];
-    sprintf(nm, "dom.ts%03i.block%03d.vtk", ts, domId);
+    sprintf(nm, "dom.ts%03d.block%03d.vtk", ts, (int)domId);
 
     vtkm::io::writer::VTKDataSetWriter writer(nm);
     writer.WriteDataSet(dom);
@@ -442,7 +442,7 @@ ParticleAdvection::DumpDS(int ts)
     for (int i = 0; i < totalNumDoms; i++)
     {
       char nm[128];
-      sprintf(nm, "dom.ts%03i.block%03d.vtk", ts, i);
+      sprintf(nm, "dom.ts%03d.block%03d.vtk", ts, i);
       output<<nm<<std::endl;
     }
   }
@@ -480,7 +480,7 @@ ParticleAdvection::BoxOfSeeds(const vtkm::Bounds &box,
   float boxRange[6] = {(float)box.X.Min, (float)box.X.Max,
                        (float)box.Y.Min, (float)box.Y.Max,
                        (float)box.Z.Min, (float)box.Z.Max};
-  DBG("Box of Seeds: N= "<<numSeeds<<" "<<box<<std::endl);
+  //DBG("Box of Seeds: N= "<<numSeeds<<" "<<box<<std::endl);
   //shrink by 5%
   if (shrink)
   {

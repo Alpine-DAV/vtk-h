@@ -124,10 +124,10 @@ ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
         }
         else if (buffers[i].first == ParticleMessenger::PARTICLE_TAG)
         {
-            int num, sendRank;
+            int sendRank;
+            std::size_t num;
             vtkh::read(*buffers[i].second, sendRank);
             vtkh::read(*buffers[i].second, num);
-
             for (int j = 0; j < num; j++)
             {
                 Particle recvP;
@@ -200,60 +200,55 @@ bool ParticleMessenger::RecvParticles(Container<P, Allocator> &recvParticles)
     return false;
 }
 
-//Check allof the blockIds that I could be in. If this rank owns that Id, see if it is really here,
-//if not, send it on.
 void
-ParticleMessenger::ParticleBlockSorter(Particle &p,
-                                       std::list<vtkh::Particle> &inData,
-                                       std::list<vtkh::Particle> &term,
-                                       std::map<int, std::list<Particle>> &sendData)
+ParticleMessenger::ParticleSorter(std::list<vtkh::Particle> &outData,
+                                  std::list<vtkh::Particle> &inData,
+                                  std::list<vtkh::Particle> &term,
+                                  std::map<int, std::list<Particle>> &sendData)
 {
-  std::vector<int> bids;
-  //Examine each blockID for inclusion in MY blocks.
-  for (auto &bid : p.blockIds)
-  {
-    int dst = boundsMap.GetRank(bid);
-    //One of my data blocks. See if it's really in there.
-    if (dst == rank)
+    for (auto &p : outData)
     {
-        //Dave: Fix this.
-#if 0
-      TIMER_START("gridLocator");
-      auto loc = gridLocators[p.blockIds[0]];
-      vtkm::cont::ArrayHandle<vtkm::Id> cellId;
-      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3>> point, pcoord;
-      std::vector<vtkm::Vec<vtkm::FloatDefault,3>> pt = {p.coords};
-      point = vtkm::cont::make_ArrayHandle(pt);
-      loc.FindCells(point, cellId, pcoord);
-      auto cellPortal = cellId.GetPortalConstControl();
-      TIMER_STOP("gridLocator");
+        //If particle in wrong domain (took no steps), remove this ID, and use what is left below.
+        //otherwise, compute a new set of block ids.
+        if (p.status == vtkh::Particle::WRONG_DOMAIN)
+            p.blockIds.erase(p.blockIds.begin());
+        else
+            p.blockIds = boundsMap.FindBlock(p, true);
 
-      //point in this domain. Set the domain and return.
-      if (cellPortal.Get(0) != -1)
-      {
-#endif
-          p.blockIds = {bid};
-          inData.push_back(p);
-          return;
-#if 0
-      }
-#endif
+        //No blocks, it terminated
+        if (p.blockIds.empty())
+        {
+            p.status = vtkh::Particle::TERMINATE;
+            term.push_back(p);
+        }
+        else
+        {
+            //If we have more than blockId, we want to minimize communication
+            //and put any blocks owned by this rank first.
+            if (p.blockIds.size() > 1)
+            {
+                auto iter = p.blockIds.begin();
+                for (auto iter = p.blockIds.begin(); iter != p.blockIds.end(); iter++)
+                {
+                    int dst = boundsMap.GetRank(*iter);
+                    if (dst == rank)
+                    {
+                        int bid = *iter;
+                        p.blockIds.erase(iter);
+                        p.blockIds.insert(p.blockIds.begin(), bid);
+                        break;
+                    }
+                }
+            }
+
+            //Particle is mine, or put it in the sendData.
+            if (p.blockIds[0] == rank)
+                inData.push_back(p);
+            else
+                sendData[boundsMap.GetRank(p.blockIds[0])].push_back(p);
+        }
     }
-    else
-      bids.push_back(bid);
-  }
-
-  p.blockIds = bids;
-
-  //No blocks remain. Particle terminated.
-  if (p.blockIds.empty())
-  {
-      p.status = vtkh::Particle::TERMINATE;
-      term.push_back(p);
-  }
-  //Otherwise, not mine. Pass it along.
-  else
-      sendData[boundsMap.GetRank(p.blockIds[0])].push_back(p);
+    outData.clear();
 }
 
 void
@@ -266,16 +261,9 @@ ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
   std::map<int, std::list<Particle>> sendData;
 
   TIMER_START("communication");
-  if (!outData.empty())
-  {
-    std::vector<std::vector<int>> blockIds;
-    boundsMap.FindBlockIDs(outData, blockIds, true);
-    DBG("-----O.blockIds: "<<outData<<" "<<blockIds<<endl);
 
-    auto bit = blockIds.begin();
-    for (auto lit = outData.begin(); lit != outData.end(); lit++, bit++)
-      ParticleBlockSorter((*lit), inData, term, sendData);
-  }
+  if (!outData.empty())
+    ParticleSorter(outData, inData, term, sendData);
 
   //Check if we have anything coming in.
   std::list<ParticleCommData<Particle>> particleData;
@@ -286,7 +274,7 @@ ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
   {
     DBG("-----Recv: M: "<<msgData<<" P: "<<particleData<<std::endl);
     for (auto &p : particleData)
-      ParticleBlockSorter(p.p, inData, term, sendData);
+        inData.push_back(p.p);
 
     for (auto &m : msgData)
     {

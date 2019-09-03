@@ -67,7 +67,7 @@ public:
       std::vector<int> res;
       for (auto it = bm.begin(); it != bm.end(); it++)
       {
-          if (ignoreCurrentBlock && p.blockIds[0] == it->first)
+          if (ignoreCurrentBlock && !p.blockIds.empty() && p.blockIds[0] == it->first)
               continue;
           if (p.coords[0] >= it->second.X.Min &&
               p.coords[0] < it->second.X.Max &&

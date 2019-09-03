@@ -24,6 +24,7 @@ class Integrator
 
     using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
     using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+    using vtkmParticleStatus = vtkm::worklet::particleadvection::ParticleStatus;
 
 public:
     Integrator(vtkm::cont::DataSet *ds, const std::string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
@@ -161,6 +162,14 @@ public:
 
 private:
 
+    inline bool CheckBit(const vtkm::Id &val, const vtkmParticleStatus &b) {return (val & static_cast<vtkm::Id>(b)) != 0;}
+
+    inline bool OK(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::SUCCESS);}
+    inline bool Terminated(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::TERMINATED);}
+    inline bool ExitSpatialBoundary(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::EXIT_SPATIAL_BOUNDARY);}
+    inline bool TookAnySteps(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::TOOK_ANY_STEPS);}
+
+
     void UpdateStatus(vtkh::Particle &p,
                       const vtkm::Id &status,
                       const vtkm::Id &maxSteps,
@@ -169,17 +178,23 @@ private:
                       std::list<vtkh::Particle> &A)
     {
 
-        vtkm::worklet::particleadvection::ParticleStatus p_status =
-        (vtkm::worklet::particleadvection::ParticleStatus)status;
-        if (p.nSteps >= maxSteps || p_status == vtkm::worklet::particleadvection::ParticleStatus::TERMINATED)
+        if (p.nSteps >= maxSteps || Terminated(status))
         {
             p.status = vtkh::Particle::TERMINATE;
             T.push_back(p);
         }
-        else if (p_status == vtkm::worklet::particleadvection::ParticleStatus::SUCCESS)
+        else if (OK(status))
         {
-            p.status = vtkh::Particle::ACTIVE;
-            A.push_back(p);
+            if (TookAnySteps(status))
+            {
+                p.status = vtkh::Particle::ACTIVE;
+                A.push_back(p);
+            }
+            else
+            {
+                p.status = vtkh::Particle::WRONG_DOMAIN;
+                I.push_back(p);
+            }
         }
         else
         {
