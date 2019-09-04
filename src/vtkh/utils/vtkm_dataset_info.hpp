@@ -21,9 +21,8 @@ public:
                                                           DefaultHandle,
                                                           DefaultHandle> CartesianArrayHandle;
 //-----------------------------------------------------------------------------
-  static bool IsStructured(const vtkm::cont::DataSet &data_set, 
-                           int &topo_dims, 
-                           const vtkm::Id cell_set_index = 0);
+  static bool IsStructured(const vtkm::cont::DataSet &data_set,
+                           int &topo_dims);
 
   static bool IsStructured(const vtkm::rendering::Actor &actor, int &topo_dims);
 
@@ -54,7 +53,7 @@ public:
   static bool GetCellDims(const vtkm::cont::DynamicCellSet &cell_set, int *dims);
 
   static bool IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set, vtkm::UInt8 &shape_id);
-  
+
 };
 
 } // namespace vtkh

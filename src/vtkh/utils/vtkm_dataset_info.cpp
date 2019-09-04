@@ -13,10 +13,9 @@ namespace vtkh
 {
 
 bool VTKMDataSetInfo::IsStructured(const vtkm::cont::DataSet &data_set,
-                                   int &topo_dims,
-                                   const vtkm::Id cell_set_index)
+                                   int &topo_dims)
 {
-  const vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet(cell_set_index);
+  const vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet();
   return IsStructured(cell_set, topo_dims);
 }
 

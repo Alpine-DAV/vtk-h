@@ -315,7 +315,7 @@ void ParticleAdvection::DoExecute()
         vtkm::cont::DataSet ds;
         vtkm::cont::CoordinateSystem outputCoords("coordinates", positions);
         ds.AddCoordinateSystem(outputCoords);
-        ds.AddCellSet(polyLines);
+        ds.SetCellSet(polyLines);
         this->m_output->AddDomain(ds, rank);
         if (this->dumpOutputFiles)
             this->DumpSLOutput(&ds, rank, 0);

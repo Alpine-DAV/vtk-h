@@ -86,14 +86,9 @@ void Recenter::DoExecute()
       temp.AddCoordinateSystem(coords);
     }
 
-    const vtkm::Id num_cellsets= dom.GetNumberOfCellSets();
-
-    for(vtkm::Id f = 0; f < num_cellsets; ++f)
-    {
-      vtkm::cont::DynamicCellSet cellset = dom.GetCellSet(f);
-      out_data.AddCellSet(cellset);
-      temp.AddCellSet(cellset);
-    }
+    vtkm::cont::DynamicCellSet cellset = dom.GetCellSet();
+    out_data.SetCellSet(cellset);
+    temp.SetCellSet(cellset);
 
     if(temp.HasField(m_field_name))
     {
