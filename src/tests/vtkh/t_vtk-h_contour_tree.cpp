@@ -32,13 +32,13 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
 
   vtkh::MarchingCubes marcher;
   marcher.SetInput(&data_set);
-  marcher.SetField("cell_data");
+  marcher.SetField("point_data_Float64");
 
   int num_levels = 5;
   marcher.SetLevels(num_levels);
   marcher.SetUseContourTree(true);
-  marcher.AddMapField("point_data");
-  marcher.AddMapField("cell_data");
+  marcher.AddMapField("point_data_Float64");
+  marcher.AddMapField("cell_data_Float64");
   marcher.Update();
 
   vtkh::DataSet *iso_output = marcher.GetOutput();
@@ -55,7 +55,7 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
                                           bg_color);
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("cell_data");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRenderer(&tracer);
