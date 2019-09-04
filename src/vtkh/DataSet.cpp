@@ -441,13 +441,13 @@ DataSet::PrintSummary(std::ostream &stream) const
 }
 
 bool
-DataSet::IsEmpty(const vtkm::Id cell_set_index) const
+DataSet::IsEmpty() const
 {
   bool is_empty = true;
   const size_t num_domains = m_domains.size();
   for(size_t i = 0; i < num_domains; ++i)
   {
-    auto cellset = m_domains[i].GetCellSet(cell_set_index);
+    auto cellset = m_domains[i].GetCellSet();
     if(cellset.GetNumberOfCells() > 0)
     {
       is_empty = false;
@@ -475,7 +475,7 @@ DataSet::IsPointMesh(const vtkm::Id cell_set_index) const
   {
     const vtkm::cont::DataSet &dom = m_domains[i];
     vtkm::UInt8 shape_type;
-    bool single_type = VTKMDataSetInfo::IsSingleCellShape(dom.GetCellSet(cell_set_index), shape_type);
+    bool single_type = VTKMDataSetInfo::IsSingleCellShape(dom.GetCellSet(), shape_type);
     is_points = (single_type && shape_type == 1) && is_points;
   }
 
@@ -493,7 +493,7 @@ DataSet::IsStructured(int &topological_dims, const vtkm::Id cell_set_index) cons
   {
     const vtkm::cont::DataSet &dom = m_domains[i];
     int dims;
-    is_structured = VTKMDataSetInfo::IsStructured(dom, dims, cell_set_index) && is_structured;
+    is_structured = VTKMDataSetInfo::IsStructured(dom, dims) && is_structured;
 
     if(i == 0)
     {

@@ -25,7 +25,7 @@ void checkValidity(vtkh::DataSet *data, const int maxSteps)
   {
     auto currentDomain = data->GetDomain(i);
     vtkm::cont::CellSetExplicit<> cellSet =
-          currentDomain.GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<>>();
+          currentDomain.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
 
     //Ensure that streamlines took <= to the max number of steps
     for(int j = 0; j < cellSet.GetNumberOfCells(); j++)

@@ -129,7 +129,6 @@ void Log::DoExecute()
     {
       vtkm::cont::Field out_field(m_result_name,
                                   in_assoc,
-                                  in_field.GetAssocCellSet(),
                                   log_field);
       dom.AddField(out_field);
     }
