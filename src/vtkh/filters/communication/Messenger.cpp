@@ -30,8 +30,12 @@ Messenger::CalcMessageBufferSize(int msgSz)
 void
 Messenger::RegisterTag(int tag, int num_recvs, int size)
 {
-  if(messageTagInfo.find(tag) != messageTagInfo.end())
-    std::cout<<"Warning tag "<<tag<<" already registerd. Overwriting\n";
+  if (messageTagInfo.find(tag) != messageTagInfo.end() || tag == TAG_ANY)
+  {
+    std::stringstream msg;
+    msg<<"Invalid message tag: "<<tag<<std::endl;
+    throw msg.str();
+  }
 
   messageTagInfo[tag] = std::pair<int,int>(num_recvs, size);
 }
@@ -55,7 +59,7 @@ Messenger::CleanupRequests(int tag)
     std::vector<RequestTagPair> delKeys;
     for (bufferIterator i = recvBuffers.begin(); i != recvBuffers.end(); i++)
     {
-        if (tag == -1 || tag == i->first.second)
+        if (tag == TAG_ANY || tag == i->first.second)
             delKeys.push_back(i->first);
     }
 
@@ -77,7 +81,7 @@ Messenger::CleanupRequests(int tag)
 void
 Messenger::PostRecv(int tag)
 {
-    std::map<int, std::pair<int, int> >::const_iterator it = messageTagInfo.find(tag);
+    auto it = messageTagInfo.find(tag);
     if (it != messageTagInfo.end())
         PostRecv(tag, it->second.second);
 }
@@ -155,9 +159,13 @@ Messenger::PacketCompare(const unsigned char *a, const unsigned char *b)
 void
 Messenger::PrepareForSend(int tag, MemStream *buff, std::vector<unsigned char *> &buffList)
 {
-    std::map<int, std::pair<int, int> >::const_iterator it = messageTagInfo.find(tag);
+    auto  it = messageTagInfo.find(tag);
     if (it == messageTagInfo.end())
-        throw "message tag not found";
+    {
+      std::stringstream msg;
+      msg<<"Message tag not found: "<<tag<<std::endl;
+      throw msg.str();
+    }
 
     int bytesLeft = buff->len();
     int maxDataLen = it->second.second;
