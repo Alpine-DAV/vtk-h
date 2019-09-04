@@ -111,7 +111,6 @@ vtkm::cont::Field CreateCellScalarField(int size, const char* fieldName)
   for(int i = 0; i < size; ++i)
   {
     FieldType val = i / vtkm::Float32(size);
-    val = vtkm::Sin(float(i));
     data.GetPortalControl().Set(i, val);
   }
 
@@ -158,8 +157,7 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* field
   {
     vtkm::Vec<FieldType,3> point = portal.Get(i);
 
-    //FieldType val = vtkm::Magnitude(point) + 1.f;
-    FieldType val = vtkm::Sin(point[0]);
+    FieldType val = vtkm::Magnitude(point) + 1.f;
     data.GetPortalControl().Set(i, val);
   }
 
