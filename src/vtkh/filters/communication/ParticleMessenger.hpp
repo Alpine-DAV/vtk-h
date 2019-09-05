@@ -31,9 +31,9 @@ class ParticleMessenger : public Messenger
                           int nParticles,
                           int nParticlesRecvs);
 
-    void Exchange(std::list<vtkh::Particle> &outData,
-                  std::list<vtkh::Particle> &inData,
-                  std::list<vtkh::Particle> &term,
+    void Exchange(std::vector<vtkh::Particle> &outData,
+                  std::vector<vtkh::Particle> &inData,
+                  std::vector<vtkh::Particle> &term,
                   int &numTerminateMessages);
 
     // Send/Recv Integral curves.
@@ -56,17 +56,9 @@ class ParticleMessenger : public Messenger
 
     // Send/Recv datasets.
     bool RecvAny(std::vector<MsgCommData> *msgs,
-                 std::list<ParticleCommData<Particle>> *recvParticles,
+                 std::vector<ParticleCommData<Particle>> *recvParticles,
                  std::vector<DSCommData> *ds,
                  bool blockAndWait);
-
-  void AddLocator(int domain, vtkm::cont::DataSet &ds)
-  {
-      vtkm::cont::CellLocatorUniformBins locator;
-      locator.SetCoordinates(ds.GetCoordinateSystem());
-      locator.SetCellSet(ds.GetCellSet());
-      gridLocators.insert(std::pair<int,vtkm::cont::CellLocatorUniformBins>(domain, locator));
-  }
 
   private:
     bool done;
@@ -77,10 +69,10 @@ class ParticleMessenger : public Messenger
     bool RecvParticles(Container<ParticleCommData<P>, Allocator> &recvICs);
 
     void
-    ParticleSorter(std::list<vtkh::Particle> &outData,
-                   std::list<vtkh::Particle> &inData,
-                   std::list<vtkh::Particle> &term,
-                   std::map<int, std::list<Particle>> &sendData);
+    ParticleSorter(std::vector<vtkh::Particle> &outData,
+                   std::vector<vtkh::Particle> &inData,
+                   std::vector<vtkh::Particle> &term,
+                   std::map<int, std::vector<Particle>> &sendData);
 
     enum
     {
@@ -89,8 +81,6 @@ class ParticleMessenger : public Messenger
     };
 
     static int CalcParticleBufferSize(int nParticles, int numBlockIds=2);
-
-    std::map<int, vtkm::cont::CellLocatorUniformBins> gridLocators;
 };
 } //namespace vtkh
 #endif

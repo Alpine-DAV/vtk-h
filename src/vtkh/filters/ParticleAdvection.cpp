@@ -111,9 +111,9 @@ template<>
 int
 ParticleAdvection::InternalIntegrate<vtkm::worklet::ParticleAdvectionResult>(DataBlockIntegrator &blk,
                                      std::vector<Particle> &v,
-                                     std::list<Particle> &I,
-                                     std::list<Particle> &T,
-                                     std::list<Particle> &A,
+                                     std::vector<Particle> &I,
+                                     std::vector<Particle> &T,
+                                     std::vector<Particle> &A,
                                      std::vector<vtkm::worklet::ParticleAdvectionResult> &traces
                                      )
 {
@@ -124,9 +124,9 @@ template<>
 int
 ParticleAdvection::InternalIntegrate<vtkm::worklet::StreamlineResult>(DataBlockIntegrator &blk,
                                      std::vector<Particle> &v,
-                                     std::list<Particle> &I,
-                                     std::list<Particle> &T,
-                                     std::list<Particle> &A,
+                                     std::vector<Particle> &I,
+                                     std::vector<Particle> &T,
+                                     std::vector<Particle> &A,
                                      std::vector<vtkm::worklet::StreamlineResult> &traces
                                      )
 {
@@ -142,21 +142,11 @@ void ParticleAdvection::TraceSingleThread(std::vector<ResultT> &traces)
   ParticleMessenger communicator(mpiComm, boundsMap);
   communicator.RegisterMessages(2, std::min(64, numRanks-1), 128, std::min(64, numRanks-1));
 
-  const int nDoms = this->m_input->GetNumberOfDomains();
-  for (int i = 0; i < nDoms; i++)
-  {
-    vtkm::Id id;
-    vtkm::cont::DataSet ds;
-    this->m_input->GetDomain(i, ds, id);
-    communicator.AddLocator(id, ds);
-  }
-
   int N = 0;
   while (true)
   {
       DBG("MANAGE: termCount= "<<terminated.size()<<std::endl<<std::endl);
-      std::vector<Particle> v;
-      std::list<Particle> I, T, A;
+      std::vector<Particle> v, I, T, A;
 
       if (GetActiveParticles(v))
       {
@@ -176,7 +166,7 @@ void ParticleAdvection::TraceSingleThread(std::vector<ResultT> &traces)
               active.insert(active.end(), A.begin(), A.end());
       }
 
-      std::list<Particle> in;
+      std::vector<Particle> in;
       int numTermMessages;
       communicator.Exchange(I, in, T, numTermMessages);
       int numTerm = T.size() + numTermMessages;
@@ -338,7 +328,7 @@ ParticleAdvection::GetActiveParticles(std::vector<Particle> &v)
 
     int workingBlockID = active.front().blockIds[0];
 
-    std::list<Particle>::iterator listIt = active.begin();
+    std::vector<Particle>::iterator listIt = active.begin();
     while (listIt != active.end())
     {
       Particle p = *listIt;

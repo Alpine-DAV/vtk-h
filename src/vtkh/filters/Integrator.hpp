@@ -34,27 +34,11 @@ public:
         rk4 = RK4Type(gridEval, stepSize);
     }
 
-    /*
-    int Go(bool recordPath,
-           std::vector<Particle> &particles,
-           const vtkm::Id &maxSteps,
-           std::list<Particle> &I,
-           std::list<Particle> &T,
-           std::list<Particle> &A,
-           std::vector<vtkm::worklet::StreamlineResult<FieldType>> *particleTraces=NULL)
-    {
-        if (recordPath)
-            return Trace(particles, maxSteps, I, T, A, particleTraces);
-        else
-            return Advect(particles, maxSteps, I, T, A, particleTraces);
-    }
-    */
-
     int Advect(std::vector<vtkh::Particle> &particles,
                const vtkm::Id &maxSteps,
-               std::list<vtkh::Particle> &I,
-               std::list<vtkh::Particle> &T,
-               std::list<vtkh::Particle> &A,
+               std::vector<vtkh::Particle> &I,
+               std::vector<vtkh::Particle> &T,
+               std::vector<vtkh::Particle> &A,
                std::vector<vtkm::worklet::ParticleAdvectionResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
@@ -105,9 +89,9 @@ public:
 
     int Trace(std::vector<vtkh::Particle> &particles,
               const vtkm::Id &maxSteps,
-              std::list<vtkh::Particle> &I,
-              std::list<vtkh::Particle> &T,
-              std::list<vtkh::Particle> &A,
+              std::vector<vtkh::Particle> &I,
+              std::vector<vtkh::Particle> &T,
+              std::vector<vtkh::Particle> &A,
               std::vector<vtkm::worklet::StreamlineResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
@@ -173,9 +157,9 @@ private:
     void UpdateStatus(vtkh::Particle &p,
                       const vtkm::Id &status,
                       const vtkm::Id &maxSteps,
-                      std::list<vtkh::Particle> &I,
-                      std::list<vtkh::Particle> &T,
-                      std::list<vtkh::Particle> &A)
+                      std::vector<vtkh::Particle> &I,
+                      std::vector<vtkh::Particle> &T,
+                      std::vector<vtkh::Particle> &A)
     {
 
         if (p.nSteps >= maxSteps || Terminated(status))

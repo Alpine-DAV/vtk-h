@@ -86,7 +86,7 @@ ParticleMessenger::SendAllMsg(const std::vector<int> &msg)
 
 bool
 ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
-                           std::list<ParticleCommData<Particle>> *recvParticles,
+                           std::vector<ParticleCommData<Particle>> *recvParticles,
                            std::vector<DSCommData> *ds,
                            bool blockAndWait)
 {
@@ -189,7 +189,7 @@ template <typename P, template <typename, typename> class Container,
           typename Allocator>
 bool ParticleMessenger::RecvParticles(Container<P, Allocator> &recvParticles)
 {
-    std::list<ParticleCommData<P>> incoming;
+    std::vector<ParticleCommData<P>> incoming;
 
     if (RecvParticles(incoming))
     {
@@ -201,10 +201,10 @@ bool ParticleMessenger::RecvParticles(Container<P, Allocator> &recvParticles)
 }
 
 void
-ParticleMessenger::ParticleSorter(std::list<vtkh::Particle> &outData,
-                                  std::list<vtkh::Particle> &inData,
-                                  std::list<vtkh::Particle> &term,
-                                  std::map<int, std::list<Particle>> &sendData)
+ParticleMessenger::ParticleSorter(std::vector<vtkh::Particle> &outData,
+                                  std::vector<vtkh::Particle> &inData,
+                                  std::vector<vtkh::Particle> &term,
+                                  std::map<int, std::vector<Particle>> &sendData)
 {
     for (auto &p : outData)
     {
@@ -252,13 +252,13 @@ ParticleMessenger::ParticleSorter(std::list<vtkh::Particle> &outData,
 }
 
 void
-ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
-                            std::list<vtkh::Particle> &inData,
-                            std::list<vtkh::Particle> &term,
+ParticleMessenger::Exchange(std::vector<vtkh::Particle> &outData,
+                            std::vector<vtkh::Particle> &inData,
+                            std::vector<vtkh::Particle> &term,
                             int &numTerminatedMessages)
 {
   DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
-  std::map<int, std::list<Particle>> sendData;
+  std::map<int, std::vector<Particle>> sendData;
 
   TIMER_START("communication");
 
@@ -266,7 +266,7 @@ ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
     ParticleSorter(outData, inData, term, sendData);
 
   //Check if we have anything coming in.
-  std::list<ParticleCommData<Particle>> particleData;
+  std::vector<ParticleCommData<Particle>> particleData;
   std::vector<MsgCommData> msgData;
   numTerminatedMessages = 0;
 
