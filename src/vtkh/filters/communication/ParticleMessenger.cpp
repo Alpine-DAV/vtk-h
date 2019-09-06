@@ -85,9 +85,8 @@ ParticleMessenger::SendAllMsg(const std::vector<int> &msg)
 }
 
 bool
-ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
-                           std::vector<ParticleCommData<Particle>> *recvParticles,
-                           std::vector<DSCommData> *ds,
+ParticleMessenger::RecvAny(std::vector<MsgCommType> *msgs,
+                           std::vector<ParticleCommType> *recvParticles,
                            bool blockAndWait)
 {
     std::set<int> tags;
@@ -118,9 +117,7 @@ ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
             vtkh::read(*buffers[i].second, sendRank);
             vtkh::read(*buffers[i].second, m);
 
-            MsgCommData msg(sendRank, m);
-
-            msgs->push_back(msg);
+            msgs->push_back(std::make_pair(sendRank, m));
         }
         else if (buffers[i].first == ParticleMessenger::PARTICLE_TAG)
         {
@@ -128,12 +125,12 @@ ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
             std::size_t num;
             vtkh::read(*buffers[i].second, sendRank);
             vtkh::read(*buffers[i].second, num);
-            for (int j = 0; j < num; j++)
+            if (num > 0)
             {
-                Particle recvP;
-                vtkh::read(*(buffers[i].second), recvP);
-                ParticleCommData<Particle> d(sendRank, recvP);
-                recvParticles->push_back(d);
+                std::vector<vtkh::Particle> particles(num);
+                for (int j = 0; j < num; j++)
+                    vtkh::read(*(buffers[i].second), particles[j]);
+                recvParticles->push_back(std::make_pair(sendRank, particles));
             }
         }
 
@@ -141,12 +138,6 @@ ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
     }
 
     return true;
-}
-
-bool
-ParticleMessenger::RecvMsg(std::vector<MsgCommData> &msgs)
-{
-    return RecvAny(&msgs, NULL, NULL, false);
 }
 
 template <typename P, template <typename, typename> class Container,
@@ -176,28 +167,6 @@ void ParticleMessenger::SendParticles(const std::map<int, Container<P, Allocator
     for (auto mit = m.begin(); mit != m.end(); mit++)
         if (! mit->second.empty())
             SendParticles(mit->first, mit->second);
-}
-
-template <typename P, template <typename, typename> class Container,
-          typename Allocator>
-bool ParticleMessenger::RecvParticles(Container<ParticleCommData<P>, Allocator> &recvParticles)
-{
-  return RecvAny(NULL, &recvParticles, NULL, false);
-}
-
-template <typename P, template <typename, typename> class Container,
-          typename Allocator>
-bool ParticleMessenger::RecvParticles(Container<P, Allocator> &recvParticles)
-{
-    std::vector<ParticleCommData<P>> incoming;
-
-    if (RecvParticles(incoming))
-    {
-        for (auto &it : incoming)
-            recvParticles.push_back(it.p);
-        return true;
-    }
-    return false;
 }
 
 void
@@ -266,26 +235,26 @@ ParticleMessenger::Exchange(std::vector<vtkh::Particle> &outData,
     ParticleSorter(outData, inData, term, sendData);
 
   //Check if we have anything coming in.
-  std::vector<ParticleCommData<Particle>> particleData;
-  std::vector<MsgCommData> msgData;
+  std::vector<ParticleCommType> particleData;
+  std::vector<MsgCommType> msgData;
   numTerminatedMessages = 0;
 
-  if (RecvAny(&msgData, &particleData, NULL, false))
+  if (RecvAny(&msgData, &particleData, false))
   {
     DBG("-----Recv: M: "<<msgData<<" P: "<<particleData<<std::endl);
     for (auto &p : particleData)
-        inData.push_back(p.p);
+        inData.insert(inData.end(), p.second.begin(), p.second.end());
 
     for (auto &m : msgData)
     {
-      if (m.message[0] == MSG_TERMINATE)
+      if (m.second[0] == MSG_TERMINATE)
       {
-          numTerminatedMessages += m.message[1];
-          DBG("-----TERMinate: Recv: "<<m.message[1]<<std::endl);
+          numTerminatedMessages += m.second[1];
+          DBG("-----TERMinate: Recv: "<<m.second[1]<<std::endl);
       }
-      else if (m.message[0] == MSG_DONE)
+      else if (m.second[0] == MSG_DONE)
       {
-        DBG("-----DONE RECEIVED: "<<m.message[1]<<std::endl);
+        DBG("-----DONE RECEIVED: "<<m.second[1]<<std::endl);
         done = true;
       }
     }

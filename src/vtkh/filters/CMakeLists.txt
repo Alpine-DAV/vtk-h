@@ -23,14 +23,12 @@ set(vtkh_filters_headers
   Slice.hpp
   VectorMagnitude.hpp
   communication/BoundsMap.hpp
-  communication/CommData.hpp
   communication/Communicator.hpp
   communication/MemStream.h
   )
 
 set(vtkh_comm_filters_headers
   communication/BoundsMap.hpp
-  communication/CommData.hpp
   communication/Communicator.hpp
   communication/MemStream.h
   )

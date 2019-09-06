@@ -2,6 +2,7 @@
 #include <string.h>
 #include "MemStream.h"
 #include "Messenger.hpp"
+#include <vtkh/utils/StreamUtil.hpp>
 
 namespace vtkh
 {

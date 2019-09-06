@@ -6,8 +6,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include "CommData.hpp"
-#include "../Particle.hpp"
 
 namespace vtkh
 {

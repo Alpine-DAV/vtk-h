@@ -338,9 +338,7 @@ ParticleAdvection::GetActiveParticles(std::vector<Particle> &v)
         listIt = active.erase(listIt);
       }
       else
-      {
         listIt++;
-      }
     }
     return !v.empty();
 }

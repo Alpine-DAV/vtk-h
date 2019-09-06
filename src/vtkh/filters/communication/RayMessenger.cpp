@@ -80,7 +80,7 @@ RayMessenger::SendAllMsg(vector<int> &msg)
 }
 
 bool
-RayMessenger::RecvAny(vector<MsgCommData> *msgs,
+RayMessenger::RecvAny(vector<MsgCommType> *msgs,
                       std::vector<vtkh::Ray> *rays,
                       bool blockAndWait)
 {
@@ -116,10 +116,7 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
           vtkh::read(*buffers[i].second, message_id);
           m_log<<sendRank<<" "<<message_id<<"\n";
 #endif
-
-          MsgCommData msg(sendRank, m);
-
-          msgs->push_back(msg);
+          msgs->push_back(std::make_pair(sendRank, m));
         }
         else if (buffers[i].first == RayMessenger::RAY_TAG)
         {
@@ -147,7 +144,7 @@ RayMessenger::RecvAny(vector<MsgCommData> *msgs,
 }
 
 bool
-RayMessenger::RecvMsg(vector<MsgCommData> &msgs)
+RayMessenger::RecvMsg(vector<MsgCommType> &msgs)
 {
     return RecvAny(&msgs, NULL, false);
 }

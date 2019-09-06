@@ -6,7 +6,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include "CommData.hpp"
 #include <vtkh/filters/Particle.hpp>
 #include <vtkh/filters/communication/Messenger.hpp>
 #include <vtkh/filters/communication/BoundsMap.hpp>
@@ -21,6 +20,9 @@ class ParticleMessenger : public Messenger
 {
     const int MSG_TERMINATE = 1;
     const int MSG_DONE = 1;
+
+    using MsgCommType = std::pair<int, std::vector<int>>;
+    using ParticleCommType = std::pair<int, std::vector<vtkh::Particle>>;
 
   public:
     ParticleMessenger(MPI_Comm comm, const vtkh::BoundsMap &bm);
@@ -45,28 +47,22 @@ class ParticleMessenger : public Messenger
               typename Allocator=std::allocator<P>>
     void SendParticles(const std::map<int, Container<P, Allocator>> &m);
 
-    template <typename P, template <typename, typename> class Container,
-              typename Allocator=std::allocator<P>>
-    bool RecvParticles(Container<P, Allocator> &recvICs);
-
     // Send/Recv messages.
     void SendMsg(int dst, const std::vector<int> &msg);
     void SendAllMsg(const std::vector<int> &msg);
-    bool RecvMsg(std::vector<MsgCommData> &msgs);
+    bool RecvMsg(std::vector<MsgCommType> &msgs)
+    {
+      return RecvAny(&msgs, NULL, false);
+    }
 
     // Send/Recv datasets.
-    bool RecvAny(std::vector<MsgCommData> *msgs,
-                 std::vector<ParticleCommData<Particle>> *recvParticles,
-                 std::vector<DSCommData> *ds,
+    bool RecvAny(std::vector<MsgCommType> *msgs,
+                 std::vector<ParticleCommType> *recvParticles,
                  bool blockAndWait);
 
   private:
     bool done;
     vtkh::BoundsMap boundsMap;
-
-    template <typename P, template <typename, typename> class Container,
-              typename Allocator=std::allocator<P>>
-    bool RecvParticles(Container<ParticleCommData<P>, Allocator> &recvICs);
 
     void
     ParticleSorter(std::vector<vtkh::Particle> &outData,
