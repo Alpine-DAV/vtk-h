@@ -14,7 +14,6 @@ cmake_policy(SET CMP0048 NEW)
 
 project(VTKh VERSION "0.4.0")
 
-
 set(VTKh_EXPORT_NAME "VTKhTargets")
 if (NOT DEFINED VTKh_INSTALL_INCLUDE_DIR)
   set(VTKh_INSTALL_INCLUDE_DIR "include")
@@ -53,6 +52,13 @@ option(BUILD_SHARED_LIBS  "Build shared libraries"    ON)
 option(ENABLE_TESTS       "Build tests"               ON)
 option(ENABLE_CUDA        "Enable CUDA Support"       OFF)
 option(ENABLE_MPI         "Build MPI Support"         ON)
+option(ENABLE_SERIAL      "Build serial (non-MPI) libraries"    ON)
+
+if(NOT ENABLE_SERIAL AND NOT ENABLE_MPI)
+  message(FATAL_ERROR "No libraries are built. "
+    "Please set ENABLE_SERIAL, ENABLE_MPI or both to ON")
+endif()
+
 
 if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
   message(FATAL_ERROR "Static libraries are required when building with CUDA")
@@ -119,15 +125,17 @@ add_subdirectory(vtkh)
 
 #------------------------------------------------------------------------------
 # Add a interface target that makes it easier to depend on VTKh
-add_library(vtkh INTERFACE)
-target_link_libraries(vtkh INTERFACE
-                      vtkh_core
-                      vtkh_utils
-                      vtkh_filters
-                      vtkh_rendering)
+if (ENABLE_SERIAL)
+  add_library(vtkh INTERFACE)
+  target_link_libraries(vtkh INTERFACE
+                        vtkh_core
+                        vtkh_utils
+                        vtkh_filters
+                        vtkh_rendering)
 
-# Install libraries
-install(TARGETS vtkh EXPORT ${VTKh_EXPORT_NAME})
+  # Install libraries
+  install(TARGETS vtkh EXPORT ${VTKh_EXPORT_NAME})
+endif()
 
 if (ENABLE_MPI)
   add_library(vtkh_mpi INTERFACE)

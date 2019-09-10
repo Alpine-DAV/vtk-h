@@ -98,7 +98,7 @@ TEST(vtkh_marching_cubes, vtkh_empty)
 
   vtkm::Bounds bounds = iso_output->GetGlobalBounds();
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkm::rendering::Camera camera; 
+  vtkm::rendering::Camera camera;
   camera.ResetToBounds(bounds);
   vtkh::Render render = vtkh::MakeRender(512,
                                          512,

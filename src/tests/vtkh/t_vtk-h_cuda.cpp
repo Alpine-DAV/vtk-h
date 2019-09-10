@@ -63,7 +63,7 @@ TEST(vtkh_cuda, vtkh_cuda_iface_checks)
   //vtkh::ForceCUDA();
   EXPECT_TRUE(vtkh::IsCUDAEnabled());
   EXPECT_TRUE(vtkh::CUDADeviceCount() > 0);
-  vtkh::SelectCUDADevice(1);
+  vtkh::SelectCUDADevice(0);
 
   std::cout << vtkh::CUDADeviceCount();
 
