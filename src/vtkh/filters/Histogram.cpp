@@ -65,6 +65,7 @@ template<>
 void reduce<vtkm::Int32>(vtkm::Int32 *array, int size)
 {
 #ifdef VTKH_PARALLEL
+  std::cout<<"Inside VTKH_PARALLEL"<<std::endl;
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   MPI_Allreduce(MPI_IN_PLACE,array,size, MPI_INT,MPI_SUM,mpi_comm);
 #else
@@ -120,7 +121,21 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
     throw Error("Histogram: field '"+field_name+"' does not exist");
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Range> ranges = data_set.GetRange(field_name);
+  vtkm::cont::ArrayHandle<vtkm::Range> ranges = data_set.GetGlobalRange(field_name); 
+
+
+  /*vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl ranges_1 = globCounts.GetPortalConstControl();
+
+    vtkm::Id sum_1 = 0;
+    for (vtkm::Id i = 0; i < numberOfBins; i++)
+    {
+            sum_1 += binPortal_1.Get(i);
+            std::cout << "  BIN[" << i << "] " << binPortal_1.Get(i)<< std::endl;
+    }
+    std::cout<<"total points:"<<sum_1<<std::endl;*/
+
+
+
 
   if(ranges.GetNumberOfValues() != 1)
   {
@@ -137,6 +152,8 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
     range = ranges.GetPortalControl().Get(0);
   }
 
+  std::cout<<"min: "<<range.Min<<" max: "<<range.Max<<std::endl;
+  
   const int num_domains = data_set.GetNumberOfDomains();
   std::vector<HistogramResult> local_histograms;
   for(int i = 0; i < num_domains; ++i)

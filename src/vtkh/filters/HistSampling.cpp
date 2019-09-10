@@ -17,6 +17,9 @@
 #include <algorithm>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 namespace vtkh
 {
@@ -112,7 +115,12 @@ calculate_pdf(const vtkm::Int32 tot_points,
   int counter=0;
   for(vtkm::Float32 n : targetSamples)
   {
-    acceptance_portal.Set(binPortal.Get(counter).second,n/binPortal.Get(counter).first);
+
+    if (binPortal.Get(counter).first<0.00000000000001)
+    	acceptance_portal.Set(binPortal.Get(counter).second,0.0);
+    else
+	acceptance_portal.Set(binPortal.Get(counter).second,n/binPortal.Get(counter).first);
+    
     sum+=n;
     counter++;
 
@@ -126,7 +134,7 @@ calculate_pdf(const vtkm::Int32 tot_points,
 }
 
 HistSampling::HistSampling()
-  : m_sample_percent(0.1f),
+  : m_sample_percent(0.3f),
     m_num_bins(128)
 {
 
@@ -248,7 +256,8 @@ void HistSampling::DoExecute()
 {
 
   vtkh::DataSet *input = this->m_input;
-  bool has_ghosts = m_ghost_field != "";
+  m_ghost_field = "ghost_indicator";
+  bool has_ghosts = m_ghost_field != "";  
 
   if(has_ghosts)
   {
@@ -267,6 +276,7 @@ void HistSampling::DoExecute()
   Histogram histogrammer;
   histogrammer.SetNumBins(m_num_bins);
   Histogram::HistogramResult histogram = histogrammer.Run(*input,m_field_name);
+  
   //histogram.Print();
 
   vtkm::Id numberOfBins = histogram.m_bins.GetNumberOfValues();
@@ -275,8 +285,18 @@ void HistSampling::DoExecute()
   vtkm::cont::Field::Association assoc = input->GetFieldAssociation(m_field_name,
                                                                     valid_field);
 
+
   for(int i = 0; i < num_domains; ++i)
   {
+    // comment
+
+    std::fstream myfile;
+    std::stringstream ss;
+    ss<<i;
+    std::string fname = "out_" + ss.str() + ".txt";
+    myfile.open (fname, std::ios::out | std::ios::app);
+  
+
     vtkm::Range range;
     vtkm::Float64 delta;
     vtkm::cont::DataSet &dom = input->GetDomain(i);
@@ -300,6 +320,24 @@ void HistSampling::DoExecute()
 
     vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
 
+    
+    // printing histogram
+    vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal_1 = globCounts.GetPortalConstControl();
+    vtkm::Id sum_1 = 0;
+    for (vtkm::Id i = 0; i < numberOfBins; i++)
+    {
+            sum_1 += binPortal_1.Get(i);
+            //std::cout << "  BIN[" << i << "] " << binPortal_1.Get(i)<< std::endl;
+            myfile << "  BIN[" << i << "] " << binPortal_1.Get(i)<< std::endl;
+    }
+
+    
+    myfile << std::endl;
+    myfile << std::endl;
+    
+    //std::cout<<"total points:"<<sum_1<<std::endl;
+      
+
     // start doing sampling
 
     vtkm::Int32 tot_points = data.GetNumberOfValues();
@@ -315,6 +353,25 @@ void HistSampling::DoExecute()
 
     vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
     probArray = detail::calculate_pdf(tot_points, numberOfBins, m_sample_percent, globCounts);
+    
+
+    //printing prob array
+    vtkm::cont::ArrayHandle<vtkm::Float32>::PortalConstControl binPortal = probArray.GetPortalConstControl();
+    vtkm::Id sum = 0;
+    for (vtkm::Id i = 0; i < numberOfBins; i++)
+    {
+      //vtkm::Float64 lo = range.Min + (static_cast<vtkm::Float64>(i) * delta);
+      //vtkm::Float64 hi = lo + delta;
+      sum += binPortal.Get(i);
+      //std::cout << "My BIN[" << i << "] " << binPortal.Get(i)<< std::endl;
+      myfile << "  probArray[" << i << "] " << binPortal.Get(i)<< std::endl;
+     
+    }
+    //std::cout<<"total points:"<<sum<<std::endl;
+   
+
+
+    myfile.close();
 
     vtkm::cont::ArrayHandle <vtkm::UInt8> stencilBool;
     vtkm::worklet::DispatcherMapField<LookupWorklet>(LookupWorklet{numberOfBins,
