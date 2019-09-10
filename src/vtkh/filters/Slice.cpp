@@ -409,17 +409,11 @@ Slice::DoExecute()
     marcher.Update();
     slices.push_back(marcher.GetOutput());
   } // each slice
-  for(int i = 0; i < slices.size(); ++i)
-  {
-    std::cout<<"**************************************\n";
-    slices[i]->PrintSummary(std::cout);
-  }
+
   if(slices.size() > 1)
   {
     detail::MergeContours merger(slices, fname);
     this->m_output = merger.Merge();
-    std::cout<<"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n";
-    this->m_output->PrintSummary(std::cout);
   }
   else
   {
