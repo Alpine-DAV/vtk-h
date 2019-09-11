@@ -12,11 +12,13 @@ namespace vtkh
 class Log: public Filter
 {
 public:
-  Log(); 
-  virtual ~Log(); 
-  std::string GetName() const override; 
+  Log();
+  virtual ~Log();
+  std::string GetName() const override;
   void SetField(const std::string &field_name);
   void SetResultField(const std::string &field_name);
+  void SetClampToMin(bool on);
+  void SetClampMin(vtkm::Float32 min_value);
 
   std::string GetField() const;
   std::string GetResultField() const;
@@ -26,6 +28,8 @@ protected:
   void DoExecute() override;
   std::string m_field_name;
   std::string m_result_name;
+  vtkm::Float32 m_min_value;
+  bool m_clamp_to_min;
 
 };
 
