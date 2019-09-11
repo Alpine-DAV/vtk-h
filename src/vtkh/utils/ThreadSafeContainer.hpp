@@ -1,6 +1,7 @@
 #ifndef VTK_H_THREAD_SAFE_CONTAINER_HPP
 #define VTK_H_THREAD_SAFE_CONTAINER_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <algorithm>
 #include <vtkh/utils/Mutex.hpp>
 
@@ -9,7 +10,7 @@ namespace vtkh
 
 template <typename T,
           template <typename, typename> class Container>
-class ThreadSafeContainer
+class VTKH_API ThreadSafeContainer
 {
 public:
  ThreadSafeContainer()

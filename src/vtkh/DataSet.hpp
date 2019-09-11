@@ -5,13 +5,14 @@
 #include <vector>
 #include <string>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkm/cont/DataSet.h>
 
 namespace vtkh
 {
 
-class DataSet
+class VTKH_API DataSet
 {
 protected:
   std::vector<vtkm::cont::DataSet> m_domains;

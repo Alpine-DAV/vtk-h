@@ -1,13 +1,14 @@
 #ifndef VTK_H_CLIP_HPP
 #define VTK_H_CLIP_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/filters/Filter.hpp>
 #include <memory>
 
 namespace vtkh
 {
 
-class Clip: public Filter
+class VTKH_API Clip: public Filter
 {
 public:
   Clip();

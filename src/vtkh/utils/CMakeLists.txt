@@ -17,31 +17,33 @@ set(vtkh_utils_sources
   )
 
 set(vtkh_utils_thirdparty_libs vtkm vtkh_lodepng)
-if (ENABLE_SERIAL)    
+if (ENABLE_SERIAL)
     if(CUDA_FOUND)
       list(APPEND vtkh_utils_thirdparty_libs cuda)
     endif()
-    
+
     if(ENABLE_OPENMP)
       list(APPEND vtkh_utils_thirdparty_libs openmp)
     endif()
-    
+
     if(ENABLE_OPENMP)
         list(APPEND vtkh_utils_thirdparty_libs openmp)
     endif()
-    
+
     blt_add_library(
       NAME vtkh_utils
       SOURCES ${vtkh_utils_sources}
       HEADERS ${vtkh_utils_headers}
       DEPENDS_ON ${vtkh_utils_thirdparty_libs}
       )
-    
+
     if(ENABLE_OPENMP)
         blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
     endif()
-    
-    
+
+    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_COMPILING_FLAG")
+
+
     # Install libraries
     install(TARGETS vtkh_utils
       EXPORT ${VTKh_EXPORT_NAME}
@@ -49,7 +51,7 @@ if (ENABLE_SERIAL)
       LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
       RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
       )
-    
+
     # Install headers
     install(FILES ${vtkh_utils_headers}
             DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/utils)
@@ -65,6 +67,7 @@ if (MPI_FOUND)
       )
 
     blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_PARALLEL")
+    blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_COMPILING_FLAG")
 
     if(ENABLE_OPENMP)
         blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_USE_OPENMP")

@@ -7,12 +7,13 @@
 #ifndef VTKM_DATASET_INFO_HPP
 #define VTKM_DATASET_INFO_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/Actor.h>
 
 namespace vtkh {
 
-class VTKMDataSetInfo
+class VTKH_API VTKMDataSetInfo
 {
 public:
  typedef typename vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;

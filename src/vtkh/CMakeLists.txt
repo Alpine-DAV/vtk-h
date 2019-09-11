@@ -1,8 +1,14 @@
 #==============================================================================
 # See License.txt
 #==============================================================================
-add_subdirectory(utils)
 add_subdirectory(thirdparty_builtin)
+
+##################################
+# Hide sybols for all vtkh targets
+##################################
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
+add_subdirectory(utils)
 
 set(vtkh_core_headers
   DataSet.hpp
@@ -10,6 +16,7 @@ set(vtkh_core_headers
   Logger.hpp
   StatisticsDB.hpp
   vtkh.hpp
+  vtkh_exports.h
   )
 
 set(vtkh_core_sources
@@ -39,9 +46,10 @@ if (ENABLE_SERIAL)
       HEADERS ${vtkh_core_headers}
       DEPENDS_ON ${vtkh_core_deps}
       )
-    
+
     vtkm_add_target_information(vtkh_core DEVICE_SOURCES ${vtkh_core_sources})
-    
+    blt_add_target_compile_flags(TO vtkh_core FLAGS "-DVTKH_COMPILING_FLAG")
+
     # Install libraries
     install(TARGETS vtkh_core
       EXPORT ${VTKh_EXPORT_NAME}
@@ -74,6 +82,7 @@ if(MPI_FOUND)
   vtkm_add_target_information(vtkh_core_mpi DEVICE_SOURCES ${vtkh_core_sources})
 
   blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-DVTKH_PARALLEL")
+  blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-DVTKH_COMPILING_FLAG")
 
   # Install libraries
   install(TARGETS vtkh_core_mpi

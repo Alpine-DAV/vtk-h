@@ -1,6 +1,7 @@
 #ifndef VTK_H_LOG_HPP
 #define VTK_H_LOG_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -9,7 +10,7 @@
 namespace vtkh
 {
 
-class Log: public Filter
+class VTKH_API Log: public Filter
 {
 public:
   Log();

@@ -15,9 +15,10 @@
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/filters/Particle.hpp>
 
-class Integrator
+class VTKH_API Integrator
 {
     typedef vtkm::Float64 FieldType;
     typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;

@@ -7,6 +7,7 @@
 #include <map>
 #include <algorithm>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/StatisticsDB.hpp>
 #include <vtkh/filters/Filter.hpp>
@@ -23,7 +24,7 @@ namespace vtkh
 {
 class DataBlockIntegrator;
 
-class ParticleAdvection : public Filter
+class VTKH_API ParticleAdvection : public Filter
 {
 public:
   enum SeedMethod {RANDOM=0, RANDOM_BLOCK, RANDOM_BOX, POINT};

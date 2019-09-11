@@ -1,6 +1,7 @@
 #ifndef VTK_H_LOGGER_HPP
 #define VTK_H_LOGGER_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/utils/StreamUtil.hpp>
 #include <stack>
 
@@ -8,7 +9,7 @@
 namespace vtkh
 {
 
-class Logger
+class VTKH_API Logger
 {
 public:
   static Logger *GetInstance(const std::string& name);
@@ -25,7 +26,7 @@ protected:
   static std::map<std::string, Logger*> Loggers;
 };
 
-class DataLogger
+class VTKH_API DataLogger
 {
 public:
   ~DataLogger();

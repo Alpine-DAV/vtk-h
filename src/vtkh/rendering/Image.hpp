@@ -5,10 +5,12 @@
 #include <vector>
 #include <vtkm/Bounds.h>
 
+#include <vtkh/vtkh_exports.h>
+
 namespace vtkh
 {
 
-struct Image
+struct VTKH_API Image
 {
     // The image bounds are indicated by a grid starting at
     // 1-width and 1-height. Actual width would be calculated

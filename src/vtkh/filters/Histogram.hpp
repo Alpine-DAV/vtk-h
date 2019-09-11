@@ -2,6 +2,7 @@
 #define VTK_H_HISTOGRAM_HPP
 
 #include <vtkh/vtkh.hpp>
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
 
@@ -11,7 +12,7 @@
 namespace vtkh
 {
 
-class Histogram
+class VTKH_API Histogram
 {
 public:
   Histogram();
