@@ -48,7 +48,7 @@ if (ENABLE_SERIAL)
       )
 
     vtkm_add_target_information(vtkh_core DEVICE_SOURCES ${vtkh_core_sources})
-    blt_add_target_compile_flags(TO vtkh_core FLAGS "-DVTKH_COMPILING_FLAG")
+    target_compile_definitions(vtkh_core PRIVATE VTKH_COMPILING_FLAG)
 
     # Install libraries
     install(TARGETS vtkh_core
@@ -81,8 +81,8 @@ if(MPI_FOUND)
 
   vtkm_add_target_information(vtkh_core_mpi DEVICE_SOURCES ${vtkh_core_sources})
 
-  blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-DVTKH_PARALLEL")
-  blt_add_target_compile_flags(TO vtkh_core_mpi FLAGS "-DVTKH_COMPILING_FLAG")
+  target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_PARALLEL)
+  target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_COMPILING_FLAG)
 
   # Install libraries
   install(TARGETS vtkh_core_mpi

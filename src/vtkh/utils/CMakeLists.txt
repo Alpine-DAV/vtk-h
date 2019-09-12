@@ -37,12 +37,11 @@ if (ENABLE_SERIAL)
       DEPENDS_ON ${vtkh_utils_thirdparty_libs}
       )
 
+    target_compile_definitions(vtkh_utils PRIVATE VTKH_COMPILING_FLAG)
+
     if(ENABLE_OPENMP)
-        blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_USE_OPENMP")
+        target_compile_definitions(vtkh_utils PRIVATE VTKH_USE_OPENMP)
     endif()
-
-    blt_add_target_compile_flags(TO vtkh_utils FLAGS "-DVTKH_COMPILING_FLAG")
-
 
     # Install libraries
     install(TARGETS vtkh_utils
@@ -66,11 +65,11 @@ if (MPI_FOUND)
       DEPENDS_ON ${vtkh_utils_thirdparty_libs} mpi
       )
 
-    blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_PARALLEL")
-    blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_COMPILING_FLAG")
+    target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_PARALLEL)
+    target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_COMPILING_FLAG)
 
     if(ENABLE_OPENMP)
-        blt_add_target_compile_flags(TO vtkh_utils_mpi FLAGS "-DVTKH_USE_OPENMP")
+        target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_USE_OPENMP)
     endif()
 
     # Install libraries
