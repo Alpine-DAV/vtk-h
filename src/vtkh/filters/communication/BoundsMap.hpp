@@ -3,6 +3,7 @@
 
 #include <vtkm/Bounds.h>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -23,7 +24,7 @@
 namespace vtkh
 {
 
-class BoundsMap
+class VTKH_API BoundsMap
 {
 public:
   BoundsMap() {}

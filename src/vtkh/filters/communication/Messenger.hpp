@@ -7,12 +7,14 @@
 #include <set>
 #include <map>
 
+#include <vtkh/vtkh_exports.h>
+
 namespace vtkh
 {
 
 class MemStream;
 
-class Messenger
+class VTKH_API Messenger
 {
   public:
     Messenger(MPI_Comm comm);

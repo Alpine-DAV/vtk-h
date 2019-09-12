@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/filters/Particle.hpp>
 #include <vtkh/filters/communication/Messenger.hpp>
 #include <vtkh/filters/communication/BoundsMap.hpp>
@@ -16,7 +17,7 @@ namespace vtkh
 
 class MemStream;
 
-class ParticleMessenger : public Messenger
+class VTKH_API ParticleMessenger : public Messenger
 {
     const int MSG_TERMINATE = 1;
     const int MSG_DONE = 1;
