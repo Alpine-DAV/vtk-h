@@ -572,14 +572,14 @@ PartialCompositor<PartialType>::set_comm_handle(int mpi_comm_id)
 }
 
 //Explicit function instantiations
-template class PartialCompositor<VolumePartial<vtkm::Float32>>;
-template class PartialCompositor<VolumePartial<vtkm::Float64>>;
+template class VTKH_API PartialCompositor<VolumePartial<vtkm::Float32>>;
+template class VTKH_API PartialCompositor<VolumePartial<vtkm::Float64>>;
 
-template class PartialCompositor<AbsorptionPartial<vtkm::Float32>>;
-template class PartialCompositor<AbsorptionPartial<vtkm::Float64>>;
+template class VTKH_API PartialCompositor<AbsorptionPartial<vtkm::Float32>>;
+template class VTKH_API PartialCompositor<AbsorptionPartial<vtkm::Float64>>;
 
-template class PartialCompositor<EmissionPartial<vtkm::Float32>>;
-template class PartialCompositor<EmissionPartial<vtkm::Float64>>;
+template class VTKH_API PartialCompositor<EmissionPartial<vtkm::Float32>>;
+template class VTKH_API PartialCompositor<EmissionPartial<vtkm::Float64>>;
 
 
 } // namespace vtkh
