@@ -4,10 +4,12 @@
 #include <vtkh/rendering/Image.hpp>
 #include <algorithm>
 
+#include<vtkh/vtkh_exports.h>
+
 namespace vtkh
 {
 
-class ImageCompositor
+class VTKH_API ImageCompositor
 {
 public:
   void Blend(vtkh::Image &front, vtkh::Image &back)

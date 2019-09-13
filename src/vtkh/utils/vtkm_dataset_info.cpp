@@ -13,10 +13,9 @@ namespace vtkh
 {
 
 bool VTKMDataSetInfo::IsStructured(const vtkm::cont::DataSet &data_set,
-                                   int &topo_dims,
-                                   const vtkm::Id cell_set_index)
+                                   int &topo_dims)
 {
-  const vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet(cell_set_index);
+  const vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet();
   return IsStructured(cell_set, topo_dims);
 }
 
@@ -239,7 +238,8 @@ VTKMDataSetInfo::IsSingleCellShape(const vtkm::cont::DynamicCellSet &cell_set, v
     {
       vtkm::cont::CellSetExplicit<> exp = cell_set.Cast<vtkm::cont::CellSetExplicit<>>();
       const vtkm::cont::ArrayHandle<vtkm::UInt8> shapes = exp.GetShapesArray(
-        vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        vtkm::TopologyElementTagCell(),
+        vtkm::TopologyElementTagPoint());
 
       vtkm::UInt8 init_min = 255;
       vtkm::UInt8 min = vtkm::cont::Algorithm::Reduce(shapes, init_min, vtkm::Minimum());

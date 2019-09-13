@@ -1,13 +1,14 @@
 #ifndef VTK_H_ISO_VOLUME_HPP
 #define VTK_H_ISO_VOLUME_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/filters/Filter.hpp>
 #include <memory>
 
 namespace vtkh
 {
 
-class IsoVolume: public Filter
+class VTKH_API IsoVolume: public Filter
 {
 public:
   IsoVolume();

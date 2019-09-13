@@ -20,12 +20,13 @@
 #include <chrono>
 #include <ratio>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/utils/StreamUtil.hpp>
 
 namespace vtkh
 {
 
-class StopWatch
+class VTKH_API StopWatch
 {
 public:
     StopWatch(bool _keepHistory=false) : t(0.0f), isRunning(false), keepHistory(_keepHistory) {}
@@ -61,7 +62,7 @@ private:
 };
 
 
-class EventHistory
+class VTKH_API EventHistory
 {
 public:
     EventHistory() : t0(-1000) {}
@@ -99,7 +100,7 @@ public:
     std::vector<std::pair<double,double>> history;
 };
 
-class StatisticsDB
+class VTKH_API StatisticsDB
 {
 public:
 

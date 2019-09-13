@@ -85,9 +85,8 @@ ParticleMessenger::SendAllMsg(const std::vector<int> &msg)
 }
 
 bool
-ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
-                           std::list<ParticleCommData<Particle>> *recvParticles,
-                           std::vector<DSCommData> *ds,
+ParticleMessenger::RecvAny(std::vector<MsgCommType> *msgs,
+                           std::vector<ParticleCommType> *recvParticles,
                            bool blockAndWait)
 {
     std::set<int> tags;
@@ -118,22 +117,20 @@ ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
             vtkh::read(*buffers[i].second, sendRank);
             vtkh::read(*buffers[i].second, m);
 
-            MsgCommData msg(sendRank, m);
-
-            msgs->push_back(msg);
+            msgs->push_back(std::make_pair(sendRank, m));
         }
         else if (buffers[i].first == ParticleMessenger::PARTICLE_TAG)
         {
-            int num, sendRank;
+            int sendRank;
+            std::size_t num;
             vtkh::read(*buffers[i].second, sendRank);
             vtkh::read(*buffers[i].second, num);
-
-            for (int j = 0; j < num; j++)
+            if (num > 0)
             {
-                Particle recvP;
-                vtkh::read(*(buffers[i].second), recvP);
-                ParticleCommData<Particle> d(sendRank, recvP);
-                recvParticles->push_back(d);
+                std::vector<vtkh::Particle> particles(num);
+                for (int j = 0; j < num; j++)
+                    vtkh::read(*(buffers[i].second), particles[j]);
+                recvParticles->push_back(std::make_pair(sendRank, particles));
             }
         }
 
@@ -141,12 +138,6 @@ ParticleMessenger::RecvAny(std::vector<MsgCommData> *msgs,
     }
 
     return true;
-}
-
-bool
-ParticleMessenger::RecvMsg(std::vector<MsgCommData> &msgs)
-{
-    return RecvAny(&msgs, NULL, NULL, false);
 }
 
 template <typename P, template <typename, typename> class Container,
@@ -178,126 +169,92 @@ void ParticleMessenger::SendParticles(const std::map<int, Container<P, Allocator
             SendParticles(mit->first, mit->second);
 }
 
-template <typename P, template <typename, typename> class Container,
-          typename Allocator>
-bool ParticleMessenger::RecvParticles(Container<ParticleCommData<P>, Allocator> &recvParticles)
-{
-  return RecvAny(NULL, &recvParticles, NULL, false);
-}
-
-template <typename P, template <typename, typename> class Container,
-          typename Allocator>
-bool ParticleMessenger::RecvParticles(Container<P, Allocator> &recvParticles)
-{
-    std::list<ParticleCommData<P>> incoming;
-
-    if (RecvParticles(incoming))
-    {
-        for (auto &it : incoming)
-            recvParticles.push_back(it.p);
-        return true;
-    }
-    return false;
-}
-
-//Check allof the blockIds that I could be in. If this rank owns that Id, see if it is really here,
-//if not, send it on.
 void
-ParticleMessenger::ParticleBlockSorter(Particle &p,
-                                       std::list<vtkh::Particle> &inData,
-                                       std::list<vtkh::Particle> &term,
-                                       std::map<int, std::list<Particle>> &sendData)
+ParticleMessenger::ParticleSorter(std::vector<vtkh::Particle> &outData,
+                                  std::vector<vtkh::Particle> &inData,
+                                  std::vector<vtkh::Particle> &term,
+                                  std::map<int, std::vector<Particle>> &sendData)
 {
-  std::vector<int> bids;
-  //Examine each blockID for inclusion in MY blocks.
-  for (auto &bid : p.blockIds)
-  {
-    int dst = boundsMap.GetRank(bid);
-    //One of my data blocks. See if it's really in there.
-    if (dst == rank)
+    for (auto &p : outData)
     {
-        //Dave: Fix this.
-#if 0
-      TIMER_START("gridLocator");
-      auto loc = gridLocators[p.blockIds[0]];
-      vtkm::cont::ArrayHandle<vtkm::Id> cellId;
-      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3>> point, pcoord;
-      std::vector<vtkm::Vec<vtkm::FloatDefault,3>> pt = {p.coords};
-      point = vtkm::cont::make_ArrayHandle(pt);
-      loc.FindCells(point, cellId, pcoord);
-      auto cellPortal = cellId.GetPortalConstControl();
-      TIMER_STOP("gridLocator");
+        //If particle in wrong domain (took no steps), remove this ID, and use what is left below.
+        //otherwise, compute a new set of block ids.
+        if (p.status == vtkh::Particle::WRONG_DOMAIN)
+            p.blockIds.erase(p.blockIds.begin());
+        else
+            p.blockIds = boundsMap.FindBlock(p, true);
 
-      //point in this domain. Set the domain and return.
-      if (cellPortal.Get(0) != -1)
-      {
-#endif
-          p.blockIds = {bid};
-          inData.push_back(p);
-          return;
-#if 0
-      }
-#endif
+        //No blocks, it terminated
+        if (p.blockIds.empty())
+        {
+            p.status = vtkh::Particle::TERMINATE;
+            term.push_back(p);
+        }
+        else
+        {
+            //If we have more than blockId, we want to minimize communication
+            //and put any blocks owned by this rank first.
+            if (p.blockIds.size() > 1)
+            {
+                auto iter = p.blockIds.begin();
+                for (auto iter = p.blockIds.begin(); iter != p.blockIds.end(); iter++)
+                {
+                    int dst = boundsMap.GetRank(*iter);
+                    if (dst == rank)
+                    {
+                        int bid = *iter;
+                        p.blockIds.erase(iter);
+                        p.blockIds.insert(p.blockIds.begin(), bid);
+                        break;
+                    }
+                }
+            }
+
+            //Particle is mine, or put it in the sendData.
+            if (p.blockIds[0] == rank)
+                inData.push_back(p);
+            else
+                sendData[boundsMap.GetRank(p.blockIds[0])].push_back(p);
+        }
     }
-    else
-      bids.push_back(bid);
-  }
-
-  p.blockIds = bids;
-
-  //No blocks remain. Particle terminated.
-  if (p.blockIds.empty())
-  {
-      p.status = vtkh::Particle::TERMINATE;
-      term.push_back(p);
-  }
-  //Otherwise, not mine. Pass it along.
-  else
-      sendData[boundsMap.GetRank(p.blockIds[0])].push_back(p);
+    outData.clear();
 }
 
 void
-ParticleMessenger::Exchange(std::list<vtkh::Particle> &outData,
-                            std::list<vtkh::Particle> &inData,
-                            std::list<vtkh::Particle> &term,
+ParticleMessenger::Exchange(std::vector<vtkh::Particle> &outData,
+                            std::vector<vtkh::Particle> &inData,
+                            std::vector<vtkh::Particle> &term,
                             int &numTerminatedMessages)
 {
   DBG("----ExchangeParticles: O="<<outData<<" I="<<inData<<std::endl);
-  std::map<int, std::list<Particle>> sendData;
+  std::map<int, std::vector<Particle>> sendData;
 
   TIMER_START("communication");
-  if (!outData.empty())
-  {
-    std::vector<std::vector<int>> blockIds;
-    boundsMap.FindBlockIDs(outData, blockIds, true);
-    DBG("-----O.blockIds: "<<outData<<" "<<blockIds<<endl);
 
-    auto bit = blockIds.begin();
-    for (auto lit = outData.begin(); lit != outData.end(); lit++, bit++)
-      ParticleBlockSorter((*lit), inData, term, sendData);
-  }
+  if (!outData.empty())
+    ParticleSorter(outData, inData, term, sendData);
 
   //Check if we have anything coming in.
-  std::list<ParticleCommData<Particle>> particleData;
-  std::vector<MsgCommData> msgData;
+  std::vector<ParticleCommType> particleData;
+  std::vector<MsgCommType> msgData;
   numTerminatedMessages = 0;
 
-  if (RecvAny(&msgData, &particleData, NULL, false))
+  if (RecvAny(&msgData, &particleData, false))
   {
     DBG("-----Recv: M: "<<msgData<<" P: "<<particleData<<std::endl);
     for (auto &p : particleData)
-      ParticleBlockSorter(p.p, inData, term, sendData);
+        inData.insert(inData.end(), p.second.begin(), p.second.end());
 
     for (auto &m : msgData)
     {
-      if (m.message[0] == MSG_TERMINATE)
+      if (m.second[0] == MSG_TERMINATE)
       {
-          numTerminatedMessages += m.message[1];
-          DBG("-----TERMinate: Recv: "<<m.message[1]<<std::endl);
+          numTerminatedMessages += m.second[1];
+          DBG("-----TERMinate: Recv: "<<m.second[1]<<std::endl);
       }
-      else if (m.message[0] == MSG_DONE)
+      else if (m.second[0] == MSG_DONE)
       {
-        DBG("-----DONE RECEIVED: "<<m.message[1]<<std::endl);
+        DBG("-----DONE RECEIVED: "<<m.second[1]<<std::endl);
         done = true;
       }
     }

@@ -120,12 +120,6 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
     throw Error("Histogram: field '"+field_name+"' does not exist");
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Range> ranges = data_set.GetRange(field_name);
-
-  if(ranges.GetNumberOfValues() != 1)
-  {
-    throw Error("Histogram: field must have a single component");
-  }
 
   vtkm::Range range;
   if(m_range.IsNonEmpty())
@@ -134,6 +128,12 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
   }
   else
   {
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges = data_set.GetGlobalRange(field_name);
+
+    if(ranges.GetNumberOfValues() != 1)
+    {
+      throw Error("Histogram: field must have a single component");
+    }
     range = ranges.GetPortalControl().Get(0);
   }
 
@@ -167,7 +167,7 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
 }
 
 void
-Histogram::HistogramResult::Print()
+Histogram::HistogramResult::Print(std::ostream &out)
 {
   auto binPortal = m_bins.GetPortalConstControl();
   const int num_bins = m_bins.GetNumberOfValues();
@@ -177,11 +177,11 @@ Histogram::HistogramResult::Print()
     vtkm::Float64 lo = m_range.Min + (static_cast<vtkm::Float64>(i) * m_bin_delta);
     vtkm::Float64 hi = lo + m_bin_delta;
     sum += binPortal.Get(i);
-    std::cout << " Bin [" << i << "] Range[" << lo
-              << ", " << hi << "] = " << binPortal.Get(i)
-              << "\n";
+    out << " Bin [" << i << "] Range[" << lo
+        << ", " << hi << "] = " << binPortal.Get(i)
+        << "\n";
   }
-  std::cout<<"total points: "<<sum<<"\n";
+  out<<"total points: "<<sum<<"\n";
 }
 
 } //  namespace vtkh

@@ -7,6 +7,7 @@
 #include <map>
 #include <algorithm>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/StatisticsDB.hpp>
 #include <vtkh/filters/Filter.hpp>
@@ -23,7 +24,7 @@ namespace vtkh
 {
 class DataBlockIntegrator;
 
-class ParticleAdvection : public Filter
+class VTKH_API ParticleAdvection : public Filter
 {
 public:
   enum SeedMethod {RANDOM=0, RANDOM_BLOCK, RANDOM_BOX, POINT};
@@ -81,9 +82,9 @@ public:
   template <typename ResultT>
   int InternalIntegrate(DataBlockIntegrator &blk,
                         std::vector<Particle> &v,
-                        std::list<Particle> &I,
-                        std::list<Particle> &T,
-                        std::list<Particle> &A,
+                        std::vector<Particle> &I,
+                        std::vector<Particle> &T,
+                        std::vector<Particle> &A,
                         std::vector<ResultT> &traces);
 
 protected:
@@ -126,7 +127,7 @@ protected:
   std::vector<DataBlockIntegrator*> dataBlocks;
 
   //seed data
-  std::list<Particle> active, inactive, terminated;
+  std::vector<Particle> active, inactive, terminated;
   bool GetActiveParticles(std::vector<Particle> &v);
 
   void DumpTraces(int ts, const std::vector<vtkm::Vec<double,4>> &particleTraces);

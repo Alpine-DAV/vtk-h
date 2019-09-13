@@ -25,12 +25,6 @@ Clip::~Clip()
 }
 
 void
-Clip::SetCellSet(const std::string &cell_set)
-{
-  m_cell_set = cell_set;
-}
-
-void
 Clip::SetInvertClip(bool invert)
 {
   m_invert = invert;
@@ -103,20 +97,10 @@ void Clip::DoExecute()
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
 
-    vtkm::Id cell_set_index = 0;
-    if(m_cell_set != "")
-    {
-      if(dom.HasCellSet(m_cell_set))
-      {
-        cell_set_index = dom.GetCellSetIndex(m_cell_set);
-      }
-    }
-
     vtkh::vtkmClip clipper;
 
     auto dataset = clipper.Run(dom,
                                m_internals->m_func,
-                               cell_set_index,
                                m_invert,
                                this->GetFieldSelection());
 

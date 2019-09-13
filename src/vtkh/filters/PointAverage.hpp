@@ -1,6 +1,7 @@
 #ifndef VTK_H_POINT_AVERAGE_HPP
 #define VTK_H_POINT_AVERAGE_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -8,11 +9,11 @@
 namespace vtkh
 {
 
-class PointAverage : public Filter
+class VTKH_API PointAverage : public Filter
 {
 public:
-  PointAverage(); 
-  virtual ~PointAverage(); 
+  PointAverage();
+  virtual ~PointAverage();
   std::string GetName() const override;
   void SetField(const std::string &field_name);
   void SetOutputField(const std::string &field_name);

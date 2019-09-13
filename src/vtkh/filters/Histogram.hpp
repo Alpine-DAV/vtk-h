@@ -2,15 +2,17 @@
 #define VTK_H_HISTOGRAM_HPP
 
 #include <vtkh/vtkh.hpp>
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
 
 #include <vector>
+#include <iostream>
 
 namespace vtkh
 {
 
-class Histogram
+class VTKH_API Histogram
 {
 public:
   Histogram();
@@ -21,7 +23,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> m_bins;
     vtkm::Range m_range;
     vtkm::Float64 m_bin_delta;
-    void Print();
+    void Print(std::ostream &out);
   };
 
   HistogramResult Run(vtkh::DataSet &data_set, const std::string &field_name);

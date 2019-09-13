@@ -6,15 +6,15 @@
 #include <vector>
 #include <set>
 #include <map>
-#include "CommData.hpp"
-#include "../Particle.hpp"
+
+#include <vtkh/vtkh_exports.h>
 
 namespace vtkh
 {
 
 class MemStream;
 
-class Messenger
+class VTKH_API Messenger
 {
   public:
     Messenger(MPI_Comm comm);
@@ -25,6 +25,8 @@ class Messenger
     {
         int rank, id, tag, numPackets, packet, packetSz, dataSz;
     } Header;
+
+    static constexpr int TAG_ANY = -1;
 
     // Register message tags for this messenger
     // Must be called before InitializeBuffers
@@ -39,7 +41,7 @@ class Messenger
 
 
     //Manage communication.
-    void CleanupRequests(int tag=-1);
+    void CleanupRequests(int tag=TAG_ANY);
     void CheckPendingSendRequests();
 
   protected:

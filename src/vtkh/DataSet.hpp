@@ -5,13 +5,14 @@
 #include <vector>
 #include <string>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkm/cont/DataSet.h>
 
 namespace vtkh
 {
 
-class DataSet
+class VTKH_API DataSet
 {
 protected:
   std::vector<vtkm::cont::DataSet> m_domains;
@@ -42,7 +43,7 @@ public:
                              const vtkm::Id domain_index);
 
   // checks to see if cells exist on this rank
-  bool IsEmpty(const vtkm::Id cell_set_index = 0) const;
+  bool IsEmpty() const;
   // checks to see if cells exist on all ranks
   bool GlobalIsEmpty(const vtkm::Id cell_set_index = 0) const;
   // returns the number of domains on this rank

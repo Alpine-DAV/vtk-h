@@ -117,7 +117,6 @@ vtkm::cont::Field CreateCellScalarField(int size, const char* fieldName)
 
   vtkm::cont::Field field(fieldName,
                           vtkm::cont::Field::Association::CELL_SET,
-                          "cells",
                           data);
   return field;
 }
@@ -142,7 +141,6 @@ vtkm::cont::Field CreateGhostScalarField(vtkm::Id3 dims)
 
   vtkm::cont::Field field("ghosts",
                           vtkm::cont::Field::Association::CELL_SET,
-                          "cells",
                           data);
   return field;
 }
@@ -231,9 +229,9 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   vtkm::cont::CoordinateSystem coords("coords", point_handle);
   data_set.AddCoordinateSystem(coords);
 
-  vtkm::cont::CellSetStructured<3> cell_set("cells");
+  vtkm::cont::CellSetStructured<3> cell_set;
   cell_set.SetPointDimensions(point_dims);
-  data_set.AddCellSet(cell_set);
+  data_set.SetCellSet(cell_set);
 
   int num_points = point_dims[0] * point_dims[1] * point_dims[2];
   int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];

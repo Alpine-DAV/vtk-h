@@ -1,12 +1,14 @@
 #ifndef VTK_H_MUTEX_HPP
 #define VTK_H_MUTEX_HPP
+
+#include <vtkh/vtkh_exports.h>
 #include <memory>
 
 namespace vtkh
 {
 
 //Mutex class for both openmp and std::mutex
-class Mutex
+class VTKH_API Mutex
 {
 
 public:

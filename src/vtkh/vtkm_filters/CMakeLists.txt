@@ -54,6 +54,6 @@ vtkm_add_target_information(vtkm_compiled_filters DEVICE_SOURCES ${vtkm_filter_s
 if(CUDA_FOUND)
   # defend against vtkm code cuda can't reason about
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
-    blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
+    target_compile_definitions(vtkm_compiled_filters PRIVATE VTKH_BYPASS_VTKM_BIH)
   endif()
 endif()

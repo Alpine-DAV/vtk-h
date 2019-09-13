@@ -33,26 +33,14 @@ public:
         m_Rank = vtkh::GetMPIRank();
         m_NumRanks = vtkh::GetMPISize();
         communicator.RegisterMessages(2, std::min(64, m_NumRanks-1), 128, std::min(64, m_NumRanks-1));
-        int nDoms = pa->GetInput()->GetNumberOfDomains();
-        for (int i = 0; i < nDoms; i++)
-        {
-            vtkm::Id id;
-            vtkm::cont::DataSet ds;
-            pa->GetInput()->GetDomain(i, ds, id);
-            communicator.AddLocator(id, ds);
-        }
         ADD_TIMER("worker_sleep");
         ADD_COUNTER("worker_naps");
     }
     ~ParticleAdvectionTask()
     {
-#ifndef VTKH_USE_OPENMP
-      for (auto &w : workerThreads)
-        w.join();
-#endif
     }
 
-    void Init(const std::list<Particle> &particles, int N, int _sleepUS)
+    void Init(const std::vector<Particle> &particles, int N, int _sleepUS)
     {
         numWorkerThreads = 1;
         TotalNumParticles = N;
@@ -117,6 +105,8 @@ public:
 #else
         workerThreads.push_back(std::thread(ParticleAdvectionTask::Worker, this));
         this->Manage();
+        for (auto &t : workerThreads)
+            t.join();
 #endif
     }
 
@@ -136,7 +126,7 @@ public:
             std::vector<Particle> particles;
             if (active.Get(particles))
             {
-                std::list<Particle> I, T, A;
+                std::vector<Particle> I, T, A;
 
                 DataBlockIntegrator *blk = filter->GetBlock(particles[0].blockIds[0]);
 
@@ -175,7 +165,7 @@ public:
         while (true)
         {
             DBG("MANAGE TIA: "<<terminated<<" "<<worker_inactive<<" "<<active<<std::endl<<std::endl);
-            std::list<Particle> out, in, term;
+            std::vector<Particle> out, in, term;
             worker_inactive.Get(out);
             worker_terminated.Get(term);
 
@@ -216,7 +206,7 @@ public:
     std::vector<std::thread> workerThreads;
 #endif
 
-    using ParticleList = vtkh::ThreadSafeContainer<Particle, std::list>;
+    using ParticleList = vtkh::ThreadSafeContainer<Particle, std::vector>;
     using ResultsVec = vtkh::ThreadSafeContainer<ResultT, std::vector>;
 
     ParticleMessenger communicator;

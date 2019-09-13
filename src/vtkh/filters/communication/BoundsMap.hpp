@@ -3,6 +3,7 @@
 
 #include <vtkm/Bounds.h>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -23,7 +24,7 @@
 namespace vtkh
 {
 
-class BoundsMap
+class VTKH_API BoundsMap
 {
 public:
   BoundsMap() {}
@@ -67,7 +68,7 @@ public:
       std::vector<int> res;
       for (auto it = bm.begin(); it != bm.end(); it++)
       {
-          if (ignoreCurrentBlock && p.blockIds[0] == it->first)
+          if (ignoreCurrentBlock && !p.blockIds.empty() && p.blockIds[0] == it->first)
               continue;
           if (p.coords[0] >= it->second.X.Min &&
               p.coords[0] < it->second.X.Max &&

@@ -2,7 +2,6 @@
 #include <vtkh/filters/GhostStripper.hpp>
 #include <vtkh/filters/Threshold.hpp>
 #include <vtkh/filters/Histogram.hpp>
-#include <vtkh/filters/Threshold.hpp>
 #include <vtkh/Error.hpp>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -10,7 +9,6 @@
 
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/worklet/FieldStatistics.h>
-#include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <iostream>
