@@ -14,6 +14,7 @@ set(vtkh_core_headers
   DataSet.hpp
   Error.hpp
   Logger.hpp
+  Timer.hpp
   StatisticsDB.hpp
   vtkh.hpp
   vtkh_exports.h
@@ -22,6 +23,7 @@ set(vtkh_core_headers
 set(vtkh_core_sources
   DataSet.cpp
   Logger.cpp
+  Timer.cpp
   StatisticsDB.cpp
   vtkh.cpp
   )

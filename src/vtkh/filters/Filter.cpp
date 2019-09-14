@@ -1,5 +1,6 @@
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/Error.hpp>
+#include <vtkh/Logger.hpp>
 
 namespace vtkh
 {
