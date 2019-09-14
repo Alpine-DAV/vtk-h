@@ -21,7 +21,7 @@
 #include <vtkh/filters/ParticleAdvectionTask.hpp>
 #endif
 
-#ifdef ENABLE_LOGGING
+#ifdef VTKH_ENABLE_LOGGING
 #define DBG(msg) vtkh::Logger::GetInstance("out")->GetStream()<<msg
 #define WDBG(msg) vtkh::Logger::GetInstance("wout")->GetStream()<<msg
 #else

@@ -49,6 +49,9 @@ if (ENABLE_SERIAL)
 
     vtkm_add_target_information(vtkh_core DEVICE_SOURCES ${vtkh_core_sources})
     target_compile_definitions(vtkh_core PRIVATE VTKH_COMPILING_FLAG)
+    if(ENABLE_LOGGING)
+      target_compile_definitions(vtkh_core PRIVATE VTKH_ENABLE_LOGGING)
+    endif()
 
     # Install libraries
     install(TARGETS vtkh_core
@@ -83,6 +86,9 @@ if(MPI_FOUND)
 
   target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_PARALLEL)
   target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_COMPILING_FLAG)
+  if(ENABLE_LOGGING)
+    target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_ENABLE_LOGGING)
+  endif()
 
   # Install libraries
   install(TARGETS vtkh_core_mpi

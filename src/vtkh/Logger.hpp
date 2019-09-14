@@ -50,7 +50,7 @@ protected:
   std::stack<std::string> Entries;
 };
 
-#ifdef ENABLE_LOGGING
+#ifdef VTKH_ENABLE_LOGGING
 #define VTKH_INFO(msg) vtkh::Logger::GetInstance("info")->GetStream()<<msg<<std::endl;
 #define VTKH_WARN(msg) vtkh::Logger::GetInstance("warning")->GetStream()<<msg<<std::endl;
 #define VTKH_ERROR(msg) vtkh::Logger::GetInstance("error")->GetStream()<<msg<<std::endl;

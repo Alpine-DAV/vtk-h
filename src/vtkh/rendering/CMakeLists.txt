@@ -60,6 +60,10 @@ if (ENABLE_SERIAL)
         target_compile_definitions(vtkh_rendering PRIVATE VTKH_USE_OPENMP)
     endif()
 
+    if(ENABLE_LOGGING)
+      target_compile_definitions(vtkh_rendering PRIVATE VTKH_ENABLE_LOGGING)
+    endif()
+
     vtkm_add_target_information(vtkh_rendering DEVICE_SOURCES ${vtkh_rendering_sources})
 
     # Install libraries
@@ -121,6 +125,11 @@ if (MPI_FOUND)
     if(ENABLE_OPENMP)
       target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_USE_OPENMP)
     endif()
+
+    if(ENABLE_LOGGING)
+      target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_ENABLE_LOGGING)
+    endif()
+
 
     vtkm_add_target_information(vtkh_rendering_mpi DEVICE_SOURCES ${vtkh_rendering_sources})
 

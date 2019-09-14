@@ -90,6 +90,10 @@ if (ENABLE_SERIAL)
         target_compile_definitions(vtkh_filters PRIVATE VTKH_USE_OPENMP)
     endif()
 
+    if(ENABLE_LOGGING)
+      target_compile_definitions(vtkh_filters PRIVATE VTKH_ENABLE_LOGGING)
+    endif()
+
     if(ENABLE_CUDA)
         set_target_properties(vtkh_filters PROPERTIES LINKER_LANGUAGE CUDA)
     endif()
@@ -146,6 +150,10 @@ if (MPI_FOUND)
 
     if(ENABLE_OPENMP)
           target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_USE_OPENMP)
+    endif()
+
+    if(ENABLE_LOGGING)
+      target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_ENABLE_LOGGING)
     endif()
 
     vtkm_add_target_information(vtkh_filters_mpi DEVICE_SOURCES ${vtkh_filter_sources})
