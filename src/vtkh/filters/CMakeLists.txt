@@ -8,6 +8,7 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  Gradient.hpp
   GhostStripper.hpp
   HistSampling.hpp
   Histogram.hpp
@@ -41,6 +42,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  Gradient.cpp
   GhostStripper.cpp
   HistSampling.cpp
   Histogram.cpp
