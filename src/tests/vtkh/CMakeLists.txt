@@ -102,9 +102,9 @@ if (ENABLE_SERIAL)
         else()
           add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
         endif()
+        set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
     endforeach()
 
-    set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
     if(CUDA_FOUND)
       foreach(TEST ${CUDA_TESTS})

@@ -74,6 +74,9 @@ foreach(TEST ${VTKM_TESTS})
   if (CUDA_FOUND)
     target_compile_definitions(${TEST} PRIVATE "VTKH_FORCE_CUDA")
   endif()
+
+  set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
 endforeach()
 
 ################################
