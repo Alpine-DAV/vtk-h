@@ -50,16 +50,17 @@ Logger::Write(const int level, const std::string &message, const char *file, int
 DataLogger DataLogger::Instance;
 
 DataLogger::DataLogger()
-  : AtBlockStart(true)
+  : AtBlockStart(true),
+    Rank(0)
 {
   Blocks.push(Block(0));
 }
 
 DataLogger::~DataLogger()
 {
-  //WriteLog();
-  //std::cout<<"Instance "<<DataLogger::Instance<<"\n";
-  std::cout<<Stream.str();
+#ifdef VTKH_ENABLE_LOGGING
+  WriteLog();
+#endif
   Stream.str("");
 }
 
@@ -73,6 +74,12 @@ DataLogger::Block&
 DataLogger::CurrentBlock()
 {
   return Blocks.top();
+}
+
+void
+DataLogger::SetRank(int rank)
+{
+  Rank = rank;
 }
 
 void
@@ -102,14 +109,10 @@ void
 DataLogger::WriteLog()
 {
   std::stringstream log_name;
-  std::ofstream stream;
-  log_name<<"vtkh_data";
-#ifdef ROVER_PARALLEL
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  log_name<<"_"<<rank;
-#endif
+  log_name<<"vtkh_data_"<<Rank;
   log_name<<".log";
+
+  std::ofstream stream;
   stream.open(log_name.str().c_str(), std::ofstream::out);
   if(!stream.is_open())
   {

@@ -45,6 +45,7 @@ public:
   static DataLogger *GetInstance();
   void OpenLogEntry(const std::string &entryName);
   void CloseLogEntry();
+  void SetRank(int rank);
 
   template<typename T>
   void AddLogData(const std::string key, const T &value)
@@ -55,18 +56,19 @@ public:
   }
 
   std::stringstream& GetStream() { return Stream; }
-  void WriteLog();
 protected:
   DataLogger();
   DataLogger(DataLogger const &);
+
+  void WriteLog();
   void WriteIndent();
   DataLogger::Block& CurrentBlock();
-
   std::stringstream Stream;
   static class DataLogger Instance;
   std::stack<Block> Blocks;
   std::stack<Timer> Timers;
   bool AtBlockStart;
+  int Rank;
 };
 
 #ifdef VTKH_ENABLE_LOGGING
