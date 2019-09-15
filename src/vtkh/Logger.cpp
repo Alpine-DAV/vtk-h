@@ -110,7 +110,7 @@ DataLogger::WriteLog()
 {
   std::stringstream log_name;
   log_name<<"vtkh_data_"<<Rank;
-  log_name<<".log";
+  log_name<<".yaml";
 
   std::ofstream stream;
   stream.open(log_name.str().c_str(), std::ofstream::out);
