@@ -30,9 +30,11 @@ Filter::GetOutput()
 DataSet*
 Filter::Update()
 {
+  VTKH_DATA_OPEN(this->GetName());
   PreExecute();
   DoExecute();
   PostExecute();
+  VTKH_DATA_CLOSE();
   return m_output;
 }
 

@@ -31,6 +31,17 @@ inline std::ostream &operator<<(std::ostream &os, const std::deque<T> &l)
     return os;
 }
 
+// Forward declaration so we can have pairs with vectors
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &v);
+
+template <typename T1, typename T2>
+inline std::ostream &operator<<(std::ostream &os, const std::pair<T1,T2> &p)
+{
+    os<<"("<<p.first<<","<<p.second<<")";
+    return os;
+}
+
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const std::vector<T> &v)
 {
@@ -52,13 +63,6 @@ inline std::ostream &operator<<(std::ostream &os, const std::map<T1,T2> &m)
     for (auto it = m.begin(); it != m.end(); it++)
         os<<"("<<it->first<<","<<it->second<<") ";
     os<<"}";
-    return os;
-}
-
-template <typename T1, typename T2>
-inline std::ostream &operator<<(std::ostream &os, const std::pair<T1,T2> &p)
-{
-    os<<"("<<p.first<<","<<p.second<<")";
     return os;
 }
 

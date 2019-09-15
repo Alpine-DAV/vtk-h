@@ -47,25 +47,55 @@ Logger::Write(const int level, const std::string &message, const char *file, int
 
 // ---------------------------------------------------------------------------------------
 
-DataLogger* DataLogger::Instance  = NULL;
+DataLogger DataLogger::Instance;
 
 DataLogger::DataLogger()
+  : AtBlockStart(true)
 {
+  Blocks.push(Block(0));
 }
 
 DataLogger::~DataLogger()
 {
+  //WriteLog();
+  //std::cout<<"Instance "<<DataLogger::Instance<<"\n";
+  std::cout<<Stream.str();
   Stream.str("");
 }
 
 DataLogger*
 DataLogger::GetInstance()
 {
-  if(DataLogger::Instance == NULL)
+  return &DataLogger::Instance;
+}
+
+DataLogger::Block&
+DataLogger::CurrentBlock()
+{
+  return Blocks.top();
+}
+
+void
+DataLogger::WriteIndent()
+{
+  int indent = this->CurrentBlock().Indent;
+  bool listStart = this->CurrentBlock().AtListItemStart;
+
+  if (listStart)
   {
-    DataLogger::Instance =  new DataLogger();
+    --indent;
   }
-  return DataLogger::Instance;
+
+  for (int i = 0; i < indent; ++i)
+  {
+    Stream << "  ";
+  }
+
+  if (listStart)
+  {
+    Stream << "- ";
+    CurrentBlock().AtListItemStart = false;
+  }
 }
 
 void
@@ -73,7 +103,7 @@ DataLogger::WriteLog()
 {
   std::stringstream log_name;
   std::ofstream stream;
-  log_name<<"rover_data";
+  log_name<<"vtkh_data";
 #ifdef ROVER_PARALLEL
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -83,7 +113,7 @@ DataLogger::WriteLog()
   stream.open(log_name.str().c_str(), std::ofstream::out);
   if(!stream.is_open())
   {
-    std::cerr<<"Warning: could not open the rover data log file\n";
+    std::cerr<<"Warning: could not open the vtkh data log file\n";
     return;
   }
   stream<<Stream.str();
@@ -93,14 +123,23 @@ DataLogger::WriteLog()
 void
 DataLogger::OpenLogEntry(const std::string &entryName)
 {
-    Stream<<entryName<<" "<<"<\n";
-    Entries.push(entryName);
+    WriteIndent();
+    Stream<<entryName<<":"<<"\n";
+    int indent = this->CurrentBlock().Indent;
+    Blocks.push(Block(indent+1));
+
+    Timer timer;
+    Timers.push(timer);
+    AtBlockStart = true;
+
 }
 void
-DataLogger::CloseLogEntry(const double &entryTime)
+DataLogger::CloseLogEntry()
 {
-  this->Stream<<"total_time "<<entryTime<<"\n";
-  this->Stream<<this->Entries.top()<<" >\n";
-  Entries.pop();
+  WriteIndent();
+  this->Stream<<"time : "<<Timers.top().elapsed()<<"\n";
+  Timers.pop();
+  Blocks.pop();
+  AtBlockStart = false;
 }
 };
