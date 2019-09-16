@@ -170,6 +170,10 @@ void
 Renderer::Update()
 {
   VTKH_DATA_OPEN(this->GetName());
+#ifdef VTKH_ENABLE_LOGGING
+  long long int in_cells = this->m_input->GetNumberOfCells();
+  VTKH_DATA_ADD("input_cells", in_cells);
+#endif
   PreExecute();
   DoExecute();
   PostExecute();

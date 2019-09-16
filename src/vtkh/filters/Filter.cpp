@@ -32,10 +32,16 @@ Filter::Update()
 {
   VTKH_DATA_OPEN(this->GetName());
 #ifdef VTKH_ENABLE_LOGGING
+  long long int in_cells = this->m_input->GetNumberOfCells();
+  VTKH_DATA_ADD("input_cells", in_cells);
 #endif
   PreExecute();
   DoExecute();
   PostExecute();
+#ifdef VTKH_ENABLE_LOGGING
+  long long int out_cells = this->m_output->GetNumberOfCells();
+  VTKH_DATA_ADD("output_cells", out_cells);
+#endif
   VTKH_DATA_CLOSE();
   return m_output;
 }
