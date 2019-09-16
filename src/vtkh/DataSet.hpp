@@ -45,7 +45,7 @@ public:
   // checks to see if cells exist on this rank
   bool IsEmpty() const;
   // checks to see if cells exist on all ranks
-  bool GlobalIsEmpty(const vtkm::Id cell_set_index = 0) const;
+  bool GlobalIsEmpty() const;
   // returns the number of domains on this rank
 
   vtkm::Id GetNumberOfDomains() const;
@@ -87,9 +87,9 @@ public:
    *  \param cell_set_index the index of the cell set to perform the IsStructured
    *         test. Defaults to 0.
    */
-  bool IsStructured(int &topological_dims, const vtkm::Id cell_set_index = 0) const;
+  bool IsStructured(int &topological_dims) const;
 
-  bool IsPointMesh(const vtkm::Id cell_set_index = 0) const;
+  bool IsPointMesh() const;
 
   void PrintSummary(std::ostream &stream) const;
 };

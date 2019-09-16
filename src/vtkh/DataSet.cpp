@@ -1,6 +1,7 @@
 #include "DataSet.hpp"
 
 #include <vtkh/Error.hpp>
+#include <vtkh/Logger.hpp>
 
 // FIXME:UDA: vtkm_dataset_info depends on vtkm::rendering
 #include <vtkh/utils/vtkm_dataset_info.hpp>
@@ -209,6 +210,7 @@ DataSet::GetBounds(vtkm::Id coordinate_system_index) const
 vtkm::Bounds
 DataSet::GetGlobalBounds(vtkm::Id coordinate_system_index) const
 {
+  VTKH_DATA_OPEN("GetGlobalBounds");
   vtkm::Bounds bounds;
   bounds = GetBounds(coordinate_system_index);
 
@@ -277,6 +279,7 @@ DataSet::GetGlobalBounds(vtkm::Id coordinate_system_index) const
   bounds.Z.Min = global_z_min;
   bounds.Z.Max = global_z_max;
 #endif
+  VTKH_DATA_CLOSE();
   return bounds;
 }
 
@@ -334,6 +337,7 @@ DataSet::GetRange(const std::string &field_name) const
 vtkm::cont::ArrayHandle<vtkm::Range>
 DataSet::GetGlobalRange(const std::string &field_name) const
 {
+  VTKH_DATA_OPEN("GetGlobalRange");
   vtkm::cont::ArrayHandle<vtkm::Range> range;
   range = GetRange(field_name);
 
@@ -427,6 +431,7 @@ DataSet::GetGlobalRange(const std::string &field_name) const
 
   delete[] global_components;
 #endif
+  VTKH_DATA_CLOSE();
   return range;
 }
 
@@ -459,7 +464,7 @@ DataSet::IsEmpty() const
 }
 
 bool
-DataSet::GlobalIsEmpty(const vtkm::Id cell_set_index) const
+DataSet::GlobalIsEmpty() const
 {
   bool is_empty = IsEmpty();
   is_empty = detail::GlobalAgreement(is_empty);
@@ -467,7 +472,7 @@ DataSet::GlobalIsEmpty(const vtkm::Id cell_set_index) const
 }
 
 bool
-DataSet::IsPointMesh(const vtkm::Id cell_set_index) const
+DataSet::IsPointMesh() const
 {
   bool is_points = true;
   const size_t num_domains = m_domains.size();
@@ -484,7 +489,7 @@ DataSet::IsPointMesh(const vtkm::Id cell_set_index) const
 }
 
 bool
-DataSet::IsStructured(int &topological_dims, const vtkm::Id cell_set_index) const
+DataSet::IsStructured(int &topological_dims) const
 {
   topological_dims = -1;
   bool is_structured = true;

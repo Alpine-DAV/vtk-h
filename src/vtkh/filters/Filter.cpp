@@ -31,6 +31,8 @@ DataSet*
 Filter::Update()
 {
   VTKH_DATA_OPEN(this->GetName());
+#ifdef VTKH_ENABLE_LOGGING
+#endif
   PreExecute();
   DoExecute();
   PostExecute();
