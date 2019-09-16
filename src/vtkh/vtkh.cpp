@@ -144,6 +144,22 @@ IsMPIEnabled()
 #endif
 }
 
+std::string GetCurrentDevice()
+{
+  std::string device = "serial";
+  // use the same prefered ordering as vtkm
+  if(IsCUDAEnabled())
+  {
+    device = "cuda";
+  }
+  else if(IsOpenMPEnabled())
+  {
+    device = "openmp";
+  }
+
+  return device;
+}
+
 //---------------------------------------------------------------------------//
 bool
 IsSerialAvailable()
