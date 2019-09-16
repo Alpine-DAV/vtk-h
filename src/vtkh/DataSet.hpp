@@ -51,6 +51,10 @@ public:
   vtkm::Id GetNumberOfDomains() const;
   // returns the number of domains on all ranks
   vtkm::Id GetGlobalNumberOfDomains() const;
+  // returns the number of cells on this rank
+  vtkm::Id GetNumberOfCells() const;
+  // returns the number of cells on this rank
+  vtkm::Id GetGlobalNumberOfCells() const;
   // returns the union of all domains bounds on this rank
   vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
   // returns the union of all abounds on all ranks

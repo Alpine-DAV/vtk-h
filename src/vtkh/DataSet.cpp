@@ -149,6 +149,39 @@ DataSet::GetNumberOfDomains() const
 }
 
 vtkm::Id
+DataSet::GetNumberOfCells() const
+{
+  vtkm::Id num_cells = 0;
+  const size_t num_domains = m_domains.size();
+  for(size_t i = 0; i < num_domains; ++i)
+  {
+    num_cells += m_domains[i].GetCellSet().GetNumberOfCells();
+  }
+  return num_cells;
+}
+
+vtkm::Id
+DataSet::GetGlobalNumberOfCells() const
+{
+  vtkm::Id num_cells = GetNumberOfCells();;
+#ifdef VTKH_PARALLEL
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  long long int local_cells = static_cast<long long int>(num_cells);
+  long long int global_cells = 0;
+  MPI_Allreduce(&local_cells,
+                &global_cells,
+                1,
+                MPI_LONG_LONG,
+                MPI_SUM,
+                mpi_comm);
+  num_cells = global_cells;
+#endif
+  return num_cells;
+}
+
+
+
+vtkm::Id
 DataSet::GetGlobalNumberOfDomains() const
 {
   vtkm::Id domains = this->GetNumberOfDomains();
