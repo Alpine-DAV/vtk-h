@@ -202,7 +202,7 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
           vtkm::Id3(static_cast<vtkm::Id>(dims[0]), static_cast<vtkm::Id>(dims[1]), currBlockSize));
       }
 
-      std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
+      std::vector<ValueType> subValues((values.begin() + blockStart),
                                            (values.begin() + blockEnd));
 
       vtkm::cont::DataSetFieldAdd dsf;
@@ -221,6 +221,7 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
   return true;
 }
 
+ using ValueArray = vtkm::cont::ArrayHandle<ValueType>;
 
 //----------------------------------------------------------------------------
 TEST(vtkh_contour_tree, vtkh_contour_tree)
@@ -240,7 +241,10 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   ReadTestData("fuel.txt", mb, rank, size);
   for (vtkm::Id id = 0; id < mb.GetNumberOfPartitions(); ++id)
   {
-    data_set.AddDomain(mb.GetPartition(id), id);
+    vtkm::cont::DataSet dom = mb.GetPartition(id);
+    ValueArray dataField;
+    dom.GetField("values").GetData().CopyTo(dataField);
+    data_set.AddDomain(dom, id);
   }
 #endif
   vtkh::MarchingCubes marcher;

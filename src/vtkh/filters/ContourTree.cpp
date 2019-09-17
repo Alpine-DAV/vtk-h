@@ -11,9 +11,8 @@
 #include <vtkm/worklet/contourtree_augmented/processcontourtree/PiecewiseLinearFunction.h>
 
 namespace caugmented_ns = vtkm::worklet::contourtree_augmented;
-//using DataValueType = vtkm::Float32;
 using DataValueType = vtkm::Float64;
-using ValueArray = vtkm::cont::ArrayHandle<DataValueType, vtkm::cont::StorageTagBasic>;
+using ValueArray = vtkm::cont::ArrayHandle<DataValueType>;
 using BranchType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::Branch<DataValueType>;
 using PLFType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::PiecewiseLinearFunction<DataValueType>;
 
@@ -220,11 +219,13 @@ void ContourTree::DoExecute()
   MPI_Comm_size(mpi_comm, &size);
   MPI_Comm_rank(mpi_comm, &rank);
   vtkm::cont::PartitionedDataSet inDataSet;
+  ValueArray dataField;
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
+    dom.GetField("values").GetData().CopyTo(dataField);
     inDataSet.AppendPartition(dom);
     std::ostringstream ostr;
     ostr << "rank: " << rank
@@ -232,6 +233,8 @@ void ContourTree::DoExecute()
     dom.GetField(this->m_field_name).PrintSummary(std::cout);
     std::cout << ostr.str();
   }
+  inDataSet.GetPartition(0).GetField("values").GetData().CopyTo(dataField);
+
   // TODO: change hardcode to computation.
   vtkm::Id3 blocksPerDim = vtkm::Id3 (1, 1, 2);
   vtkm::Id3 globalSize = vtkm::Id3 (64, 64, 64);
@@ -249,7 +252,7 @@ void ContourTree::DoExecute()
   {
     localBlockIndicesPortal.Set(0, vtkm::Id3 (0, 0, 0));
     localBlockOriginsPortal.Set(0, vtkm::Id3 (0, 0, 0));
-    localBlockSizesPortal.Set(0, vtkm::Id3(64, 64, 32));
+    localBlockSizesPortal.Set(0, vtkm::Id3(64, 64, 33));
   }
   else
   {
@@ -281,6 +284,14 @@ void ContourTree::DoExecute()
 #endif // VTKH_PARALLEL
   filter.SetActiveField(m_field_name);
   auto result = filter.Execute(inDataSet);
+// #ifdef VTKH_PARALLEL
+//     {
+//       std::ostringstream ostr;
+//       ostr << "result_" << rank << ".vtk";
+//       vtkm::io::writer::VTKDataSetWriter writer(ostr.str().c_str());
+//       writer.WriteDataSet(result.GetPartition(0));
+//     }
+// #endif
   vtkm::cont::TryExecute(detail::ComputeCaller(), result, m_field_name, filter, m_levels, iso_values);
   m_iso_values.resize(iso_values.size());
   for(size_t x = 0; x < iso_values.size(); ++x)
