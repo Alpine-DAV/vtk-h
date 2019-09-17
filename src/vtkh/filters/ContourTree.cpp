@@ -33,7 +33,7 @@ void ComputeContourValues(
 #ifndef VTKH_PARALLEL
   vtkm::cont::DataSet &inDataSet,
 #else
-  vtkm::cont::MultiBlock &inDataSet,
+  vtkm::cont::PartitionedDataSet &inDataSet,
 #endif
   std::string fieldName,
   vtkm::filter::ContourTreePPP2 &filter,
@@ -86,7 +86,7 @@ void ComputeContourValues(
   bool dataFieldIsSorted = false;
 #else // VTKH_PARALLEL
   ValueArray dataField;
-  inDataSet.GetBlock(0).GetField(fieldName).GetData().CopyTo(dataField);
+  inDataSet.GetPartition(0).GetField(fieldName).GetData().CopyTo(dataField);
   bool dataFieldIsSorted = true;
 #endif // VTKH_PARALLEL
   BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
@@ -149,7 +149,7 @@ struct ComputeCaller
 #ifndef VTKH_PARALLEL
                             vtkm::cont::DataSet &in,
 #else // VTKH_PARALLEL
-                            vtkm::cont::MultiBlock &in,
+                            vtkm::cont::PartitionedDataSet &in,
 #endif // VTKH_PARALLEL
                             std::string fieldName,
                             vtkm::filter::ContourTreePPP2 &filter,
@@ -219,13 +219,13 @@ void ContourTree::DoExecute()
   int size, rank;
   MPI_Comm_size(mpi_comm, &size);
   MPI_Comm_rank(mpi_comm, &rank);
-  vtkm::cont::MultiBlock inDataSet;
+  vtkm::cont::PartitionedDataSet inDataSet;
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-    inDataSet.AddBlock(dom);
+    inDataSet.AppendPartition(dom);
     std::ostringstream ostr;
     ostr << "rank: " << rank
          << " coord system range: " << dom.GetCoordinateSystem(0).GetRange() << std::endl;
@@ -275,7 +275,7 @@ void ContourTree::DoExecute()
   ostr.str("");
   ostr << "data_" << rank << ".vtk";
   vtkm::io::writer::VTKDataSetWriter writer(ostr.str().c_str());
-  writer.WriteDataSet(inDataSet.GetBlock(0));
+  writer.WriteDataSet(inDataSet.GetPartition(0));
   filter.SetSpatialDecomposition(
     blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
 #endif // VTKH_PARALLEL
