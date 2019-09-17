@@ -15,7 +15,6 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/MultiBlock.h>
 
 #include <iostream>
 #ifdef VTKH_PARALLEL
@@ -30,7 +29,7 @@ bool ReadTestData(const char* filename, vtkm::cont::DataSet& inDataSet)
 {
   const int rank = 0;
 #else
-bool ReadTestData(const char* filename, vtkm::cont::MultiBlock& inDataSet,
+bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSet,
                   int rank, int size)
 {
 #endif
@@ -207,7 +206,7 @@ bool ReadTestData(const char* filename, vtkm::cont::MultiBlock& inDataSet,
 
       vtkm::cont::DataSetFieldAdd dsf;
       dsf.AddPointField(ds, "values", subValues);
-      inDataSet.AddBlock(ds);
+      inDataSet.AppendPartition(ds);
       std::cout << "blockPerDim: " << blocksPerDim << std::endl
                 << "globalSize: " << globalSize << std::endl
                 << "localblockIndices: " << localBlockIndicesPortal.Get(localBlockIndex) << std::endl
@@ -236,11 +235,11 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   vtkh::SetMPICommHandle(MPI_COMM_WORLD);
-  vtkm::cont::MultiBlock mb;
+  vtkm::cont::PartitionedDataSet mb;
   ReadTestData("fuel.txt", mb, rank, size);
-  for (vtkm::Id id = 0; id < mb.GetNumberOfBlocks(); ++id)
+  for (vtkm::Id id = 0; id < mb.GetNumberOfPartitions(); ++id)
   {
-    data_set.AddDomain(mb.GetBlock(id), id);
+    data_set.AddDomain(mb.GetPartition(id), id);
   }
 #endif
   vtkh::MarchingCubes marcher;
