@@ -214,7 +214,7 @@ void ContourTree::DoExecute()
   this->m_input->GetDomain(0, inDataSet, domain_id);
   this->m_output->AddDomain(inDataSet, domain_id);
 #else // VTKH_PARALLEL
-  MPI_Comm mpi_comm = vtkh::GetMPICommHandle();
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(mpi_comm));
   int size, rank;
   MPI_Comm_size(mpi_comm, &size);

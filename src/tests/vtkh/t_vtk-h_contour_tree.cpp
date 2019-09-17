@@ -15,6 +15,7 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 
 #include <iostream>
 #ifdef VTKH_PARALLEL
@@ -234,7 +235,7 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   int size, rank;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  vtkh::SetMPICommHandle(MPI_COMM_WORLD);
+  vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
   vtkm::cont::PartitionedDataSet mb;
   ReadTestData("fuel.txt", mb, rank, size);
   for (vtkm::Id id = 0; id < mb.GetNumberOfPartitions(); ++id)
