@@ -3,6 +3,7 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/internal/Configure.h>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -16,6 +17,11 @@ using ValueArray = vtkm::cont::ArrayHandle<DataValueType, vtkm::cont::StorageTag
 using BranchType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::Branch<DataValueType>;
 using PLFType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::PiecewiseLinearFunction<DataValueType>;
 
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#endif
+
+
 namespace vtkh
 {
 
@@ -23,13 +29,17 @@ namespace detail
 {
 
 template<typename DeviceAdapter>
-void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
-                          std::string fieldName,
-                          vtkm::filter::ContourTreePPP2 &filter,
-                          vtkm::Id numLevels,
-                          std::vector<DataValueType> &iso_values)
+void ComputeContourValues(
+#ifndef VTKH_PARALLEL
+  vtkm::cont::DataSet &inDataSet,
+#else
+  vtkm::cont::MultiBlock &inDataSet,
+#endif
+  std::string fieldName,
+  vtkm::filter::ContourTreePPP2 &filter,
+  vtkm::Id numLevels,
+  std::vector<DataValueType> &iso_values)
 {
-
   DataValueType eps = 0.00001;        // Error away from critical point
   vtkm::Id numComp = numLevels + 1;   // Number of components the tree should be simplified to
   vtkm::Id contourType = 0;           // Approach to be used to select contours based on the tree
@@ -70,14 +80,15 @@ void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
           branchParent);             // (output)
 
   // create explicit representation of the branch decompostion from the array representation
-#ifdef WITH_MPI
-      bool dataFieldIsSorted = true;
-#else
-      bool dataFieldIsSorted = false;
-#endif
-
-  ValueArray vtkmValues = inDataSet.GetField(fieldName).GetData().Cast<ValueArray>();
-  // TODO: fix this properly
+#ifndef VTKH_PARALLEL
+  ValueArray dataField;
+  inDataSet.GetField(fieldName).GetData().CopyTo(dataField);
+  bool dataFieldIsSorted = false;
+#else // VTKH_PARALLEL
+  ValueArray dataField;
+  inDataSet.GetBlock(0).GetField(fieldName).GetData().CopyTo(dataField);
+  bool dataFieldIsSorted = true;
+#endif // VTKH_PARALLEL
   BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
           filter.GetContourTree().superparents,
           filter.GetContourTree().supernodes,
@@ -87,15 +98,13 @@ void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
           branchSaddle,
           branchParent,
           filter.GetSortOrder(),
-          vtkmValues,
+          dataField,
           dataFieldIsSorted
     );
 
   // Simplify the contour tree of the branch decompostion
   branchDecompostionRoot->simplifyToSize(numComp, usePersistenceSorter);
-#ifdef DEBUG_PRINT
   branchDecompostionRoot->print(std::cout);
-#endif
 
   // Compute the relevant iso-values
   switch(contourSelectMethod)
@@ -130,14 +139,18 @@ void ComputeContourValues(vtkm::cont::DataSet &inDataSet,
   std::cout << std::endl;
 
   std::cout<<"Acrs : " << filter.GetContourTree().arcs.GetNumberOfValues() <<std::endl;
-};
+}
 
 struct ComputeCaller
 {
 
   template <typename Device>
   VTKM_CONT bool operator()(Device,
+#ifndef VTKH_PARALLEL
                             vtkm::cont::DataSet &in,
+#else // VTKH_PARALLEL
+                            vtkm::cont::MultiBlock &in,
+#endif // VTKH_PARALLEL
                             std::string fieldName,
                             vtkm::filter::ContourTreePPP2 &filter,
                             vtkm::Id numLevels,
@@ -194,32 +207,85 @@ void ContourTree::DoExecute()
 {
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-
+#ifndef VTKH_PARALLEL
+  assert(num_domains == 1);
+  vtkm::cont::DataSet inDataSet;
+  vtkm::Id domain_id;
+  this->m_input->GetDomain(0, inDataSet, domain_id);
+  this->m_output->AddDomain(inDataSet, domain_id);
+#else // VTKH_PARALLEL
+  MPI_Comm mpi_comm = vtkh::GetMPICommHandle();
+  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(mpi_comm));
+  int size, rank;
+  MPI_Comm_size(mpi_comm, &size);
+  MPI_Comm_rank(mpi_comm, &rank);
+  vtkm::cont::MultiBlock inDataSet;
   for(int i = 0; i < num_domains; ++i)
   {
-    std::cout<<"RUNNING TREE\n";
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-    // insert interesting stuff
-    m_output->AddDomain(dom, domain_id);
-    bool useMarchingCubes = true;
-    // Compute the fully augmented contour tree.
-    // This should always be true for now in order for the isovalue selection to work.
-    bool computeRegularStructure = true;
-    vtkm::cont::DataSet result;
-    //Convert the mesh of values into contour tree, pairs of vertex ids
-    vtkm::filter::ContourTreePPP2 filter(useMarchingCubes,
-                                         computeRegularStructure);
-    std::vector<DataValueType> iso_values;
-    filter.SetActiveField(m_field_name);
-    result = filter.Execute(dom);
-    vtkm::cont::TryExecute(detail::ComputeCaller(), result, m_field_name, filter, m_levels, iso_values);
-    m_iso_values.resize(iso_values.size());
-    for(size_t x = 0; x < iso_values.size(); ++x)
-    {
-      m_iso_values[x] = iso_values[x];
-    }
+    inDataSet.AddBlock(dom);
+    std::ostringstream ostr;
+    ostr << "rank: " << rank
+         << " coord system range: " << dom.GetCoordinateSystem(0).GetRange() << std::endl;
+    dom.GetField(this->m_field_name).PrintSummary(std::cout);
+    std::cout << ostr.str();
+  }
+  // TODO: change hardcode to computation.
+  vtkm::Id3 blocksPerDim = vtkm::Id3 (1, 1, 2);
+  vtkm::Id3 globalSize = vtkm::Id3 (64, 64, 64);
+  int blocksPerRank = 1;
+  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
+  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
+  vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
+  localBlockIndices.Allocate(blocksPerRank);
+  localBlockOrigins.Allocate(blocksPerRank);
+  localBlockSizes.Allocate(blocksPerRank);
+  auto localBlockIndicesPortal = localBlockIndices.GetPortalControl();
+  auto localBlockOriginsPortal = localBlockOrigins.GetPortalControl();
+  auto localBlockSizesPortal = localBlockSizes.GetPortalControl();
+  if (rank == 0)
+  {
+    localBlockIndicesPortal.Set(0, vtkm::Id3 (0, 0, 0));
+    localBlockOriginsPortal.Set(0, vtkm::Id3 (0, 0, 0));
+    localBlockSizesPortal.Set(0, vtkm::Id3(64, 64, 32));
+  }
+  else
+  {
+    localBlockIndicesPortal.Set(0, vtkm::Id3 (0, 0, 1));
+    localBlockOriginsPortal.Set(0, vtkm::Id3 (0, 0, 32));
+    localBlockSizesPortal.Set(0, vtkm::Id3(64, 64, 32));
+  }
+
+#endif // VTKH_PARALLEL
+  std::cout<<"RUNNING TREE\n";
+  bool useMarchingCubes = true;
+  // Compute the fully augmented contour tree.
+  // This should always be true for now in order for the isovalue selection to work.
+  bool computeRegularStructure = true;
+  //Convert the mesh of values into contour tree, pairs of vertex ids
+  vtkm::filter::ContourTreePPP2 filter(useMarchingCubes,
+                                       computeRegularStructure);
+  std::vector<DataValueType> iso_values;
+#ifdef VTKH_PARALLEL
+  std::ostringstream ostr;
+  ostr << "global bounds: " << vtkm::cont::BoundsGlobalCompute(inDataSet) << std::endl;
+  std::cout << ostr.str();
+  ostr.str("");
+  ostr << "data_" << rank << ".vtk";
+  vtkm::io::writer::VTKDataSetWriter writer(ostr.str().c_str());
+  writer.WriteDataSet(inDataSet.GetBlock(0));
+  filter.SetSpatialDecomposition(
+    blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
+#endif // VTKH_PARALLEL
+  filter.SetActiveField(m_field_name);
+  auto result = filter.Execute(inDataSet);
+  vtkm::cont::TryExecute(detail::ComputeCaller(), result, m_field_name, filter, m_levels, iso_values);
+  m_iso_values.resize(iso_values.size());
+  for(size_t x = 0; x < iso_values.size(); ++x)
+  {
+    m_iso_values[x] = iso_values[x];
   }
 }
 

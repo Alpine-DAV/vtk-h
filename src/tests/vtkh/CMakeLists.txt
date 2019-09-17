@@ -54,7 +54,6 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
-                t_vtk-h_contour_tree
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
                 t_vtk-h_gradient
@@ -78,6 +77,7 @@ set(BASIC_TESTS t_vtk-h_smoke
 set(CUDA_TESTS t_vtk-h_cuda)
 
 set(MPI_TESTS t_vtk-h_smoke_par
+              t_vtk-h_contour_tree
               t_vtk-h_dataset_par
               t_vtk-h_no_op_par
               t_vtk-h_histogram_par
@@ -106,8 +106,6 @@ if (ENABLE_SERIAL)
         endif()
         set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
     endforeach()
-
-
     if(CUDA_FOUND)
       foreach(TEST ${CUDA_TESTS})
           add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
