@@ -112,14 +112,6 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
   }
 #else // VTKH_PARALLEL
   int numBlocks = size;
-  vtkm::Id3 blocksPerDim =
-    nDims == 3 ? vtkm::Id3(1, 1, numBlocks) : vtkm::Id3(1, numBlocks, 1); // Decompose the data into
-  vtkm::Id3 globalSize = nDims == 3 ? vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                                static_cast<vtkm::Id>(dims[1]),
-                                                static_cast<vtkm::Id>(dims[2]))
-                                    : vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                                static_cast<vtkm::Id>(dims[1]),
-                                                static_cast<vtkm::Id>(0));
   int blocksPerRank = 1;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
@@ -216,13 +208,15 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
 
  using ValueArray = vtkm::cont::ArrayHandle<ValueType>;
 
+#cmakedefine TESTS_SOURCE_DIR "@TESTS_SOURCE_DIR@"
 //----------------------------------------------------------------------------
 TEST(vtkh_contour_tree, vtkh_contour_tree)
 {
   vtkh::DataSet data_set;
+  std::string fileName = std::string(TESTS_SOURCE_DIR) + "/fuel.txt";
 #ifndef VTKH_PARALLEL
   vtkm::cont::DataSet vtkmData;
-  ReadTestData("fuel.txt", vtkmData);
+  ReadTestData(fileName.c_str(), vtkmData);
   data_set.AddDomain(vtkmData, 0);
 #else
   MPI_Init(NULL, NULL);
@@ -231,7 +225,7 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
   vtkm::cont::PartitionedDataSet mb;
-  ReadTestData("fuel.txt", mb, rank, size);
+  ReadTestData(fileName.c_str(), mb, rank, size);
   for (vtkm::Id id = 0; id < mb.GetNumberOfPartitions(); ++id)
   {
     vtkm::cont::DataSet dom = mb.GetPartition(id);
