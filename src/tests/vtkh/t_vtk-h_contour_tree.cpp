@@ -208,13 +208,6 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
       vtkm::cont::DataSetFieldAdd dsf;
       dsf.AddPointField(ds, "values", subValues);
       inDataSet.AppendPartition(ds);
-      std::cout << "blockPerDim: " << blocksPerDim << std::endl
-                << "globalSize: " << globalSize << std::endl
-                << "localblockIndices: " << localBlockIndicesPortal.Get(localBlockIndex) << std::endl
-                << "localBlockOrigins: " << localBlockOriginsPortal.Get(localBlockIndex) << std::endl
-                << "localBlockSizes: " << localBlockSizesPortal.Get(localBlockIndex) << std::endl
-                << std::endl;
-
     }
   }
 #endif // VTKH_PARALLEL
