@@ -3,7 +3,6 @@
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/internal/Configure.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 #include <vtkm/filter/ContourTreeUniformAugmented.h>
 #include <vtkm/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -23,145 +22,6 @@ using PLFType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::P
 
 namespace vtkh
 {
-
-namespace detail
-{
-
-template<typename DeviceAdapter>
-void ComputeContourValues(
-#ifndef VTKH_PARALLEL
-  vtkm::cont::DataSet &inDataSet,
-#else
-  vtkm::cont::PartitionedDataSet &inDataSet,
-#endif
-  std::string fieldName,
-  vtkm::filter::ContourTreePPP2 &filter,
-  vtkm::Id numLevels,
-  std::vector<DataValueType> &iso_values)
-{
-  DataValueType eps = 0.00001;        // Error away from critical point
-  vtkm::Id numComp = numLevels + 1;   // Number of components the tree should be simplified to
-  vtkm::Id contourType = 0;           // Approach to be used to select contours based on the tree
-  vtkm::Id contourSelectMethod = 0;   // Method to be used to compute the relevant iso values
-  bool usePersistenceSorter = true;
-  ////////////////////////////////////////////
-  // Compute the branch decomposition
-  ////////////////////////////////////////////
-  // compute the volume for each hyperarc and superarc
-  caugmented_ns::IdArrayType superarcIntrinsicWeight;
-  caugmented_ns::IdArrayType superarcDependentWeight;
-  caugmented_ns::IdArrayType supernodeTransferWeight;
-  caugmented_ns::IdArrayType hyperarcDependentWeight;
-
-  caugmented_ns::ProcessContourTree::ComputeVolumeWeights(
-          filter.GetContourTree(),
-          filter.GetNumIterations(),
-          superarcIntrinsicWeight,  // (output)
-          superarcDependentWeight,  // (output)
-          supernodeTransferWeight,  // (output)
-          hyperarcDependentWeight); // (output)
-
-  // compute the branch decomposition by volume
-  caugmented_ns::IdArrayType whichBranch;
-  caugmented_ns::IdArrayType branchMinimum;
-  caugmented_ns::IdArrayType branchMaximum;
-  caugmented_ns::IdArrayType branchSaddle;
-  caugmented_ns::IdArrayType branchParent;
-
-  caugmented_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(
-          filter.GetContourTree(),
-          superarcDependentWeight,
-          superarcIntrinsicWeight,
-          whichBranch,               // (output)
-          branchMinimum,             // (output)
-          branchMaximum,             // (output)
-          branchSaddle,              // (output)
-          branchParent);             // (output)
-
-  // create explicit representation of the branch decompostion from the array representation
-#ifndef VTKH_PARALLEL
-  ValueArray dataField;
-  inDataSet.GetField(fieldName).GetData().CopyTo(dataField);
-  bool dataFieldIsSorted = false;
-#else // VTKH_PARALLEL
-  ValueArray dataField;
-  inDataSet.GetPartition(0).GetField(fieldName).GetData().CopyTo(dataField);
-  bool dataFieldIsSorted = true;
-#endif // VTKH_PARALLEL
-  BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
-          filter.GetContourTree().superparents,
-          filter.GetContourTree().supernodes,
-          whichBranch,
-          branchMinimum,
-          branchMaximum,
-          branchSaddle,
-          branchParent,
-          filter.GetSortOrder(),
-          dataField,
-          dataFieldIsSorted
-    );
-
-  // Simplify the contour tree of the branch decompostion
-  branchDecompostionRoot->simplifyToSize(numComp, usePersistenceSorter);
-  branchDecompostionRoot->print(std::cout);
-
-  // Compute the relevant iso-values
-  switch(contourSelectMethod)
-  {
-    default:
-    case 0:
-      {
-        branchDecompostionRoot->getRelevantValues(contourType, eps, iso_values);
-      }
-      break;
-    case 1:
-      {
-        PLFType plf;
-        branchDecompostionRoot->accumulateIntervals(contourType, eps, plf);
-        iso_values = plf.nLargest(numLevels);
-      }
-      break;
-  }
-
-  // Print the compute iso values
-  std::sort(iso_values.begin(), iso_values.end());
-  std::cout << "Isovalues: ";
-  for (DataValueType val : iso_values) std::cout << val << " ";
-  std::cout << std::endl;
-
-  // Unique isovalues
-  std::vector<DataValueType>::iterator it = std::unique (iso_values.begin(), iso_values.end());
-  iso_values.resize( std::distance(iso_values.begin(),it) );
-
-  std::cout << iso_values.size() << "  Unique Isovalues: ";
-  for (DataValueType val : iso_values) std::cout << val << " ";
-  std::cout << std::endl;
-
-  std::cout<<"Acrs : " << filter.GetContourTree().arcs.GetNumberOfValues() <<std::endl;
-}
-
-struct ComputeCaller
-{
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device,
-#ifndef VTKH_PARALLEL
-                            vtkm::cont::DataSet &in,
-#else // VTKH_PARALLEL
-                            vtkm::cont::PartitionedDataSet &in,
-#endif // VTKH_PARALLEL
-                            std::string fieldName,
-                            vtkm::filter::ContourTreePPP2 &filter,
-                            vtkm::Id numLevels,
-                            std::vector<DataValueType> &iso_values) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    ComputeContourValues<Device>(in, fieldName, filter, numLevels, iso_values);
-    return true;
-  }
-};
-
-} // namespace detail
 
 ContourTree::ContourTree()
   : m_levels(5)
@@ -204,6 +64,7 @@ void ContourTree::PostExecute()
 
 void ContourTree::DoExecute()
 {
+  int rank = 0;
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
 #ifndef VTKH_PARALLEL
@@ -213,27 +74,23 @@ void ContourTree::DoExecute()
   this->m_input->GetDomain(0, inDataSet, domain_id);
   this->m_output->AddDomain(inDataSet, domain_id);
 #else // VTKH_PARALLEL
+  int size;
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(mpi_comm));
-  int size, rank;
   MPI_Comm_size(mpi_comm, &size);
   MPI_Comm_rank(mpi_comm, &rank);
   vtkm::cont::PartitionedDataSet inDataSet;
-  ValueArray dataField;
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
-    dom.GetField("values").GetData().CopyTo(dataField);
     inDataSet.AppendPartition(dom);
     std::ostringstream ostr;
     ostr << "rank: " << rank
          << " coord system range: " << dom.GetCoordinateSystem(0).GetRange() << std::endl;
-    dom.GetField(this->m_field_name).PrintSummary(std::cout);
     std::cout << ostr.str();
   }
-  inDataSet.GetPartition(0).GetField("values").GetData().CopyTo(dataField);
 
   // TODO: change hardcode to computation.
   vtkm::Id3 blocksPerDim = vtkm::Id3 (1, 1, 2);
@@ -261,43 +118,156 @@ void ContourTree::DoExecute()
     localBlockSizesPortal.Set(0, vtkm::Id3(64, 64, 32));
   }
 
+  // compute
+
 #endif // VTKH_PARALLEL
   std::cout<<"RUNNING TREE\n";
-  bool useMarchingCubes = true;
+  bool useMarchingCubes = false;
   // Compute the fully augmented contour tree.
   // This should always be true for now in order for the isovalue selection to work.
   bool computeRegularStructure = true;
   //Convert the mesh of values into contour tree, pairs of vertex ids
+#ifdef VTKH_PARALLEL
+    {
+      std::ostringstream ostr;
+      ostr << "global bounds: " << vtkm::cont::BoundsGlobalCompute(inDataSet) << std::endl
+           << "useMarchingCubes: " << useMarchingCubes << std::endl
+           << "computeRegularStructure: " << computeRegularStructure << std::endl;
+      std::cout << ostr.str();
+
+      ostr.str("");
+      ostr << "blockPerDim: " << blocksPerDim << std::endl
+           << "globalSize: " << globalSize << std::endl
+           << "localblockIndices: " << localBlockIndicesPortal.Get(0) << std::endl
+           << "localBlockOrigins: " << localBlockOriginsPortal.Get(0) << std::endl
+           << "localBlockSizes: " << localBlockSizesPortal.Get(0) << std::endl
+           << std::endl;
+      std::cout << ostr.str();
+    }
+#endif
   vtkm::filter::ContourTreePPP2 filter(useMarchingCubes,
                                        computeRegularStructure);
   std::vector<DataValueType> iso_values;
 #ifdef VTKH_PARALLEL
-  std::ostringstream ostr;
-  ostr << "global bounds: " << vtkm::cont::BoundsGlobalCompute(inDataSet) << std::endl;
-  std::cout << ostr.str();
-  ostr.str("");
-  ostr << "data_" << rank << ".vtk";
-  vtkm::io::writer::VTKDataSetWriter writer(ostr.str().c_str());
-  writer.WriteDataSet(inDataSet.GetPartition(0));
   filter.SetSpatialDecomposition(
     blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
 #endif // VTKH_PARALLEL
   filter.SetActiveField(m_field_name);
   auto result = filter.Execute(inDataSet);
-// #ifdef VTKH_PARALLEL
-//     {
-//       std::ostringstream ostr;
-//       ostr << "result_" << rank << ".vtk";
-//       vtkm::io::writer::VTKDataSetWriter writer(ostr.str().c_str());
-//       writer.WriteDataSet(result.GetPartition(0));
-//     }
-// #endif
-  vtkm::cont::TryExecute(detail::ComputeCaller(), result, m_field_name, filter, m_levels, iso_values);
-  m_iso_values.resize(iso_values.size());
-  for(size_t x = 0; x < iso_values.size(); ++x)
+
+  m_iso_values.resize(m_levels);
+  if (rank == 0)
   {
-    m_iso_values[x] = iso_values[x];
+    DataValueType eps = 0.00001;        // Error away from critical point
+    vtkm::Id numComp = m_levels + 1;    // Number of components the tree should be simplified to
+    vtkm::Id contourType = 0;           // Approach to be used to select contours based on the tree
+    vtkm::Id contourSelectMethod = 0;   // Method to be used to compute the relevant iso values
+    bool usePersistenceSorter = true;
+    ////////////////////////////////////////////
+    // Compute the branch decomposition
+    ////////////////////////////////////////////
+    // compute the volume for each hyperarc and superarc
+    caugmented_ns::IdArrayType superarcIntrinsicWeight;
+    caugmented_ns::IdArrayType superarcDependentWeight;
+    caugmented_ns::IdArrayType supernodeTransferWeight;
+    caugmented_ns::IdArrayType hyperarcDependentWeight;
+
+    caugmented_ns::ProcessContourTree::ComputeVolumeWeights(
+      filter.GetContourTree(),
+      filter.GetNumIterations(),
+      superarcIntrinsicWeight,  // (output)
+      superarcDependentWeight,  // (output)
+      supernodeTransferWeight,  // (output)
+      hyperarcDependentWeight); // (output)
+
+    // compute the branch decomposition by volume
+    caugmented_ns::IdArrayType whichBranch;
+    caugmented_ns::IdArrayType branchMinimum;
+    caugmented_ns::IdArrayType branchMaximum;
+    caugmented_ns::IdArrayType branchSaddle;
+    caugmented_ns::IdArrayType branchParent;
+
+    caugmented_ns::ProcessContourTree::ComputeVolumeBranchDecomposition(
+      filter.GetContourTree(),
+      superarcDependentWeight,
+      superarcIntrinsicWeight,
+      whichBranch,               // (output)
+      branchMinimum,             // (output)
+      branchMaximum,             // (output)
+      branchSaddle,              // (output)
+      branchParent);             // (output)
+
+    // create explicit representation of the branch decompostion from the array representation
+#ifndef VTKH_PARALLEL
+    ValueArray dataField;
+    result.GetField(0).GetData().CopyTo(dataField);
+    bool dataFieldIsSorted = false;
+#else // VTKH_PARALLEL
+    ValueArray dataField;
+    result.GetPartition(0).GetField(0).GetData().CopyTo(dataField);
+    bool dataFieldIsSorted = true;
+#endif // VTKH_PARALLEL
+    BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
+      filter.GetContourTree().superparents,
+      filter.GetContourTree().supernodes,
+      whichBranch,
+      branchMinimum,
+      branchMaximum,
+      branchSaddle,
+      branchParent,
+      filter.GetSortOrder(),
+      dataField,
+      dataFieldIsSorted
+    );
+
+    // Simplify the contour tree of the branch decompostion
+    branchDecompostionRoot->simplifyToSize(numComp, usePersistenceSorter);
+
+    // Compute the relevant iso-values
+    switch(contourSelectMethod)
+    {
+    default:
+    case 0:
+      {
+        branchDecompostionRoot->getRelevantValues(contourType, eps, iso_values);
+      }
+      break;
+    case 1:
+      {
+        PLFType plf;
+        branchDecompostionRoot->accumulateIntervals(contourType, eps, plf);
+        iso_values = plf.nLargest(m_levels);
+      }
+      break;
+    }
+
+    // Print the compute iso values
+    std::sort(iso_values.begin(), iso_values.end());
+    std::cout << "Isovalues: ";
+    for (DataValueType val : iso_values) std::cout << val << " ";
+    std::cout << std::endl;
+
+    // Unique isovalues
+    std::vector<DataValueType>::iterator it = std::unique (iso_values.begin(), iso_values.end());
+    iso_values.resize( std::distance(iso_values.begin(),it) );
+
+    std::cout << iso_values.size() << "  Unique Isovalues: ";
+    for (DataValueType val : iso_values) std::cout << val << " ";
+    std::cout << std::endl;
+
+    std::cout<<"Acrs : " << filter.GetContourTree().arcs.GetNumberOfValues() <<std::endl;
+
+
+
+
+    for(size_t x = 0; x < iso_values.size(); ++x)
+    {
+      m_iso_values[x] = iso_values[x];
+    }
   }
+#ifdef VTKH_PARALLEL
+  MPI_Bcast(&m_iso_values[0], m_levels, MPI_DOUBLE, 0, mpi_comm);
+#endif // VTKH_PARALLEL
 }
 
 std::string
