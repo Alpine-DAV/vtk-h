@@ -56,6 +56,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_clip_field
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
+                t_vtk-h_gradient
                 t_vtk-h_ghost_stripper
                 t_vtk-h_iso_volume
                 t_vtk-h_no_op
@@ -101,8 +102,10 @@ if (ENABLE_SERIAL)
         else()
           add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
         endif()
+        set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
     endforeach()
-    
+
+
     if(CUDA_FOUND)
       foreach(TEST ${CUDA_TESTS})
           add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
@@ -123,6 +126,7 @@ if(MPI_FOUND AND ENABLE_MPI)
       else()
         add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi)
       endif()
+      set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
     endforeach()
 else()
     message(STATUS "MPI disabled: Skipping related tests")

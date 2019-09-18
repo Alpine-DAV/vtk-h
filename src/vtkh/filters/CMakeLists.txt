@@ -8,6 +8,7 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  Gradient.hpp
   GhostStripper.hpp
   HistSampling.hpp
   Histogram.hpp
@@ -41,6 +42,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  Gradient.cpp
   GhostStripper.cpp
   HistSampling.cpp
   Histogram.cpp
@@ -86,6 +88,10 @@ if (ENABLE_SERIAL)
 
     if(ENABLE_OPENMP)
         target_compile_definitions(vtkh_filters PRIVATE VTKH_USE_OPENMP)
+    endif()
+
+    if(ENABLE_LOGGING)
+      target_compile_definitions(vtkh_filters PRIVATE VTKH_ENABLE_LOGGING)
     endif()
 
     if(ENABLE_CUDA)
@@ -144,6 +150,10 @@ if (MPI_FOUND)
 
     if(ENABLE_OPENMP)
           target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_USE_OPENMP)
+    endif()
+
+    if(ENABLE_LOGGING)
+      target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_ENABLE_LOGGING)
     endif()
 
     vtkm_add_target_information(vtkh_filters_mpi DEVICE_SOURCES ${vtkh_filter_sources})

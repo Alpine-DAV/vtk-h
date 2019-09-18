@@ -1,5 +1,6 @@
 #include "vtkh.hpp"
 #include "Error.hpp"
+#include <vtkh/Logger.hpp>
 
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
@@ -45,6 +46,9 @@ void
 SetMPICommHandle(int mpi_comm_id)
 {
   g_mpi_comm_id = mpi_comm_id;
+#ifdef VTKH_ENABLE_LOGGING
+  DataLogger::GetInstance()->SetRank(GetMPIRank());
+#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -138,6 +142,22 @@ IsMPIEnabled()
 #else
   return false;
 #endif
+}
+
+std::string GetCurrentDevice()
+{
+  std::string device = "serial";
+  // use the same prefered ordering as vtkm
+  if(IsCUDAEnabled())
+  {
+    device = "cuda";
+  }
+  else if(IsOpenMPEnabled())
+  {
+    device = "openmp";
+  }
+
+  return device;
 }
 
 //---------------------------------------------------------------------------//

@@ -27,6 +27,7 @@ namespace vtkh
   VTKH_API void        ForceOpenMP();
   VTKH_API void        ForceCUDA();
   VTKH_API void        ResetDevices();
+  VTKH_API std::string GetCurrentDevice();
 
   VTKH_API int         GetMPIRank();
   VTKH_API int         GetMPISize();

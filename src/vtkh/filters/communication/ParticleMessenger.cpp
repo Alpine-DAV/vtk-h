@@ -5,7 +5,7 @@
 #include <vtkh/filters/communication/MemStream.h>
 #include <vtkh/filters/communication/ParticleMessenger.hpp>
 
-#ifdef ENABLE_LOGGING
+#ifdef VTKH_ENABLE_LOGGING
 #define DBG(msg) vtkh::Logger::GetInstance("out")->GetStream()<<msg
 #define WDBG(msg) vtkh::Logger::GetInstance("wout")->GetStream()<<msg
 #else

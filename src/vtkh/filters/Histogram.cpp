@@ -1,5 +1,6 @@
 #include <vtkh/filters/Histogram.hpp>
 #include <vtkh/Error.hpp>
+#include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 
 #include <vtkm/worklet/FieldHistogram.h>
@@ -114,6 +115,11 @@ Histogram::SetNumBins(const int num_bins)
 Histogram::HistogramResult
 Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
 {
+  VTKH_DATA_OPEN("histogram");
+  VTKH_DATA_ADD("device", GetCurrentDevice());
+  VTKH_DATA_ADD("bins", m_num_bins);
+  VTKH_DATA_ADD("input_cells", data_set.GetNumberOfCells());
+  VTKH_DATA_ADD("input_domains", data_set.GetNumberOfDomains());
 
   if(!data_set.GlobalFieldExists(field_name))
   {
@@ -163,6 +169,8 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
   HistogramResult local = detail::merge_histograms(local_histograms);
   vtkm::Id * bin_ptr = GetVTKMPointer(local.m_bins);
   detail::reduce(bin_ptr, m_num_bins);
+
+  VTKH_DATA_CLOSE();
   return local;
 }
 
