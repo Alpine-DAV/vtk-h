@@ -23,6 +23,22 @@ using PLFType = vtkm::worklet::contourtree_augmented::process_contourtree_inc::P
 namespace vtkh
 {
 
+class SplitColumnComparer
+{
+public:
+  SplitColumnComparer(double* range, int splitDim):
+    m_range(range), m_splitDim(splitDim)
+  {
+  }
+  bool operator() (int i,int j)
+  {
+    return m_range[i*6 + 2*m_splitDim] < m_range[j*6 + 2*m_splitDim];
+  }
+private:
+  double* m_range;
+  int m_splitDim;
+};
+
 ContourTree::ContourTree()
   : m_levels(5)
 {
@@ -64,38 +80,86 @@ void ContourTree::PostExecute()
 
 void ContourTree::DoExecute()
 {
-  int rank = 0;
+  int mpi_rank = 0;
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
-#ifndef VTKH_PARALLEL
   assert(num_domains == 1);
+#ifndef VTKH_PARALLEL
   vtkm::cont::DataSet inDataSet;
   vtkm::Id domain_id;
   this->m_input->GetDomain(0, inDataSet, domain_id);
   this->m_output->AddDomain(inDataSet, domain_id);
 #else // VTKH_PARALLEL
-  int size;
+  int mpi_size;
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(mpi_comm));
-  MPI_Comm_size(mpi_comm, &size);
-  MPI_Comm_rank(mpi_comm, &rank);
+  MPI_Comm_size(mpi_comm, &mpi_size);
+  MPI_Comm_rank(mpi_comm, &mpi_rank);
   vtkm::cont::PartitionedDataSet inDataSet;
-  for(int i = 0; i < num_domains; ++i)
+  // each rank has one or more blocks
+  // all ranks have the same number of blocks
+  double range[mpi_size][6];
+  double localRange[6];
+
+  vtkm::Id domain_id;
+  vtkm::cont::DataSet dom;
+  this->m_input->GetDomain(0, dom, domain_id);
+  auto domRange = dom.GetCoordinateSystem(0).GetRange();
+  inDataSet.AppendPartition(dom);
+  for (int j = 0; j < 3; ++j)
   {
-    vtkm::Id domain_id;
-    vtkm::cont::DataSet dom;
-    this->m_input->GetDomain(i, dom, domain_id);
-    inDataSet.AppendPartition(dom);
+    localRange[2*j] = domRange[j].Min;
+    localRange[2*j + 1] = domRange[j].Max;
+  }
+  std::ostringstream ostr;
+  ostr << "rank: " << mpi_rank
+       << " coord system range: " << dom.GetCoordinateSystem(0).GetRange() << std::endl;
+  std::cout << ostr.str();
+
+  int blocksPerRank = num_domains;
+  MPI_Allgather(localRange, 2*3*blocksPerRank, MPI_DOUBLE,
+                range, 2*3*blocksPerRank, MPI_DOUBLE, mpi_comm);
+  {
     std::ostringstream ostr;
-    ostr << "rank: " << rank
-         << " coord system range: " << dom.GetCoordinateSystem(0).GetRange() << std::endl;
+    ostr << "rank: " << mpi_rank << " values: " << std::endl;
+    for (int i = 0; i < mpi_size; ++i)
+    {
+        for (int j = 0; j < 6; ++j)
+          ostr << range[i][j] << " ";
+        ostr << std::endl;
+    }
+
+    ostr << std::endl;
     std::cout << ostr.str();
   }
-
-  // TODO: change hardcode to computation.
-  vtkm::Id3 blocksPerDim = vtkm::Id3 (1, 1, 2);
-  vtkm::Id3 globalSize = vtkm::Id3 (64, 64, 64);
-  int blocksPerRank = 1;
+  // compute globalSize
+  vtkm::Id3 globalSize = vtkm::Id3(0, 0, 0);
+  for (int i = 0; i < mpi_size; ++i)
+  {
+    for (int j = 0; j < 3; ++j)
+      if (range[i][2*j+1] > globalSize[j])
+        globalSize[j] = range[i][2*j+1];
+  }
+  for (int j = 0; j < 3; ++j)
+    ++globalSize[j];
+  // compute blocksPerDim
+  vtkm::Id3 blocksPerDim = vtkm::Id3 (1, 1, 1);
+  double minRange[3] = {range[0][0], range[0][2], range[0][4]};
+  int splitDim = -1;
+  for (int i = 1; i < mpi_size; ++i)
+  {
+    for (int j = 0; j < 3; ++j)
+    {
+      if (range[i][2*j] != minRange[j])
+      {
+        blocksPerDim[j] = mpi_size;
+        splitDim = j;
+        goto next; // break with label, Java style
+      }
+    }
+  }
+ next:
+  // initalize localBlock variables
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockSizes;
@@ -105,20 +169,26 @@ void ContourTree::DoExecute()
   auto localBlockIndicesPortal = localBlockIndices.GetPortalControl();
   auto localBlockOriginsPortal = localBlockOrigins.GetPortalControl();
   auto localBlockSizesPortal = localBlockSizes.GetPortalControl();
-  if (rank == 0)
+  // compute localBlockIndices
+  int start[mpi_size]; // start of the splitDim column
+  for (int i = 0; i < mpi_size; ++i)
   {
-    localBlockIndicesPortal.Set(0, vtkm::Id3 (0, 0, 0));
-    localBlockOriginsPortal.Set(0, vtkm::Id3 (0, 0, 0));
-    localBlockSizesPortal.Set(0, vtkm::Id3(64, 64, 33));
+    start[i] = i;
   }
-  else
-  {
-    localBlockIndicesPortal.Set(0, vtkm::Id3 (0, 0, 1));
-    localBlockOriginsPortal.Set(0, vtkm::Id3 (0, 0, 32));
-    localBlockSizesPortal.Set(0, vtkm::Id3(64, 64, 32));
-  }
-
-  // compute
+  SplitColumnComparer comp(&range[0][0], splitDim);
+  std::sort(start, start+mpi_size, comp);
+  vtkm::Id3 id = vtkm::Id3(0, 0, 0);
+  id[splitDim] = start[mpi_rank];
+  localBlockIndicesPortal.Set(0, id);
+  // compute localBlockOrigins
+  id = vtkm::Id3(0, 0, 0);
+  id[splitDim] = range[start[mpi_rank]][2*splitDim];
+  localBlockOriginsPortal.Set(0, id);
+  // compute localBlockSizes
+  id = globalSize;
+  id[splitDim] = range[start[mpi_rank]][2*splitDim + 1] -
+    range[start[mpi_rank]][2*splitDim] + 1;
+  localBlockSizesPortal.Set(0, id);
 
 #endif // VTKH_PARALLEL
   std::cout<<"RUNNING TREE\n";
@@ -156,7 +226,7 @@ void ContourTree::DoExecute()
   auto result = filter.Execute(inDataSet);
 
   m_iso_values.resize(m_levels);
-  if (rank == 0)
+  if (mpi_rank == 0)
   {
     DataValueType eps = 0.00001;        // Error away from critical point
     vtkm::Id numComp = m_levels + 1;    // Number of components the tree should be simplified to
