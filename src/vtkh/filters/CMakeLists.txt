@@ -23,6 +23,7 @@ set(vtkh_filters_headers
   PointAverage.hpp
   Recenter.hpp
   Threshold.hpp
+  Statistics.hpp
   Slice.hpp
   VectorMagnitude.hpp
   communication/BoundsMap.hpp
@@ -56,6 +57,7 @@ set(vtkh_filters_sources
   Recenter.cpp
   Threshold.cpp
   Slice.cpp
+  Statistics.cpp
   VectorMagnitude.cpp
   communication/MemStream.cpp
   )
