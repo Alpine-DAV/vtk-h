@@ -18,6 +18,13 @@ public:
     vtkm::Float32 variance;
     vtkm::Float32 skewness;
     vtkm::Float32 kurtosis;
+    void Print(std::ostream &out)
+    {
+      out<<"Mean    : "<<mean<<"\n";
+      out<<"Variance: "<<variance<<"\n";
+      out<<"Skewness: "<<skewness<<"\n";
+      out<<"Kurtosis: "<<kurtosis<<"\n";
+    }
   };
 
   Statistics();
