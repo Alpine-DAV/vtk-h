@@ -4,6 +4,8 @@
 # Ref:
 # https://aka.ms/yaml
 
+# VTK-h ci tests
+
 # only build merge target pr to develop
 trigger: none
 pr:
