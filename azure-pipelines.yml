@@ -244,7 +244,7 @@ stages:
            python --version
            # setup spack spec (must be static)
            export SPACK_SPEC="%gcc+mpi+cuda~openmp~shared"
-           export SPACK_SPEC="${SPACK_SPEC}${SPACK_SHARED_VARIANT} ^vtkh+cuda${SPACK_SHARED_VARIANT} ^vtkm+cuda${SPACK_SHARED_VARIANT}"
+           export SPACK_SPEC="${SPACK_SPEC}${SPACK_SHARED_VARIANT} ^vtkm+cuda${SPACK_SHARED_VARIANT}"
            export SPACK_SPEC="${SPACK_SPEC} ^cmake~openssl~ncurses"
            echo $SPACK_SPEC
            # run uber to build tpls
