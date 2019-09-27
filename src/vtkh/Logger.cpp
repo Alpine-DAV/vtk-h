@@ -1,5 +1,6 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Logger.hpp>
+#include <cstdlib>
 
 namespace vtkh
 {
@@ -109,7 +110,12 @@ void
 DataLogger::WriteLog()
 {
   std::stringstream log_name;
-  log_name<<"vtkh_data_"<<Rank;
+  std::string log_prefix = "vtkh_data";
+  if(const char* log_p = std::getenv("VTKH_LOG_PREFIX"))
+  {
+    log_prefix = std::string(log_p);
+  }
+  log_name<<log_prefix<<"_"<<Rank;
   log_name<<".yaml";
 
   std::ofstream stream;
