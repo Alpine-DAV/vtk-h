@@ -54,6 +54,9 @@ if (ENABLE_SERIAL)
     if(ENABLE_LOGGING)
       target_compile_definitions(vtkh_core PRIVATE VTKH_ENABLE_LOGGING)
     endif()
+    if(ENABLE_DEBUG_LOGGING)
+      target_compile_definitions(vtkh_core PRIVATE VTKH_ENABLE_DEBUG_LOGGING)
+    endif()
 
     # Install libraries
     install(TARGETS vtkh_core
@@ -90,6 +93,9 @@ if(MPI_FOUND)
   target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_COMPILING_FLAG)
   if(ENABLE_LOGGING)
     target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_ENABLE_LOGGING)
+  endif()
+  if(ENABLE_DEBUG_LOGGING)
+    target_compile_definitions(vtkh_core_mpi PRIVATE VTKH_ENABLE_DEBUG_LOGGING)
   endif()
 
   # Install libraries
