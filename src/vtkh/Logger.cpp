@@ -55,6 +55,7 @@ DataLogger::DataLogger()
     Rank(0)
 {
   Blocks.push(Block(0));
+  KeyCounters.push(std::map<std::string,int>());
 }
 
 DataLogger::~DataLogger()
@@ -133,9 +134,19 @@ void
 DataLogger::OpenLogEntry(const std::string &entryName)
 {
     WriteIndent();
-    Stream<<entryName<<":"<<"\n";
+    // ensure that we have unique keys for valid yaml
+    int key_count = KeyCounters.top()[entryName]++;
+    if(key_count != 0)
+    {
+      Stream<<entryName<<"_"<<key_count<<":"<<"\n";
+    }
+    else
+    {
+      Stream<<entryName<<":"<<"\n";
+    }
     int indent = this->CurrentBlock().Indent;
     Blocks.push(Block(indent+1));
+    KeyCounters.push(std::map<std::string,int>());
 
     Timer timer;
     Timers.push(timer);
@@ -149,6 +160,7 @@ DataLogger::CloseLogEntry()
   this->Stream<<"time : "<<Timers.top().elapsed()<<"\n";
   Timers.pop();
   Blocks.pop();
+  KeyCounters.pop();
   AtBlockStart = false;
 }
 };

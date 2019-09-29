@@ -67,6 +67,7 @@ protected:
   static class DataLogger Instance;
   std::stack<Block> Blocks;
   std::stack<Timer> Timers;
+  std::stack<std::map<std::string,int>> KeyCounters;
   bool AtBlockStart;
   int Rank;
 };
