@@ -55,12 +55,12 @@ public:
     AtBlockStart = false;
   }
 
+  void WriteLog();
   std::stringstream& GetStream() { return Stream; }
 protected:
   DataLogger();
   DataLogger(DataLogger const &);
 
-  void WriteLog();
   void WriteIndent();
   DataLogger::Block& CurrentBlock();
   std::stringstream Stream;
