@@ -70,3 +70,35 @@ TEST(vtkh_ghost_stripper, vtkh_ghost_stripper)
 
   delete stripped_output;
 }
+
+//----------------------------------------------------------------------------
+TEST(vtkh_ghost_stripper, vtkh_ghost_stripper_no_strip)
+{
+  vtkh::DataSet data_set;
+
+  const int base_size = 32;
+  const int num_blocks = 1;
+
+  for(int i = 0; i < num_blocks; ++i)
+  {
+    data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
+  }
+
+  vtkm::Id before_cells = data_set.GetNumberOfCells();
+
+  vtkh::GhostStripper stripper;
+
+  stripper.SetInput(&data_set);
+  stripper.SetField("ghosts");
+  stripper.SetMinValue(0);
+  stripper.SetMaxValue(2);
+  stripper.AddMapField("point_data_Float64");
+  stripper.Update();
+
+  vtkh::DataSet *stripped_output = stripper.GetOutput();
+
+  vtkm::Id after_cells = stripped_output->GetNumberOfCells();
+
+  assert(before_cells == after_cells);
+  delete stripped_output;
+}

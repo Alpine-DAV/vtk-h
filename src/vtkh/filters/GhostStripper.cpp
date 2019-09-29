@@ -1,4 +1,5 @@
 #include <vtkh/filters/GhostStripper.hpp>
+#include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
 #include <vtkh/vtkm_filters/vtkmThreshold.hpp>
 #include <vtkh/vtkm_filters/vtkmCleanGrid.hpp>
@@ -6,6 +7,7 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/BinaryOperators.h>
 
 #include <limits>
 
@@ -14,6 +16,49 @@ namespace vtkh
 
 namespace detail
 {
+// only do reductions for positive numbers
+struct MinMaxIgnore
+{
+  VTKM_EXEC_CONT
+  vtkm::Vec<vtkm::Id, 2> operator()(const vtkm::Id& a) const
+  {
+    return vtkm::make_Vec(a, a);
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Vec<vtkm::Id, 2> operator()(const vtkm::Vec<vtkm::Id, 2>& a,
+                                    const vtkm::Vec<vtkm::Id, 2>& b) const
+  {
+    vtkm::Vec<vtkm::Id,2> min_max;
+    if(a[0] >= 0 && b[0] >=0)
+    {
+      min_max[0] = vtkm::Min(a[0], b[0]);
+    }
+    else if(a[0] < 0)
+    {
+      min_max[0] = b[0];
+    }
+    else
+    {
+      min_max[0] = a[0];
+    }
+
+    if(a[1] >= 0 && b[1] >=0)
+    {
+      min_max[1] = vtkm::Max(a[1], b[1]);
+    }
+    else if(a[1] < 0)
+    {
+      min_max[1] = b[1];
+    }
+    else
+    {
+      min_max[1] = a[1];
+    }
+    return min_max;
+  }
+
+};
 
 template<int DIMS>
 VTKM_EXEC_CONT
@@ -50,69 +95,49 @@ vtkm::Vec<vtkm::Id,3> get_logical<1>(const vtkm::Id &index, const vtkm::Vec<vtkm
 }
 
 template<int DIMS>
-class RealMinMax : public vtkm::worklet::WorkletMapField
+class GhostIndex : public vtkm::worklet::WorkletMapField
 {
 protected:
   vtkm::Vec<vtkm::Id,3> m_cell_dims;
   vtkm::Int32 m_min_value;
   vtkm::Int32 m_max_value;
+  vtkm::Id m_default_value;
+  vtkm::Int32 m_dim;
 public:
   VTKM_CONT
-  RealMinMax(vtkm::Vec<vtkm::Id,3> cell_dims, vtkm::Int32 min_value, vtkm::Int32 max_value)
+  GhostIndex(vtkm::Vec<vtkm::Id,3> cell_dims,
+             vtkm::Int32 min_value,
+             vtkm::Int32 max_value,
+             vtkm::Id default_value,
+             vtkm::Id dim)
     : m_cell_dims(cell_dims),
       m_min_value(min_value),
-      m_max_value(max_value)
+      m_max_value(max_value),
+      m_default_value(default_value),
+      m_dim(dim)
   {
   }
 
-  typedef void ControlSignature(FieldIn, AtomicArrayInOut);
+  typedef void ControlSignature(FieldIn, FieldOut);
   typedef void ExecutionSignature(_1, WorkIndex, _2);
 
-  template<typename Atomic>
-  VTKM_EXEC void Max(Atomic &boom,
-                     const vtkm::Int32 &val,
-                     const vtkm::Id &index) const
-  {
-    vtkm::Int32 old = -1;
-    do
-    {
-      old = boom.CompareAndSwap(index, val, old);
-    }
-    while (old < val);
-  }
-
-  template<typename Atomic>
-  VTKM_EXEC void Min(Atomic &boom,
-                     const vtkm::Int32 &val,
-                     const vtkm::Id &index) const
-  {
-    vtkm::Int32 old = 1000000000;
-    do
-    {
-      old = boom.CompareAndSwap(index, val, old);
-    }
-    while (old > val);
-  }
-
-  template<typename T, typename AtomicType>
+  template<typename T>
   VTKM_EXEC
-  void operator()(const T &value, const vtkm::Id &index, AtomicType &boom) const
+  void operator()(const T &value, const vtkm::Id &index, vtkm::Id &ghost_index) const
   {
+
     // we are finding the logical min max of valid zones
-    if( value < m_min_value || value > m_max_value) return;
-
-    vtkm::Vec<vtkm::Id,3> logical = get_logical<DIMS>(index, m_cell_dims);
-
-    Min(boom, logical[0], 0);
-    Min(boom, logical[1], 1);
-    Min(boom, logical[2], 2);
-
-    Max(boom, logical[0], 3);
-    Max(boom, logical[1], 4);
-    Max(boom, logical[2], 5);
-
+    if( value < m_min_value || value > m_max_value)
+    {
+      ghost_index = m_default_value;
+    }
+    else
+    {
+      vtkm::Vec<vtkm::Id,3> logical = get_logical<DIMS>(index, m_cell_dims);
+      ghost_index = logical[m_dim];
+    }
   }
-}; //class TheRealMinMax
+}; //class GhostIndex
 
 template<int DIMS>
 class Validate : public vtkm::worklet::WorkletMapField
@@ -169,28 +194,35 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
               vtkm::Vec<vtkm::Id,3> &min,
               vtkm::Vec<vtkm::Id,3> &max,
               vtkm::Vec<vtkm::Id,3> cell_dims,
-              vtkm::Id size)
+              vtkm::Id size,
+              bool &should_strip)
 {
-  vtkm::cont::ArrayHandle<vtkm::Id> minmax;
-  minmax.Allocate(6);
-  minmax.GetPortalControl().Set(0,std::numeric_limits<int>::max());
-  minmax.GetPortalControl().Set(1,std::numeric_limits<int>::max());
-  minmax.GetPortalControl().Set(2,std::numeric_limits<int>::max());
-  minmax.GetPortalControl().Set(3,std::numeric_limits<int>::min());
-  minmax.GetPortalControl().Set(4,std::numeric_limits<int>::min());
-  minmax.GetPortalControl().Set(5,std::numeric_limits<int>::min());
 
-  vtkm::worklet::DispatcherMapField<RealMinMax<3>>(RealMinMax<3>(cell_dims, min_value, max_value))
-     .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListTagScalarAll()), minmax);
+  VTKH_DATA_OPEN("can_strip");
+  vtkm::cont::ArrayHandle<vtkm::Id> dim_indices;
 
-  vtkm::Vec<vtkm::Id, 3> valid_min, valid_max;
-  valid_min[0] = minmax.GetPortalConstControl().Get(0);
-  valid_min[1] = minmax.GetPortalConstControl().Get(1);
-  valid_min[2] = minmax.GetPortalConstControl().Get(2);
+  vtkm::Vec<vtkm::Id, 3> valid_min = {0,0,0};
+  vtkm::Vec<vtkm::Id, 3> valid_max = {0,0,0};
 
-  valid_max[0] = minmax.GetPortalConstControl().Get(3);
-  valid_max[1] = minmax.GetPortalConstControl().Get(4);
-  valid_max[2] = minmax.GetPortalConstControl().Get(5);
+  for(vtkm::Int32 i = 0; i < DIMS; ++i)
+  {
+    vtkm::worklet::DispatcherMapField<GhostIndex<DIMS>>(
+        GhostIndex<DIMS>(cell_dims,
+                      min_value,
+                      max_value,
+                      -1,
+                      i))
+       .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListTagScalarAll()),
+           dim_indices);
+
+    vtkm::Vec<vtkm::Id,2> d = {-1, -1};
+    auto mm = vtkm::cont::Algorithm::Reduce(dim_indices,
+                                            d,
+                                            detail::MinMaxIgnore());
+
+    valid_min[i] = mm[0];
+    valid_max[i] = mm[1];
+  }
 
   vtkm::cont::ArrayHandle<vtkm::UInt8> valid_flags;
   valid_flags.Allocate(size);
@@ -205,8 +237,29 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
                                                              valid_max))
      .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListTagScalarAll()), valid_flags);
 
-  vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(valid_flags, vtkm::UInt8(0), vtkm::Maximum());
-  return res == 0;
+  vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(valid_flags,
+                                                  vtkm::UInt8(0),
+                                                  vtkm::Maximum());
+  VTKH_DATA_CLOSE();
+
+  bool can_strip = res == 0;
+  if(can_strip)
+  {
+    should_strip = false;
+    for(int i = 0; i < DIMS; ++i)
+    {
+      if(cell_dims[i] != (valid_max[i] - valid_min[i] + 1))
+      {
+        should_strip = true;
+      }
+    }
+  }
+  else
+  {
+    should_strip = true;
+  }
+
+  return can_strip;
 }
 
 bool StructuredStrip(vtkm::cont::DataSet &dataset,
@@ -214,8 +267,10 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                      const vtkm::Int32 min_value,
                      const vtkm::Int32 max_value,
                      vtkm::Vec<vtkm::Id,3> &min,
-                     vtkm::Vec<vtkm::Id,3> &max)
+                     vtkm::Vec<vtkm::Id,3> &max,
+                     bool &should_strip)
 {
+  VTKH_DATA_OPEN("structured_strip");
   vtkm::cont::DynamicCellSet cell_set = dataset.GetCellSet();
   int dims[3];
   VTKMDataSetInfo::GetPointDims(cell_set, dims);
@@ -224,6 +279,7 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
 
   bool can_strip = false;
   vtkm::Id size = 0;
+  should_strip = false;
   if(cell_set.IsSameType(vtkm::cont::CellSetStructured<1>()))
   {
     cell_dims[0] = dims[0] - 1;
@@ -235,7 +291,8 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             min,
                             max,
                             cell_dims,
-                            size);
+                            size,
+                            should_strip);
   }
   else if(cell_set.IsSameType(vtkm::cont::CellSetStructured<2>()))
   {
@@ -249,7 +306,8 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             min,
                             max,
                             cell_dims,
-                            size);
+                            size,
+                            should_strip);
   }
   else if(cell_set.IsSameType(vtkm::cont::CellSetStructured<3>()))
   {
@@ -264,9 +322,11 @@ bool StructuredStrip(vtkm::cont::DataSet &dataset,
                             min,
                             max,
                             cell_dims,
-                            size);
+                            size,
+                            should_strip);
   }
 
+  VTKH_DATA_CLOSE();
   return can_strip;
 }
 
@@ -339,20 +399,37 @@ void GhostStripper::DoExecute()
     if(VTKMDataSetInfo::IsStructured(dom, topo_dims))
     {
       vtkm::Vec<vtkm::Id,3> min, max;
-      bool can_strip = detail::StructuredStrip(dom, field, m_min_value, m_max_value, min, max);
+      bool should_strip; // just because we can doesn't mean we should
+      bool can_strip = detail::StructuredStrip(dom,
+                                              field,
+                                              m_min_value,
+                                              m_max_value,
+                                              min,
+                                              max,
+                                              should_strip);
       if(can_strip)
       {
         do_threshold = false;
-        vtkm::RangeId3 range(min[0],max[0]+2, min[1], max[1]+2, min[2], max[2]+2);
-        vtkm::Id3 sample(1, 1, 1);
+        if(should_strip)
+        {
+          VTKH_DATA_OPEN("extract_structured");
+          vtkm::RangeId3 range(min[0],max[0]+2, min[1], max[1]+2, min[2], max[2]+2);
+          vtkm::Id3 sample(1, 1, 1);
 
-        vtkh::vtkmExtractStructured extract;
-        auto output = extract.Run(dom,
-                                  range,
-                                  sample,
-                                  this->GetFieldSelection());
+          vtkh::vtkmExtractStructured extract;
+          auto output = extract.Run(dom,
+                                    range,
+                                    sample,
+                                    this->GetFieldSelection());
 
-        m_output->AddDomain(output, domain_id);
+          m_output->AddDomain(output, domain_id);
+          VTKH_DATA_CLOSE();
+        }
+        else
+        {
+          // All zones are valid so just pass through
+          m_output->AddDomain(dom, domain_id);
+        }
       }
 
     }
