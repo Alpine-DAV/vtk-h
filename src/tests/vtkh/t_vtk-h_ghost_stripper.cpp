@@ -47,26 +47,26 @@ TEST(vtkh_ghost_stripper, vtkh_ghost_stripper)
 
   vtkm::Bounds bounds = stripped_output->GetGlobalBounds();
 
-  //vtkm::rendering::Camera camera;
-  //camera.ResetToBounds(bounds);
-  //camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
-  //float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  //vtkh::Render render = vtkh::MakeRender(512,
-  //                                       512,
-  //                                       camera,
-  //                                       *stripped_output,
-  //                                       "ghost_stipper",
-  //                                       bg_color);
+  vtkm::rendering::Camera camera;
+  camera.ResetToBounds(bounds);
+  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(16,-32,-32));
+  float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         *stripped_output,
+                                         "ghost_stipper",
+                                         bg_color);
 
-  //vtkh::Scene scene;
-  //scene.AddRender(render);
+  vtkh::Scene scene;
+  scene.AddRender(render);
 
-  //vtkh::RayTracer tracer;
-  //tracer.SetInput(stripped_output);
-  //tracer.SetField("point_data_Float64");
+  vtkh::RayTracer tracer;
+  tracer.SetInput(stripped_output);
+  tracer.SetField("point_data_Float64");
 
-  //scene.AddRenderer(&tracer);
-  //scene.Render();
+  scene.AddRenderer(&tracer);
+  scene.Render();
 
   delete stripped_output;
 }
