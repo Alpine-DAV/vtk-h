@@ -20,9 +20,10 @@ class Vtkm(CMakePackage, CudaPackage):
     url      = "https://gitlab.kitware.com/api/v4/projects/vtk%2Fvtk-m/repository/archive.tar.gz?sha=v1.3.0"
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
+    # overrider master to pin 
     # version used for ascent
-    version('ascent_ver', commit='a4dfe50cd50b6827491ac6e760a6a60940d8ba17', preferred=True)
-    version('master', branch='master')
+    version('master', commit='a4dfe50cd50b6827491ac6e760a6a60940d8ba17', preferred=True)
+    #version('master', branch='master')
     version('1.3.0', "d9f6e274dec2ea01273cccaba356d23ca88c5a25")
     version('1.2.0', "3295fed86012226c107e1f2605ca7cc583586b63")
     version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
