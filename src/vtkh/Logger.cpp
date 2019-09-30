@@ -120,7 +120,7 @@ DataLogger::WriteLog()
   log_name<<".yaml";
 
   std::ofstream stream;
-  stream.open(log_name.str().c_str(), std::ofstream::out);
+  stream.open(log_name.str().c_str(), std::ofstream::app);
   if(!stream.is_open())
   {
     std::cerr<<"Warning: could not open the vtkh data log file\n";
@@ -128,6 +128,7 @@ DataLogger::WriteLog()
   }
   stream<<Stream.str();
   stream.close();
+  Stream.str("");
 }
 
 void
