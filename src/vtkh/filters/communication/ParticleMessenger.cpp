@@ -211,7 +211,7 @@ ParticleMessenger::ParticleSorter(std::vector<vtkh::Particle> &outData,
             }
 
             //Particle is mine, or put it in the sendData.
-            if (p.blockIds[0] == rank)
+            if (boundsMap.GetRank(p.blockIds[0]) == rank)
                 inData.push_back(p);
             else
                 sendData[boundsMap.GetRank(p.blockIds[0])].push_back(p);

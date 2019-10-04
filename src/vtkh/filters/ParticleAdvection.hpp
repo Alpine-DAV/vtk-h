@@ -131,6 +131,7 @@ protected:
   bool GetActiveParticles(std::vector<Particle> &v);
 
   void DumpTraces(int ts, const std::vector<vtkm::Vec<double,4>> &particleTraces);
+  void DumpTraces(const vtkm::cont::ArrayHandle<vtkm::Vec3f> &pts);
   void DumpDS(int ts);
   void DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts);
 };
