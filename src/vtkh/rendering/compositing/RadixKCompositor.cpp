@@ -14,8 +14,8 @@ namespace vtkh
 {
 
 void reduce_images(void *b,
-                   const diy::ReduceProxy &proxy,
-                   const diy::RegularSwapPartners &partners)
+                   const vtkhdiy::ReduceProxy &proxy,
+                   const vtkhdiy::RegularSwapPartners &partners)
 {
   ImageBlock *block = reinterpret_cast<ImageBlock*>(b);
   unsigned int round = proxy.round();
@@ -47,7 +47,7 @@ void reduce_images(void *b,
   const int current_dim = partners.dim(round);
 
   //create balanced set of ranges for current dim
-  diy::DiscreteBounds image_bounds = VTKMBoundsToDIY(image.m_bounds);
+  vtkhdiy::DiscreteBounds image_bounds = VTKMBoundsToDIY(image.m_bounds);
   int range_length = image_bounds.max[current_dim] - image_bounds.min[current_dim];
   int base_step = range_length / group_size;
   int rem = range_length % group_size;
@@ -64,7 +64,7 @@ void reduce_images(void *b,
   }
   assert(count == range_length);
 
-  std::vector<diy::DiscreteBounds> subset_bounds(group_size, VTKMBoundsToDIY(image.m_bounds));
+  std::vector<vtkhdiy::DiscreteBounds> subset_bounds(group_size, VTKMBoundsToDIY(image.m_bounds));
   int min_pixel = image_bounds.min[current_dim];
   for(int i = 0; i < group_size; ++i)
   {
@@ -116,35 +116,35 @@ RadixKCompositor::~RadixKCompositor()
 }
 
 void
-RadixKCompositor::CompositeSurface(diy::mpi::communicator &diy_comm, Image &image)
+RadixKCompositor::CompositeSurface(vtkhdiy::mpi::communicator &diy_comm, Image &image)
 {
 
-    diy::DiscreteBounds global_bounds = VTKMBoundsToDIY(image.m_orig_bounds);
+    vtkhdiy::DiscreteBounds global_bounds = VTKMBoundsToDIY(image.m_orig_bounds);
 
     // tells diy to use one thread
     const int num_threads = 1;
     const int num_blocks = diy_comm.size();
     const int magic_k = 8;
 
-    diy::Master master(diy_comm, num_threads);
+    vtkhdiy::Master master(diy_comm, num_threads);
 
     // create an assigner with one block per rank
-    diy::ContiguousAssigner assigner(num_blocks, num_blocks);
+    vtkhdiy::ContiguousAssigner assigner(num_blocks, num_blocks);
     AddImageBlock create(master, image);
     const int num_dims = 2;
-    diy::RegularDecomposer<diy::DiscreteBounds> decomposer(num_dims, global_bounds, num_blocks);
+    vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> decomposer(num_dims, global_bounds, num_blocks);
     decomposer.decompose(diy_comm.rank(), assigner, create);
-    diy::RegularSwapPartners partners(decomposer,
+    vtkhdiy::RegularSwapPartners partners(decomposer,
                                       magic_k,
                                       false); // false == distance halving
-    diy::reduce(master,
+    vtkhdiy::reduce(master,
                 assigner,
                 partners,
                 reduce_images);
 
 
     //MPICollect(image, diy_comm);
-    diy::all_to_all(master,
+    vtkhdiy::all_to_all(master,
                     assigner,
                     CollectImages(decomposer),
                     magic_k);

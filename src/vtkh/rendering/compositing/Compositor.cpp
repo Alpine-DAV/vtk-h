@@ -202,8 +202,8 @@ Compositor::CompositeZBufferSurface()
   // nothing to do here in serial. Images were composited as
   // they were added to the compositor
 #ifdef VTKH_PARALLEL
-  diy::mpi::communicator diy_comm;
-  diy_comm = diy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
+  vtkhdiy::mpi::communicator diy_comm;
+  diy_comm = vtkhdiy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
 
   assert(m_images.size() == 1);
   RadixKCompositor compositor;
@@ -223,8 +223,8 @@ Compositor::CompositeVisOrder()
 {
 
 #ifdef VTKH_PARALLEL
-  diy::mpi::communicator diy_comm;
-  diy_comm = diy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
+  vtkhdiy::mpi::communicator diy_comm;
+  diy_comm = vtkhdiy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
 
   assert(m_images.size() != 0);
   DirectSendCompositor compositor;

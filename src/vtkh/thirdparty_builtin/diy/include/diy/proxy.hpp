@@ -2,7 +2,7 @@
 #define DIY_PROXY_HPP
 
 
-namespace diy
+namespace vtkhdiy
 {
   //! Communication proxy, used for enqueueing and dequeueing items for future exchange.
   struct Master::Proxy
@@ -23,7 +23,7 @@ namespace diy
     template<class T>
     void                enqueue(const BlockID&  to,                                     //!< target block (gid,proc)
                                 const T&        x,                                      //!< data (eg. STL vector)
-                                void (*save)(BinaryBuffer&, const T&) = &::diy::save<T> //!< optional serialization function
+                                void (*save)(BinaryBuffer&, const T&) = &::vtkhdiy::save<T> //!< optional serialization function
                                ) const
     { OutgoingQueues& out = *outgoing_; save(out[to], x); }
 
@@ -32,7 +32,7 @@ namespace diy
     void                enqueue(const BlockID&  to,                                     //!< target block (gid,proc)
                                 const T*        x,                                      //!< pointer to the data (eg. address of start of vector)
                                 size_t          n,                                      //!< size in data elements (eg. ints)
-                                void (*save)(BinaryBuffer&, const T&) = &::diy::save<T> //!< optional serialization function
+                                void (*save)(BinaryBuffer&, const T&) = &::vtkhdiy::save<T> //!< optional serialization function
                                ) const;
 
     //! Dequeue data whose size can be determined automatically (e.g., STL vector) and that was
@@ -41,7 +41,7 @@ namespace diy
     template<class T>
     void                dequeue(int             from,                                   //!< target block gid
                                 T&              x,                                      //!< data (eg. STL vector)
-                                void (*load)(BinaryBuffer&, T&) = &::diy::load<T>       //!< optional serialization function
+                                void (*load)(BinaryBuffer&, T&) = &::vtkhdiy::load<T>       //!< optional serialization function
                                ) const
     { IncomingQueues& in  = *incoming_; load(in[from], x); }
 
@@ -51,12 +51,12 @@ namespace diy
     void                dequeue(int             from,                                   //!< target block gid
                                 T*              x,                                      //!< pointer to the data (eg. address of start of vector)
                                 size_t          n,                                      //!< size in data elements (eg. ints)
-                                void (*load)(BinaryBuffer&, T&) = &::diy::load<T>       //!< optional serialization function
+                                void (*load)(BinaryBuffer&, T&) = &::vtkhdiy::load<T>       //!< optional serialization function
                                ) const;
 
     template<class T>
     EnqueueIterator<T>  enqueuer(const T& x,
-                                 void (*save)(BinaryBuffer&, const T&) = &::diy::save<T>) const
+                                 void (*save)(BinaryBuffer&, const T&) = &::vtkhdiy::save<T>) const
     { return EnqueueIterator<T>(this, x, save); }
 
     IncomingQueues*     incoming() const                                { return incoming_; }
@@ -116,7 +116,7 @@ namespace diy
     typedef     void (*SaveT)(BinaryBuffer&, const T&);
 
                         EnqueueIterator(const Proxy* proxy, const T& x,
-                                        SaveT save = &::diy::save<T>):
+                                        SaveT save = &::vtkhdiy::save<T>):
                             proxy_(proxy), x_(x), save_(save)               {}
 
     EnqueueIterator&    operator=(const BlockID& to)                        { proxy_->enqueue(to, x_, save_); return *this; }
@@ -151,7 +151,7 @@ namespace diy
 
 
 void
-diy::Master::Proxy::
+vtkhdiy::Master::Proxy::
 incoming(std::vector<int>& v) const
 {
   for (IncomingQueues::const_iterator it = incoming_->begin(); it != incoming_->end(); ++it)
@@ -160,7 +160,7 @@ incoming(std::vector<int>& v) const
 
 template<class T, class Op>
 void
-diy::Master::Proxy::
+vtkhdiy::Master::Proxy::
 all_reduce(const T& in, Op op) const
 {
   collectives_->push_back(Collective(new detail::AllReduceOp<T,Op>(in, op)));
@@ -168,7 +168,7 @@ all_reduce(const T& in, Op op) const
 
 template<class T>
 T
-diy::Master::Proxy::
+vtkhdiy::Master::Proxy::
 read() const
 {
   T res;
@@ -178,7 +178,7 @@ read() const
 
 template<class T>
 T
-diy::Master::Proxy::
+vtkhdiy::Master::Proxy::
 get() const
 {
   T res = read<T>();
@@ -188,7 +188,7 @@ get() const
 
 template<class T>
 void
-diy::Master::Proxy::
+vtkhdiy::Master::Proxy::
 scratch(const T& in) const
 {
   collectives_->push_back(Collective(new detail::Scratch<T>(in)));
@@ -196,14 +196,14 @@ scratch(const T& in) const
 
 template<class T>
 void
-diy::Master::Proxy::
+vtkhdiy::Master::Proxy::
 enqueue(const BlockID& to, const T* x, size_t n,
         void (*save)(BinaryBuffer&, const T&)) const
 {
     OutgoingQueues& out = *outgoing_;
     BinaryBuffer&   bb  = out[to];
-    if (save == (void (*)(BinaryBuffer&, const T&)) &::diy::save<T>)
-        diy::save(bb, x, n);       // optimized for unspecialized types
+    if (save == (void (*)(BinaryBuffer&, const T&)) &::vtkhdiy::save<T>)
+        vtkhdiy::save(bb, x, n);       // optimized for unspecialized types
     else
         for (size_t i = 0; i < n; ++i)
             save(bb, x[i]);
@@ -211,14 +211,14 @@ enqueue(const BlockID& to, const T* x, size_t n,
 
 template<class T>
 void
-diy::Master::Proxy::
+vtkhdiy::Master::Proxy::
 dequeue(int from, T* x, size_t n,
         void (*load)(BinaryBuffer&, T&)) const
 {
     IncomingQueues& in = *incoming_;
     BinaryBuffer&   bb = in[from];
-    if (load == (void (*)(BinaryBuffer&, T&)) &::diy::load<T>)
-        diy::load(bb, x, n);       // optimized for unspecialized types
+    if (load == (void (*)(BinaryBuffer&, T&)) &::vtkhdiy::load<T>)
+        vtkhdiy::load(bb, x, n);       // optimized for unspecialized types
     else
         for (size_t i = 0; i < n; ++i)
             load(bb, x[i]);

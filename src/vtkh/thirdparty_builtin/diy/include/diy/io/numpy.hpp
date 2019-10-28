@@ -8,7 +8,7 @@
 #include "../serialization.hpp"
 #include "bov.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 namespace io
 {
@@ -179,7 +179,7 @@ diy::io::detail::big_endian()
   return y == 1 ? '<' : '>';
 }
 
-namespace diy
+namespace vtkhdiy
 {
 namespace io
 {

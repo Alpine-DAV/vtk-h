@@ -2,7 +2,7 @@
 
 #include "operations.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {

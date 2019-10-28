@@ -1,4 +1,4 @@
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {
@@ -58,8 +58,8 @@ namespace mpi
 }
 }
 
-diy::mpi::optional<diy::mpi::status>
-diy::mpi::communicator::
+vtkhdiy::mpi::optional<vtkhdiy::mpi::status>
+vtkhdiy::mpi::communicator::
 iprobe(int source, int tag) const
 {
   status s;

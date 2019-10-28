@@ -14,7 +14,7 @@
 #include "thread.hpp"
 #include "log.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
   namespace detail
   {

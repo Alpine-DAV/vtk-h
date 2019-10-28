@@ -5,7 +5,7 @@
 #include "constants.h"
 #include "point.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
     struct BlockID
     {
@@ -24,7 +24,7 @@ namespace diy
 
     //! Helper to create a 1-dimensional discrete domain with the specified extents
     inline
-    diy::DiscreteBounds
+    vtkhdiy::DiscreteBounds
     interval(int from, int to)            { DiscreteBounds domain; domain.min[0] = from; domain.max[0] = to; return domain; }
 
     struct Direction: public Point<int,DIY_MAX_DIM>
@@ -44,7 +44,7 @@ namespace diy
       }
 
       bool
-      operator==(const diy::Direction& y) const
+      operator==(const vtkhdiy::Direction& y) const
       {
         for (int i = 0; i < DIY_MAX_DIM; ++i)
             if ((*this)[i] != y[i]) return false;
@@ -53,7 +53,7 @@ namespace diy
 
       // lexicographic comparison
       bool
-      operator<(const diy::Direction& y) const
+      operator<(const vtkhdiy::Direction& y) const
       {
         for (int i = 0; i < DIY_MAX_DIM; ++i)
         {
@@ -73,12 +73,12 @@ namespace diy
 
     inline
     bool
-    operator<(const diy::BlockID& x, const diy::BlockID& y)
+    operator<(const vtkhdiy::BlockID& x, const vtkhdiy::BlockID& y)
     { return x.gid < y.gid; }
 
     inline
     bool
-    operator==(const diy::BlockID& x, const diy::BlockID& y)
+    operator==(const vtkhdiy::BlockID& x, const vtkhdiy::BlockID& y)
     { return x.gid == y.gid; }
 }
 

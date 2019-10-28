@@ -30,9 +30,9 @@ struct MultiImageBlock
 struct AddImageBlock
 {
   Image             &m_image;
-  const diy::Master &m_master;
+  const vtkhdiy::Master &m_master;
 
-  AddImageBlock(diy::Master &master, Image &image)
+  AddImageBlock(vtkhdiy::Master &master, Image &image)
     : m_image(image),
       m_master(master)
   {
@@ -46,7 +46,7 @@ struct AddImageBlock
   {
     ImageBlock *block = new ImageBlock(m_image);
     LinkType *linked = new LinkType(link);
-    diy::Master& master = const_cast<diy::Master&>(m_master);
+    vtkhdiy::Master& master = const_cast<vtkhdiy::Master&>(m_master);
     master.add(gid, block, linked);
   }
 };
@@ -55,9 +55,9 @@ struct AddMultiImageBlock
 {
   std::vector<Image> &m_images;
   Image              &m_output;
-  const diy::Master  &m_master;
+  const vtkhdiy::Master  &m_master;
 
-  AddMultiImageBlock(diy::Master &master,
+  AddMultiImageBlock(vtkhdiy::Master &master,
                      std::vector<Image> &images,
                      Image &output)
     : m_master(master),
@@ -73,60 +73,60 @@ struct AddMultiImageBlock
   {
     MultiImageBlock *block = new MultiImageBlock(m_images, m_output);
     LinkType *linked = new LinkType(link);
-    diy::Master& master = const_cast<diy::Master&>(m_master);
+    vtkhdiy::Master& master = const_cast<vtkhdiy::Master&>(m_master);
     int lid = master.add(gid, block, linked);
   }
 };
 
 } //namespace  vtkh
 
-namespace diy {
+namespace vtkhdiy {
 
 template<>
 struct Serialization<vtkh::Image>
 {
   static void save(BinaryBuffer &bb, const vtkh::Image &image)
   {
-    diy::save(bb, image.m_orig_bounds.X.Min);
-    diy::save(bb, image.m_orig_bounds.Y.Min);
-    diy::save(bb, image.m_orig_bounds.Z.Min);
-    diy::save(bb, image.m_orig_bounds.X.Max);
-    diy::save(bb, image.m_orig_bounds.Y.Max);
-    diy::save(bb, image.m_orig_bounds.Z.Max);
+    vtkhdiy::save(bb, image.m_orig_bounds.X.Min);
+    vtkhdiy::save(bb, image.m_orig_bounds.Y.Min);
+    vtkhdiy::save(bb, image.m_orig_bounds.Z.Min);
+    vtkhdiy::save(bb, image.m_orig_bounds.X.Max);
+    vtkhdiy::save(bb, image.m_orig_bounds.Y.Max);
+    vtkhdiy::save(bb, image.m_orig_bounds.Z.Max);
 
-    diy::save(bb, image.m_bounds.X.Min);
-    diy::save(bb, image.m_bounds.Y.Min);
-    diy::save(bb, image.m_bounds.Z.Min);
-    diy::save(bb, image.m_bounds.X.Max);
-    diy::save(bb, image.m_bounds.Y.Max);
-    diy::save(bb, image.m_bounds.Z.Max);
+    vtkhdiy::save(bb, image.m_bounds.X.Min);
+    vtkhdiy::save(bb, image.m_bounds.Y.Min);
+    vtkhdiy::save(bb, image.m_bounds.Z.Min);
+    vtkhdiy::save(bb, image.m_bounds.X.Max);
+    vtkhdiy::save(bb, image.m_bounds.Y.Max);
+    vtkhdiy::save(bb, image.m_bounds.Z.Max);
 
-    diy::save(bb, image.m_pixels);
-    diy::save(bb, image.m_depths);
-    diy::save(bb, image.m_orig_rank);
-    diy::save(bb, image.m_composite_order);
+    vtkhdiy::save(bb, image.m_pixels);
+    vtkhdiy::save(bb, image.m_depths);
+    vtkhdiy::save(bb, image.m_orig_rank);
+    vtkhdiy::save(bb, image.m_composite_order);
   }
 
   static void load(BinaryBuffer &bb, vtkh::Image &image)
   {
-    diy::load(bb, image.m_orig_bounds.X.Min);
-    diy::load(bb, image.m_orig_bounds.Y.Min);
-    diy::load(bb, image.m_orig_bounds.Z.Min);
-    diy::load(bb, image.m_orig_bounds.X.Max);
-    diy::load(bb, image.m_orig_bounds.Y.Max);
-    diy::load(bb, image.m_orig_bounds.Z.Max);
+    vtkhdiy::load(bb, image.m_orig_bounds.X.Min);
+    vtkhdiy::load(bb, image.m_orig_bounds.Y.Min);
+    vtkhdiy::load(bb, image.m_orig_bounds.Z.Min);
+    vtkhdiy::load(bb, image.m_orig_bounds.X.Max);
+    vtkhdiy::load(bb, image.m_orig_bounds.Y.Max);
+    vtkhdiy::load(bb, image.m_orig_bounds.Z.Max);
 
-    diy::load(bb, image.m_bounds.X.Min);
-    diy::load(bb, image.m_bounds.Y.Min);
-    diy::load(bb, image.m_bounds.Z.Min);
-    diy::load(bb, image.m_bounds.X.Max);
-    diy::load(bb, image.m_bounds.Y.Max);
-    diy::load(bb, image.m_bounds.Z.Max);
+    vtkhdiy::load(bb, image.m_bounds.X.Min);
+    vtkhdiy::load(bb, image.m_bounds.Y.Min);
+    vtkhdiy::load(bb, image.m_bounds.Z.Min);
+    vtkhdiy::load(bb, image.m_bounds.X.Max);
+    vtkhdiy::load(bb, image.m_bounds.Y.Max);
+    vtkhdiy::load(bb, image.m_bounds.Z.Max);
 
-    diy::load(bb, image.m_pixels);
-    diy::load(bb, image.m_depths);
-    diy::load(bb, image.m_orig_rank);
-    diy::load(bb, image.m_composite_order);
+    vtkhdiy::load(bb, image.m_pixels);
+    vtkhdiy::load(bb, image.m_depths);
+    vtkhdiy::load(bb, image.m_orig_rank);
+    vtkhdiy::load(bb, image.m_composite_order);
   }
 };
 
