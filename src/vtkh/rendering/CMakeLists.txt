@@ -112,12 +112,15 @@ if (MPI_FOUND)
          list(APPEND vtkh_rendering_mpi_deps openmp)
     endif()
 
+
     blt_add_library(
         NAME vtkh_rendering_mpi
         SOURCES ${vtkh_rendering_sources} ${vtkh_rendering_mpi_sources}
         HEADERS ${vtkh_rendering_headers} ${vtkh_rendering_mpi_headers}
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
+
+    target_link_libraries(vtkh_rendering_mpi PRIVATE vtkhdiy)
 
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_COMPILING_FLAG)
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_PARALLEL)
