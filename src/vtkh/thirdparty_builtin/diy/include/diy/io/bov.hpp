@@ -8,7 +8,7 @@
 #include "../types.hpp"
 #include "../mpi.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 namespace io
 {

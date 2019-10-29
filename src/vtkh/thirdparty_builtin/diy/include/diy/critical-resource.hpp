@@ -1,7 +1,7 @@
 #ifndef DIY_CRITICAL_RESOURCE_HPP
 #define DIY_CRITICAL_RESOURCE_HPP
 
-namespace diy
+namespace vtkhdiy
 {
   // TODO: when not running under C++11, i.e., when lock_guard is TinyThread's
   //       lock_guard, and not C++11's unique_lock, this implementation might

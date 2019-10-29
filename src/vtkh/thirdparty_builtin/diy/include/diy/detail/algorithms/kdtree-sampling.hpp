@@ -15,7 +15,7 @@
 //     random number generators (and take a generator as an external parameter)
 //     (TODO)
 
-namespace diy
+namespace vtkhdiy
 {
 namespace detail
 {

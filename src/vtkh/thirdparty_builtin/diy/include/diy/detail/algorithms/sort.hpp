@@ -4,7 +4,7 @@
 #include <functional>
 #include <algorithm>
 
-namespace diy
+namespace vtkhdiy
 {
 
 namespace detail

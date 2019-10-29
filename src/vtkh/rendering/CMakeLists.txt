@@ -112,12 +112,17 @@ if (MPI_FOUND)
          list(APPEND vtkh_rendering_mpi_deps openmp)
     endif()
 
+
     blt_add_library(
         NAME vtkh_rendering_mpi
         SOURCES ${vtkh_rendering_sources} ${vtkh_rendering_mpi_sources}
         HEADERS ${vtkh_rendering_headers} ${vtkh_rendering_mpi_headers}
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
+
+    #target_link_libraries(vtkh_rendering_mpi PRIVATE vtkhdiy)
+    #this is a workaround for a cmake issue linking an interface header only library statically
+    target_include_directories(vtkh_rendering_mpi PRIVATE $<TARGET_PROPERTY:vtkhdiy,INTERFACE_INCLUDE_DIRECTORIES>)
 
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_COMPILING_FLAG)
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_PARALLEL)

@@ -3,7 +3,7 @@
 
 #include "../block_traits.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 
 namespace detail
@@ -104,8 +104,8 @@ namespace detail
           size_t s;
           while(in)
           {
-            diy::load(in, from_to);
-            diy::load(in, s);
+            vtkhdiy::load(in, from_to);
+            vtkhdiy::load(in, s);
 
             int j = (from_to.second - range.first) / group;
             sizes_out[j] += s + sizeof(size_t) + sizeof(std::pair<int,int>);

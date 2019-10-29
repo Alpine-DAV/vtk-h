@@ -1,4 +1,4 @@
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {
@@ -14,8 +14,8 @@ namespace mpi
 }
 }
 
-diy::mpi::optional<diy::mpi::status>
-diy::mpi::request::test()
+vtkhdiy::mpi::optional<vtkhdiy::mpi::status>
+vtkhdiy::mpi::request::test()
 {
   status s;
   int flag;

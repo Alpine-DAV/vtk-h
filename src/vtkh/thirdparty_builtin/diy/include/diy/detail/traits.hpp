@@ -25,7 +25,7 @@ the standard library.
 #include <functional>
 #include <type_traits>
 
-namespace diy
+namespace vtkhdiy
 {
 namespace detail {
 

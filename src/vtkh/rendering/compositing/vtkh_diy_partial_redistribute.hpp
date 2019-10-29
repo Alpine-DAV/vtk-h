@@ -58,13 +58,13 @@ namespace vtkh {
 template<typename BlockType>
 struct Redistribute
 {
-  const diy::RegularDecomposer<diy::DiscreteBounds> &m_decomposer;
+  const vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> &m_decomposer;
 
-  Redistribute(const diy::RegularDecomposer<diy::DiscreteBounds> &decomposer)
+  Redistribute(const vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> &decomposer)
     : m_decomposer(decomposer)
   {}
 
-  void operator()(void *v_block, const diy::ReduceProxy &proxy) const
+  void operator()(void *v_block, const vtkhdiy::ReduceProxy &proxy) const
   {
     BlockType *block = static_cast<BlockType*>(v_block);
     //
@@ -74,14 +74,14 @@ struct Redistribute
     if(proxy.in_link().size() == 0)
     {
       const int size = block->m_partials.size();
-      std::map<diy::BlockID,std::vector<typename BlockType::PartialType>> outgoing;
+      std::map<vtkhdiy::BlockID,std::vector<typename BlockType::PartialType>> outgoing;
 
       for(int i = 0; i < size; ++i)
       {
-        diy::Point<int,DIY_MAX_DIM> point;
+        vtkhdiy::Point<int,DIY_MAX_DIM> point;
         point[0] = block->m_partials[i].m_pixel_id;
         int dest_gid = m_decomposer.point_to_gid(point);
-        diy::BlockID dest = proxy.out_link().target(dest_gid);
+        vtkhdiy::BlockID dest = proxy.out_link().target(dest_gid);
         outgoing[dest].push_back(block->m_partials[i]);
       } //for
 
@@ -91,7 +91,7 @@ struct Redistribute
       for(int i = 0; i < proxy.out_link().size(); ++i)
       {
         int dest_gid = proxy.out_link().target(i).gid;
-        diy::BlockID dest = proxy.out_link().target(dest_gid);
+        vtkhdiy::BlockID dest = proxy.out_link().target(dest_gid);
         proxy.enqueue(dest, outgoing[dest]);
         //outgoing[dest].clear();
       }
@@ -126,8 +126,8 @@ void redistribute_detail(std::vector<typename AddBlockType::PartialType> &partia
 {
   typedef typename AddBlockType::Block Block;
 
-  diy::mpi::communicator world(comm);
-  diy::DiscreteBounds global_bounds;
+  vtkhdiy::mpi::communicator world(comm);
+  vtkhdiy::DiscreteBounds global_bounds;
   global_bounds.min[0] = domain_min_pixel;
   global_bounds.max[0] = domain_max_pixel;
 
@@ -136,16 +136,16 @@ void redistribute_detail(std::vector<typename AddBlockType::PartialType> &partia
   const int num_blocks = world.size();
   const int magic_k = 2;
 
-  diy::Master master(world, num_threads);
+  vtkhdiy::Master master(world, num_threads);
 
   // create an assigner with one block per rank
-  diy::ContiguousAssigner assigner(num_blocks, num_blocks);
+  vtkhdiy::ContiguousAssigner assigner(num_blocks, num_blocks);
   AddBlockType create(master, partials);
 
   const int dims = 1;
-  diy::RegularDecomposer<diy::DiscreteBounds> decomposer(dims, global_bounds, num_blocks);
+  vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> decomposer(dims, global_bounds, num_blocks);
   decomposer.decompose(world.rank(), assigner, create);
-  diy::all_to_all(master, assigner, Redistribute<Block>(decomposer), magic_k);
+  vtkhdiy::all_to_all(master, assigner, Redistribute<Block>(decomposer), magic_k);
 }
 
 //

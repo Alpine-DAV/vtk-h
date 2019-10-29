@@ -5,7 +5,7 @@
 #include "partners/swap.hpp"
 #include "detail/reduce/all-to-all.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 
 /**

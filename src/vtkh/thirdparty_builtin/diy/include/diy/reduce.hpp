@@ -7,7 +7,7 @@
 #include "detail/block_traits.hpp"
 #include "log.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 //! Enables communication within a group during a reduction.
 //! DIY creates the ReduceProxy for you in diy::reduce()

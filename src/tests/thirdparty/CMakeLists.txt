@@ -47,7 +47,7 @@
 ################################
 
 list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+set(MPI_TESTS )
 
 ################################
 # Add our Main Unit Tests
@@ -87,7 +87,7 @@ if(MPI_FOUND)
   foreach(TEST ${MPI_TESTS})
     # this uses 2 procs
     add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
+    #target_link_libraries(${TEST} PRIVATE diy)
   endforeach()
 else()
   message(STATUS "MPI disabled: Skipping related tests")

@@ -76,6 +76,10 @@ if(ENABLE_CUDA)
     unset(_fetch_vtkm_cuda_flags)
 endif()
 
+# VTKM does not seem to propogate includes it exposes to us, so we have to work
+# around this.
+file(GLOB LCL_DIR "${VTKM_DIR}/include/vtkm-*/vtkm/thirdparty/lcl/vtkmlcl/")
+include_directories("${LCL_DIR}")
 
 blt_register_library(NAME vtkm
                      LIBRARIES ${VTKM_TARGETS}

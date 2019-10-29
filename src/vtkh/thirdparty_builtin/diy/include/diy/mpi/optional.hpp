@@ -1,4 +1,4 @@
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {
@@ -41,8 +41,8 @@ namespace mpi
 }
 
 template<class T>
-diy::mpi::optional<T>&
-diy::mpi::optional<T>::
+vtkhdiy::mpi::optional<T>&
+vtkhdiy::mpi::optional<T>::
 operator=(const optional& o)
 {
   if (init_)

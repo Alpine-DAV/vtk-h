@@ -3,7 +3,7 @@
 
 #include <vector>
 
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {

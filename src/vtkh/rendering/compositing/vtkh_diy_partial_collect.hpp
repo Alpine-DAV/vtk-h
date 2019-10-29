@@ -57,13 +57,13 @@ namespace vtkh {
 template<typename BlockType>
 struct Collect
 {
-  const diy::RegularDecomposer<diy::ContinuousBounds> &m_decomposer;
+  const vtkhdiy::RegularDecomposer<vtkhdiy::ContinuousBounds> &m_decomposer;
 
-  Collect(const diy::RegularDecomposer<diy::ContinuousBounds> &decomposer)
+  Collect(const vtkhdiy::RegularDecomposer<vtkhdiy::ContinuousBounds> &decomposer)
     : m_decomposer(decomposer)
   {}
 
-  void operator()(void *v_block, const diy::ReduceProxy &proxy) const
+  void operator()(void *v_block, const vtkhdiy::ReduceProxy &proxy) const
   {
     BlockType *block = static_cast<BlockType*>(v_block);
     //
@@ -74,7 +74,7 @@ struct Collect
     if(proxy.in_link().size() == 0 && proxy.gid() != collection_rank)
     {
       int dest_gid = collection_rank;
-      diy::BlockID dest = proxy.out_link().target(dest_gid);
+      vtkhdiy::BlockID dest = proxy.out_link().target(dest_gid);
       proxy.enqueue(dest, block->m_partials);
 
       block->m_partials.clear();
@@ -115,8 +115,8 @@ void collect_detail(std::vector<typename AddBlockType::PartialType> &partials,
 {
   typedef typename AddBlockType::Block Block;
 
-  diy::mpi::communicator world(comm);
-  diy::ContinuousBounds global_bounds;
+  vtkhdiy::mpi::communicator world(comm);
+  vtkhdiy::ContinuousBounds global_bounds;
   global_bounds.min[0] = 0;
   global_bounds.max[0] = 1;
 
@@ -125,17 +125,17 @@ void collect_detail(std::vector<typename AddBlockType::PartialType> &partials,
   const int num_blocks = world.size();
   const int magic_k = 2;
 
-  diy::Master master(world, num_threads);
+  vtkhdiy::Master master(world, num_threads);
 
   // create an assigner with one block per rank
-  diy::ContiguousAssigner assigner(num_blocks, num_blocks);
+  vtkhdiy::ContiguousAssigner assigner(num_blocks, num_blocks);
   AddBlockType create(master, partials);
 
   const int dims = 1;
-  diy::RegularDecomposer<diy::ContinuousBounds> decomposer(dims, global_bounds, num_blocks);
+  vtkhdiy::RegularDecomposer<vtkhdiy::ContinuousBounds> decomposer(dims, global_bounds, num_blocks);
   decomposer.decompose(world.rank(), assigner, create);
 
-  diy::all_to_all(master, assigner, Collect<Block>(decomposer), magic_k);
+  vtkhdiy::all_to_all(master, assigner, Collect<Block>(decomposer), magic_k);
 
 
 }
