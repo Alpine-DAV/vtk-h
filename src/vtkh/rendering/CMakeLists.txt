@@ -120,7 +120,9 @@ if (MPI_FOUND)
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
 
-    target_link_libraries(vtkh_rendering_mpi PRIVATE vtkhdiy)
+    #target_link_libraries(vtkh_rendering_mpi PRIVATE vtkhdiy)
+    #this is a workaround for a cmake issue linking an interface header only library statically
+    target_include_directories(vtkh_rendering_mpi PRIVATE $<TARGET_PROPERTY:vtkhdiy,INTERFACE_INCLUDE_DIRECTORIES>)
 
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_COMPILING_FLAG)
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_PARALLEL)
