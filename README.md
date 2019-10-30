@@ -6,14 +6,10 @@ bring together several projects like VTK-m and DIY2 to provide a toolkit with hy
 
 VTK-m Version:
 ==============
-Both Ascent and VTK-h use a specific version of VTK-m. 
+VTK-h use a specific version of VTK-m.
 For the current version see:
 
-https://ascent.readthedocs.io/en/latest/BuildingAscent.html#vtk-m-optional-but-recommended
-
-Or 
-
-https://github.com/Alpine-DAV/ascent/blob/develop/hashes.txt
+https://github.com/Alpine-DAV/vtk-h/blob/develop/hashes.txt
 
 Source Repo
 =================
