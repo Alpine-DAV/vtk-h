@@ -11,6 +11,9 @@ For the current version see:
 
 https://github.com/Alpine-DAV/vtk-h/blob/develop/hashes.txt
 
+Additionally, VTK-m has several build settings and we test with a specific combination.
+When building VTK-m, be sure to set `VTKm_USE_64BIT_IDS=OFF` and `VTKm_USE_DOUBLE_PRECISION=ON`.
+
 Source Repo
 =================
 
