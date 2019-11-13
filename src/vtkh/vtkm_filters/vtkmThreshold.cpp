@@ -45,7 +45,7 @@ void StripPermutation(vtkm::cont::DataSet &data_set)
     explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
   }
 
-  result.AddCellSet(explicit_cells);
+  result.SetCellSet(explicit_cells);
 
   vtkm::Id num_coords = data_set.GetNumberOfCoordinateSystems();
   for(vtkm::Id i = 0; i < num_coords; ++i)
@@ -75,7 +75,7 @@ vtkmThreshold::Run(vtkm::cont::DataSet &input,
   thresholder.SetActiveField(field_name);
   thresholder.SetFieldsToPass(map_fields);
   auto output = thresholder.Execute(input);
-  vtkh::StripPermutation(output);
+  //vtkh::StripPermutation(output);
   return output;
 }
 

@@ -1,6 +1,7 @@
 #ifndef VTK_H_HIST_SAMPLING_HPP
 #define VTK_H_HIST_SAMPLING_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -8,7 +9,7 @@
 namespace vtkh
 {
 
-class HistSampling : public Filter
+class VTKH_API HistSampling : public Filter
 {
 public:
   HistSampling();

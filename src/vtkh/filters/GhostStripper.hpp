@@ -1,6 +1,7 @@
 #ifndef VTK_H_GHOST_STRIPPER_HPP
 #define VTK_H_GHOST_STRIPPER_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -8,7 +9,7 @@
 namespace vtkh
 {
 
-class GhostStripper : public Filter
+class VTKH_API GhostStripper : public Filter
 {
 public:
   GhostStripper();

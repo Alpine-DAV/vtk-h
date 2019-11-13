@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 
 class Master;

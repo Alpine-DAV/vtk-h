@@ -3,7 +3,7 @@
 
 #include "point.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 
 template<class C, unsigned D>

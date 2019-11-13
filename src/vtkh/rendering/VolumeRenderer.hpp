@@ -1,12 +1,13 @@
 #ifndef VTK_H_RENDERER_VOLUME_HPP
 #define VTK_H_RENDERER_VOLUME_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/rendering/Renderer.hpp>
 #include <vtkm/rendering/MapperVolume.h>
 
 namespace vtkh {
 
-class VolumeRenderer : public Renderer
+class VTKH_API VolumeRenderer : public Renderer
 {
 public:
   VolumeRenderer();

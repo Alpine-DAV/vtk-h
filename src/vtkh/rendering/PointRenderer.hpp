@@ -5,7 +5,8 @@
 
 namespace vtkh {
 
-class PointRenderer : public Renderer
+#include<vtkh/vtkh_exports.h>
+class VTKH_API PointRenderer : public Renderer
 {
 public:
   PointRenderer();

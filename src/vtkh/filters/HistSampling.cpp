@@ -2,7 +2,6 @@
 #include <vtkh/filters/GhostStripper.hpp>
 #include <vtkh/filters/Threshold.hpp>
 #include <vtkh/filters/Histogram.hpp>
-#include <vtkh/filters/Threshold.hpp>
 #include <vtkh/Error.hpp>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -10,7 +9,6 @@
 
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/worklet/FieldStatistics.h>
-#include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <iostream>
@@ -113,6 +111,14 @@ calculate_pdf(const vtkm::Int32 tot_points,
   for(vtkm::Float32 n : targetSamples)
   {
     acceptance_portal.Set(binPortal.Get(counter).second,n/binPortal.Get(counter).first);
+    if (binPortal.Get(counter).first < 0.00000000000001f)
+    {
+    	acceptance_portal.Set(binPortal.Get(counter).second,0.0);
+    }
+    else
+    {
+      acceptance_portal.Set(binPortal.Get(counter).second,n/binPortal.Get(counter).first);
+    }
     sum+=n;
     counter++;
 

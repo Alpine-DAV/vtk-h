@@ -3,7 +3,7 @@
 
 #include <iterator>
 
-namespace diy
+namespace vtkhdiy
 {
 
 namespace detail

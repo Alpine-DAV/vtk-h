@@ -47,7 +47,7 @@
 ################################
 
 list(APPEND VTKM_TESTS t_vtkm_smoke)
-set(MPI_TESTS t_diy_smoke)
+set(MPI_TESTS )
 
 ################################
 # Add our Main Unit Tests
@@ -74,6 +74,9 @@ foreach(TEST ${VTKM_TESTS})
   if (CUDA_FOUND)
     target_compile_definitions(${TEST} PRIVATE "VTKH_FORCE_CUDA")
   endif()
+
+  set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
 endforeach()
 
 ################################
@@ -84,7 +87,7 @@ if(MPI_FOUND)
   foreach(TEST ${MPI_TESTS})
     # this uses 2 procs
     add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2)
-    target_link_libraries(${TEST} PRIVATE diy)
+    #target_link_libraries(${TEST} PRIVATE diy)
   endforeach()
 else()
   message(STATUS "MPI disabled: Skipping related tests")

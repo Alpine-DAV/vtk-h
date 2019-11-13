@@ -12,13 +12,13 @@ namespace vtkh
 {
 struct CollectImages
 {
-  const diy::RegularDecomposer<diy::DiscreteBounds> &m_decomposer;
+  const vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> &m_decomposer;
 
-  CollectImages(const diy::RegularDecomposer<diy::DiscreteBounds> &decomposer)
+  CollectImages(const vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> &decomposer)
     : m_decomposer(decomposer)
   {}
 
-  void operator()(void *b, const diy::ReduceProxy &proxy) const
+  void operator()(void *b, const vtkhdiy::ReduceProxy &proxy) const
   {
     ImageBlock *block = reinterpret_cast<ImageBlock*>(b);
     //
@@ -32,7 +32,7 @@ struct CollectImages
       if(proxy.gid() != collection_rank)
       {
         int dest_gid = collection_rank;
-        diy::BlockID dest = proxy.out_link().target(dest_gid);
+        vtkhdiy::BlockID dest = proxy.out_link().target(dest_gid);
 
         proxy.enqueue(dest, block->m_image);
         block->m_image.Clear();

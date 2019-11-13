@@ -38,7 +38,7 @@ TEST(vtkh_histogram_par, vtkh_histogram_clamp_range)
 
   vtkh::Histogram::HistogramResult res;
   vtkh::Histogram histogrammer;
-  histogrammer.SetNumBins(50);
+  histogrammer.SetNumBins(128);
 
   vtkm::Range range;
   range.Min = 0;
@@ -47,6 +47,7 @@ TEST(vtkh_histogram_par, vtkh_histogram_clamp_range)
   histogrammer.SetRange(range);
   res = histogrammer.Run(data_set,"point_data_Float64");
 
-  if(rank == 0) res.Print();
+  if(rank == 0) res.Print(std::cout);
+
   MPI_Finalize();
 }

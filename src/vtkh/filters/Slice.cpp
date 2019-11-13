@@ -182,21 +182,10 @@ public:
         vtkm::cont::Algorithm::CopySubRange(in, start, copy_size, out, offset);
       }
 
-      if(assoc_points)
-      {
-        vtkm::cont::Field out_field(scalar_field.GetName(),
-                                    scalar_field.GetAssociation(),
-                                    out);
-        m_data_set.AddField(out_field);
-      }
-      else
-      {
-        vtkm::cont::Field out_field(scalar_field.GetName(),
-                                    scalar_field.GetAssociation(),
-                                    scalar_field.GetAssocCellSet(),
-                                    out);
-        m_data_set.AddField(out_field);
-      }
+      vtkm::cont::Field out_field(scalar_field.GetName(),
+                                  scalar_field.GetAssociation(),
+                                  out);
+      m_data_set.AddField(out_field);
 
     }
   };
@@ -265,7 +254,8 @@ public:
       vtkm::cont::CellSetExplicit<> single_type =
         cell_set.Cast<vtkm::cont::CellSetExplicit<>>();
       const vtkm::cont::ArrayHandle<vtkm::Id> dconn = single_type.GetConnectivityArray(
-        vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        vtkm::TopologyElementTagCell(),
+        vtkm::TopologyElementTagPoint());
 
       vtkm::Id copy_size = dconn.GetNumberOfValues();
       vtkm::Id start = 0;
@@ -301,9 +291,9 @@ public:
     } // for each domain
 
 
-    vtkm::cont::CellSetSingleType<> cellSet("cells");
+    vtkm::cont::CellSetSingleType<> cellSet;
     cellSet.Fill(num_points, vtkm::CELL_SHAPE_TRIANGLE, 3, conn);
-    res.AddCellSet(cellSet);
+    res.SetCellSet(cellSet);
 
     res.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", out_coords));
 
@@ -419,17 +409,11 @@ Slice::DoExecute()
     marcher.Update();
     slices.push_back(marcher.GetOutput());
   } // each slice
-  for(int i = 0; i < slices.size(); ++i)
-  {
-    std::cout<<"**************************************\n";
-    slices[i]->PrintSummary(std::cout);
-  }
+
   if(slices.size() > 1)
   {
     detail::MergeContours merger(slices, fname);
     this->m_output = merger.Merge();
-    std::cout<<"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n";
-    this->m_output->PrintSummary(std::cout);
   }
   else
   {

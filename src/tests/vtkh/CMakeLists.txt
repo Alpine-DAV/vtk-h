@@ -56,6 +56,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_clip_field
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
+                t_vtk-h_gradient
                 t_vtk-h_ghost_stripper
                 t_vtk-h_iso_volume
                 t_vtk-h_no_op
@@ -79,6 +80,7 @@ set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_dataset_par
               t_vtk-h_no_op_par
               t_vtk-h_histogram_par
+              t_vtk-h_statistics_par
               t_vtk-h_marching_cubes_par
               t_vtk-h_multi_render_par
               t_vtk-h_particle_advection_par
@@ -91,21 +93,25 @@ set(MPI_TESTS t_vtk-h_smoke_par
 ################################
 # Add main tests
 ################################
-message(STATUS "Adding vtk-h lib unit tests")
-foreach(TEST ${BASIC_TESTS})
-    if(ENABLE_CUDA)
-      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
-      vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
-      set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CUDA)
-    else()
-      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
-    endif()
-endforeach()
+if (ENABLE_SERIAL)
+    message(STATUS "Adding vtk-h lib unit tests")
+    foreach(TEST ${BASIC_TESTS})
+        if(ENABLE_CUDA)
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
+          vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
+          set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CUDA)
+        else()
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+        endif()
+        set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    endforeach()
 
-if(CUDA_FOUND)
-  foreach(TEST ${CUDA_TESTS})
-      add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
-  endforeach()
+
+    if(CUDA_FOUND)
+      foreach(TEST ${CUDA_TESTS})
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
+      endforeach()
+    endif()
 endif()
 
 ################################
@@ -121,6 +127,7 @@ if(MPI_FOUND AND ENABLE_MPI)
       else()
         add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi)
       endif()
+      set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
     endforeach()
 else()
     message(STATUS "MPI disabled: Skipping related tests")

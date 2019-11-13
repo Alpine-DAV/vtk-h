@@ -2,12 +2,13 @@
 #define VTKH_COMPOSITOR_BASE_HPP
 
 #include <sstream>
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/rendering/Image.hpp>
 
 namespace vtkh
 {
 
-class Compositor
+class VTKH_API Compositor
 {
 public:
     enum CompositeMode {

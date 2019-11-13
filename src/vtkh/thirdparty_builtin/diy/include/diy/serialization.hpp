@@ -13,7 +13,7 @@
 #include <unordered_set>
 #include <type_traits>              // this is used for a safety check for default serialization
 
-namespace diy
+namespace vtkhdiy
 {
   //! A serialization buffer. \ingroup Serialization
   struct BinaryBuffer
@@ -73,15 +73,15 @@ namespace diy
 
   /**
    * \brief Main interface to serialization, meant to be specialized for the
-   * types that require special handling.  `diy::save()` and `diy::load()` call
+   * types that require special handling.  `vtkhdiy::save()` and `vtkhdiy::load()` call
    * the static member functions of this class.
    *
    * The default (unspecialized) version copies
    * `sizeof(T)` bytes from `&x` to or from `bb` via
-   * its `diy::BinaryBuffer::save_binary()` and `diy::BinaryBuffer::load_binary()`
+   * its `vtkhdiy::BinaryBuffer::save_binary()` and `vtkhdiy::BinaryBuffer::load_binary()`
    * functions.  This works out perfectly for plain old data (e.g., simple structs).
    * To save a more complicated type, one has to specialize
-   * `diy::Serialization<T>` for that type. Specializations are already provided for
+   * `vtkhdiy::Serialization<T>` for that type. Specializations are already provided for
    * `std::vector<T>`, `std::map<K,V>`, and `std::pair<T,U>`.
    * As a result one can quickly add a specialization of one's own
    *
@@ -97,20 +97,20 @@ namespace diy
     static void         load(BinaryBuffer& bb, T& x)                { bb.load_binary((char*)        &x, sizeof(T)); }
   };
 
-  //! Saves `x` to `bb` by calling `diy::Serialization<T>::save(bb,x)`.
+  //! Saves `x` to `bb` by calling `vtkhdiy::Serialization<T>::save(bb,x)`.
   template<class T>
   void                  save(BinaryBuffer& bb, const T& x)          { Serialization<T>::save(bb, x); }
 
-  //! Loads `x` from `bb` by calling `diy::Serialization<T>::load(bb,x)`.
+  //! Loads `x` from `bb` by calling `vtkhdiy::Serialization<T>::load(bb,x)`.
   template<class T>
   void                  load(BinaryBuffer& bb, T& x)                { Serialization<T>::load(bb, x); }
 
-  //! Optimization for arrays. If `diy::Serialization` is not specialized for `T`,
+  //! Optimization for arrays. If `vtkhdiy::Serialization` is not specialized for `T`,
   //! the array will be copied all at once. Otherwise, it's copied element by element.
   template<class T>
   void                  save(BinaryBuffer& bb, const T* x, size_t n);
 
-  //! Optimization for arrays. If `diy::Serialization` is not specialized for `T`,
+  //! Optimization for arrays. If `vtkhdiy::Serialization` is not specialized for `T`,
   //! the array will be filled all at once. Otherwise, it's filled element by element.
   template<class T>
   void                  load(BinaryBuffer& bb, T* x, size_t n);
@@ -142,7 +142,7 @@ namespace diy
   {
     if (!detail::is_default< Serialization<T> >::value)
       for (size_t i = 0; i < n; ++i)
-        diy::save(bb, x[i]);
+        vtkhdiy::save(bb, x[i]);
     else        // if Serialization is not specialized for U, just save the binary data
       bb.save_binary((const char*) &x[0], sizeof(T)*n);
   }
@@ -152,7 +152,7 @@ namespace diy
   {
     if (!detail::is_default< Serialization<T> >::value)
       for (size_t i = 0; i < n; ++i)
-        diy::load(bb, x[i]);
+        vtkhdiy::load(bb, x[i]);
     else      // if Serialization is not specialized for U, just load the binary data
       bb.load_binary((char*) &x[0], sizeof(T)*n);
   }
@@ -164,15 +164,15 @@ namespace diy
   {
     static void         save(BinaryBuffer& bb, const MemoryBuffer& x)
     {
-      diy::save(bb, x.position);
-      diy::save(bb, &x.buffer[0], x.position);
+      vtkhdiy::save(bb, x.position);
+      vtkhdiy::save(bb, &x.buffer[0], x.position);
     }
 
     static void         load(BinaryBuffer& bb, MemoryBuffer& x)
     {
-      diy::load(bb, x.position);
+      vtkhdiy::load(bb, x.position);
       x.buffer.resize(x.position);
-      diy::load(bb, &x.buffer[0], x.position);
+      vtkhdiy::load(bb, &x.buffer[0], x.position);
     }
   };
 
@@ -185,16 +185,16 @@ namespace diy
     static void         save(BinaryBuffer& bb, const Vector& v)
     {
       size_t s = v.size();
-      diy::save(bb, s);
-      diy::save(bb, &v[0], v.size());
+      vtkhdiy::save(bb, s);
+      vtkhdiy::save(bb, &v[0], v.size());
     }
 
     static void         load(BinaryBuffer& bb, Vector& v)
     {
       size_t s;
-      diy::load(bb, s);
+      vtkhdiy::load(bb, s);
       v.resize(s);
-      diy::load(bb, &v[0], s);
+      vtkhdiy::load(bb, &v[0], s);
     }
   };
 
@@ -206,16 +206,16 @@ namespace diy
     static void         save(BinaryBuffer& bb, const ValArray& v)
     {
       size_t s = v.size();
-      diy::save(bb, s);
-      diy::save(bb, &v[0], v.size());
+      vtkhdiy::save(bb, s);
+      vtkhdiy::save(bb, &v[0], v.size());
     }
 
     static void         load(BinaryBuffer& bb, ValArray& v)
     {
       size_t s;
-      diy::load(bb, s);
+      vtkhdiy::load(bb, s);
       v.resize(s);
-      diy::load(bb, &v[0], s);
+      vtkhdiy::load(bb, &v[0], s);
     }
   };
 
@@ -228,19 +228,19 @@ namespace diy
     static void         save(BinaryBuffer& bb, const String& s)
     {
       size_t sz = s.size();
-      diy::save(bb, sz);
-      diy::save(bb, s.c_str(), sz);
+      vtkhdiy::save(bb, sz);
+      vtkhdiy::save(bb, s.c_str(), sz);
     }
 
     static void         load(BinaryBuffer& bb, String& s)
     {
       size_t sz;
-      diy::load(bb, sz);
+      vtkhdiy::load(bb, sz);
       s.resize(sz);
       for (size_t i = 0; i < sz; ++i)
       {
           char c;
-          diy::load(bb, c);
+          vtkhdiy::load(bb, c);
           s[i] = c;
       }
     }
@@ -254,14 +254,14 @@ namespace diy
 
     static void         save(BinaryBuffer& bb, const Pair& p)
     {
-      diy::save(bb, p.first);
-      diy::save(bb, p.second);
+      vtkhdiy::save(bb, p.first);
+      vtkhdiy::save(bb, p.second);
     }
 
     static void         load(BinaryBuffer& bb, Pair& p)
     {
-      diy::load(bb, p.first);
-      diy::load(bb, p.second);
+      vtkhdiy::load(bb, p.first);
+      vtkhdiy::load(bb, p.second);
     }
   };
 
@@ -274,20 +274,20 @@ namespace diy
     static void         save(BinaryBuffer& bb, const Map& m)
     {
       size_t s = m.size();
-      diy::save(bb, s);
+      vtkhdiy::save(bb, s);
       for (typename std::map<K,V>::const_iterator it = m.begin(); it != m.end(); ++it)
-        diy::save(bb, *it);
+        vtkhdiy::save(bb, *it);
     }
 
     static void         load(BinaryBuffer& bb, Map& m)
     {
       size_t s;
-      diy::load(bb, s);
+      vtkhdiy::load(bb, s);
       for (size_t i = 0; i < s; ++i)
       {
         K k;
-        diy::load(bb, k);
-        diy::load(bb, m[k]);
+        vtkhdiy::load(bb, k);
+        vtkhdiy::load(bb, m[k]);
       }
     }
   };
@@ -301,19 +301,19 @@ namespace diy
     static void         save(BinaryBuffer& bb, const Set& m)
     {
       size_t s = m.size();
-      diy::save(bb, s);
+      vtkhdiy::save(bb, s);
       for (typename std::set<T>::const_iterator it = m.begin(); it != m.end(); ++it)
-        diy::save(bb, *it);
+        vtkhdiy::save(bb, *it);
     }
 
     static void         load(BinaryBuffer& bb, Set& m)
     {
       size_t s;
-      diy::load(bb, s);
+      vtkhdiy::load(bb, s);
       for (size_t i = 0; i < s; ++i)
       {
         T p;
-        diy::load(bb, p);
+        vtkhdiy::load(bb, p);
         m.insert(p);
       }
     }
@@ -328,19 +328,19 @@ namespace diy
     static void         save(BinaryBuffer& bb, const Map& m)
     {
       size_t s = m.size();
-      diy::save(bb, s);
+      vtkhdiy::save(bb, s);
       for (auto& x : m)
-        diy::save(bb, x);
+        vtkhdiy::save(bb, x);
     }
 
     static void         load(BinaryBuffer& bb, Map& m)
     {
       size_t s;
-      diy::load(bb, s);
+      vtkhdiy::load(bb, s);
       for (size_t i = 0; i < s; ++i)
       {
         std::pair<K,V> p;
-        diy::load(bb, p);
+        vtkhdiy::load(bb, p);
         m.emplace(std::move(p));
       }
     }
@@ -355,19 +355,19 @@ namespace diy
     static void         save(BinaryBuffer& bb, const Set& m)
     {
       size_t s = m.size();
-      diy::save(bb, s);
+      vtkhdiy::save(bb, s);
       for (auto& x : m)
-        diy::save(bb, x);
+        vtkhdiy::save(bb, x);
     }
 
     static void         load(BinaryBuffer& bb, Set& m)
     {
       size_t s;
-      diy::load(bb, s);
+      vtkhdiy::load(bb, s);
       for (size_t i = 0; i < s; ++i)
       {
         T p;
-        diy::load(bb, p);
+        vtkhdiy::load(bb, p);
         m.emplace(std::move(p));
       }
     }
@@ -391,7 +391,7 @@ namespace diy
     template<std::size_t I = 0>
     static
     typename std::enable_if<I < sizeof...(Args), void>::type
-                        save(BinaryBuffer& bb, const Tuple& t)          { diy::save(bb, std::get<I>(t)); save<I+1>(bb, t); }
+                        save(BinaryBuffer& bb, const Tuple& t)          { vtkhdiy::save(bb, std::get<I>(t)); save<I+1>(bb, t); }
 
     static void         load(BinaryBuffer& bb, Tuple& t)                { load<0>(bb, t); }
 
@@ -403,13 +403,13 @@ namespace diy
     template<std::size_t I = 0>
     static
     typename std::enable_if<I < sizeof...(Args), void>::type
-                        load(BinaryBuffer& bb, Tuple& t)                { diy::load(bb, std::get<I>(t)); load<I+1>(bb, t); }
+                        load(BinaryBuffer& bb, Tuple& t)                { vtkhdiy::load(bb, std::get<I>(t)); load<I+1>(bb, t); }
 
   };
 }
 
 void
-diy::MemoryBuffer::
+vtkhdiy::MemoryBuffer::
 save_binary(const char* x, size_t count)
 {
   if (position + count > buffer.capacity())
@@ -423,7 +423,7 @@ save_binary(const char* x, size_t count)
 }
 
 void
-diy::MemoryBuffer::
+vtkhdiy::MemoryBuffer::
 load_binary(char* x, size_t count)
 {
   std::copy(&buffer[position], &buffer[position + count], x);
@@ -431,7 +431,7 @@ load_binary(char* x, size_t count)
 }
 
 void
-diy::MemoryBuffer::
+vtkhdiy::MemoryBuffer::
 load_binary_back(char* x, size_t count)
 {
   std::copy(&buffer[buffer.size() - count], &buffer[buffer.size()], x);
@@ -439,11 +439,11 @@ load_binary_back(char* x, size_t count)
 }
 
 void
-diy::MemoryBuffer::
+vtkhdiy::MemoryBuffer::
 copy(MemoryBuffer& from, MemoryBuffer& to)
 {
   size_t sz;
-  diy::load(from, sz);
+  vtkhdiy::load(from, sz);
   from.position -= sizeof(size_t);
 
   size_t total = sizeof(size_t) + sz;

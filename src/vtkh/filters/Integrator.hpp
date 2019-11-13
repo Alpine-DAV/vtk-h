@@ -15,15 +15,17 @@
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/filters/Particle.hpp>
 
-class Integrator
+class VTKH_API Integrator
 {
     typedef vtkm::Float64 FieldType;
     typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
 
     using GridEvalType = vtkm::worklet::particleadvection::GridEvaluator<FieldHandle>;
     using RK4Type = vtkm::worklet::particleadvection::RK4Integrator<GridEvalType>;
+    using vtkmParticleStatus = vtkm::worklet::particleadvection::ParticleStatus;
 
 public:
     Integrator(vtkm::cont::DataSet *ds, const std::string &fieldName, FieldType _stepSize) : stepSize(_stepSize)
@@ -33,27 +35,11 @@ public:
         rk4 = RK4Type(gridEval, stepSize);
     }
 
-    /*
-    int Go(bool recordPath,
-           std::vector<Particle> &particles,
-           const vtkm::Id &maxSteps,
-           std::list<Particle> &I,
-           std::list<Particle> &T,
-           std::list<Particle> &A,
-           std::vector<vtkm::worklet::StreamlineResult<FieldType>> *particleTraces=NULL)
-    {
-        if (recordPath)
-            return Trace(particles, maxSteps, I, T, A, particleTraces);
-        else
-            return Advect(particles, maxSteps, I, T, A, particleTraces);
-    }
-    */
-
     int Advect(std::vector<vtkh::Particle> &particles,
                const vtkm::Id &maxSteps,
-               std::list<vtkh::Particle> &I,
-               std::list<vtkh::Particle> &T,
-               std::list<vtkh::Particle> &A,
+               std::vector<vtkh::Particle> &I,
+               std::vector<vtkh::Particle> &T,
+               std::vector<vtkh::Particle> &A,
                std::vector<vtkm::worklet::ParticleAdvectionResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
@@ -104,9 +90,9 @@ public:
 
     int Trace(std::vector<vtkh::Particle> &particles,
               const vtkm::Id &maxSteps,
-              std::list<vtkh::Particle> &I,
-              std::list<vtkh::Particle> &T,
-              std::list<vtkh::Particle> &A,
+              std::vector<vtkh::Particle> &I,
+              std::vector<vtkh::Particle> &T,
+              std::vector<vtkh::Particle> &A,
               std::vector<vtkm::worklet::StreamlineResult> *particleTraces=NULL)
     {
         size_t nSeeds = particles.size();
@@ -161,22 +147,39 @@ public:
 
 private:
 
+    inline bool CheckBit(const vtkm::Id &val, const vtkmParticleStatus &b) {return (val & static_cast<vtkm::Id>(b)) != 0;}
+
+    inline bool OK(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::SUCCESS);}
+    inline bool Terminated(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::TERMINATED);}
+    inline bool ExitSpatialBoundary(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::EXIT_SPATIAL_BOUNDARY);}
+    inline bool TookAnySteps(const vtkm::Id &val) {return CheckBit(val, vtkmParticleStatus::TOOK_ANY_STEPS);}
+
+
     void UpdateStatus(vtkh::Particle &p,
                       const vtkm::Id &status,
                       const vtkm::Id &maxSteps,
-                      std::list<vtkh::Particle> &I,
-                      std::list<vtkh::Particle> &T,
-                      std::list<vtkh::Particle> &A)
+                      std::vector<vtkh::Particle> &I,
+                      std::vector<vtkh::Particle> &T,
+                      std::vector<vtkh::Particle> &A)
     {
-        if (p.nSteps >= maxSteps || status == vtkm::worklet::particleadvection::ParticleStatus::TERMINATED)
+
+        if (p.nSteps >= maxSteps || Terminated(status))
         {
             p.status = vtkh::Particle::TERMINATE;
             T.push_back(p);
         }
-        else if (status == vtkm::worklet::particleadvection::ParticleStatus::STATUS_OK)
+        else if (OK(status))
         {
-            p.status = vtkh::Particle::ACTIVE;
-            A.push_back(p);
+            if (TookAnySteps(status))
+            {
+                p.status = vtkh::Particle::ACTIVE;
+                A.push_back(p);
+            }
+            else
+            {
+                p.status = vtkh::Particle::WRONG_DOMAIN;
+                I.push_back(p);
+            }
         }
         else
         {

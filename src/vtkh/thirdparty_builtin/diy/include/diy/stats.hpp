@@ -7,7 +7,7 @@
 
 #include "log.hpp"      // need this for format
 #define DIY_PROFILE 1
-namespace diy
+namespace vtkhdiy
 {
 namespace stats
 {

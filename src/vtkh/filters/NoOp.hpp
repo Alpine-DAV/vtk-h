@@ -1,6 +1,7 @@
 #ifndef VTK_H_NO_OP_HPP
 #define VTK_H_NO_OP_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -8,11 +9,11 @@
 namespace vtkh
 {
 
-class NoOp : public Filter
+class VTKH_API NoOp : public Filter
 {
 public:
-  NoOp(); 
-  virtual ~NoOp(); 
+  NoOp();
+  virtual ~NoOp();
   std::string GetName() const override;
   void SetField(const std::string &field_name);
 

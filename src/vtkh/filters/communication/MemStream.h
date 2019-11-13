@@ -7,10 +7,12 @@
 #include <list>
 #include <cstring>
 
+#include <vtkh/vtkh_exports.h>
+
 namespace vtkh
 {
 
-class MemStream
+class VTKH_API MemStream
 {
   public:
     enum Mode

@@ -5,13 +5,14 @@
 #include <vector>
 #include <string>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkm/cont/DataSet.h>
 
 namespace vtkh
 {
 
-class DataSet
+class VTKH_API DataSet
 {
 protected:
   std::vector<vtkm::cont::DataSet> m_domains;
@@ -42,14 +43,18 @@ public:
                              const vtkm::Id domain_index);
 
   // checks to see if cells exist on this rank
-  bool IsEmpty(const vtkm::Id cell_set_index = 0) const;
+  bool IsEmpty() const;
   // checks to see if cells exist on all ranks
-  bool GlobalIsEmpty(const vtkm::Id cell_set_index = 0) const;
+  bool GlobalIsEmpty() const;
   // returns the number of domains on this rank
 
   vtkm::Id GetNumberOfDomains() const;
   // returns the number of domains on all ranks
   vtkm::Id GetGlobalNumberOfDomains() const;
+  // returns the number of cells on this rank
+  vtkm::Id GetNumberOfCells() const;
+  // returns the number of cells on this rank
+  vtkm::Id GetGlobalNumberOfCells() const;
   // returns the union of all domains bounds on this rank
   vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
   // returns the union of all abounds on all ranks
@@ -86,9 +91,9 @@ public:
    *  \param cell_set_index the index of the cell set to perform the IsStructured
    *         test. Defaults to 0.
    */
-  bool IsStructured(int &topological_dims, const vtkm::Id cell_set_index = 0) const;
+  bool IsStructured(int &topological_dims) const;
 
-  bool IsPointMesh(const vtkm::Id cell_set_index = 0) const;
+  bool IsPointMesh() const;
 
   void PrintSummary(std::ostream &stream) const;
 };

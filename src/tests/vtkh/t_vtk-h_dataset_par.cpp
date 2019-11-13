@@ -84,7 +84,7 @@ TEST(vtkh_dataset_par, vtkh_range_par)
     conn.push_back(2);
 
     vtkm::cont::DataSetBuilderExplicit builder;
-    unstructured = builder.Create(coords, shapes, num_indices, conn, "coordinates", "cells");
+    unstructured = builder.Create(coords, shapes, num_indices, conn, "coordinates");
     data_set.AddDomain(unstructured, -1);
   }
 

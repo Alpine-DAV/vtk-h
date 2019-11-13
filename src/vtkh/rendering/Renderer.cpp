@@ -1,13 +1,11 @@
 #include "Renderer.hpp"
 #include "compositing/Compositor.hpp"
 
+#include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
 #include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
-#ifdef VTKH_PARALLEL
-#include "compositing/DIYCompositor.hpp"
-#endif
 
 #include <assert.h>
 
@@ -19,13 +17,7 @@ Renderer::Renderer()
     m_field_index(0),
     m_has_color_table(true)
 {
-  m_compositor  = NULL;
-#ifdef VTKH_PARALLEL
-  m_compositor  = new DIYCompositor();
-#else
   m_compositor  = new Compositor();
-#endif
-
 }
 
 Renderer::~Renderer()
@@ -101,7 +93,7 @@ vtkm::cont::ColorTable Renderer::GetColorTable() const
 void
 Renderer::Composite(const int &num_images)
 {
-
+  VTKH_DATA_OPEN("Composite");
   m_compositor->SetCompositeMode(Compositor::Z_BUFFER_SURFACE);
   for(int i = 0; i < num_images; ++i)
   {
@@ -133,6 +125,7 @@ Renderer::Composite(const int &num_images)
 #endif
     m_compositor->ClearImages();
   } // for image
+  VTKH_DATA_CLOSE();
 }
 
 void
@@ -176,9 +169,15 @@ Renderer::PreExecute()
 void
 Renderer::Update()
 {
+  VTKH_DATA_OPEN(this->GetName());
+#ifdef VTKH_ENABLE_LOGGING
+  long long int in_cells = this->m_input->GetNumberOfCells();
+  VTKH_DATA_ADD("input_cells", in_cells);
+#endif
   PreExecute();
   DoExecute();
   PostExecute();
+  VTKH_DATA_CLOSE();
 }
 
 void

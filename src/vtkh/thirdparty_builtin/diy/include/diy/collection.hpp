@@ -8,7 +8,7 @@
 #include "thread.hpp"
 
 
-namespace diy
+namespace vtkhdiy
 {
   class Collection
   {
@@ -76,7 +76,7 @@ namespace diy
 }
 
 void
-diy::Collection::
+vtkhdiy::Collection::
 clear()
 {
   if (own())
@@ -88,7 +88,7 @@ clear()
 }
 
 void
-diy::Collection::
+vtkhdiy::Collection::
 unload(int i)
 {
   //BinaryBuffer bb;
@@ -104,7 +104,7 @@ unload(int i)
 }
 
 void
-diy::Collection::
+vtkhdiy::Collection::
 load(int i)
 {
   //BinaryBuffer bb;

@@ -1,36 +1,38 @@
 #ifndef VTK_H_HPP
 #define VTK_H_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <string>
 
 namespace vtkh
 {
 
-  std::string AboutVTKH();
+  VTKH_API std::string AboutVTKH();
   // is backend support compiled in
-  bool        IsSerialAvailable();
-  bool        IsOpenMPAvailable();
-  bool        IsCUDAAvailable();
+  VTKH_API bool        IsSerialAvailable();
+  VTKH_API bool        IsOpenMPAvailable();
+  VTKH_API bool        IsCUDAAvailable();
 
   // is backend enabled (e.g., ForceX)
-  bool        IsSerialEnabled();
-  bool        IsOpenMPEnabled();
-  bool        IsCUDAEnabled();
+  VTKH_API bool        IsSerialEnabled();
+  VTKH_API bool        IsOpenMPEnabled();
+  VTKH_API bool        IsCUDAEnabled();
 
-  bool        IsMPIEnabled();
+  VTKH_API bool        IsMPIEnabled();
 
-  int         CUDADeviceCount();
-  void        SelectCUDADevice(int device_index);
+  VTKH_API int         CUDADeviceCount();
+  VTKH_API void        SelectCUDADevice(int device_index);
 
-  void        ForceSerial();
-  void        ForceOpenMP();
-  void        ForceCUDA();
-  void        ResetDevices();
+  VTKH_API void        ForceSerial();
+  VTKH_API void        ForceOpenMP();
+  VTKH_API void        ForceCUDA();
+  VTKH_API void        ResetDevices();
+  VTKH_API std::string GetCurrentDevice();
 
-  int         GetMPIRank();
-  int         GetMPISize();
+  VTKH_API int         GetMPIRank();
+  VTKH_API int         GetMPISize();
 
-  void        SetMPICommHandle(int mpi_comm_id);
-  int         GetMPICommHandle();
+  VTKH_API void        SetMPICommHandle(int mpi_comm_id);
+  VTKH_API int         GetMPICommHandle();
 }
 #endif

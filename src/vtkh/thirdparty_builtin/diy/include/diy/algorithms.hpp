@@ -15,7 +15,7 @@
 
 #include "log.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
     /**
      * \ingroup Algorithms

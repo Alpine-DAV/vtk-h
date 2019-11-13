@@ -8,11 +8,13 @@ set(vtkm_filters_headers
   vtkmCleanGrid.hpp
   vtkmClipWithField.hpp
   vtkmExtractStructured.hpp
+  vtkmGradient.hpp
   vtkmLagrangian.hpp
   vtkmMarchingCubes.hpp
   vtkmPointAverage.hpp
   vtkmThreshold.hpp
   vtkmVectorMagnitude.hpp
+  GradientParameters.hpp
   )
 
 set(vtkm_filters_sources
@@ -21,12 +23,16 @@ set(vtkm_filters_sources
   vtkmCleanGrid.cpp
   vtkmClipWithField.cpp
   vtkmExtractStructured.cpp
+  vtkmGradient.cpp
   vtkmLagrangian.cpp
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
   vtkmThreshold.cpp
   vtkmVectorMagnitude.cpp
   )
+
+set(vtkm_filters_install_headers
+    GradientParameters.hpp)
 
 # we use these specific vtk-m targets b/c our favorite version
 # of cmake does not yet support transitive deps for object libs
@@ -54,6 +60,10 @@ vtkm_add_target_information(vtkm_compiled_filters DEVICE_SOURCES ${vtkm_filter_s
 if(CUDA_FOUND)
   # defend against vtkm code cuda can't reason about
   if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 10.0.0)
-    blt_add_target_compile_flags(TO vtkm_compiled_filters FLAGS "-DVTKH_BYPASS_VTKM_BIH")
+    target_compile_definitions(vtkm_compiled_filters PRIVATE VTKH_BYPASS_VTKM_BIH)
   endif()
 endif()
+
+install(FILES ${vtkm_filters_install_headers}
+  DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/vtkm_filters)
+

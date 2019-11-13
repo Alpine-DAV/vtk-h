@@ -10,7 +10,7 @@
 #include <thread>
 #include <mutex>
 
-namespace diy
+namespace vtkhdiy
 {
     using std::thread;
     using std::mutex;

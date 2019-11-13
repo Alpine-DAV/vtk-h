@@ -3,7 +3,7 @@
 
 #include "link.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
     template<class Bounds, class Point, class OutIter>
     void near(const RegularLink<Bounds>& link, const Point& p, float r, OutIter out,
@@ -26,7 +26,7 @@ namespace diy
 //! Finds the neighbors within radius r of a target point.
 template<class Bounds, class Point, class OutIter>
 void
-diy::
+vtkhdiy::
 near(const RegularLink<Bounds>& link,  //!< neighbors
      const Point& p,                   //!< target point (must be in current block)
      float r,                          //!< target radius (>= 0.0)
@@ -50,7 +50,7 @@ near(const RegularLink<Bounds>& link,  //!< neighbors
 //! Find the distance between point `p` and box `bounds`.
 template<class Point, class Bounds>
 float
-diy::
+vtkhdiy::
 distance(int dim, const Bounds& bounds, const Point& p)
 {
     float res = 0;
@@ -72,7 +72,7 @@ distance(int dim, const Bounds& bounds, const Point& p)
 
 template<class Bounds>
 float
-diy::
+vtkhdiy::
 distance(int dim, const Bounds& bounds1, const Bounds& bounds2)
 {
     float res = 0;
@@ -98,7 +98,7 @@ distance(int dim, const Bounds& bounds1, const Bounds& bounds2)
 //! Finds the neighbor(s) containing the target point.
 template<class Bounds, class Point, class OutIter>
 void
-diy::
+vtkhdiy::
 in(const RegularLink<Bounds>& link,  //!< neighbors
    const Point& p,                   //!< target point
    OutIter out,                      //!< insert iterator for output set of neighbors
@@ -123,7 +123,7 @@ in(const RegularLink<Bounds>& link,  //!< neighbors
 // overall domain bounds and dimensionality are also needed
 template<class Bounds>
 void
-diy::
+vtkhdiy::
 wrap_bounds(Bounds& bounds, Direction wrap_dir, const Bounds& domain, int dim)
 {
   for (int i = 0; i < dim; ++i)

@@ -1,6 +1,7 @@
 #ifndef VTK_H_LAGRANGIAN_HPP
 #define VTK_H_LAGRANGIAN_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
@@ -8,11 +9,11 @@
 namespace vtkh
 {
 
-class Lagrangian : public Filter
+class VTKH_API Lagrangian : public Filter
 {
 public:
-  Lagrangian(); 
-  virtual ~Lagrangian(); 
+  Lagrangian();
+  virtual ~Lagrangian();
   std::string GetName() const override;
 	void SetField(const std::string &field_name);
   void SetStepSize(const double &step_size);
@@ -21,8 +22,8 @@ public:
 	void SetSeedResolutionInX(const int &x_res);
 	void SetSeedResolutionInY(const int &y_res);
 	void SetSeedResolutionInZ(const int &z_res);
-	
-	
+
+
 protected:
   void PreExecute() override;
   void PostExecute() override;

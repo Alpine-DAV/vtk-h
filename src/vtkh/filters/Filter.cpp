@@ -1,5 +1,6 @@
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/Error.hpp>
+#include <vtkh/Logger.hpp>
 
 namespace vtkh
 {
@@ -29,9 +30,43 @@ Filter::GetOutput()
 DataSet*
 Filter::Update()
 {
+  VTKH_DATA_OPEN(this->GetName());
+#ifdef VTKH_ENABLE_LOGGING
+  VTKH_DATA_ADD("device", GetCurrentDevice());
+  long long int in_cells = this->m_input->GetNumberOfCells();
+  VTKH_DATA_ADD("input_cells", in_cells);
+  VTKH_DATA_ADD("input_domains", this->m_input->GetNumberOfDomains());
+  int in_topo_dims;
+  bool in_structured = this->m_input->IsStructured(in_topo_dims);
+  if(in_structured)
+  {
+    VTKH_DATA_ADD("in_topology", "structured");
+  }
+  else
+  {
+    VTKH_DATA_ADD("in_topology", "unstructured");
+  }
+#endif
   PreExecute();
   DoExecute();
   PostExecute();
+#ifdef VTKH_ENABLE_LOGGING
+  long long int out_cells = this->m_output->GetNumberOfCells();
+  VTKH_DATA_ADD("output_cells", out_cells);
+  VTKH_DATA_ADD("output_domains", this->m_output->GetNumberOfDomains());
+  int out_topo_dims;
+  bool out_structured = this->m_output->IsStructured(out_topo_dims);
+
+  if(out_structured)
+  {
+    VTKH_DATA_ADD("output_topology", "structured");
+  }
+  else
+  {
+    VTKH_DATA_ADD("output_topology", "unstructured");
+  }
+#endif
+  VTKH_DATA_CLOSE();
   return m_output;
 }
 

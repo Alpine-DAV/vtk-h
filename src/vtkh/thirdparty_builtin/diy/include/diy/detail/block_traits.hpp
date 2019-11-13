@@ -3,7 +3,7 @@
 
 #include "traits.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 namespace detail
 {

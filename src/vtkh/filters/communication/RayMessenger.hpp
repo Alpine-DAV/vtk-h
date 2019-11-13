@@ -6,7 +6,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include "CommData.hpp"
 #include "Ray.hpp"
 #include "Messenger.hpp"
 
@@ -24,6 +23,8 @@ class MemStream;
 
 class RayMessenger : public Messenger
 {
+  using MsgCommType = std::pair<int, std::vector<int>>;
+
   public:
     RayMessenger(MPI_Comm comm);
     ~RayMessenger();
@@ -42,10 +43,10 @@ class RayMessenger : public Messenger
     // Send/Recv messages.
     void SendMsg(int dst, std::vector<int> &msg);
     void SendAllMsg(std::vector<int> &msg);
-    bool RecvMsg(std::vector<MsgCommData> &msgs);
+    bool RecvMsg(std::vector<MsgCommType> &msgs);
 
     // Send/Recv datasets.
-    bool RecvAny(std::vector<MsgCommData> *msgs,
+    bool RecvAny(std::vector<MsgCommType> *msgs,
                  std::vector<vtkh::Ray> *rays,
                  bool blockAndWait);
 
