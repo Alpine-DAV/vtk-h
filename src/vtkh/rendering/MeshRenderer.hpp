@@ -2,10 +2,11 @@
 #define VTK_H_RENDERER_MESH_HPP
 
 #include <vtkh/rendering/Renderer.hpp>
+#include<vtkh/vtkh_exports.h>
 
 namespace vtkh {
 
-class MeshRenderer : public Renderer
+class VTKH_API MeshRenderer : public Renderer
 {
 public:
   MeshRenderer();

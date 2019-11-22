@@ -1,17 +1,18 @@
 #ifndef VTKH_PNG_ENCODER_HPP
 #define VTKH_PNG_ENCODER_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <string>
 
-namespace vtkh 
+namespace vtkh
 {
 
-class PNGEncoder
+class VTKH_API PNGEncoder
 {
 public:
     PNGEncoder();
     ~PNGEncoder();
-    
+
     void           Encode(const unsigned char *rgba_in,
                           const int width,
                           const int height);
@@ -24,7 +25,7 @@ public:
     size_t         PngBufferSize();
 
     void           Cleanup();
-    
+
 private:
     unsigned char *m_buffer;
     size_t         m_buffer_size;

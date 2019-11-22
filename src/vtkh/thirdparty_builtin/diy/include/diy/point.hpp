@@ -8,7 +8,7 @@
 
 #include <array>
 
-namespace diy
+namespace vtkhdiy
 {
 
 template<class Coordinate_, unsigned D>

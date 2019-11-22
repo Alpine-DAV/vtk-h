@@ -7,22 +7,24 @@
 #include <map>
 #include <algorithm>
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
+#include <vtkh/StatisticsDB.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/filters/Particle.hpp>
-#include <vtkh/filters/BoundsMap.hpp>
+#include <vtkh/filters/communication/BoundsMap.hpp>
 #include <vtkh/filters/Integrator.hpp>
 #include <vtkh/DataSet.hpp>
 
 #ifdef VTKH_PARALLEL
-  #include <mpi.h>
+#include <mpi.h>
 #endif
 
 namespace vtkh
 {
-class DataBlock;
+class DataBlockIntegrator;
 
-class ParticleAdvection : public Filter
+class VTKH_API ParticleAdvection : public Filter
 {
 public:
   enum SeedMethod {RANDOM=0, RANDOM_BLOCK, RANDOM_BOX, POINT};
@@ -30,6 +32,8 @@ public:
   ParticleAdvection();
   virtual ~ParticleAdvection();
   std::string GetName() const override;
+
+  DataSet * GetInput() const {return m_input;}
 
   void SetSeedPoint(const vtkm::Vec<double,3> &pt)
   {
@@ -53,9 +57,35 @@ public:
     seedBox = box;
   }
 
+  void SetUseThreadedVersion(bool useThreaded)
+  {
+    useThreadedVersion = useThreaded;
+  }
+
+  void SetGatherTraces(bool gTraces)
+  {
+    gatherTraces = gTraces;
+  }
+
+  void SetDumpOutputFiles(bool dumpOutput)
+  {
+    dumpOutputFiles = dumpOutput;
+  }
+
   void SetField(const std::string &field_name) {m_field_name = field_name;}
   void SetStepSize(const double &v) { stepSize = v;}
   void SetMaxSteps(const int &n) { maxSteps = n;}
+  int  GetMaxSteps() const { return maxSteps; }
+
+  DataBlockIntegrator * GetBlock(int blockId);
+
+  template <typename ResultT>
+  int InternalIntegrate(DataBlockIntegrator &blk,
+                        std::vector<Particle> &v,
+                        std::vector<Particle> &I,
+                        std::vector<Particle> &T,
+                        std::vector<Particle> &A,
+                        std::vector<ResultT> &traces);
 
 protected:
   void PreExecute() override;
@@ -64,17 +94,24 @@ protected:
 
   void Init();
   void CreateSeeds();
-  void TraceSeeds(std::vector<vtkm::worklet::StreamlineResult<double>> &traces);
 
+  template <typename ResultT>
+  void TraceSeeds(std::vector<ResultT> &traces);
+  template <typename ResultT>
+  void TraceMultiThread(std::vector<ResultT> &traces);
+  template <typename ResultT>
+  void TraceSingleThread(std::vector<ResultT> &traces);
 
-
-  DataBlock * GetBlock(int blockId);
-  int DomainToRank(int blockId) {return domToRank[blockId];}
+  int DomainToRank(int blockId) {return boundsMap.GetRank(blockId);}
   void BoxOfSeeds(const vtkm::Bounds &box,
                   std::vector<Particle> &seeds,
                   vtkm::Id domId=-1,
                   bool shrink=true);
 
+  bool useThreadedVersion;
+  bool gatherTraces;
+  bool dumpOutputFiles;
+  int sleepUS;
   int rank, numRanks;
   std::string m_field_name;
   int numSeeds, totalNumSeeds;
@@ -87,52 +124,40 @@ protected:
   float stepSize;
 
   BoundsMap boundsMap;
-  std::vector<int> domToRank;
-  std::vector<DataBlock*> dataBlocks;
-  vtkm::Bounds globalBounds;
+  std::vector<DataBlockIntegrator*> dataBlocks;
 
   //seed data
-  std::list<Particle> active, inactive, terminated;
+  std::vector<Particle> active, inactive, terminated;
   bool GetActiveParticles(std::vector<Particle> &v);
 
-  void DumpTraces(int idx, const vector<vtkm::Vec<double,4>> &particleTraces);
-  void DumpDS();
-  void DumpSLOutput(const vtkm::cont::DataSet &ds, int domId);
+  void DumpTraces(int ts, const std::vector<vtkm::Vec<double,4>> &particleTraces);
+  void DumpDS(int ts);
+  void DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts);
 };
 
 
-class DataBlock
+class DataBlockIntegrator
 {
 public:
-    DataBlock(int _id, vtkm::cont::DataSet &_ds, const std::string &fieldName, float advectStep)
+    DataBlockIntegrator(int _id, vtkm::cont::DataSet *_ds, const std::string &fieldName, float advectStep)
         : id(_id), ds(_ds),
           integrator(_ds, fieldName, advectStep)
-          //refCount(0), used(false)
-
     {
-        //dbg<<"DB ctor: "<<ds.use_count()<<endl;
     }
-    ~DataBlock() {}//{ds=NULL; delete ds;}//cout<<"Delete datablock id= "<<id<<" cnt= "<<ds.use_count()<<endl;}
+    ~DataBlockIntegrator() {}
 
     int id;
-    vtkm::cont::DataSet ds;
+    vtkm::cont::DataSet *ds;
     Integrator integrator;
 
-    /*
-    void getRefUsed(int &r, bool &u) {m.lock(); r=refCount; u=used; m.unlock();}
-    bool getUsed() {bool v; m.lock(); v=used; m.unlock(); return v;}
-    int getRefCount() {int v; m.lock(); v=refCount; m.unlock(); return v;}
-
-    void addUsed() {m.lock(); used=true; m.unlock();}
-
-    void addRef() {m.lock(); refCount++; m.unlock();}
-    void release() {m.lock(); refCount--;  m.unlock(); if(refCount<0) throw std::runtime_error("Negative ref cnt");}
-
-private:
-    int refCount;
-    bool used;
-    mutex m;
-    */
+    friend std::ostream &operator<<(std::ostream &os, const DataBlockIntegrator &d)
+    {
+        os<<"DataBlockIntegrator {"<<std::endl;
+        os<<"  id="<<d.id<<std::endl;
+        d.ds->PrintSummary(os);
+        os<<"} DataBlockIntegrator"<<std::endl;
+        return os;
+    }
 };
 
 

@@ -8,10 +8,12 @@
 #include <vtkm/rendering/ColorBarAnnotation.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
+#include<vtkh/vtkh_exports.h>
+
 namespace vtkh
 {
 
-class Annotator
+class VTKH_API Annotator
 {
 public:
   Annotator(vtkm::rendering::Canvas &canvas,

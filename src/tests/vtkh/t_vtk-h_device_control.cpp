@@ -45,7 +45,7 @@ TEST(vtkh_raytracer, vtkh_serial_render)
   vtkh::RayTracer tracer;
 
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -92,7 +92,7 @@ TEST(vtkh_raytracer, vtkh_omp_render)
   vtkh::RayTracer tracer;
 
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -139,7 +139,7 @@ TEST(vtkh_raytracer, vtkh_cuda_render)
   vtkh::RayTracer tracer;
 
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);

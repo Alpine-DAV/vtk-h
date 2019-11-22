@@ -41,7 +41,7 @@ TEST(vtkh_mesh_renderer, vtkh_serial_render)
                                          "mesh_render_field");
   vtkh::MeshRenderer renderer;
   renderer.SetInput(&data_set);
-  renderer.SetField("point_data_Float32");
+  renderer.SetField("point_data_Float64");
   renderer.SetUseForegroundColor(true);
 
   vtkh::Scene scene;

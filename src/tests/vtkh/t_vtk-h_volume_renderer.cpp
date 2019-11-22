@@ -52,7 +52,7 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
   vtkh::VolumeRenderer tracer;
   tracer.SetColorTable(color_map);
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);

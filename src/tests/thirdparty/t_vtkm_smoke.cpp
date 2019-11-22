@@ -67,8 +67,8 @@ TEST(vtkm_smoke, headers_work)
 //-----------------------------------------------------------------------------
 TEST(vtkm_smoke, basic_use_serial)
 {
-    vtkm::cont::RuntimeDeviceTracker device_tracker
-      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+    vtkm::cont::RuntimeDeviceTracker &device_tracker
+      = vtkm::cont::GetRuntimeDeviceTracker();
     device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
 
     vtkm::cont::testing::MakeTestDataSet maker;
@@ -82,7 +82,6 @@ TEST(vtkm_smoke, basic_use_serial)
     scalars.push_back(1);
     vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
                                                            vtkm::cont::Field::Association::CELL_SET,
-                                                           "cell_set",
                                                            scalars);
 
     const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
@@ -115,8 +114,8 @@ TEST(vtkm_smoke, basic_use_serial)
 #ifdef VTKH_FORCE_OPENMP
 TEST(vtkm_smoke, basic_use_openmp)
 {
-    vtkm::cont::RuntimeDeviceTracker device_tracker
-      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+    vtkm::cont::RuntimeDeviceTracker &device_tracker
+      = vtkm::cont::GetRuntimeDeviceTracker();
     device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP());
 
     vtkm::cont::testing::MakeTestDataSet maker;
@@ -130,7 +129,6 @@ TEST(vtkm_smoke, basic_use_openmp)
     scalars.push_back(1);
     vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
                                                            vtkm::cont::Field::Association::CELL_SET,
-                                                           "cell_set",
                                                            scalars);
 
     const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
@@ -165,8 +163,8 @@ TEST(vtkm_smoke, basic_use_openmp)
 #ifdef VTKH_FORCE_CUDA
 TEST(vtkm_smoke, basic_use_cuda)
 {
-    vtkm::cont::RuntimeDeviceTracker device_tracker
-      = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+    vtkm::cont::RuntimeDeviceTracker &device_tracker
+      = vtkm::cont::GetRuntimeDeviceTracker();
     device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
 
     vtkm::cont::testing::MakeTestDataSet maker;
@@ -180,7 +178,6 @@ TEST(vtkm_smoke, basic_use_cuda)
     scalars.push_back(1);
     vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
                                                            vtkm::cont::Field::Association::CELL_SET,
-                                                           "cell_set",
                                                            scalars);
 
     const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
@@ -211,5 +208,3 @@ TEST(vtkm_smoke, basic_use_cuda)
 
 }
 #endif
-
-

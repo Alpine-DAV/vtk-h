@@ -1,5 +1,5 @@
 #include "vtkmMarchingCubes.hpp"
-#include <vtkm/filter/MarchingCubes.h>
+#include <vtkm/filter/Contour.h>
 
 namespace vtkh
 {
@@ -9,11 +9,11 @@ vtkmMarchingCubes::Run(vtkm::cont::DataSet &input,
                        std::vector<double> iso_values,
                        vtkm::filter::FieldSelection map_fields)
 {
-  vtkm::filter::MarchingCubes marcher;
+  vtkm::filter::Contour marcher;
 
   marcher.SetFieldsToPass(map_fields);
   marcher.SetIsoValues(iso_values);
-  marcher.SetMergeDuplicatePoints(true);
+  marcher.SetMergeDuplicatePoints(false);
   marcher.SetActiveField(field_name);
 
   auto output = marcher.Execute(input);

@@ -49,15 +49,14 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
                                          data_set,
                                          "volume_par");
 
-  vtkm::cont::ColorTable color_map("cool2warm");
-
+  vtkm::cont::ColorTable color_map("cool to warm");
   color_map.AddPointAlpha(0.0, .05);
   color_map.AddPointAlpha(1.0, .5);
 
   vtkh::VolumeRenderer tracer;
   tracer.SetColorTable(color_map);
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   tracer.Update();
 

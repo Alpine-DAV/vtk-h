@@ -32,11 +32,11 @@ TEST(vtkh_vector_magnitude, vtkh_vector_magnitude)
 
   vtkh::VectorMagnitude mag;
   mag.SetInput(&data_set);
-  mag.SetField("vector_data_Float32");
+  mag.SetField("vector_data_Float64");
 
   mag.SetResultName("mag");
-  mag.AddMapField("point_data_Float32");
-  mag.AddMapField("cell_data_Float32");
+  mag.AddMapField("point_data_Float64");
+  mag.AddMapField("cell_data_Float64");
   mag.Update();
 
   vtkh::DataSet *mag_output = mag.GetOutput();

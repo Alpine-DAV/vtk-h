@@ -1,6 +1,6 @@
 #include <functional>
 
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {

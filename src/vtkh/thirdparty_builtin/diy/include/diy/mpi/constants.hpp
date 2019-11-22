@@ -1,7 +1,7 @@
 #ifndef DIY_MPI_CONSTANTS_HPP
 #define DIY_MPI_CONSTANTS_HPP
 
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {

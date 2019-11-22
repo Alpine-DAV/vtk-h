@@ -67,7 +67,19 @@ endif()
 
 set(VTKM_FOUND TRUE)
 
-set(VTKM_TARGETS vtkm_cont vtkm_rendering)
+set(VTKM_TARGETS vtkm_cont vtkm_filter vtkm_rendering)
+
+if(ENABLE_CUDA)
+    # we need to inject the vtkm cuda flags into CMAKE_CUDA_FLAGS
+    vtkm_get_cuda_flags(_fetch_vtkm_cuda_flags)
+    set(CMAKE_CUDA_FLAGS  "${CMAKE_CUDA_FLAGS} ${_fetch_vtkm_cuda_flags}")
+    unset(_fetch_vtkm_cuda_flags)
+endif()
+
+# VTKM does not seem to propogate includes it exposes to us, so we have to work
+# around this.
+file(GLOB LCL_DIR "${VTKM_DIR}/include/vtkm-*/vtkm/thirdparty/lcl/vtkmlcl/")
+include_directories("${LCL_DIR}")
 
 blt_register_library(NAME vtkm
                      LIBRARIES ${VTKM_TARGETS}

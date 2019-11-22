@@ -4,7 +4,7 @@
 // replicates only the parts of the threading interface that we use
 // executes everything in a single thread
 
-namespace diy
+namespace vtkhdiy
 {
   struct thread
   {

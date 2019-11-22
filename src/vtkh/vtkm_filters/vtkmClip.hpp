@@ -13,7 +13,6 @@ class vtkmClip
 public:
   vtkm::cont::DataSet Run(vtkm::cont::DataSet &input,
                           vtkm::cont::ImplicitFunctionHandle func,
-                          vtkm::Id activeCellSet,
                           bool invert,
                           vtkm::filter::FieldSelection map_fields);
 };

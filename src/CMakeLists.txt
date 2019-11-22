@@ -2,7 +2,9 @@
 # See License.txt
 #==============================================================================
 
-cmake_minimum_required(VERSION 3.9)
+################################
+# VTK-h
+################################
 
 ################################
 # cmake policy selections
@@ -10,10 +12,7 @@ cmake_minimum_required(VERSION 3.9)
 # avoid warnings for project commands w/o VERSION
 cmake_policy(SET CMP0048 NEW)
 
-################################
-# VTK-h
-################################
-project(VTKh)
+project(VTKh VERSION "0.4.0")
 
 set(VTKh_EXPORT_NAME "VTKhTargets")
 if (NOT DEFINED VTKh_INSTALL_INCLUDE_DIR)
@@ -53,8 +52,25 @@ option(BUILD_SHARED_LIBS  "Build shared libraries"    ON)
 option(ENABLE_TESTS       "Build tests"               ON)
 option(ENABLE_CUDA        "Enable CUDA Support"       OFF)
 option(ENABLE_MPI         "Build MPI Support"         ON)
+option(ENABLE_LOGGING     "Generate log files "       OFF)
+option(ENABLE_SERIAL      "Build serial (non-MPI) libraries"    ON)
+
+if(NOT ENABLE_SERIAL AND NOT ENABLE_MPI)
+  message(FATAL_ERROR "No libraries are built. "
+    "Please set ENABLE_SERIAL, ENABLE_MPI or both to ON")
+endif()
 
 
+if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "Static libraries are required when building with CUDA")
+endif()
+set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+# enforce the version after the ENABLE Cuda option
+if(ENABLE_CUDA)
+  cmake_minimum_required(VERSION 3.14)
+else()
+  cmake_minimum_required(VERSION 3.9)
+endif()
 ################################
 # Set BLT Options
 ################################
@@ -65,14 +81,17 @@ set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
 ################################
 # Init BLT
 ################################
-set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
-
 if (NOT BLT_CXX_STD)
   set(BLT_CXX_STD "c++11" CACHE STRING "")
 endif()
 
-include(blt/SetupBLT.cmake)
+# if BLT_SOURCE_DIR is not set - use "blt" as default
+if(NOT BLT_SOURCE_DIR)
+    set(BLT_SOURCE_DIR "blt")
+endif()
 
+# init blt using BLT_SOURCE_DIR
+include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 
 ################################
 # Basic CMake Setup
@@ -107,15 +126,17 @@ add_subdirectory(vtkh)
 
 #------------------------------------------------------------------------------
 # Add a interface target that makes it easier to depend on VTKh
-add_library(vtkh INTERFACE)
-target_link_libraries(vtkh INTERFACE
-                      vtkh_core
-                      vtkh_utils
-                      vtkh_filters
-                      vtkh_rendering)
+if (ENABLE_SERIAL)
+  add_library(vtkh INTERFACE)
+  target_link_libraries(vtkh INTERFACE
+                        vtkh_core
+                        vtkh_utils
+                        vtkh_filters
+                        vtkh_rendering)
 
-# Install libraries
-install(TARGETS vtkh EXPORT ${VTKh_EXPORT_NAME})
+  # Install libraries
+  install(TARGETS vtkh EXPORT ${VTKh_EXPORT_NAME})
+endif()
 
 if (ENABLE_MPI)
   add_library(vtkh_mpi INTERFACE)
@@ -134,6 +155,13 @@ endif()
 
 if(ENABLE_TESTS)
   add_subdirectory(tests)
+endif()
+
+################################
+# Add examples
+################################
+if(ENABLE_EXAMPLES)
+    add_subdirectory(examples)
 endif()
 
 

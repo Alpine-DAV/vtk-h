@@ -2,6 +2,7 @@
 #define VTK_H_RENDER_HPP
 
 #include <vector>
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/DataSet.hpp>
 #include <vtkh/Error.hpp>
 
@@ -19,7 +20,7 @@ namespace vtkh {
 // that each canvas is associated with.
 //
 
-class Render
+class VTKH_API Render
 {
 public:
   typedef std::shared_ptr<vtkm::rendering::CanvasRayTracer> vtkmCanvasPtr;
@@ -75,7 +76,7 @@ protected:
 static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};
 static float vtkh_default_fg_color[4] = {1.f, 1.f, 1.f, 1.f};
 
-//template<typename RendererType>
+VTKH_API
 vtkh::Render
 MakeRender(int width,
            int height,
@@ -85,6 +86,7 @@ MakeRender(int width,
            float bg_color[4] = vtkh_default_bg_color,
            float fg_color[4] = vtkh_default_fg_color);
 
+VTKH_API
 vtkh::Render
 MakeRender(int width,
            int height,

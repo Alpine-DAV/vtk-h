@@ -35,7 +35,7 @@ TEST(vtkh_clip_field, vtkh_clip)
   vtkh::ClipField clipper;
 
   clipper.SetClipValue(10.);
-  clipper.SetField("point_data_Float32");
+  clipper.SetField("point_data_Float64");
   clipper.SetInput(&data_set);
   clipper.Update();
 
@@ -59,7 +59,7 @@ TEST(vtkh_clip_field, vtkh_clip)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(clip_output);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   scene.AddRenderer(&tracer);
   scene.Render();
@@ -83,7 +83,7 @@ TEST(vtkh_clip_field, vtkh_clip_cell_centered)
   vtkh::ClipField clipper;
 
   clipper.SetClipValue(.5);
-  clipper.SetField("cell_data_Float32");
+  clipper.SetField("cell_data_Float64");
   clipper.SetInput(&data_set);
   clipper.Update();
 
@@ -107,7 +107,7 @@ TEST(vtkh_clip_field, vtkh_clip_cell_centered)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(clip_output);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   scene.AddRenderer(&tracer);
   scene.Render();

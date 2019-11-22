@@ -4,6 +4,14 @@
 #include <assert.h>
 #include <algorithm>
 
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#include <vtkh/vtkh.hpp>
+#include <vtkh/rendering/compositing/DirectSendCompositor.hpp>
+#include <vtkh/rendering/compositing/RadixKCompositor.hpp>
+#include <diy/mpi.hpp>
+#endif
+
 namespace vtkh
 {
 
@@ -191,8 +199,17 @@ Compositor::GetLogString()
 void
 Compositor::CompositeZBufferSurface()
 {
-  // nothing to do here. Images were composited as
+  // nothing to do here in serial. Images were composited as
   // they were added to the compositor
+#ifdef VTKH_PARALLEL
+  vtkhdiy::mpi::communicator diy_comm;
+  diy_comm = vtkhdiy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
+
+  assert(m_images.size() == 1);
+  RadixKCompositor compositor;
+  compositor.CompositeSurface(diy_comm, this->m_images[0]);
+  m_log_stream<<compositor.GetTimingString();
+#endif
 }
 
 void
@@ -204,8 +221,18 @@ Compositor::CompositeZBufferBlend()
 void
 Compositor::CompositeVisOrder()
 {
+
+#ifdef VTKH_PARALLEL
+  vtkhdiy::mpi::communicator diy_comm;
+  diy_comm = vtkhdiy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
+
+  assert(m_images.size() != 0);
+  DirectSendCompositor compositor;
+  compositor.CompositeVolume(diy_comm, this->m_images);
+#else
   vtkh::ImageCompositor compositor;
   compositor.OrderedComposite(m_images);
+#endif
 }
 
 } // namespace vtkh

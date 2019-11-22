@@ -45,6 +45,7 @@
 #include <vector>
 #include <iostream>
 #include <vtkm/Types.h>
+#include <vtkh/vtkh_exports.h>
 #include "AbsorptionPartial.hpp"
 #include "EmissionPartial.hpp"
 #include "VolumePartial.hpp"
@@ -53,7 +54,7 @@
 namespace vtkh {
 
 template<typename PartialType>
-class PartialCompositor
+class VTKH_API PartialCompositor
 {
 public:
   PartialCompositor();

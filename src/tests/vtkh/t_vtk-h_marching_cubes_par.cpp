@@ -41,7 +41,7 @@ TEST(vtkh_marching_cubes_par, vtkh_parallel_marching_cubes)
 
   vtkh::MarchingCubes marcher;
   marcher.SetInput(&data_set);
-  marcher.SetField("point_data_Float32");
+  marcher.SetField("point_data_Float64");
 
   const int num_vals = 2;
   double iso_vals [num_vals];
@@ -49,8 +49,8 @@ TEST(vtkh_marching_cubes_par, vtkh_parallel_marching_cubes)
   iso_vals[1] = (float)base_size * (float)num_blocks * 0.5f;
 
   marcher.SetIsoValues(iso_vals, num_vals);
-  marcher.AddMapField("point_data_Float32");
-  marcher.AddMapField("cell_data_Float32");
+  marcher.AddMapField("point_data_Float64");
+  marcher.AddMapField("cell_data_Float64");
   marcher.Update();
 
   vtkh::DataSet *iso_output = marcher.GetOutput();
@@ -72,7 +72,7 @@ TEST(vtkh_marching_cubes_par, vtkh_parallel_marching_cubes)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("cell_data_Float32");
+  tracer.SetField("cell_data_Float64");
   scene.AddRenderer(&tracer);
 
   scene.Render();

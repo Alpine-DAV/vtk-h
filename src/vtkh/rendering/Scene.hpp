@@ -3,16 +3,17 @@
 
 #include <vector>
 #include <list>
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/rendering/Render.hpp>
 #include <vtkh/rendering/Renderer.hpp>
 
-namespace vtkh 
+namespace vtkh
 {
 
-class Scene 
+class VTKH_API Scene
 {
 private:
-  std::list<vtkh::Renderer*>   m_renderers; 
+  std::list<vtkh::Renderer*>   m_renderers;
   std::vector<vtkh::Render>    m_renders;
   bool                         m_has_volume;
   int                          m_batch_size;

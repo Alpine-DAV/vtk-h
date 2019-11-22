@@ -151,7 +151,7 @@ public:
     {}
 
     template<typename T, typename S>
-    void operator()(const vtkm::cont::ArrayHandle<T,S> &field) const
+    void operator()(const vtkm::cont::ArrayHandle<T,S> &vtkmNotUsed(field)) const
     {
       //check to see if this is a supported field ;
       const vtkm::cont::Field &scalar_field = m_in_data_sets[0].GetField(m_field_index);
@@ -182,21 +182,10 @@ public:
         vtkm::cont::Algorithm::CopySubRange(in, start, copy_size, out, offset);
       }
 
-      if(assoc_points)
-      {
-        vtkm::cont::Field out_field(scalar_field.GetName(),
-                                    scalar_field.GetAssociation(),
-                                    out);
-        m_data_set.AddField(out_field);
-      }
-      else
-      {
-        vtkm::cont::Field out_field(scalar_field.GetName(),
-                                    scalar_field.GetAssociation(),
-                                    scalar_field.GetAssocCellSet(),
-                                    out);
-        m_data_set.AddField(out_field);
-      }
+      vtkm::cont::Field out_field(scalar_field.GetName(),
+                                  scalar_field.GetAssociation(),
+                                  out);
+      m_data_set.AddField(out_field);
 
     }
   };
@@ -214,7 +203,18 @@ public:
     {
       auto cell_set = doms[dom].GetCellSet();
 
-      if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+      // In the past, we were making assumptions that the output of contour
+      // was a cell set single type. Because of difficult vtkm reasons, the output
+      // of contour is now explicit cell set,but we can still assume that
+      // this output will be all triangles.
+      // this becomes more complicated if we want to support mixed types
+      //if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+      if(!cell_set.IsSameType(vtkm::cont::CellSetExplicit<>()))
+      {
+        std::cout<<"expected explicit cell set as the result of contour\n";
+
+        continue;
+      }
 
       cell_offsets[dom] = num_cells;
       num_cells += cell_set.GetNumberOfCells();
@@ -241,12 +241,21 @@ public:
     for(size_t dom = 0; dom < doms.size(); ++dom)
     {
       auto cell_set = doms[dom].GetCellSet();
-      if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+
+      //if(!cell_set.IsSameType(vtkm::cont::CellSetSingleType<>())) continue;
+      if(!cell_set.IsSameType(vtkm::cont::CellSetExplicit<>()))
+      {
+        std::cout<<"expected explicit cell set as the result of contour\n";
+        continue;
+      }
 
       // grab the connectivity and copy it into the larger array
-      vtkm::cont::CellSetSingleType<> single_type = cell_set.Cast<vtkm::cont::CellSetSingleType<>>();
+      //vtkm::cont::CellSetSingleType<> single_type = cell_set.Cast<vtkm::cont::CellSetSingleType<>>();
+      vtkm::cont::CellSetExplicit<> single_type =
+        cell_set.Cast<vtkm::cont::CellSetExplicit<>>();
       const vtkm::cont::ArrayHandle<vtkm::Id> dconn = single_type.GetConnectivityArray(
-        vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+        vtkm::TopologyElementTagCell(),
+        vtkm::TopologyElementTagPoint());
 
       vtkm::Id copy_size = dconn.GetNumberOfValues();
       vtkm::Id start = 0;
@@ -282,9 +291,9 @@ public:
     } // for each domain
 
 
-    vtkm::cont::CellSetSingleType<> cellSet("cells");
+    vtkm::cont::CellSetSingleType<> cellSet;
     cellSet.Fill(num_points, vtkm::CELL_SHAPE_TRIANGLE, 3, conn);
-    res.AddCellSet(cellSet);
+    res.SetCellSet(cellSet);
 
     res.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coords", out_coords));
 

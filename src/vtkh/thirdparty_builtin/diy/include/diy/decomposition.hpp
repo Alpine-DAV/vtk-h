@@ -12,7 +12,7 @@
 #include "assigner.hpp"
 #include "master.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 namespace detail
 {
@@ -239,7 +239,7 @@ namespace detail
     assigner.local_gids(rank, local_gids);
 
     for (size_t i = 0; i < local_gids.size(); ++i)
-      master.add(local_gids[i], master.create(), new diy::Link);
+      master.add(local_gids[i], master.create(), new vtkhdiy::Link);
   }
 
     /**
@@ -278,7 +278,7 @@ namespace detail
 // decomposes domain and adds blocks to the master
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 decompose(int rank, const Assigner& assigner, Master& master)
 {
   decompose(rank, assigner, [&master](int gid, const Bounds& core, const Bounds& bounds, const Bounds& domain, const Link& link)
@@ -291,7 +291,7 @@ decompose(int rank, const Assigner& assigner, Master& master)
 
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 decompose(int rank, const Assigner& assigner, const Creator& create)
 {
   std::vector<int> gids;
@@ -379,7 +379,7 @@ decompose(int rank, const Assigner& assigner, const Creator& create)
 // decomposes domain but does not add blocks to master, assumes they were added already
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 decompose(int rank, const Assigner& assigner, Master& master, const Updater& update)
 {
     decompose(rank, assigner, [&master,&update](int gid, const Bounds& core, const Bounds& bounds, const Bounds& domain, const Link& link)
@@ -393,7 +393,7 @@ decompose(int rank, const Assigner& assigner, Master& master, const Updater& upd
 
 template<class Bounds>
 bool
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 all(const std::vector<int>& v, int x)
 {
   for (unsigned i = 0; i < v.size(); ++i)
@@ -404,7 +404,7 @@ all(const std::vector<int>& v, int x)
 
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 gid_to_coords(int gid, DivisionsVector& coords, const DivisionsVector& divisions)
 {
   int dim = divisions.size();
@@ -417,7 +417,7 @@ gid_to_coords(int gid, DivisionsVector& coords, const DivisionsVector& divisions
 
 template<class Bounds>
 int
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 coords_to_gid(const DivisionsVector& coords, const DivisionsVector& divisions)
 {
   int gid = 0;
@@ -433,7 +433,7 @@ coords_to_gid(const DivisionsVector& coords, const DivisionsVector& divisions)
 //! Gets the bounds, with or without ghosts, for a block specified by its block coordinates
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 fill_bounds(Bounds& bounds,                  //!< (output) bounds
             const DivisionsVector& coords,   //!< coordinates of the block in the decomposition
             bool add_ghosts)                 //!< whether to include ghosts in the output bounds
@@ -472,7 +472,7 @@ fill_bounds(Bounds& bounds,                  //!< (output) bounds
 //! Gets the bounds, with or without ghosts, for a block specified by its gid
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 fill_bounds(Bounds& bounds,                  //!< (output) bounds
             int gid,                         //!< global id of the block
             bool add_ghosts)                 //!< whether to include ghosts in the output bounds
@@ -486,7 +486,7 @@ fill_bounds(Bounds& bounds,                  //!< (output) bounds
         fill_bounds(bounds, coords);
 }
 
-namespace diy { namespace detail {
+namespace vtkhdiy { namespace detail {
 // current state of division in one dimension used in fill_divisions below
 template<class Coordinate>
 struct Div
@@ -514,7 +514,7 @@ struct Div
 
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 fill_divisions(std::vector<int>& divisions) const
 {
     // prod = number of blocks unconstrained by user; c = number of unconstrained dimensions
@@ -597,7 +597,7 @@ fill_divisions(std::vector<int>& divisions) const
 
 template<class Bounds>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 factor(std::vector<unsigned>& factors, int n)
 {
   while (n != 1)
@@ -618,7 +618,7 @@ factor(std::vector<unsigned>& factors, int n)
 template<class Bounds>
 template<class Point>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 point_to_gids(std::vector<int>& gids, const Point& p) const
 {
     std::vector< std::pair<int, int> > ranges(dim);
@@ -647,7 +647,7 @@ point_to_gids(std::vector<int>& gids, const Point& p) const
 template<class Bounds>
 template<class Point>
 int
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 point_to_gid(const Point& p) const
 {
     int gid = 0;
@@ -667,7 +667,7 @@ point_to_gid(const Point& p) const
 template<class Bounds>
 template<class Point>
 int
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 num_gids(const Point& p) const
 {
     int res = 1;
@@ -683,7 +683,7 @@ num_gids(const Point& p) const
 template<class Bounds>
 template<class Point>
 void
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 top_bottom(int& top, int& bottom, const Point& p, int axis) const
 {
     Coordinate l = p[axis] - ghosts[axis];
@@ -703,7 +703,7 @@ top_bottom(int& top, int& bottom, const Point& p, int axis) const
 template<class Bounds>
 template<class Point>
 int
-diy::RegularDecomposer<Bounds>::
+vtkhdiy::RegularDecomposer<Bounds>::
 lowest_gid(const Point& p) const
 {
     // TODO: optimize - no need to compute all gids

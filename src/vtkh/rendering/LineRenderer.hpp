@@ -2,10 +2,11 @@
 #define VTK_H_RENDERER_LINES_HPP
 
 #include <vtkh/rendering/Renderer.hpp>
+#include<vtkh/vtkh_exports.h>
 
 namespace vtkh {
 
-class LineRenderer : public Renderer
+class VTKH_API LineRenderer : public Renderer
 {
 public:
   LineRenderer();

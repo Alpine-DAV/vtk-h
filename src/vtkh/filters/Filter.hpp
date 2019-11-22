@@ -1,6 +1,7 @@
 #ifndef VTK_H_FILTER_HPP
 #define VTK_H_FILTER_HPP
 
+#include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
 #include <vtkm/filter/FieldSelection.h>
@@ -8,7 +9,7 @@
 namespace vtkh
 {
 
-class Filter
+class VTKH_API Filter
 {
 public:
   Filter();

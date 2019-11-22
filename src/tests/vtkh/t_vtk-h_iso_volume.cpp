@@ -37,7 +37,7 @@ TEST(vtkh_iso_volume, vtkh_iso_volume)
   iso_range.Min = 10.;
   iso_range.Max = 30.;
   iso.SetRange(iso_range);
-  iso.SetField("point_data_Float32");
+  iso.SetField("point_data_Float64");
   iso.SetInput(&data_set);
   iso.Update();
 
@@ -61,7 +61,7 @@ TEST(vtkh_iso_volume, vtkh_iso_volume)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   scene.AddRenderer(&tracer);
   scene.Render();
@@ -88,7 +88,7 @@ TEST(vtkh_iso_volume, vtkh_iso_volume_empty)
   iso_range.Min = 40e16;
   iso_range.Max = 30e16;
   iso.SetRange(iso_range);
-  iso.SetField("point_data_Float32");
+  iso.SetField("point_data_Float64");
   iso.SetInput(&data_set);
   iso.Update();
 
@@ -112,7 +112,7 @@ TEST(vtkh_iso_volume, vtkh_iso_volume_empty)
 
   vtkh::RayTracer tracer;
   tracer.SetInput(iso_output);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   scene.AddRenderer(&tracer);
   scene.Render();

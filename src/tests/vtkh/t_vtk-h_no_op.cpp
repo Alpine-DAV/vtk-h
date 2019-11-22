@@ -32,7 +32,7 @@ TEST(vtkh_no_op, vtkh_serial_no_op)
 
   vtkh::NoOp noop;
   noop.SetInput(&data_set);
-  noop.SetField("point_data_Float32");
+  noop.SetField("point_data_Float64");
 
   noop.Update();
 
@@ -50,7 +50,7 @@ TEST(vtkh_no_op, vtkh_serial_no_op)
                                           bg_color);
   vtkh::RayTracer tracer;
   tracer.SetInput(noop_output);
-  tracer.SetField("cell_data_Float32");
+  tracer.SetField("cell_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRenderer(&tracer);

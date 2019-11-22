@@ -52,7 +52,7 @@ TEST(vtkh_raytracer, vtkh_parallel_render)
   vtkh::RayTracer tracer;
 
   tracer.SetInput(&data_set);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);

@@ -79,7 +79,7 @@ void MarchingCubes::PostExecute()
 
 void MarchingCubes::DoExecute()
 {
-  this->m_output = new DataSet();
+  DataSet temp_data;
   vtkh::DataSet *old_input = this->m_input;
 
 
@@ -119,9 +119,14 @@ void MarchingCubes::DoExecute()
                                m_iso_values,
                                this->GetFieldSelection());
 
-    m_output->AddDomain(dataset, domain_id);
+    temp_data.AddDomain(dataset, domain_id);
 
   }
+
+  CleanGrid cleaner;
+  cleaner.SetInput(&temp_data);
+  cleaner.Update();
+  this->m_output = cleaner.GetOutput();
 
   if(delete_input)
   {

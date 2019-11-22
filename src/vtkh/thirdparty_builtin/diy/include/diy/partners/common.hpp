@@ -4,7 +4,7 @@
 #include "../decomposition.hpp"
 #include "../types.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 
 struct RegularPartners
@@ -67,7 +67,7 @@ struct RegularPartners
 }
 
 void
-diy::RegularPartners::
+vtkhdiy::RegularPartners::
 fill_steps()
 {
   if (contiguous_)
@@ -91,7 +91,7 @@ fill_steps()
 }
 
 void
-diy::RegularPartners::
+vtkhdiy::RegularPartners::
 fill(int round, int gid, std::vector<int>& partners) const
 {
   const DimK&   kv  = kvs_[round];
@@ -120,7 +120,7 @@ fill(int round, int gid, std::vector<int>& partners) const
 
 // Tom's GetGrpPos
 int
-diy::RegularPartners::
+vtkhdiy::RegularPartners::
 group_position(int round, int c, int step) const
 {
   // the second term in the following expression does not simplify to
@@ -137,7 +137,7 @@ group_position(int round, int c, int step) const
 }
 
 void
-diy::RegularPartners::
+vtkhdiy::RegularPartners::
 factor(int k, const DivisionVector& divisions, KVSVector& kvs)
 {
   // factor in each dimension
@@ -165,7 +165,7 @@ factor(int k, const DivisionVector& divisions, KVSVector& kvs)
 
 // Tom's FactorK
 void
-diy::RegularPartners::
+vtkhdiy::RegularPartners::
 factor(int k, int tot_b, std::vector<int>& kv)
 {
   int rem = tot_b; // unfactored remaining portion of tot_b

@@ -41,7 +41,7 @@ TEST(vtkh_point_renderer, vtkh_point_render)
                                          "render_points");
   vtkh::PointRenderer renderer;
   renderer.SetInput(&data_set);
-  renderer.SetField("point_data_Float32");
+  renderer.SetField("point_data_Float64");
 
 
 
@@ -76,7 +76,7 @@ TEST(vtkh_point_renderer, vtkh_variable_point_render)
                                          "render_var_points");
   vtkh::PointRenderer renderer;
   renderer.SetInput(&data_set);
-  renderer.SetField("point_data_Float32");
+  renderer.SetField("point_data_Float64");
   renderer.UseVariableRadius(true);
   renderer.SetRadiusDelta(1.0f);
 

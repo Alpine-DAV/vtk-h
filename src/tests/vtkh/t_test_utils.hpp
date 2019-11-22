@@ -117,7 +117,6 @@ vtkm::cont::Field CreateCellScalarField(int size, const char* fieldName)
 
   vtkm::cont::Field field(fieldName,
                           vtkm::cont::Field::Association::CELL_SET,
-                          "cells",
                           data);
   return field;
 }
@@ -142,7 +141,6 @@ vtkm::cont::Field CreateGhostScalarField(vtkm::Id3 dims)
 
   vtkm::cont::Field field("ghosts",
                           vtkm::cont::Field::Association::CELL_SET,
-                          "cells",
                           data);
   return field;
 }
@@ -159,7 +157,7 @@ vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* field
   {
     vtkm::Vec<FieldType,3> point = portal.Get(i);
 
-    FieldType val = vtkm::Magnitude(point);
+    FieldType val = vtkm::Magnitude(point) + 1.f;
     data.GetPortalControl().Set(i, val);
   }
 
@@ -231,9 +229,9 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   vtkm::cont::CoordinateSystem coords("coords", point_handle);
   data_set.AddCoordinateSystem(coords);
 
-  vtkm::cont::CellSetStructured<3> cell_set("cells");
+  vtkm::cont::CellSetStructured<3> cell_set;
   cell_set.SetPointDimensions(point_dims);
-  data_set.AddCellSet(cell_set);
+  data_set.SetCellSet(cell_set);
 
   int num_points = point_dims[0] * point_dims[1] * point_dims[2];
   int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];
@@ -244,7 +242,7 @@ vtkm::cont::DataSet CreateTestData(int block, int num_blocks, int base_size)
   data_set.AddField(CreatePointScalarField<vtkm::Float64>(point_handle, "point_data_Float64"));
   data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
   data_set.AddField(CreateCellScalarField<vtkm::Float64>(num_cells, "cell_data_Float64"));
-
+  data_set.AddField(CreateGhostScalarField(cell_dims));
   return data_set;
 }
 
@@ -302,11 +300,8 @@ vtkm::cont::DataSet CreateTestDataRectilinear(int block, int num_blocks, int bas
   int num_points = point_dims[0] * point_dims[1] * point_dims[2];
   int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];
 
+  data_set.AddField(CreatePointVecField<vtkm::Float32>(num_points, "vector_data_Float32"));
   data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
-  data_set.AddField(CreatePointScalarField(point_handle));
-  data_set.AddField(CreatePointVecField(num_points));
-  data_set.AddField(CreateCellScalarField(num_cells));
-  data_set.AddField(CreateGhostScalarField(cell_dims));
 
   return data_set;
 }

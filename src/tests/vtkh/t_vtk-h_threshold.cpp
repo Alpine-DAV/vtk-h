@@ -32,7 +32,7 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
 
   vtkh::Threshold thresher;
   thresher.SetInput(&data_set);
-  thresher.SetField("point_data_Float32");
+  thresher.SetField("point_data_Float64");
 
   double upper_bound = (float)base_size * (float)num_blocks * 0.5f;
   double lower_bound = 0;
@@ -53,7 +53,7 @@ TEST(vtkh_threshold, vtkh_serial_threshold)
                                          "threshold");
   vtkh::RayTracer tracer;
   tracer.SetInput(output);
-  tracer.SetField("point_data_Float32");
+  tracer.SetField("point_data_Float64");
 
   vtkh::Scene scene;
   scene.AddRender(render);
