@@ -218,8 +218,6 @@ void ParticleAdvection::DoExecute()
 {
   this->Init();
   this->CreateSeeds();
-  if (this->dumpOutputFiles)
-    this->DumpDS(0);
 
   if(!gatherTraces)
   {
@@ -308,7 +306,7 @@ void ParticleAdvection::DoExecute()
         ds.SetCellSet(polyLines);
         this->m_output->AddDomain(ds, rank);
         if (this->dumpOutputFiles)
-            this->DumpSLOutput(&ds, rank, 0);
+            this->DumpTraces(positions);
     }
     else
     {
@@ -575,6 +573,35 @@ ParticleAdvection::DumpTraces(int ts, const std::vector<vtkm::Vec<double,4>> &pa
         {
             char nm[128];
             sprintf(nm, "output.ts%03i.block%03d.txt", ts, i);
+            output<<nm<<std::endl;
+        }
+    }
+}
+
+void
+ParticleAdvection::DumpTraces(const vtkm::cont::ArrayHandle<vtkm::Vec3f> &pts)
+{
+    std::ofstream output;
+    char nm[128];
+    sprintf(nm, "output.%03d.txt", rank);
+    output.open(nm, std::ofstream::out);
+
+    output<<"X,Y,Z,ID"<<std::endl;
+    auto portal = pts.GetPortalConstControl();
+    int nPts = pts.GetNumberOfValues();
+
+    for (int i = 0; i < nPts; i++)
+        output<<portal.Get(i)[0]<<", "<<portal.Get(i)[1]<<", "<<portal.Get(i)[2]<<", "<<i<<std::endl;
+
+    if (rank == 0)
+    {
+        std::ofstream output;
+        output.open("output.visit", std::ofstream::out);
+        output<<"!NBLOCKS "<<numRanks<<std::endl;
+        for (int i = 0; i < numRanks; i++)
+        {
+            char nm[128];
+            sprintf(nm, "output.%03d.txt", i);
             output<<nm<<std::endl;
         }
     }
