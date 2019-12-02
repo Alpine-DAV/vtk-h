@@ -141,6 +141,8 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
       throw Error("Histogram: field must have a single component");
     }
     range = ranges.GetPortalControl().Get(0);
+    VTKH_DATA_ADD("field_min", range.Min);
+    VTKH_DATA_ADD("field_max", range.Max);
   }
 
   const int num_domains = data_set.GetNumberOfDomains();
@@ -170,6 +172,7 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
   vtkm::Id * bin_ptr = GetVTKMPointer(local.m_bins);
   detail::reduce(bin_ptr, m_num_bins);
 
+  VTKH_DATA_ADD("entropy", local.Entropy());
   VTKH_DATA_CLOSE();
   return local;
 }
@@ -190,6 +193,32 @@ Histogram::HistogramResult::Print(std::ostream &out)
         << "\n";
   }
   out<<"total points: "<<sum<<"\n";
+}
+
+double
+Histogram::HistogramResult::Entropy()
+{
+  auto binPortal = m_bins.GetPortalConstControl();
+  const int num_bins = m_bins.GetNumberOfValues();
+  double sum = 0;
+  double entropy = 0;
+
+  for (vtkm::Id i = 0; i < num_bins; i++)
+  {
+    sum += double(binPortal.Get(i));
+  }
+
+  for (vtkm::Id i = 0; i < num_bins; i++)
+  {
+    double count = double(binPortal.Get(i));
+    if(count != 0.0)
+    {
+      double p = count / sum;
+      entropy += -p * std::log(p);
+    }
+  }
+
+  return entropy;
 }
 
 } //  namespace vtkh

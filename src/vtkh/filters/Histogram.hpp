@@ -24,6 +24,7 @@ public:
     vtkm::Range m_range;
     vtkm::Float64 m_bin_delta;
     void Print(std::ostream &out);
+    double Entropy();
   };
 
   HistogramResult Run(vtkh::DataSet &data_set, const std::string &field_name);
