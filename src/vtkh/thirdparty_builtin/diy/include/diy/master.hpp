@@ -28,7 +28,7 @@
 #include "log.hpp"
 #include "stats.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
   // Stores and manages blocks; initiates serialization and communication when necessary.
   //
@@ -385,7 +385,7 @@ namespace diy
 #include "proxy.hpp"
 
 // --- ProcessBlock ---
-struct diy::Master::ProcessBlock
+struct vtkhdiy::Master::ProcessBlock
 {
           ProcessBlock(Master&                    master_,
                        const std::deque<int>&     blocks_,
@@ -483,7 +483,7 @@ struct diy::Master::ProcessBlock
 // --------------------
 
 void
-diy::Master::
+vtkhdiy::Master::
 clear()
 {
   for (unsigned i = 0; i < size(); ++i)
@@ -496,7 +496,7 @@ clear()
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 unload(int i)
 {
   log->debug("Unloading block: {}", gid(i));
@@ -506,7 +506,7 @@ unload(int i)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 unload_queues(int i)
 {
   unload_incoming(gid(i));
@@ -514,7 +514,7 @@ unload_queues(int i)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 unload_incoming(int gid)
 {
   for (IncomingRoundMap::iterator round_itr = incoming_.begin(); round_itr != incoming_.end(); ++round_itr)
@@ -538,7 +538,7 @@ unload_incoming(int gid)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 unload_outgoing(int gid)
 {
   OutgoingQueuesRecord& out_qr = outgoing_[gid];
@@ -559,7 +559,7 @@ unload_outgoing(int gid)
   {
       log->debug("Unloading outgoing queues: {} -> ...; size = {}\n", gid, out_queues_size);
       MemoryBuffer  bb;     bb.reserve(out_queues_size);
-      diy::save(bb, count);
+      vtkhdiy::save(bb, count);
 
       for (OutgoingQueues::iterator it = out_qr.queues.begin(); it != out_qr.queues.end();)
       {
@@ -577,8 +577,8 @@ unload_outgoing(int gid)
           } // else keep in memory
         } else
         {
-          diy::save(bb, it->first);
-          diy::save(bb, it->second);
+          vtkhdiy::save(bb, it->first);
+          vtkhdiy::save(bb, it->second);
 
           out_qr.queues.erase(it++);
           continue;
@@ -593,7 +593,7 @@ unload_outgoing(int gid)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 load(int i)
 {
  log->debug("Loading block: {}", gid(i));
@@ -603,7 +603,7 @@ load(int i)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 load_queues(int i)
 {
   load_incoming(gid(i));
@@ -611,7 +611,7 @@ load_queues(int i)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 load_incoming(int gid)
 {
   IncomingQueuesRecords& in_qrs = incoming_[exchange_round_].map[gid];
@@ -628,7 +628,7 @@ load_incoming(int gid)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 load_outgoing(int gid)
 {
   // TODO: we could adjust this mechanism to read directly from storage,
@@ -641,24 +641,24 @@ load_outgoing(int gid)
     out_qr.external = -1;
 
     size_t count;
-    diy::load(bb, count);
+    vtkhdiy::load(bb, count);
     for (size_t i = 0; i < count; ++i)
     {
       BlockID to;
-      diy::load(bb, to);
-      diy::load(bb, out_qr.queues[to]);
+      vtkhdiy::load(bb, to);
+      vtkhdiy::load(bb, out_qr.queues[to]);
     }
   }
 }
 
-diy::Master::ProxyWithLink
-diy::Master::
+vtkhdiy::Master::ProxyWithLink
+vtkhdiy::Master::
 proxy(int i) const
 { return ProxyWithLink(Proxy(const_cast<Master*>(this), gid(i)), block(i), link(i)); }
 
 
 int
-diy::Master::
+vtkhdiy::Master::
 add(int gid, void* b, Link* l)
 {
   if (*blocks_.in_memory().const_access() == limit_)
@@ -678,7 +678,7 @@ add(int gid, void* b, Link* l)
 }
 
 void*
-diy::Master::
+vtkhdiy::Master::
 release(int i)
 {
   void* b = blocks_.release(i);
@@ -688,7 +688,7 @@ release(int i)
 }
 
 bool
-diy::Master::
+vtkhdiy::Master::
 has_incoming(int i) const
 {
   const IncomingQueuesRecords& in_qrs = const_cast<Master&>(*this).incoming_[exchange_round_].map[gid(i)];
@@ -703,7 +703,7 @@ has_incoming(int i) const
 
 template<class Block>
 void
-diy::Master::
+vtkhdiy::Master::
 foreach_(const Callback<Block>& f, const Skip& skip)
 {
     auto scoped = prof.scoped("foreach");
@@ -714,7 +714,7 @@ foreach_(const Callback<Block>& f, const Skip& skip)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 execute()
 {
   log->debug("Entered execute()");
@@ -798,7 +798,7 @@ execute()
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 exchange()
 {
   auto scoped = prof.scoped("exchange");
@@ -823,7 +823,7 @@ exchange()
   log->debug("Finished exchange");
 }
 
-namespace diy
+namespace vtkhdiy
 {
 namespace detail
 {
@@ -839,12 +839,12 @@ namespace mpi
 {
 namespace detail
 {
-  template<typename T>  struct is_mpi_datatype< diy::detail::VectorWindow<T> > { typedef true_type type; };
+  template<typename T>  struct is_mpi_datatype< vtkhdiy::detail::VectorWindow<T> > { typedef true_type type; };
 
   template <typename T>
-  struct mpi_datatype< diy::detail::VectorWindow<T> >
+  struct mpi_datatype< vtkhdiy::detail::VectorWindow<T> >
   {
-    typedef diy::detail::VectorWindow<T> VecWin;
+    typedef vtkhdiy::detail::VectorWindow<T> VecWin;
     static MPI_Datatype         datatype()                { return get_mpi_datatype<T>(); }
     static const void*          address(const VecWin& x)  { return x.begin; }
     static void*                address(VecWin& x)        { return x.begin; }
@@ -853,11 +853,11 @@ namespace detail
 }
 } // namespace mpi::detail
 
-} // namespace diy
+} // namespace vtkhdiy
 
 /* Communicator */
 void
-diy::Master::
+vtkhdiy::Master::
 comm_exchange(ToSendList& to_send, int out_queues_limit)
 {
   static const size_t MAX_MPI_MESSAGE_COUNT = INT_MAX;
@@ -949,7 +949,7 @@ comm_exchange(ToSendList& to_send, int out_queues_limit)
       MessageInfo info{from, to, exchange_round_};
       if (buffer->size() <= (MAX_MPI_MESSAGE_COUNT - sizeof(info)))
       {
-        diy::save(*buffer, info);
+        vtkhdiy::save(*buffer, info);
 
         inflight_sends_.emplace_back();
         inflight_sends_.back().info = info;
@@ -962,8 +962,8 @@ comm_exchange(ToSendList& to_send, int out_queues_limit)
 
         // first send the head
         std::shared_ptr<MemoryBuffer> hb = std::make_shared<MemoryBuffer>();
-        diy::save(*hb, buffer->size());
-        diy::save(*hb, info);
+        vtkhdiy::save(*hb, buffer->size());
+        vtkhdiy::save(*hb, info);
 
         inflight_sends_.emplace_back();
         inflight_sends_.back().info = info;
@@ -1006,14 +1006,14 @@ comm_exchange(ToSendList& to_send, int out_queues_limit)
       if (ostatus->tag() == tags::piece)
       {
         size_t msg_size;
-        diy::load(bb, msg_size);
-        diy::load(bb, ir.info);
+        vtkhdiy::load(bb, msg_size);
+        vtkhdiy::load(bb, ir.info);
 
         ir.message.buffer.reserve(msg_size);
       }
       else // tags::queue
       {
-        diy::load_back(bb, ir.info);
+        vtkhdiy::load_back(bb, ir.info);
         ir.message.swap(bb);
       }
     }
@@ -1063,7 +1063,7 @@ comm_exchange(ToSendList& to_send, int out_queues_limit)
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 flush()
 {
 
@@ -1121,7 +1121,7 @@ flush()
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 process_collectives()
 {
   auto scoped = prof.scoped("collectives");
@@ -1159,7 +1159,7 @@ process_collectives()
 }
 
 bool
-diy::Master::
+vtkhdiy::Master::
 nudge()
 {
   bool success = false;
@@ -1178,7 +1178,7 @@ nudge()
 }
 
 void
-diy::Master::
+vtkhdiy::Master::
 show_incoming_records() const
 {
   for (IncomingRoundMap::const_iterator rounds_itr = incoming_.begin(); rounds_itr != incoming_.end(); ++rounds_itr)

@@ -8,7 +8,7 @@ namespace vtkh
 {
 
 static
-vtkm::Bounds DIYBoundsToVTKM(const diy::DiscreteBounds &bounds)
+vtkm::Bounds DIYBoundsToVTKM(const vtkhdiy::DiscreteBounds &bounds)
 {
   vtkm::Bounds vtkm_bounds;
 
@@ -23,9 +23,9 @@ vtkm::Bounds DIYBoundsToVTKM(const diy::DiscreteBounds &bounds)
 }
 
 static
-diy::DiscreteBounds VTKMBoundsToDIY(const vtkm::Bounds &bounds)
+vtkhdiy::DiscreteBounds VTKMBoundsToDIY(const vtkm::Bounds &bounds)
 {
-  diy::DiscreteBounds diy_bounds;
+  vtkhdiy::DiscreteBounds diy_bounds;
 
   diy_bounds.min[0] = bounds.X.Min;
   diy_bounds.min[1] = bounds.Y.Min;

@@ -16,7 +16,7 @@
 #include "../log.hpp"
 
 // Read and write collections of blocks using MPI-IO
-namespace diy
+namespace vtkhdiy
 {
 namespace io
 {

@@ -29,7 +29,7 @@ set(vtkh_core_sources
   )
 
 
-set(vtkh_core_deps vtkm diy vtkh_utils)
+set(vtkh_core_deps vtkm vtkh_utils)
 
 
 if(CUDA_FOUND)
@@ -73,7 +73,7 @@ install(FILES ${vtkh_core_headers}
 
 if(MPI_FOUND)
 
-  set(vtkh_core_mpi_deps vtkm diy vtkh_utils_mpi)
+  set(vtkh_core_mpi_deps vtkm vtkh_utils_mpi)
 
   if(CUDA_FOUND)
     list(APPEND vtkh_core_mpi_deps cuda)

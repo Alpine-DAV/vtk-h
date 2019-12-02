@@ -1,4 +1,4 @@
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {
@@ -22,7 +22,7 @@ namespace mpi
 
 template<class T>
 int
-diy::mpi::status::count() const
+vtkhdiy::mpi::status::count() const
 {
   int c;
   MPI_Get_count(const_cast<MPI_Status*>(&s), detail::get_mpi_datatype<T>(), &c);

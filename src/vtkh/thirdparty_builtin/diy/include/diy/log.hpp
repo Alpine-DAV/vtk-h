@@ -7,7 +7,7 @@
 #include "fmt/format.h"
 #include "fmt/ostream.h"
 
-namespace diy
+namespace vtkhdiy
 {
 
 namespace spd
@@ -57,7 +57,7 @@ set_logger(Args... args)
 #include <spdlog/fmt/bundled/format.h>
 #include <spdlog/fmt/bundled/ostream.h>
 
-namespace diy
+namespace vtkhdiy
 {
 
 namespace spd = ::spdlog;

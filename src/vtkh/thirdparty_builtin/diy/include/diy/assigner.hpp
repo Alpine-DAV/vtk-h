@@ -3,7 +3,7 @@
 
 #include <vector>
 
-namespace diy
+namespace vtkhdiy
 {
   // Derived types should define
   //   int rank(int gid) const
@@ -90,7 +90,7 @@ namespace diy
 }
 
 void
-diy::ContiguousAssigner::
+vtkhdiy::ContiguousAssigner::
 local_gids(int rank, std::vector<int>& gids) const
 {
   int div = nblocks() / size();
@@ -112,7 +112,7 @@ local_gids(int rank, std::vector<int>& gids) const
 }
 
 void
-diy::RoundRobinAssigner::
+vtkhdiy::RoundRobinAssigner::
 local_gids(int rank, std::vector<int>& gids) const
 {
   int cur = rank;

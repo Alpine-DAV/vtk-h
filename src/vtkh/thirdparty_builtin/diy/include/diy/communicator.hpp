@@ -5,7 +5,7 @@
 
 #include "mpi.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
   typedef mpi::communicator         Communicator;
 }

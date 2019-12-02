@@ -13,7 +13,7 @@
 #include "mpi/collectives.hpp"
 #include "mpi/io.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 namespace mpi
 {

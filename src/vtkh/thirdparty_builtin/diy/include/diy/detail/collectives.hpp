@@ -1,7 +1,7 @@
 #ifndef DIY_COLLECTIVES_HPP
 #define DIY_COLLECTIVES_HPP
 
-namespace diy
+namespace vtkhdiy
 {
 namespace detail
 {

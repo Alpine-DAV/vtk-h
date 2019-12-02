@@ -9,7 +9,7 @@
 #include "serialization.hpp"
 #include "assigner.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
   // Local view of a distributed representation of a cover, a completely unstructured link
   class Link
@@ -31,8 +31,8 @@ namespace diy
 
       void      swap(Link& other)                   { neighbors_.swap(other.neighbors_); }
 
-      virtual void  save(BinaryBuffer& bb) const    { diy::save(bb, neighbors_); }
-      virtual void  load(BinaryBuffer& bb)          { diy::load(bb, neighbors_); }
+      virtual void  save(BinaryBuffer& bb) const    { vtkhdiy::save(bb, neighbors_); }
+      virtual void  load(BinaryBuffer& bb)          { vtkhdiy::load(bb, neighbors_); }
 
       virtual size_t id() const                     { return 0; }
 
@@ -106,25 +106,25 @@ namespace diy
       void      save(BinaryBuffer& bb) const
       {
           Link::save(bb);
-          diy::save(bb, dim_);
-          diy::save(bb, dir_map_);
-          diy::save(bb, dir_vec_);
-          diy::save(bb, core_);
-          diy::save(bb, bounds_);
-          diy::save(bb, nbr_bounds_);
-          diy::save(bb, wrap_);
+          vtkhdiy::save(bb, dim_);
+          vtkhdiy::save(bb, dir_map_);
+          vtkhdiy::save(bb, dir_vec_);
+          vtkhdiy::save(bb, core_);
+          vtkhdiy::save(bb, bounds_);
+          vtkhdiy::save(bb, nbr_bounds_);
+          vtkhdiy::save(bb, wrap_);
       }
 
       void      load(BinaryBuffer& bb)
       {
           Link::load(bb);
-          diy::load(bb, dim_);
-          diy::load(bb, dir_map_);
-          diy::load(bb, dir_vec_);
-          diy::load(bb, core_);
-          diy::load(bb, bounds_);
-          diy::load(bb, nbr_bounds_);
-          diy::load(bb, wrap_);
+          vtkhdiy::load(bb, dim_);
+          vtkhdiy::load(bb, dir_map_);
+          vtkhdiy::load(bb, dir_vec_);
+          vtkhdiy::load(bb, core_);
+          vtkhdiy::load(bb, bounds_);
+          vtkhdiy::load(bb, nbr_bounds_);
+          vtkhdiy::load(bb, wrap_);
       }
 
       virtual size_t id() const                         { return RegularLinkSelector<Bounds>::id; }
@@ -166,26 +166,26 @@ namespace diy
 
 
 void
-diy::LinkFactory::
+vtkhdiy::LinkFactory::
 save(BinaryBuffer& bb, const Link* l)
 {
-    diy::save(bb, l->id());
+    vtkhdiy::save(bb, l->id());
     l->save(bb);
 }
 
-diy::Link*
-diy::LinkFactory::
+vtkhdiy::Link*
+vtkhdiy::LinkFactory::
 load(BinaryBuffer& bb)
 {
     size_t id;
-    diy::load(bb, id);
+    vtkhdiy::load(bb, id);
     Link* l = create(id);
     l->load(bb);
     return l;
 }
 
 int
-diy::Link::
+vtkhdiy::Link::
 find(int gid) const
 {
     for (unsigned i = 0; i < (unsigned)size(); ++i)
@@ -196,7 +196,7 @@ find(int gid) const
   return -1;
 }
 int
-diy::Link::
+vtkhdiy::Link::
 size_unique() const
 {
     std::vector<BlockID> tmp(neighbors_.begin(), neighbors_.end());
@@ -206,7 +206,7 @@ size_unique() const
 
 template<class Bounds>
 int
-diy::RegularLink<Bounds>::
+vtkhdiy::RegularLink<Bounds>::
 direction(Direction dir) const
 {
   DirMap::const_iterator it = dir_map_.find(dir);

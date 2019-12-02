@@ -3,7 +3,7 @@
 
 #include "merge.hpp"
 
-namespace diy
+namespace vtkhdiy
 {
 
 class Master;

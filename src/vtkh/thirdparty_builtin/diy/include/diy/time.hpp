@@ -8,7 +8,7 @@
 #include <mach/mach.h>
 #endif
 
-namespace diy
+namespace vtkhdiy
 {
 
 typedef     unsigned long       time_type;
