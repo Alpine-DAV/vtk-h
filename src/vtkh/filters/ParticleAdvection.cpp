@@ -21,7 +21,7 @@
 #include <vtkh/filters/ParticleAdvectionTask.hpp>
 #endif
 
-#ifdef VTKH_ENABLE_LOGGING
+#ifdef VTKH_ENABLE_DEBUG_LOGGING
 #define DBG(msg) vtkh::Logger::GetInstance("out")->GetStream()<<msg
 #define WDBG(msg) vtkh::Logger::GetInstance("wout")->GetStream()<<msg
 #else
@@ -298,7 +298,8 @@ void ParticleAdvection::DoExecute()
 
         //Create a single polyLines cell set.
         vtkm::cont::CellSetExplicit<> polyLines;
-        polyLines.Fill(positions.GetNumberOfValues(), cellTypes, cellCounts, connectivity);
+        auto new_offsets = vtkm::cont::ConvertNumIndicesToOffsets(cellCounts);
+        polyLines.Fill(positions.GetNumberOfValues(), cellTypes, connectivity, new_offsets);
 
         vtkm::cont::DataSet ds;
         vtkm::cont::CoordinateSystem outputCoords("coordinates", positions);
