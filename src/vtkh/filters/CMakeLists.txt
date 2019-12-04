@@ -151,6 +151,7 @@ if (MPI_FOUND)
 
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_PARALLEL)
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_COMPILING_FLAG)
+    target_compile_definitions(vtkh_filters_mpi PRIVATE VTKM_ENABLE_MPI=TRUE)
 
     if(ENABLE_OPENMP)
           target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_USE_OPENMP)
