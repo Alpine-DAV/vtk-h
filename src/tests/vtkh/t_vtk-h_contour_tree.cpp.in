@@ -212,6 +212,9 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
 //----------------------------------------------------------------------------
 TEST(vtkh_contour_tree, vtkh_contour_tree)
 {
+    // TODO remove Just needed for a test.
+    vtkh::ForceSerial();
+
   vtkh::DataSet data_set;
   std::string fileName = std::string(TESTS_SOURCE_DIR) + "/fuel.txt";
 #ifndef VTKH_PARALLEL
