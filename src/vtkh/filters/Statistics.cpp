@@ -158,6 +158,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
 #endif
   vtkm::Float32 mean = sum / vtkm::Float32(total_values);
   res.mean = mean;
+  VTKH_DATA_ADD("mean", mean);
 
   std::vector<vtkm::cont::ArrayHandle<vtkm::Float32>> unbiased_fields(fields.size());
   std::vector<vtkm::cont::ArrayHandle<vtkm::Float32>> temp_fields(fields.size());
@@ -179,6 +180,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
 
   vtkm::Float32 variance = sum2 / vtkm::Float32(total_values - 1);
   res.variance = variance;
+  VTKH_DATA_ADD("variance", variance);
 
   // skewness
   vtkm::Float32 sum3 = 0;
@@ -193,6 +195,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
 #endif
   vtkm::Float32 skewness = (sum3/vtkm::Float32(total_values))/(vtkm::Pow(variance,1.5f));
   res.skewness = skewness;
+  VTKH_DATA_ADD("skewness", skewness);
 
   // kertosis
   vtkm::Float32 sum4 = 0;
@@ -207,6 +210,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
 #endif
   vtkm::Float32 kurtosis = (sum4/vtkm::Float32(total_values))/vtkm::Pow(variance,2.f) - 3.0f;
   res.kurtosis = kurtosis;
+  VTKH_DATA_ADD("kurtosis", kurtosis);
 
   VTKH_DATA_CLOSE();
   return res;

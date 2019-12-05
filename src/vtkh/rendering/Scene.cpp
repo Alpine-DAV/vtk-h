@@ -175,12 +175,19 @@ Scene::Render()
       renderer++;
     }
 
-    // render screen annotations last and save
+    // render screen annotations last
     for(int i = 0; i < current_batch.size(); ++i)
     {
       current_batch[i].RenderWorldAnnotations();
       current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
       current_batch[i].RenderBackground();
+    }
+    // save the images
+#ifdef VTKH_USE_OPENMP
+      #pragma omp parallel for schedule(static, 1)
+#endif
+    for(int i = 0; i < current_batch.size(); ++i)
+    {
       current_batch[i].Save();
       // free buffers
       m_renders[batch_start + i].ClearCanvases();
