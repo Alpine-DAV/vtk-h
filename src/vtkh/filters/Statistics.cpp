@@ -18,6 +18,33 @@ namespace vtkh
 namespace detail
 {
 
+template<typename T>
+void reduce_id(T *array, int size);
+
+template<>
+void reduce_id<vtkm::Int32>(vtkm::Int32 *array, int size)
+{
+#ifdef VTKH_PARALLEL
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  MPI_Allreduce(MPI_IN_PLACE,array,size, MPI_INT,MPI_SUM,mpi_comm);
+#else
+  (void) array;
+  (void) size;
+#endif
+}
+
+template<>
+void reduce_id<vtkm::Int64>(vtkm::Int64 *array, int size)
+{
+#ifdef VTKH_PARALLEL
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  MPI_Allreduce(MPI_IN_PLACE,array,size, MPI_LONG_LONG,MPI_SUM,mpi_comm);
+#else
+  (void) array;
+  (void) size;
+#endif
+}
+
 class CopyToFloat : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -122,7 +149,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
     throw Error("Statistics: field : '"+field_name+"' does not exist'");
   }
   std::vector<vtkm::cont::ArrayHandle<vtkm::Float32>> fields;
-  int total_values = 0;
+  vtkm::Id total_values = 0;
 
   for(int i = 0; i < num_domains; ++i)
   {
@@ -141,11 +168,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
   }
 
   Statistics::Result res;
-#ifdef VTKH_PARALLEL
-  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  MPI_Allreduce(MPI_IN_PLACE, &total_values, 1, MPI_INT, MPI_SUM, mpi_comm);
-#endif
-
+  detail::reduce_id(&total_values,1);
   // mean
   vtkm::Float32 sum = 0;
   for(size_t i = 0; i < fields.size(); ++i)
@@ -154,6 +177,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
   }
 
 #ifdef VTKH_PARALLEL
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_FLOAT, MPI_SUM, mpi_comm);
 #endif
   vtkm::Float32 mean = sum / vtkm::Float32(total_values);

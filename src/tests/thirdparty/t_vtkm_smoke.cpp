@@ -84,7 +84,8 @@ TEST(vtkm_smoke, basic_use_serial)
                                                            vtkm::cont::Field::Association::CELL_SET,
                                                            scalars);
 
-    const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
+    vtkm::Id coord_id = 0;
+    const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem(coord_id);
     vtkm::rendering::Actor actor(data.GetCellSet(),
                                  data.GetCoordinateSystem(),
                                  scalarField);
