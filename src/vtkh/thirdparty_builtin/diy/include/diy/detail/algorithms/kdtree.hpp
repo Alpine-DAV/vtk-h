@@ -16,8 +16,8 @@ struct KDTreePartners;
 template<class Block, class Point>
 struct KDTreePartition
 {
-    typedef     diy::RegularContinuousLink      RCLink;
-    typedef     diy::ContinuousBounds           Bounds;
+    typedef     vtkhdiy::RegularContinuousLink      RCLink;
+    typedef     vtkhdiy::ContinuousBounds           Bounds;
 
     typedef     std::vector<size_t>             Histogram;
 
@@ -26,21 +26,21 @@ struct KDTreePartition
                                 size_t                          bins):
                     dim_(dim), points_(points), bins_(bins)            {}
 
-    void        operator()(Block* b, const diy::ReduceProxy& srp, const KDTreePartners& partners) const;
+    void        operator()(Block* b, const vtkhdiy::ReduceProxy& srp, const KDTreePartners& partners) const;
 
     int         divide_gid(int gid, bool lower, int round, int rounds) const;
-    void        update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const;
-    void        split_to_neighbors(Block* b, const diy::ReduceProxy& srp, int dim) const;
-    diy::Direction
+    void        update_links(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const;
+    void        split_to_neighbors(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const;
+    vtkhdiy::Direction
                 find_wrap(const Bounds& bounds, const Bounds& nbr_bounds, const Bounds& domain) const;
 
-    void        compute_local_histogram(Block* b, const diy::ReduceProxy& srp, int dim) const;
-    void        add_histogram(Block* b, const diy::ReduceProxy& srp, Histogram& histogram) const;
-    void        receive_histogram(Block* b, const diy::ReduceProxy& srp,       Histogram& histogram) const;
-    void        forward_histogram(Block* b, const diy::ReduceProxy& srp, const Histogram& histogram) const;
+    void        compute_local_histogram(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const;
+    void        add_histogram(Block* b, const vtkhdiy::ReduceProxy& srp, Histogram& histogram) const;
+    void        receive_histogram(Block* b, const vtkhdiy::ReduceProxy& srp,       Histogram& histogram) const;
+    void        forward_histogram(Block* b, const vtkhdiy::ReduceProxy& srp, const Histogram& histogram) const;
 
-    void        enqueue_exchange(Block* b, const diy::ReduceProxy& srp, int dim, const Histogram& histogram) const;
-    void        dequeue_exchange(Block* b, const diy::ReduceProxy& srp, int dim) const;
+    void        enqueue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, const Histogram& histogram) const;
+    void        dequeue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const;
 
     void        update_neighbor_bounds(Bounds& bounds, float split, int dim, bool lower) const;
     bool        intersects(const Bounds& x, const Bounds& y, int dim, bool wrap, const Bounds& domain) const;
@@ -54,12 +54,12 @@ struct KDTreePartition
 }
 }
 
-struct diy::detail::KDTreePartners
+struct vtkhdiy::detail::KDTreePartners
 {
   // bool = are we in a swap (vs histogram) round
   // int  = round within that partner
   typedef           std::pair<bool, int>                    RoundType;
-  typedef           diy::ContinuousBounds                   Bounds;
+  typedef           vtkhdiy::ContinuousBounds                   Bounds;
 
                     KDTreePartners(int dim, int nblocks, bool wrap_, const Bounds& domain_):
                         decomposer(1, interval(0,nblocks-1), nblocks),
@@ -96,7 +96,7 @@ struct diy::detail::KDTreePartners
   bool          swap_round(int round) const                 { return rounds_[round].first; }
   int           sub_round(int round) const                  { return rounds_[round].second; }
 
-  inline bool   active(int round, int gid, const diy::Master& m) const
+  inline bool   active(int round, int gid, const vtkhdiy::Master& m) const
   {
     if (round == (int) rounds())
         return true;
@@ -108,7 +108,7 @@ struct diy::detail::KDTreePartners
         return histogram.active(sub_round(round), gid, m);
   }
 
-  inline void   incoming(int round, int gid, std::vector<int>& partners, const diy::Master& m) const
+  inline void   incoming(int round, int gid, std::vector<int>& partners, const vtkhdiy::Master& m) const
   {
     if (round == (int) rounds())
         link_neighbors(-1, gid, partners, m);
@@ -127,7 +127,7 @@ struct diy::detail::KDTreePartners
     }
   }
 
-  inline void   outgoing(int round, int gid, std::vector<int>& partners, const diy::Master& m) const
+  inline void   outgoing(int round, int gid, std::vector<int>& partners, const vtkhdiy::Master& m) const
   {
     if (round == (int) rounds())
         swap.outgoing(sub_round(round-1) + 1, gid, partners, m);
@@ -139,10 +139,10 @@ struct diy::detail::KDTreePartners
         histogram.outgoing(sub_round(round), gid, partners, m);
   }
 
-  inline void   link_neighbors(int, int gid, std::vector<int>& partners, const diy::Master& m) const
+  inline void   link_neighbors(int, int gid, std::vector<int>& partners, const vtkhdiy::Master& m) const
   {
     int         lid  = m.lid(gid);
-    diy::Link*  link = m.link(lid);
+    vtkhdiy::Link*  link = m.link(lid);
 
     std::set<int> result;       // partners must be unique
     for (int i = 0; i < link->size(); ++i)
@@ -153,10 +153,10 @@ struct diy::detail::KDTreePartners
   }
 
   // 1-D domain to feed into histogram and swap
-  diy::RegularDecomposer<diy::DiscreteBounds>   decomposer;
+  vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds>   decomposer;
 
-  diy::RegularAllReducePartners     histogram;
-  diy::RegularSwapPartners          swap;
+  vtkhdiy::RegularAllReducePartners     histogram;
+  vtkhdiy::RegularSwapPartners          swap;
 
   std::vector<RoundType>            rounds_;
   std::vector<int>                  dim_;
@@ -167,8 +167,8 @@ struct diy::detail::KDTreePartners
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-operator()(Block* b, const diy::ReduceProxy& srp, const KDTreePartners& partners) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+operator()(Block* b, const vtkhdiy::ReduceProxy& srp, const KDTreePartners& partners) const
 {
     int dim;
     if (srp.round() < partners.rounds())
@@ -215,7 +215,7 @@ operator()(Block* b, const diy::ReduceProxy& srp, const KDTreePartners& partners
 
 template<class Block, class Point>
 int
-diy::detail::KDTreePartition<Block,Point>::
+vtkhdiy::detail::KDTreePartition<Block,Point>::
 divide_gid(int gid, bool lower, int round, int rounds) const
 {
     if (lower)
@@ -228,15 +228,15 @@ divide_gid(int gid, bool lower, int round, int rounds) const
 // round here is the outer iteration of the algorithm
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+update_links(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const
 {
     int         gid  = srp.gid();
     int         lid  = srp.master()->lid(gid);
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
 
     // (gid, dir) -> i
-    std::map<std::pair<int,diy::Direction>, int> link_map;
+    std::map<std::pair<int,vtkhdiy::Direction>, int> link_map;
     for (int i = 0; i < link->size(); ++i)
         link_map[std::make_pair(link->target(i).gid, link->direction(i))] = i;
 
@@ -244,7 +244,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
     std::vector<float>  splits(link->size());
     for (int i = 0; i < link->size(); ++i)
     {
-        float split; diy::Direction dir;
+        float split; vtkhdiy::Direction dir(dim_,0);
 
         int in_gid = link->target(i).gid;
         while(srp.incoming(in_gid))
@@ -268,14 +268,14 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
     // fill out the new link
     for (int i = 0; i < link->size(); ++i)
     {
-        diy::Direction  dir      = link->direction(i);
-        //diy::Direction  wrap_dir = link->wrap(i);     // we don't use existing wrap, but restore it from scratch
+        vtkhdiy::Direction  dir      = link->direction(i);
+        //vtkhdiy::Direction  wrap_dir = link->wrap(i);     // we don't use existing wrap, but restore it from scratch
         if (dir[dim] != 0)
         {
             if ((dir[dim] < 0 && lower) || (dir[dim] > 0 && !lower))
             {
                 int nbr_gid = divide_gid(link->target(i).gid, !lower, round, rounds);
-                diy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
+                vtkhdiy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
                 new_link.add_neighbor(nbr);
 
                 new_link.add_direction(dir);
@@ -287,7 +287,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
                 if (wrap)
                     new_link.add_wrap(find_wrap(new_link.bounds(), bounds, domain));
                 else
-                    new_link.add_wrap(diy::Direction());
+                    new_link.add_wrap(vtkhdiy::Direction(dim_,0));
             }
         } else // non-aligned side
         {
@@ -300,7 +300,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
 
                 if (intersects(bounds, new_link.bounds(), dim, wrap, domain))
                 {
-                    diy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
+                    vtkhdiy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
                     new_link.add_neighbor(nbr);
                     new_link.add_direction(dir);
                     new_link.add_bounds(bounds);
@@ -308,7 +308,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
                     if (wrap)
                         new_link.add_wrap(find_wrap(new_link.bounds(), bounds, domain));
                     else
-                        new_link.add_wrap(diy::Direction());
+                        new_link.add_wrap(vtkhdiy::Direction(dim_, 0));
                 }
             }
         }
@@ -316,23 +316,23 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
 
     // add link to the dual block
     int dual_gid = divide_gid(gid, !lower, round, rounds);
-    diy::BlockID dual = { dual_gid, srp.assigner().rank(dual_gid) };
+    vtkhdiy::BlockID dual = { dual_gid, srp.assigner().rank(dual_gid) };
     new_link.add_neighbor(dual);
 
     Bounds nbr_bounds = link->bounds();     // old block bounds
     update_neighbor_bounds(nbr_bounds, find_split(new_link.bounds(), nbr_bounds), dim, !lower);
     new_link.add_bounds(nbr_bounds);
 
-    new_link.add_wrap(diy::Direction());    // dual block cannot be wrapped
+    new_link.add_wrap(vtkhdiy::Direction(dim_,0));    // dual block cannot be wrapped
 
     if (lower)
     {
-        diy::Direction right;
+        vtkhdiy::Direction right(dim_,0);
         right[dim] = 1;
         new_link.add_direction(right);
     } else
     {
-        diy::Direction left;
+        vtkhdiy::Direction left(dim_,0);
         left[dim] = -1;
         new_link.add_direction(left);
     }
@@ -345,8 +345,8 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-split_to_neighbors(Block* b, const diy::ReduceProxy& srp, int dim) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+split_to_neighbors(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const
 {
     int         lid  = srp.master()->lid(srp.gid());
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
@@ -363,8 +363,8 @@ split_to_neighbors(Block* b, const diy::ReduceProxy& srp, int dim) const
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-compute_local_histogram(Block* b, const diy::ReduceProxy& srp, int dim) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+compute_local_histogram(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const
 {
     int         lid  = srp.master()->lid(srp.gid());
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
@@ -389,8 +389,8 @@ compute_local_histogram(Block* b, const diy::ReduceProxy& srp, int dim) const
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-add_histogram(Block* b, const diy::ReduceProxy& srp, Histogram& histogram) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+add_histogram(Block* b, const vtkhdiy::ReduceProxy& srp, Histogram& histogram) const
 {
     // dequeue and add up the histograms
     for (int i = 0; i < srp.in_link().size(); ++i)
@@ -399,23 +399,23 @@ add_histogram(Block* b, const diy::ReduceProxy& srp, Histogram& histogram) const
 
         Histogram hist;
         srp.dequeue(nbr_gid, hist);
-        for (size_t i = 0; i < hist.size(); ++i)
-            histogram[i] += hist[i];
+        for (size_t j = 0; j < hist.size(); ++j)
+            histogram[j] += hist[j];
     }
 }
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-receive_histogram(Block* b, const diy::ReduceProxy& srp, Histogram& histogram) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+receive_histogram(Block* b, const vtkhdiy::ReduceProxy& srp, Histogram& histogram) const
 {
     srp.dequeue(srp.in_link().target(0).gid, histogram);
 }
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-forward_histogram(Block* b, const diy::ReduceProxy& srp, const Histogram& histogram) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+forward_histogram(Block* b, const vtkhdiy::ReduceProxy& srp, const Histogram& histogram) const
 {
     for (int i = 0; i < srp.out_link().size(); ++i)
         srp.enqueue(srp.out_link().target(i), histogram);
@@ -423,8 +423,8 @@ forward_histogram(Block* b, const diy::ReduceProxy& srp, const Histogram& histog
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-enqueue_exchange(Block* b, const diy::ReduceProxy& srp, int dim, const Histogram& histogram) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+enqueue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, const Histogram& histogram) const
 {
     auto        log = get_logger();
 
@@ -483,8 +483,8 @@ enqueue_exchange(Block* b, const diy::ReduceProxy& srp, int dim, const Histogram
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
-dequeue_exchange(Block* b, const diy::ReduceProxy& srp, int dim) const
+vtkhdiy::detail::KDTreePartition<Block,Point>::
+dequeue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const
 {
     int         lid  = srp.master()->lid(srp.gid());
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
@@ -509,7 +509,7 @@ dequeue_exchange(Block* b, const diy::ReduceProxy& srp, int dim) const
 
 template<class Block, class Point>
 void
-diy::detail::KDTreePartition<Block,Point>::
+vtkhdiy::detail::KDTreePartition<Block,Point>::
 update_neighbor_bounds(Bounds& bounds, float split, int dim, bool lower) const
 {
     if (lower)
@@ -520,7 +520,7 @@ update_neighbor_bounds(Bounds& bounds, float split, int dim, bool lower) const
 
 template<class Block, class Point>
 bool
-diy::detail::KDTreePartition<Block,Point>::
+vtkhdiy::detail::KDTreePartition<Block,Point>::
 intersects(const Bounds& x, const Bounds& y, int dim, bool wrap, const Bounds& domain) const
 {
     if (wrap)
@@ -535,7 +535,7 @@ intersects(const Bounds& x, const Bounds& y, int dim, bool wrap, const Bounds& d
 
 template<class Block, class Point>
 float
-diy::detail::KDTreePartition<Block,Point>::
+vtkhdiy::detail::KDTreePartition<Block,Point>::
 find_split(const Bounds& changed, const Bounds& original) const
 {
     for (int i = 0; i < dim_; ++i)
@@ -550,11 +550,11 @@ find_split(const Bounds& changed, const Bounds& original) const
 }
 
 template<class Block, class Point>
-diy::Direction
-diy::detail::KDTreePartition<Block,Point>::
+vtkhdiy::Direction
+vtkhdiy::detail::KDTreePartition<Block,Point>::
 find_wrap(const Bounds& bounds, const Bounds& nbr_bounds, const Bounds& domain) const
 {
-    diy::Direction wrap;
+    vtkhdiy::Direction wrap(dim_,0);
     for (int i = 0; i < dim_; ++i)
     {
         if (bounds.min[i] == domain.min[i] && nbr_bounds.max[i] == domain.max[i])

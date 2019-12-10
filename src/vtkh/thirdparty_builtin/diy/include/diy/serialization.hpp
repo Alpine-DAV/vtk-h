@@ -1,5 +1,5 @@
-#ifndef DIYY_SERIALIZATION_HPP
-#define DIYY_SERIALIZATION_HPP
+#ifndef DIY_SERIALIZATION_HPP
+#define DIY_SERIALIZATION_HPP
 
 #include <vector>
 #include <valarray>
@@ -18,7 +18,9 @@ namespace vtkhdiy
   //! A serialization buffer. \ingroup Serialization
   struct BinaryBuffer
   {
+    virtual ~BinaryBuffer()                                         =default;
     virtual void        save_binary(const char* x, size_t count)    =0;   //!< copy `count` bytes from `x` into the buffer
+    virtual inline void append_binary(const char* x, size_t count)  =0;   //!< append `count` bytes from `x` to end of buffer
     virtual void        load_binary(char* x, size_t count)          =0;   //!< copy `count` bytes into `x` from the buffer
     virtual void        load_binary_back(char* x, size_t count)     =0;   //!< copy `count` bytes into `x` from the back of the buffer
   };
@@ -29,6 +31,7 @@ namespace vtkhdiy
                           position(position_)                       {}
 
     virtual inline void save_binary(const char* x, size_t count) override;   //!< copy `count` bytes from `x` into the buffer
+    virtual inline void append_binary(const char* x, size_t count) override; //!< append `count` bytes from `x` to end of buffer
     virtual inline void load_binary(char* x, size_t count) override;         //!< copy `count` bytes into `x` from the buffer
     virtual inline void load_binary_back(char* x, size_t count) override;    //!< copy `count` bytes into `x` from the back of the buffer
 
@@ -53,9 +56,9 @@ namespace vtkhdiy
     void                read(const std::string& fn)
     {
         std::ifstream in(fn.c_str(), std::ios::binary | std::ios::ate);
-        buffer.resize(in.tellg());
+        buffer.resize(static_cast<size_t>(in.tellg()));
         in.seekg(0);
-        in.read(&buffer[0], size());
+        in.read(&buffer[0], static_cast<std::streamsize>(size()));
         position = 0;
     }
 
@@ -73,15 +76,15 @@ namespace vtkhdiy
 
   /**
    * \brief Main interface to serialization, meant to be specialized for the
-   * types that require special handling.  `vtkhdiy::save()` and `vtkhdiy::load()` call
+   * types that require special handling.  `diy::save()` and `diy::load()` call
    * the static member functions of this class.
    *
    * The default (unspecialized) version copies
    * `sizeof(T)` bytes from `&x` to or from `bb` via
-   * its `vtkhdiy::BinaryBuffer::save_binary()` and `vtkhdiy::BinaryBuffer::load_binary()`
+   * its `diy::BinaryBuffer::save_binary()` and `diy::BinaryBuffer::load_binary()`
    * functions.  This works out perfectly for plain old data (e.g., simple structs).
    * To save a more complicated type, one has to specialize
-   * `vtkhdiy::Serialization<T>` for that type. Specializations are already provided for
+   * `diy::Serialization<T>` for that type. Specializations are already provided for
    * `std::vector<T>`, `std::map<K,V>`, and `std::pair<T,U>`.
    * As a result one can quickly add a specialization of one's own
    *
@@ -90,27 +93,29 @@ namespace vtkhdiy
   struct Serialization: public detail::Default
   {
 #if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
+    //exempt power-pc clang variants due to: https://gitlab.kitware.com/vtk/vtk-m/issues/201
     static_assert(std::is_trivially_copyable<T>::value, "Default serialization works only for trivially copyable types");
 #endif
 
     static void         save(BinaryBuffer& bb, const T& x)          { bb.save_binary((const char*)  &x, sizeof(T)); }
     static void         load(BinaryBuffer& bb, T& x)                { bb.load_binary((char*)        &x, sizeof(T)); }
+    static size_t       size(const T& x)                            { return sizeof(T); }
   };
 
-  //! Saves `x` to `bb` by calling `vtkhdiy::Serialization<T>::save(bb,x)`.
+  //! Saves `x` to `bb` by calling `diy::Serialization<T>::save(bb,x)`.
   template<class T>
   void                  save(BinaryBuffer& bb, const T& x)          { Serialization<T>::save(bb, x); }
 
-  //! Loads `x` from `bb` by calling `vtkhdiy::Serialization<T>::load(bb,x)`.
+  //! Loads `x` from `bb` by calling `diy::Serialization<T>::load(bb,x)`.
   template<class T>
   void                  load(BinaryBuffer& bb, T& x)                { Serialization<T>::load(bb, x); }
 
-  //! Optimization for arrays. If `vtkhdiy::Serialization` is not specialized for `T`,
+  //! Optimization for arrays. If `diy::Serialization` is not specialized for `T`,
   //! the array will be copied all at once. Otherwise, it's copied element by element.
   template<class T>
   void                  save(BinaryBuffer& bb, const T* x, size_t n);
 
-  //! Optimization for arrays. If `vtkhdiy::Serialization` is not specialized for `T`,
+  //! Optimization for arrays. If `diy::Serialization` is not specialized for `T`,
   //! the array will be filled all at once. Otherwise, it's filled element by element.
   template<class T>
   void                  load(BinaryBuffer& bb, T* x, size_t n);
@@ -165,14 +170,21 @@ namespace vtkhdiy
     static void         save(BinaryBuffer& bb, const MemoryBuffer& x)
     {
       vtkhdiy::save(bb, x.position);
-      vtkhdiy::save(bb, &x.buffer[0], x.position);
+      if (x.position > 0)
+          vtkhdiy::save(bb, &x.buffer[0], x.position);
     }
 
     static void         load(BinaryBuffer& bb, MemoryBuffer& x)
     {
       vtkhdiy::load(bb, x.position);
       x.buffer.resize(x.position);
-      vtkhdiy::load(bb, &x.buffer[0], x.position);
+      if (x.position > 0)
+          vtkhdiy::load(bb, &x.buffer[0], x.position);
+    }
+
+    static size_t       size(const MemoryBuffer& x)
+    {
+        return sizeof(x.position) + x.position;
     }
   };
 
@@ -186,7 +198,8 @@ namespace vtkhdiy
     {
       size_t s = v.size();
       vtkhdiy::save(bb, s);
-      vtkhdiy::save(bb, &v[0], v.size());
+      if (s > 0)
+        vtkhdiy::save(bb, &v[0], v.size());
     }
 
     static void         load(BinaryBuffer& bb, Vector& v)
@@ -194,7 +207,8 @@ namespace vtkhdiy
       size_t s;
       vtkhdiy::load(bb, s);
       v.resize(s);
-      vtkhdiy::load(bb, &v[0], s);
+      if (s > 0)
+        vtkhdiy::load(bb, &v[0], s);
     }
   };
 
@@ -207,7 +221,8 @@ namespace vtkhdiy
     {
       size_t s = v.size();
       vtkhdiy::save(bb, s);
-      vtkhdiy::save(bb, &v[0], v.size());
+      if (s > 0)
+        vtkhdiy::save(bb, &v[0], v.size());
     }
 
     static void         load(BinaryBuffer& bb, ValArray& v)
@@ -215,7 +230,8 @@ namespace vtkhdiy
       size_t s;
       vtkhdiy::load(bb, s);
       v.resize(s);
-      vtkhdiy::load(bb, &v[0], s);
+      if (s > 0)
+        vtkhdiy::load(bb, &v[0], s);
     }
   };
 
@@ -413,20 +429,59 @@ vtkhdiy::MemoryBuffer::
 save_binary(const char* x, size_t count)
 {
   if (position + count > buffer.capacity())
-    buffer.reserve((position + count) * growth_multiplier());           // if we have to grow, grow geometrically
+  {
+    double newsize = static_cast<double>(position + count) * growth_multiplier();  // if we have to grow, grow geometrically
+    buffer.reserve(static_cast<size_t>(newsize));
+  }
 
   if (position + count > buffer.size())
     buffer.resize(position + count);
 
-  std::copy(x, x + count, &buffer[position]);
+  std::copy_n(x, count, &buffer[position]);
   position += count;
+}
+
+void
+vtkhdiy::MemoryBuffer::
+append_binary(const char* x, size_t count)
+{
+    if (buffer.size() + count > buffer.capacity())     // growth/copying will be triggered
+    {
+        size_t cur_size = buffer.size() - position;
+        size_t new_size = cur_size + count;
+        if (new_size * growth_multiplier() <= buffer.capacity())        // we have enough space in this buffer, copy in place
+        {
+            // copy the data to the beginning of the buffer and reduce its size
+            for (size_t i = 0; i < cur_size; ++i)
+                buffer[i] = buffer[position++];
+
+            buffer.resize(cur_size);
+            position = 0;
+        } else
+        {
+            std::vector<char> tmp;
+            tmp.reserve(new_size * static_cast<size_t>(growth_multiplier()));
+            tmp.resize(cur_size);
+
+            for (size_t i = 0; i < tmp.size(); ++i)
+                tmp[i] = buffer[position++];
+
+            buffer.swap(tmp);
+            position = 0;
+        }
+    }
+
+    size_t temp_pos = position;
+    position = size();
+    save_binary(x, count);
+    position = temp_pos;
 }
 
 void
 vtkhdiy::MemoryBuffer::
 load_binary(char* x, size_t count)
 {
-  std::copy(&buffer[position], &buffer[position + count], x);
+  std::copy_n(&buffer[position], count, x);
   position += count;
 }
 
@@ -434,7 +489,7 @@ void
 vtkhdiy::MemoryBuffer::
 load_binary_back(char* x, size_t count)
 {
-  std::copy(&buffer[buffer.size() - count], &buffer[buffer.size()], x);
+  std::copy_n(&buffer[buffer.size() - count], count, x);
   buffer.resize(buffer.size() - count);
 }
 
@@ -448,7 +503,7 @@ copy(MemoryBuffer& from, MemoryBuffer& to)
 
   size_t total = sizeof(size_t) + sz;
   to.buffer.resize(to.position + total);
-  std::copy(&from.buffer[from.position], &from.buffer[from.position + total], &to.buffer[to.position]);
+  std::copy_n(&from.buffer[from.position], total, &to.buffer[to.position]);
   to.position += total;
   from.position += total;
 }

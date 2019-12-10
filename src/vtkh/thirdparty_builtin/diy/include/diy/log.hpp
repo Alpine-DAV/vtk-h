@@ -15,12 +15,12 @@ namespace spd
     struct logger
     {
         // logger.info(cppformat_string, arg1, arg2, arg3, ...) call style
-        template <typename... Args> void trace(const char* fmt, const Args&... args)    {}
-        template <typename... Args> void debug(const char* fmt, const Args&... args)    {}
-        template <typename... Args> void info(const char* fmt, const Args&... args)     {}
-        template <typename... Args> void warn(const char* fmt, const Args&... args)     {}
-        template <typename... Args> void error(const char* fmt, const Args&... args)    {}
-        template <typename... Args> void critical(const char* fmt, const Args&... args) {}
+        template <typename... Args> void trace(const char*, const Args&...)    {}
+        template <typename... Args> void debug(const char*, const Args&...)    {}
+        template <typename... Args> void info(const char*, const Args&...)     {}
+        template <typename... Args> void warn(const char*, const Args&...)     {}
+        template <typename... Args> void error(const char*, const Args&...)    {}
+        template <typename... Args> void critical(const char*, const Args&...) {}
     };
 }
 
@@ -40,7 +40,7 @@ create_logger(std::string)
 
 template<class... Args>
 std::shared_ptr<spd::logger>
-set_logger(Args... args)
+set_logger(Args...)
 {
     return std::make_shared<spd::logger>();
 }
@@ -53,6 +53,7 @@ set_logger(Args... args)
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/null_sink.h>
+#include <spdlog/sinks/stdout_sinks.h>
 
 #include <spdlog/fmt/bundled/format.h>
 #include <spdlog/fmt/bundled/ostream.h>
@@ -80,10 +81,7 @@ std::shared_ptr<spd::logger>
 create_logger(std::string log_level)
 {
     auto log = spd::stderr_logger_mt("diy");
-    int lvl;
-    for (lvl = spd::level::trace; lvl < spd::level::off; ++lvl)
-        if (spd::level::level_names[lvl] == log_level)
-            break;
+    int lvl = spd::level::from_str(log_level);
     log->set_level(static_cast<spd::level::level_enum>(lvl));
     return log;
 }

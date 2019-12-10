@@ -3,21 +3,31 @@
 
 #include <iostream>
 #include "constants.h"
-#include "point.hpp"
+#include "dynamic-point.hpp"
 
 namespace vtkhdiy
 {
     struct BlockID
     {
         int gid, proc;
+
+        BlockID() = default;
+        BlockID(int _gid, int _proc) : gid(_gid), proc(_proc) {}
     };
 
     template<class Coordinate_>
     struct Bounds
     {
         using Coordinate = Coordinate_;
+        using Point      = vtkhdiy::DynamicPoint<Coordinate>;
 
-        Point<Coordinate, DIY_MAX_DIM>    min, max;
+        Point min, max;
+
+        DEPRECATED("Default Bounds constructor should not be used; old behavior is preserved for compatibility. Pass explicitly the dimension of the Bounds instead.")
+        Bounds():
+            Bounds(DIY_MAX_DIM)                                             {}
+        Bounds(int dim): min(dim), max(dim)                                 {}
+        Bounds(const Point& _min, const Point& _max) : min(_min), max(_max) {}
     };
     using DiscreteBounds   = Bounds<int>;
     using ContinuousBounds = Bounds<float>;
@@ -25,28 +35,47 @@ namespace vtkhdiy
     //! Helper to create a 1-dimensional discrete domain with the specified extents
     inline
     vtkhdiy::DiscreteBounds
-    interval(int from, int to)            { DiscreteBounds domain; domain.min[0] = from; domain.max[0] = to; return domain; }
+    interval(int from, int to)            { DiscreteBounds domain(1); domain.min[0] = from; domain.max[0] = to; return domain; }
 
-    struct Direction: public Point<int,DIY_MAX_DIM>
+    struct Direction: public DynamicPoint<int>
     {
-              Direction()                 { for (int i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0; }
-              Direction(int dir)
+        using Parent = DynamicPoint<int>;
+
+        using Parent::dimension;
+        using Parent::operator[];
+
+        // enable inherited ctor
+        using Parent::Parent;
+
+        // DM: This breaks the old behavior. Ideally, we'd explicitly deprecate
+        //     this, but we need the default constructor in Serialization.  I
+        //     believe I've fixed all uses of this In DIY proper. Hopefully, no
+        //     existing codes break.
+              Direction(): Parent(0)                              {}
+
+              Direction(int dim, int dir):
+                  Parent(dim)
       {
-          for (int i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0;
-          if (dir & DIY_X0) (*this)[0] -= 1;
-          if (dir & DIY_X1) (*this)[0] += 1;
-          if (dir & DIY_Y0) (*this)[1] -= 1;
-          if (dir & DIY_Y1) (*this)[1] += 1;
-          if (dir & DIY_Z0) (*this)[2] -= 1;
-          if (dir & DIY_Z1) (*this)[2] += 1;
-          if (dir & DIY_T0) (*this)[3] -= 1;
-          if (dir & DIY_T1) (*this)[3] += 1;
+          if (dim > 0 && dir & DIY_X0) (*this)[0] -= 1;
+          if (dim > 0 && dir & DIY_X1) (*this)[0] += 1;
+          if (dim > 1 && dir & DIY_Y0) (*this)[1] -= 1;
+          if (dim > 1 && dir & DIY_Y1) (*this)[1] += 1;
+          if (dim > 2 && dir & DIY_Z0) (*this)[2] -= 1;
+          if (dim > 2 && dir & DIY_Z1) (*this)[2] += 1;
+          if (dim > 3 && dir & DIY_T0) (*this)[3] -= 1;
+          if (dim > 3 && dir & DIY_T1) (*this)[3] += 1;
+      }
+
+        DEPRECATED("Direction without dimension is deprecated")
+              Direction(int dir):
+                  Direction(DIY_MAX_DIM, dir)       // if we are decoding the old constants, we assume DIY_MAX_DIM dimensional space
+      {
       }
 
       bool
       operator==(const vtkhdiy::Direction& y) const
       {
-        for (int i = 0; i < DIY_MAX_DIM; ++i)
+        for (size_t i = 0; i < dimension(); ++i)
             if ((*this)[i] != y[i]) return false;
         return true;
       }
@@ -55,7 +84,7 @@ namespace vtkhdiy
       bool
       operator<(const vtkhdiy::Direction& y) const
       {
-        for (int i = 0; i < DIY_MAX_DIM; ++i)
+        for (size_t i = 0; i < dimension(); ++i)
         {
             if ((*this)[i] < y[i]) return true;
             if ((*this)[i] > y[i]) return false;
@@ -80,6 +109,36 @@ namespace vtkhdiy
     bool
     operator==(const vtkhdiy::BlockID& x, const vtkhdiy::BlockID& y)
     { return x.gid == y.gid; }
+
+    // Serialization
+    template<class C>
+    struct Serialization<Bounds<C>>
+    {
+        static void         save(BinaryBuffer& bb, const Bounds<C>& b)
+        {
+            vtkhdiy::save(bb, b.min);
+            vtkhdiy::save(bb, b.max);
+        }
+
+        static void         load(BinaryBuffer& bb, Bounds<C>& b)
+        {
+            vtkhdiy::load(bb, b.min);
+            vtkhdiy::load(bb, b.max);
+        }
+    };
+    template<>
+    struct Serialization<Direction>
+    {
+        static void         save(BinaryBuffer& bb, const Direction& d)
+        {
+            vtkhdiy::save(bb, static_cast<const Direction::Parent&>(d));
+        }
+
+        static void         load(BinaryBuffer& bb, Direction& d)
+        {
+            vtkhdiy::load(bb, static_cast<Direction::Parent&>(d));
+        }
+    };
 }
 
 #endif
