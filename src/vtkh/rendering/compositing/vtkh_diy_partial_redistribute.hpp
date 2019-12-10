@@ -78,8 +78,9 @@ struct Redistribute
 
       for(int i = 0; i < size; ++i)
       {
-        vtkhdiy::Point<int,DIY_MAX_DIM> point;
-        point[0] = block->m_partials[i].m_pixel_id;
+        vtkhdiy::DynamicPoint<int,DIY_MAX_DIM> point(block->m_partials[i].m_pixel_id);
+        //vtkhdiy::DynamicPoint<int,DIY_MAX_DIM> point;
+        //point[0] = block->m_partials[i].m_pixel_id;
         int dest_gid = m_decomposer.point_to_gid(point);
         vtkhdiy::BlockID dest = proxy.out_link().target(dest_gid);
         outgoing[dest].push_back(block->m_partials[i]);

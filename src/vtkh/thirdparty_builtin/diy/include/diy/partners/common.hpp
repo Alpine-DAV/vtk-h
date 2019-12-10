@@ -200,4 +200,5 @@ factor(int k, int tot_b, std::vector<int>& kv)
   } // while
 }
 
+
 #endif

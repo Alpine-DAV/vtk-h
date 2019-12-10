@@ -26,7 +26,7 @@ namespace io
         bool        fortran;
         size_t      offset = parse_npy_header(shape, fortran);
         if (fortran)
-            throw std::runtime_error("diy::io::NumPy cannot read data in fortran order");
+            throw std::runtime_error("vtkhdiy::io::NumPy cannot read data in fortran order");
         BOV::set_offset(offset);
         BOV::set_shape(shape);
         return word_size_;
@@ -40,9 +40,9 @@ namespace io
 
     private:
       inline size_t     parse_npy_header(BOV::Shape& shape, bool& fortran_order);
-      void              save(diy::BinaryBuffer& bb, const std::string& s)               { bb.save_binary(s.c_str(), s.size()); }
+      void              save(vtkhdiy::BinaryBuffer& bb, const std::string& s)               { bb.save_binary(s.c_str(), s.size()); }
       template<class T>
-      inline void       convert_and_save(diy::BinaryBuffer& bb, const T& x)
+      inline void       convert_and_save(vtkhdiy::BinaryBuffer& bb, const T& x)
       {
           std::ostringstream oss;
           oss << x;
@@ -67,7 +67,7 @@ namespace io
 // Released under MIT License
 // license available at http://www.opensource.org/licenses/mit-license.php
 size_t
-diy::io::NumPy::
+vtkhdiy::io::NumPy::
 parse_npy_header(BOV::Shape& shape, bool& fortran_order)
 {
     char buffer[256];
@@ -118,7 +118,7 @@ parse_npy_header(BOV::Shape& shape, bool& fortran_order)
 
 template<class T>
 void
-diy::io::NumPy::
+vtkhdiy::io::NumPy::
 write_header(int dim, const DiscreteBounds& bounds)
 {
     std::vector<int> shape;
@@ -131,15 +131,15 @@ write_header(int dim, const DiscreteBounds& bounds)
 
 template<class T, class S>
 void
-diy::io::NumPy::
+vtkhdiy::io::NumPy::
 write_header(const S& shape)
 {
     BOV::set_shape(shape);
 
-    diy::MemoryBuffer dict;
+    vtkhdiy::MemoryBuffer dict;
     save(dict, "{'descr': '");
-    diy::save(dict, detail::big_endian());
-    diy::save(dict, detail::map_numpy_type<T>());
+    vtkhdiy::save(dict, detail::big_endian());
+    vtkhdiy::save(dict, detail::map_numpy_type<T>());
     convert_and_save(dict, sizeof(T));
     save(dict, "', 'fortran_order': False, 'shape': (");
     convert_and_save(dict, shape[0]);
@@ -153,15 +153,15 @@ write_header(const S& shape)
     //pad with spaces so that preamble+dict is modulo 16 bytes. preamble is 10 bytes. dict needs to end with \n
     int remainder = 16 - (10 + dict.position) % 16;
     for (int i = 0; i < remainder - 1; ++i)
-        diy::save(dict, ' ');
-    diy::save(dict, '\n');
+        vtkhdiy::save(dict, ' ');
+    vtkhdiy::save(dict, '\n');
 
-    diy::MemoryBuffer header;
-    diy::save(header, (char) 0x93);
+    vtkhdiy::MemoryBuffer header;
+    vtkhdiy::save(header, (char) 0x93);
     save(header, "NUMPY");
-    diy::save(header, (char) 0x01);  // major version of numpy format
-    diy::save(header, (char) 0x00);  // minor version of numpy format
-    diy::save(header, (unsigned short) dict.position);
+    vtkhdiy::save(header, (char) 0x01);  // major version of numpy format
+    vtkhdiy::save(header, (char) 0x00);  // minor version of numpy format
+    vtkhdiy::save(header, (unsigned short) dict.position);
     header.save_binary(&dict.buffer[0], dict.buffer.size());
 
     BOV::set_offset(header.position);
@@ -171,7 +171,7 @@ write_header(const S& shape)
 }
 
 char
-diy::io::detail::big_endian()
+vtkhdiy::io::detail::big_endian()
 {
   unsigned char x[] = {1,0};
   void* x_void = x;

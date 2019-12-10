@@ -10,12 +10,14 @@ namespace vtkhdiy
     template <class T>
     struct EnqueueIterator;
 
-                        Proxy(Master* master, int gid):
-                          gid_(gid),
-                          master_(master),
-                          incoming_(&master->incoming(gid)),
-                          outgoing_(&master->outgoing(gid)),
-                          collectives_(&master->collectives(gid))       {}
+                        Proxy(Master* master__, int gid__,
+                              IExchangeInfo*  iexchange__ = 0):
+                          gid_(gid__),
+                          master_(master__),
+                          iexchange_(iexchange__),
+                          incoming_(&master__->incoming(gid__)),
+                          outgoing_(&master__->outgoing(gid__)),
+                          collectives_(&master__->collectives(gid__))   {}
 
     int                 gid() const                                     { return gid_; }
 
@@ -25,7 +27,15 @@ namespace vtkhdiy
                                 const T&        x,                                      //!< data (eg. STL vector)
                                 void (*save)(BinaryBuffer&, const T&) = &::vtkhdiy::save<T> //!< optional serialization function
                                ) const
-    { OutgoingQueues& out = *outgoing_; save(out[to], x); }
+    {
+        OutgoingQueues& out = *outgoing_; save(out[to], x);
+
+        if (iexchange_ && iexchange_->fine())
+        {
+            GidSendOrder gid_order;             // uninitialized, not needed
+            master()->comm_exchange(gid_order, iexchange_);
+        }
+    }
 
     //! Enqueue data whose size is given explicitly by the user, e.g., an array.
     template<class T>
@@ -36,8 +46,8 @@ namespace vtkhdiy
                                ) const;
 
     //! Dequeue data whose size can be determined automatically (e.g., STL vector) and that was
-    //! previously enqueued so that diy knows its size when it is received.
-    //! In this case, diy will allocate the receive buffer; the user does not need to do so.
+    //! previously enqueued so that vtkhdiy knows its size when it is received.
+    //! In this case, vtkhdiy will allocate the receive buffer; the user does not need to do so.
     template<class T>
     void                dequeue(int             from,                                   //!< target block gid
                                 T&              x,                                      //!< data (eg. STL vector)
@@ -54,6 +64,24 @@ namespace vtkhdiy
                                 void (*load)(BinaryBuffer&, T&) = &::vtkhdiy::load<T>       //!< optional serialization function
                                ) const;
 
+    //! Dequeue data whose size can be determined automatically (e.g., STL vector) and that was
+    //! previously enqueued so that vtkhdiy knows its size when it is received.
+    //! In this case, vtkhdiy will allocate the receive buffer; the user does not need to do so.
+    template<class T>
+    void                dequeue(const BlockID&  from,                                   //!< target block (gid,proc)
+                                T&              x,                                      //!< data (eg. STL vector)
+                                void (*load)(BinaryBuffer&, T&) = &::vtkhdiy::load<T>       //!< optional serialization function
+                               ) const                                  { dequeue(from.gid, x, load); }
+
+    //! Dequeue an array of data whose size is given explicitly by the user.
+    //! In this case, the user needs to allocate the receive buffer prior to calling dequeue.
+    template<class T>
+    void                dequeue(const BlockID&  from,                                   //!< target block (gid,proc)
+                                T*              x,                                      //!< pointer to the data (eg. address of start of vector)
+                                size_t          n,                                      //!< size in data elements (eg. ints)
+                                void (*load)(BinaryBuffer&, T&) = &::vtkhdiy::load<T>       //!< optional serialization function
+                               ) const                                  { dequeue(from.gid, x, n, load); }
+
     template<class T>
     EnqueueIterator<T>  enqueuer(const T& x,
                                  void (*save)(BinaryBuffer&, const T&) = &::vtkhdiy::save<T>) const
@@ -65,6 +93,10 @@ namespace vtkhdiy
 
     OutgoingQueues*     outgoing() const                                { return outgoing_; }
     MemoryBuffer&       outgoing(const BlockID& to) const               { return (*outgoing_)[to]; }
+
+    inline bool         empty_incoming_queues() const;
+    inline bool         empty_outgoing_queues() const;
+    inline bool         empty_queues() const;
 
 /**
  * \ingroup Communication
@@ -100,10 +132,13 @@ namespace vtkhdiy
     CollectivesList*    collectives() const                             { return collectives_; }
 
     Master*             master() const                                  { return master_; }
+    IExchangeInfo*      iexchange() const                               { return iexchange_; }
 
     private:
       int               gid_;
       Master*           master_;
+      IExchangeInfo*    iexchange_;
+
       IncomingQueues*   incoming_;
       OutgoingQueues*   outgoing_;
       CollectivesList*  collectives_;
@@ -134,21 +169,20 @@ namespace vtkhdiy
   struct Master::ProxyWithLink: public Master::Proxy
   {
             ProxyWithLink(const Proxy&    proxy,
-                          void*           block,
-                          Link*           link):
+                          void*           block__,
+                          Link*           link__):
               Proxy(proxy),
-              block_(block),
-              link_(link)                                           {}
+              block_(block__),
+              link_(link__)                                         {}
 
       Link*   link() const                                          { return link_; }
       void*   block() const                                         { return block_; }
 
     private:
-      void*   block_;
-      Link*   link_;
+      void*             block_;
+      Link*             link_;
   };
-}
-
+}                                           // vtkhdiy namespace
 
 void
 vtkhdiy::Master::Proxy::
@@ -157,6 +191,34 @@ incoming(std::vector<int>& v) const
   for (IncomingQueues::const_iterator it = incoming_->begin(); it != incoming_->end(); ++it)
     v.push_back(it->first);
 }
+
+bool
+vtkhdiy::Master::Proxy::
+empty_incoming_queues() const
+{
+    for (auto& x : *incoming())
+        if (x.second)
+            return false;
+    return true;
+}
+
+bool
+vtkhdiy::Master::Proxy::
+empty_outgoing_queues() const
+{
+    for (auto& x : *outgoing())
+        if (x.second.size())
+            return false;
+    return true;
+}
+
+bool
+vtkhdiy::Master::Proxy::
+empty_queues() const
+{
+    return empty_incoming_queues() && empty_outgoing_queues();
+}
+
 
 template<class T, class Op>
 void
@@ -207,6 +269,12 @@ enqueue(const BlockID& to, const T* x, size_t n,
     else
         for (size_t i = 0; i < n; ++i)
             save(bb, x[i]);
+
+    if (iexchange_ && iexchange_->fine())
+    {
+        GidSendOrder gid_order;             // uninitialized, not needed
+        master()->comm_exchange(gid_order, iexchange_);
+    }
 }
 
 template<class T>

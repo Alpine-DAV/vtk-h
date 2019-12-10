@@ -23,8 +23,8 @@ namespace detail
 template<class Block, class Point>
 struct KDTreeSamplingPartition
 {
-    typedef     diy::RegularContinuousLink      RCLink;
-    typedef     diy::ContinuousBounds           Bounds;
+    typedef     vtkhdiy::RegularContinuousLink      RCLink;
+    typedef     vtkhdiy::ContinuousBounds           Bounds;
 
     typedef     std::vector<float>              Samples;
 
@@ -33,21 +33,21 @@ struct KDTreeSamplingPartition
                                         size_t                          samples):
                     dim_(dim), points_(points), samples_(samples)           {}
 
-    void        operator()(Block* b, const diy::ReduceProxy& srp, const KDTreePartners& partners) const;
+    void        operator()(Block* b, const vtkhdiy::ReduceProxy& srp, const KDTreePartners& partners) const;
 
     int         divide_gid(int gid, bool lower, int round, int rounds) const;
-    void        update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const;
-    void        split_to_neighbors(Block* b, const diy::ReduceProxy& srp, int dim) const;
-    diy::Direction
+    void        update_links(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const;
+    void        split_to_neighbors(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const;
+    vtkhdiy::Direction
                 find_wrap(const Bounds& bounds, const Bounds& nbr_bounds, const Bounds& domain) const;
 
-    void        compute_local_samples(Block* b, const diy::ReduceProxy& srp, int dim) const;
-    void        add_samples(Block* b, const diy::ReduceProxy& srp, Samples& samples) const;
-    void        receive_samples(Block* b, const diy::ReduceProxy& srp,       Samples& samples) const;
-    void        forward_samples(Block* b, const diy::ReduceProxy& srp, const Samples& samples) const;
+    void        compute_local_samples(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const;
+    void        add_samples(Block* b, const vtkhdiy::ReduceProxy& srp, Samples& samples) const;
+    void        receive_samples(Block* b, const vtkhdiy::ReduceProxy& srp,       Samples& samples) const;
+    void        forward_samples(Block* b, const vtkhdiy::ReduceProxy& srp, const Samples& samples) const;
 
-    void        enqueue_exchange(Block* b, const diy::ReduceProxy& srp, int dim, const Samples& samples) const;
-    void        dequeue_exchange(Block* b, const diy::ReduceProxy& srp, int dim) const;
+    void        enqueue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, const Samples& samples) const;
+    void        dequeue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const;
 
     void        update_neighbor_bounds(Bounds& bounds, float split, int dim, bool lower) const;
     bool        intersects(const Bounds& x, const Bounds& y, int dim, bool wrap, const Bounds& domain) const;
@@ -64,8 +64,8 @@ struct KDTreeSamplingPartition
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-operator()(Block* b, const diy::ReduceProxy& srp, const KDTreePartners& partners) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+operator()(Block* b, const vtkhdiy::ReduceProxy& srp, const KDTreePartners& partners) const
 {
     int dim;
     if (srp.round() < partners.rounds())
@@ -120,7 +120,7 @@ operator()(Block* b, const diy::ReduceProxy& srp, const KDTreePartners& partners
 
 template<class Block, class Point>
 int
-diy::detail::KDTreeSamplingPartition<Block,Point>::
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
 divide_gid(int gid, bool lower, int round, int rounds) const
 {
     if (lower)
@@ -133,8 +133,8 @@ divide_gid(int gid, bool lower, int round, int rounds) const
 // round here is the outer iteration of the algorithm
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+update_links(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, int round, int rounds, bool wrap, const Bounds& domain) const
 {
     auto        log  = get_logger();
     int         gid  = srp.gid();
@@ -142,7 +142,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
 
     // (gid, dir) -> i
-    std::map<std::pair<int,diy::Direction>, int> link_map;
+    std::map<std::pair<int,vtkhdiy::Direction>, int> link_map;
     for (int i = 0; i < link->size(); ++i)
         link_map[std::make_pair(link->target(i).gid, link->direction(i))] = i;
 
@@ -150,7 +150,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
     std::vector<float>  splits(link->size());
     for (int i = 0; i < link->size(); ++i)
     {
-        float split; diy::Direction dir;
+        float split; vtkhdiy::Direction dir(dim_,0);
 
         int in_gid = link->target(i).gid;
         while(srp.incoming(in_gid))
@@ -175,14 +175,14 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
     // fill out the new link
     for (int i = 0; i < link->size(); ++i)
     {
-        diy::Direction  dir = link->direction(i);
-        //diy::Direction  wrap_dir = link->wrap(i);     // we don't use existing wrap, but restore it from scratch
+        vtkhdiy::Direction  dir = link->direction(i);
+        //vtkhdiy::Direction  wrap_dir = link->wrap(i);     // we don't use existing wrap, but restore it from scratch
         if (dir[dim] != 0)
         {
             if ((dir[dim] < 0 && lower) || (dir[dim] > 0 && !lower))
             {
                 int nbr_gid = divide_gid(link->target(i).gid, !lower, round, rounds);
-                diy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
+                vtkhdiy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
                 new_link.add_neighbor(nbr);
 
                 new_link.add_direction(dir);
@@ -194,7 +194,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
                 if (wrap)
                     new_link.add_wrap(find_wrap(new_link.bounds(), bounds, domain));
                 else
-                    new_link.add_wrap(diy::Direction());
+                    new_link.add_wrap(vtkhdiy::Direction(dim_,0));
             }
         } else // non-aligned side
         {
@@ -207,7 +207,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
 
                 if (intersects(bounds, new_link.bounds(), dim, wrap, domain))
                 {
-                    diy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
+                    vtkhdiy::BlockID nbr = { nbr_gid, srp.assigner().rank(nbr_gid) };
                     new_link.add_neighbor(nbr);
                     new_link.add_direction(dir);
                     new_link.add_bounds(bounds);
@@ -215,7 +215,7 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
                     if (wrap)
                         new_link.add_wrap(find_wrap(new_link.bounds(), bounds, domain));
                     else
-                        new_link.add_wrap(diy::Direction());
+                        new_link.add_wrap(vtkhdiy::Direction(dim_,0));
                 }
             }
         }
@@ -223,23 +223,23 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
 
     // add link to the dual block
     int dual_gid = divide_gid(gid, !lower, round, rounds);
-    diy::BlockID dual = { dual_gid, srp.assigner().rank(dual_gid) };
+    vtkhdiy::BlockID dual = { dual_gid, srp.assigner().rank(dual_gid) };
     new_link.add_neighbor(dual);
 
     Bounds nbr_bounds = link->bounds();     // old block bounds
     update_neighbor_bounds(nbr_bounds, find_split(new_link.bounds(), nbr_bounds), dim, !lower);
     new_link.add_bounds(nbr_bounds);
 
-    new_link.add_wrap(diy::Direction());    // dual block cannot be wrapped
+    new_link.add_wrap(vtkhdiy::Direction(dim_,0));    // dual block cannot be wrapped
 
     if (lower)
     {
-        diy::Direction right;
+        vtkhdiy::Direction right(dim_,0);
         right[dim] = 1;
         new_link.add_direction(right);
     } else
     {
-        diy::Direction left;
+        vtkhdiy::Direction left(dim_,0);
         left[dim] = -1;
         new_link.add_direction(left);
     }
@@ -252,8 +252,8 @@ update_links(Block* b, const diy::ReduceProxy& srp, int dim, int round, int roun
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-split_to_neighbors(Block* b, const diy::ReduceProxy& srp, int dim) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+split_to_neighbors(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const
 {
     int         lid  = srp.master()->lid(srp.gid());
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
@@ -270,8 +270,8 @@ split_to_neighbors(Block* b, const diy::ReduceProxy& srp, int dim) const
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-compute_local_samples(Block* b, const diy::ReduceProxy& srp, int dim) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+compute_local_samples(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const
 {
     // compute and enqueue local samples
     Samples samples;
@@ -289,8 +289,8 @@ compute_local_samples(Block* b, const diy::ReduceProxy& srp, int dim) const
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-add_samples(Block* b, const diy::ReduceProxy& srp, Samples& samples) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+add_samples(Block* b, const vtkhdiy::ReduceProxy& srp, Samples& samples) const
 {
     // dequeue and combine the samples
     for (int i = 0; i < srp.in_link().size(); ++i)
@@ -299,23 +299,23 @@ add_samples(Block* b, const diy::ReduceProxy& srp, Samples& samples) const
 
         Samples smpls;
         srp.dequeue(nbr_gid, smpls);
-        for (size_t i = 0; i < smpls.size(); ++i)
-            samples.push_back(smpls[i]);
+        for (size_t j = 0; j < smpls.size(); ++j)
+            samples.push_back(smpls[j]);
     }
 }
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-receive_samples(Block* b, const diy::ReduceProxy& srp, Samples& samples) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+receive_samples(Block* b, const vtkhdiy::ReduceProxy& srp, Samples& samples) const
 {
     srp.dequeue(srp.in_link().target(0).gid, samples);
 }
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-forward_samples(Block* b, const diy::ReduceProxy& srp, const Samples& samples) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+forward_samples(Block* b, const vtkhdiy::ReduceProxy& srp, const Samples& samples) const
 {
     for (int i = 0; i < srp.out_link().size(); ++i)
         srp.enqueue(srp.out_link().target(i), samples);
@@ -323,8 +323,8 @@ forward_samples(Block* b, const diy::ReduceProxy& srp, const Samples& samples) c
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-enqueue_exchange(Block* b, const diy::ReduceProxy& srp, int dim, const Samples& samples) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+enqueue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim, const Samples& samples) const
 {
     int         lid  = srp.master()->lid(srp.gid());
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
@@ -364,8 +364,8 @@ enqueue_exchange(Block* b, const diy::ReduceProxy& srp, int dim, const Samples& 
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
-dequeue_exchange(Block* b, const diy::ReduceProxy& srp, int dim) const
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
+dequeue_exchange(Block* b, const vtkhdiy::ReduceProxy& srp, int dim) const
 {
     int         lid  = srp.master()->lid(srp.gid());
     RCLink*     link = static_cast<RCLink*>(srp.master()->link(lid));
@@ -390,7 +390,7 @@ dequeue_exchange(Block* b, const diy::ReduceProxy& srp, int dim) const
 
 template<class Block, class Point>
 void
-diy::detail::KDTreeSamplingPartition<Block,Point>::
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
 update_neighbor_bounds(Bounds& bounds, float split, int dim, bool lower) const
 {
     if (lower)
@@ -401,7 +401,7 @@ update_neighbor_bounds(Bounds& bounds, float split, int dim, bool lower) const
 
 template<class Block, class Point>
 bool
-diy::detail::KDTreeSamplingPartition<Block,Point>::
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
 intersects(const Bounds& x, const Bounds& y, int dim, bool wrap, const Bounds& domain) const
 {
     if (wrap)
@@ -416,7 +416,7 @@ intersects(const Bounds& x, const Bounds& y, int dim, bool wrap, const Bounds& d
 
 template<class Block, class Point>
 float
-diy::detail::KDTreeSamplingPartition<Block,Point>::
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
 find_split(const Bounds& changed, const Bounds& original) const
 {
     for (int i = 0; i < dim_; ++i)
@@ -431,11 +431,11 @@ find_split(const Bounds& changed, const Bounds& original) const
 }
 
 template<class Block, class Point>
-diy::Direction
-diy::detail::KDTreeSamplingPartition<Block,Point>::
+vtkhdiy::Direction
+vtkhdiy::detail::KDTreeSamplingPartition<Block,Point>::
 find_wrap(const Bounds& bounds, const Bounds& nbr_bounds, const Bounds& domain) const
 {
-    diy::Direction wrap;
+    vtkhdiy::Direction wrap(dim_,0);
     for (int i = 0; i < dim_; ++i)
     {
         if (bounds.min[i] == domain.min[i] && nbr_bounds.max[i] == domain.max[i])
