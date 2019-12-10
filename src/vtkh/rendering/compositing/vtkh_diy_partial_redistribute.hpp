@@ -128,7 +128,8 @@ void redistribute_detail(std::vector<typename AddBlockType::PartialType> &partia
   typedef typename AddBlockType::Block Block;
 
   vtkhdiy::mpi::communicator world(comm);
-  vtkhdiy::DiscreteBounds global_bounds;
+  const int dims = 1; // we are doing a 1d decomposition
+  vtkhdiy::DiscreteBounds global_bounds(dims);
   global_bounds.min[0] = domain_min_pixel;
   global_bounds.max[0] = domain_max_pixel;
 
@@ -143,7 +144,6 @@ void redistribute_detail(std::vector<typename AddBlockType::PartialType> &partia
   vtkhdiy::ContiguousAssigner assigner(num_blocks, num_blocks);
   AddBlockType create(master, partials);
 
-  const int dims = 1;
   vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> decomposer(dims, global_bounds, num_blocks);
   decomposer.decompose(world.rank(), assigner, create);
   vtkhdiy::all_to_all(master, assigner, Redistribute<Block>(decomposer), magic_k);

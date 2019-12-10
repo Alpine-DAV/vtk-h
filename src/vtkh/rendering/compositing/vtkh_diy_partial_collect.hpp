@@ -116,7 +116,8 @@ void collect_detail(std::vector<typename AddBlockType::PartialType> &partials,
   typedef typename AddBlockType::Block Block;
 
   vtkhdiy::mpi::communicator world(comm);
-  vtkhdiy::ContinuousBounds global_bounds;
+  const int dims = 1; // 1D decomp
+  vtkhdiy::ContinuousBounds global_bounds(dims);
   global_bounds.min[0] = 0;
   global_bounds.max[0] = 1;
 
@@ -131,7 +132,6 @@ void collect_detail(std::vector<typename AddBlockType::PartialType> &partials,
   vtkhdiy::ContiguousAssigner assigner(num_blocks, num_blocks);
   AddBlockType create(master, partials);
 
-  const int dims = 1;
   vtkhdiy::RegularDecomposer<vtkhdiy::ContinuousBounds> decomposer(dims, global_bounds, num_blocks);
   decomposer.decompose(world.rank(), assigner, create);
 
