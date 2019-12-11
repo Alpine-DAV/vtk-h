@@ -198,6 +198,7 @@ void ContourTree::DoExecute()
   bool computeRegularStructure = true;
   //Convert the mesh of values into contour tree, pairs of vertex ids
 #ifdef VTKH_PARALLEL
+/**** Bug in VTKM with BoundsGlobalCompute. It will hang.
     {
       std::ostringstream ostr;
       ostr << "global bounds: " << vtkm::cont::BoundsGlobalCompute(inDataSet) << std::endl
@@ -214,6 +215,7 @@ void ContourTree::DoExecute()
            << std::endl;
       std::cout << ostr.str();
     }
+*/
 #endif
   vtkm::filter::ContourTreePPP2 filter(useMarchingCubes,
                                        computeRegularStructure);
