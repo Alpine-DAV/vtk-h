@@ -16,6 +16,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/cont/EnvironmentTracker.h>
 
 #include <iostream>
 #ifdef VTKH_PARALLEL
@@ -28,10 +29,10 @@ using ValueType = vtkm::Float64;
 #ifndef VTKH_PARALLEL
 bool ReadTestData(const char* filename, vtkm::cont::DataSet& inDataSet)
 {
-  const int rank = 0;
+  const int mpiRank = 0;
 #else
 bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSet,
-                  int rank, int size)
+                  int mpiRank, int mpiSize)
 {
 #endif
 
@@ -56,14 +57,14 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
     std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<std::size_t>()));
 
   // Print the mesh metadata
-  if (rank == 0)
+  if (mpiRank == 0)
   {
     std::cout << "Number of dimensions: " << nDims << std::endl;
     std::cout << "Number of mesh vertices: " << nVertices << std::endl;
   }
   // Check the the number of dimensiosn is either 2D or 3D
   bool invalidNumDimensions = (nDims < 2 || nDims > 3);
-  if (rank == 0)
+  if (mpiRank == 0)
   {
     if (invalidNumDimensions)
     {
@@ -111,7 +112,7 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
     dsf.AddPointField(inDataSet, "values", values);
   }
 #else // VTKH_PARALLEL
-  int numBlocks = size;
+  int numBlocks = mpiSize;
   int blocksPerRank = 1;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
   vtkm::cont::ArrayHandle<vtkm::Id3> localBlockOrigins;
@@ -125,12 +126,12 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
   {
     vtkm::Id lastDimSize =
       (nDims == 2) ? static_cast<vtkm::Id>(dims[1]) : static_cast<vtkm::Id>(dims[2]);
-    if (size > (lastDimSize / 2.))
+    if (mpiSize > (lastDimSize / 2.))
     {
-      if (rank == 0)
+      if (mpiRank == 0)
       {
         std::cout << "Number of ranks to large for data. Use " << lastDimSize / 2
-                  << "or fewer ranks" << std::endl;
+                  << " or fewer ranks" << std::endl;
       }
       return false;
     }
@@ -140,7 +141,7 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
       nDims == 2 ? static_cast<vtkm::Id>(dims[0]) : static_cast<vtkm::Id>((dims[0] * dims[1]));
     vtkm::Id blockNumValues = blockSize * blockSliceSize;
 
-    vtkm::Id startBlock = blocksPerRank * rank;
+    vtkm::Id startBlock = blocksPerRank * mpiRank;
     vtkm::Id endBlock = startBlock + blocksPerRank;
     for (vtkm::Id blockIndex = startBlock; blockIndex < endBlock; ++blockIndex)
     {
@@ -212,23 +213,26 @@ bool ReadTestData(const char* filename, vtkm::cont::PartitionedDataSet& inDataSe
 //----------------------------------------------------------------------------
 TEST(vtkh_contour_tree, vtkh_contour_tree)
 {
-    // TODO remove Just needed for a test.
-    vtkh::ForceSerial();
-
   vtkh::DataSet data_set;
   std::string fileName = std::string(TESTS_SOURCE_DIR) + "/fuel.txt";
+
 #ifndef VTKH_PARALLEL
   vtkm::cont::DataSet vtkmData;
   ReadTestData(fileName.c_str(), vtkmData);
   data_set.AddDomain(vtkmData, 0);
 #else
   MPI_Init(NULL, NULL);
-  int size, rank;
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int mpiSize, mpiRank;
+  MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
   vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
+
+  // Setup vtk-m GlobalCommuncator. This is need because the GlobalCommuncator does not setup it self up right.
+  diy::mpi::communicator tempComm(MPI_COMM_WORLD);
+  GlobalCommuncator = tempComm;
+
   vtkm::cont::PartitionedDataSet mb;
-  ReadTestData(fileName.c_str(), mb, rank, size);
+  ReadTestData(fileName.c_str(), mb, mpiRank, mpiSize);
   for (vtkm::Id id = 0; id < mb.GetNumberOfPartitions(); ++id)
   {
     vtkm::cont::DataSet dom = mb.GetPartition(id);
@@ -257,6 +261,7 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   //EXPECT_FLOAT_EQ(isoValues[2], 133);
   //EXPECT_FLOAT_EQ(isoValues[3], 168);
   //EXPECT_FLOAT_EQ(isoValues[4], 177);
+
 #ifdef VTKH_PARALLEL
   MPI_Finalize();
 #endif
