@@ -222,15 +222,23 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   data_set.AddDomain(vtkmData, 0);
 #else
   MPI_Init(NULL, NULL);
+
   int mpiSize, mpiRank;
   MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
   MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+
+  // Setup MPI comm for VTK-h.
   vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
 
   // Setup vtk-m GlobalCommuncator. 
   // This is need because the GlobalCommuncator does not setup it self up right if you call MPI_Init.
-  vtkmdiy::mpi::communicator tempComm(MPI_COMM_WORLD);
-  vtkm::cont::EnvironmentTracker::SetCommunicator( tempComm );
+  auto comm = MPI_COMM_WORLD;
+  vtkm::cont::EnvironmentTracker::SetCommunicator( vtkmdiy::mpi::communicator(comm) );
+
+  auto envComm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  std::cout << "mpiRank:  " << mpiRank        << " mpiSize:  " << mpiSize        << std::endl;
+  std::cout << "Env Rank: " << envComm.rank() << " Env Size: " << envComm.size() << std::endl;
+  std::cout << "If the Rank and Size do not match, VTK-m needs to be built with VTKm_ENABLE_MPI." << std::endl;
 
   vtkm::cont::PartitionedDataSet mb;
   ReadTestData(fileName.c_str(), mb, mpiRank, mpiSize);
