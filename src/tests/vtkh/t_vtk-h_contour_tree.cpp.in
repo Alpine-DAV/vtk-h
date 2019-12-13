@@ -228,8 +228,8 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   vtkh::SetMPICommHandle(MPI_Comm_c2f(MPI_COMM_WORLD));
 
   // Setup vtk-m GlobalCommuncator. This is need because the GlobalCommuncator does not setup it self up right.
-  diy::mpi::communicator tempComm(MPI_COMM_WORLD);
-  GlobalCommuncator = tempComm;
+  vtkmdiy::mpi::communicator tempComm(MPI_COMM_WORLD);
+  SetCommunicator( tempComm );
 
   vtkm::cont::PartitionedDataSet mb;
   ReadTestData(fileName.c_str(), mb, mpiRank, mpiSize);
