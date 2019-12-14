@@ -245,9 +245,8 @@ stages:
            python --version
            # setup spack spec (must be static)
            export SPACK_SPEC="%gcc+mpi+cuda~openmp~shared"
-           export SPACK_SPEC="${SPACK_SPEC}${SPACK_SHARED_VARIANT} ^vtkm+cuda${SPACK_SHARED_VARIANT}"
+           export SPACK_SPEC="${SPACK_SPEC}${SPACK_SHARED_VARIANT} ^vtkm+cuda+mpi${SPACK_SHARED_VARIANT}"
            export SPACK_SPEC="${SPACK_SPEC} ^cmake~openssl~ncurses"
-           export SPACK_SPEC="${SPACK_SPEC} ^vtkm+mpi"
            echo $SPACK_SPEC
            # run uber to build tpls
            python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_cuda/
