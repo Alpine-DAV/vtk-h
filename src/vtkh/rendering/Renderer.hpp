@@ -44,6 +44,9 @@ public:
   vtkh::DataSet              *GetInput();
   vtkm::Range                 GetRange() const;
   bool                        GetHasColorTable() const;
+  double                      GetLastRenderTime() const;
+  std::vector<double>         GetRenderTimes() const;
+  int                         GetMpiRank() const;
 protected:
 
   // image related data with cinema support
@@ -57,6 +60,7 @@ protected:
   vtkm::Range                              m_range;
   vtkm::cont::ColorTable                   m_color_table;
   bool                                     m_has_color_table;
+  std::vector<double>                      m_render_times;  // render time in milliseconds
   // methods
   virtual void PreExecute() override;
   virtual void PostExecute() override;
@@ -64,6 +68,7 @@ protected:
 
   virtual void Composite(const int &num_images);
   void ImageToCanvas(Image &image, vtkm::rendering::Canvas &canvas, bool get_depth);
+  void AddRenderTime(double t);
 };
 
 } // namespace vtkh

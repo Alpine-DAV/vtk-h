@@ -8,6 +8,7 @@
 #include <vtkm/rendering/raytracing/Logger.h>
 
 #include <assert.h>
+#include <chrono>
 
 namespace vtkh {
 
@@ -48,6 +49,24 @@ bool
 Renderer::GetHasColorTable() const
 {
   return m_has_color_table;
+}
+
+double 
+Renderer::GetLastRenderTime() const
+{
+  return m_render_times.back();
+}
+
+int 
+Renderer::GetMpiRank() const
+{
+  return vtkh::GetMPIRank();
+}
+
+std::vector<double> 
+Renderer::GetRenderTimes() const
+{
+  return m_render_times;
 }
 
 void
@@ -230,6 +249,8 @@ Renderer::DoExecute()
 
       m_mapper->SetActiveColorTable(m_color_table);
 
+      auto t1 = std::chrono::high_resolution_clock::now();
+      
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera();
       m_mapper->SetCanvas(&(*p_canvas));
@@ -239,7 +260,12 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
-
+      
+      auto t2 = std::chrono::high_resolution_clock::now();
+      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+      AddRenderTime(duration);
+    // TODO: get those values to ascent for prediction calculations
+    // std::cout << "vtkh  " << vtkh::GetMPIRank() << " : " << duration << std::endl;
     }
   }
 
@@ -265,6 +291,13 @@ Renderer::ImageToCanvas(Image &image, vtkm::rendering::Canvas &canvas, bool get_
 
   float* depth_buffer = GetVTKMPointer(canvas.GetDepthBuffer());
   if(get_depth) memcpy(depth_buffer, &image.m_depths[0], sizeof(float) * size);
+}
+
+void Renderer::AddRenderTime(double t)
+{
+  m_render_times.push_back(t);
+  if (m_render_times.size() > 10000) // only keep the last 10k frame times for now
+    m_render_times.erase(m_render_times.begin());
 }
 
 std::vector<Render>
