@@ -16,6 +16,7 @@ set(vtkh_filters_headers
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
+  LagrangianInterpolation.hpp
   MarchingCubes.hpp
   Particle.hpp
   ParticleAdvection.hpp
