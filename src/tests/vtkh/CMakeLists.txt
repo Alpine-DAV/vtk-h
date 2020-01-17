@@ -47,17 +47,16 @@
 # Unit Tests
 ################################
 
-set(TESTS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/t_vtk-h_contour_tree.cpp.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/t_vtk-h_contour_tree_par.cpp")
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/t_vtk-h_contour_tree.cpp.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/t_vtk-h_contour_tree.cpp")
-
-set(BINARY_TESTS t_vtk-h_contour_tree.cpp
-                 t_vtk-h_contour_tree_par.cpp)
-
+# Contour tree depends on the VTK-m build type.
+if(VTKm_ENABLE_MPI)
+    message(STATUS "VTKm_ENABLE_MPI TRUE")
+    set( t_vtk-h_contour_tree_ "" )
+    set( t_vtk-h_contour_tree_par_ "t_vtk-h_contour_tree_par" )
+else()
+    message(STATUS "VTKm_ENABLE_MPI FALSE")
+    set( t_vtk-h_contour_tree_ "" )
+    set( t_vtk-h_contour_tree_par_ "" )
+endif()
 
 ################################
 # Core VTK-h Unit Tests
@@ -66,7 +65,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
-                t_vtk-h_contour_tree
+                ${t_vtk-h_contour_tree_}
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
                 t_vtk-h_gradient
@@ -90,7 +89,7 @@ set(BASIC_TESTS t_vtk-h_smoke
 set(CUDA_TESTS t_vtk-h_cuda)
 
 set(MPI_TESTS t_vtk-h_smoke_par
-              t_vtk-h_contour_tree_par
+              ${t_vtk-h_contour_tree_par_}
               t_vtk-h_dataset_par
               t_vtk-h_no_op_par
               t_vtk-h_histogram_par
@@ -110,21 +109,15 @@ set(MPI_TESTS t_vtk-h_smoke_par
 if (ENABLE_SERIAL)
     message(STATUS "Adding vtk-h lib unit tests")
     foreach(TEST ${BASIC_TESTS})
-        if (${TEST} IN_LIST BINARY_TESTS)
-          set (TEST_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${TEST})
-        else()
-          set (TEST_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${TEST})
-        endif()
         if(ENABLE_CUDA)
-          add_cpp_test(TEST ${TEST} SOURCE ${TEST_SOURCE} DEPENDS_ON vtkh cuda)
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
           vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
           set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CUDA)
         else()
-          add_cpp_test(TEST ${TEST} SOURCE ${TEST_SOURCE} DEPENDS_ON vtkh)
+          add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
           set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CXX)
         endif()
         set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
-        target_compile_options(${TEST} PRIVATE "-I${CMAKE_CURRENT_SOURCE_DIR}")
     endforeach()
     if(CUDA_FOUND)
       foreach(TEST ${CUDA_TESTS})
@@ -139,22 +132,15 @@ endif()
 if(MPI_FOUND AND ENABLE_MPI)
     message(STATUS "MPI enabled: Adding related unit tests")
     foreach(TEST ${MPI_TESTS})
-      if (${TEST} IN_LIST BINARY_TESTS)
-        set (TEST_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${TEST})
-      else()
-        set (TEST_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${TEST})
-      endif()
         # this uses 2 procs
       if(ENABLE_CUDA)
-        add_cpp_mpi_test(TEST ${TEST}  SOURCE ${TEST_SOURCE} NUM_PROCS 2 DEPENDS_ON vtkh_mpi cuda)
+        add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi cuda)
         vtkm_add_target_information(${TEST} DEVICE_SOURCES ${TEST}.cpp)
       else()
-        add_cpp_mpi_test(TEST ${TEST} SOURCE ${TEST_SOURCE} NUM_PROCS 2 DEPENDS_ON vtkh_mpi)
+        add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi)
       endif()
       set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
       target_compile_definitions(${TEST} PRIVATE VTKH_PARALLEL)
-      target_compile_definitions(${TEST} PRIVATE VTKM_ENABLE_MPI=TRUE)
-      target_compile_options(${TEST} PRIVATE "-I${CMAKE_CURRENT_SOURCE_DIR}")
     endforeach()
 else()
     message(STATUS "MPI disabled: Skipping related tests")

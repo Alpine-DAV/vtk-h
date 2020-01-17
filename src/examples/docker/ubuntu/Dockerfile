@@ -75,7 +75,8 @@ RUN tar -xzf vtkh.docker.src.tar.gz
 
 # bootstrap third party libs using spack and uberenv
 #  for this example we use mpich for MPI
-RUN cd vtkh && python scripts/uberenv/uberenv.py -k --spec "%gcc+mpi ^mpich ^vtkm+mpi"
+#RUN cd vtkh && python scripts/uberenv/uberenv.py -k --spec "%gcc+mpi ^mpich ^vtkm+mpi"
+RUN cd vtkh && python scripts/uberenv/uberenv.py -k --spec "%gcc+mpi ^mpich"
 
 # configure a debug build with cmake
 RUN cd vtkh && mkdir build-debug

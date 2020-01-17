@@ -80,7 +80,6 @@ if (ENABLE_SERIAL)
         list(APPEND vtkh_filters_deps openmp)
     endif()
 
-
     blt_add_library(
       NAME vtkh_filters
       SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources}
@@ -142,6 +141,7 @@ if (MPI_FOUND)
     if(ENABLE_OPENMP)
          list(APPEND vtkh_filters_mpi_deps openmp)
     endif()
+
     blt_add_library(
       NAME vtkh_filters_mpi
       SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources} ${vtkh_mpi_sources}
@@ -151,7 +151,6 @@ if (MPI_FOUND)
 
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_PARALLEL)
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_COMPILING_FLAG)
-    target_compile_definitions(vtkh_filters_mpi PRIVATE VTKM_ENABLE_MPI=TRUE)
 
     if(ENABLE_OPENMP)
           target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_USE_OPENMP)
