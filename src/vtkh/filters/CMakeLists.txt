@@ -13,6 +13,7 @@ set(vtkh_filters_headers
   HistSampling.hpp
   Histogram.hpp
   Log.hpp
+  ContourTree.hpp
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
@@ -48,6 +49,7 @@ set(vtkh_filters_sources
   HistSampling.cpp
   Histogram.cpp
   Log.cpp
+  ContourTree.cpp
   IsoVolume.cpp
   NoOp.cpp
   Lagrangian.cpp
@@ -77,7 +79,6 @@ if (ENABLE_SERIAL)
     if(ENABLE_OPENMP)
         list(APPEND vtkh_filters_deps openmp)
     endif()
-
 
     blt_add_library(
       NAME vtkh_filters
@@ -140,6 +141,7 @@ if (MPI_FOUND)
     if(ENABLE_OPENMP)
          list(APPEND vtkh_filters_mpi_deps openmp)
     endif()
+
     blt_add_library(
       NAME vtkh_filters_mpi
       SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources} ${vtkh_mpi_sources}
