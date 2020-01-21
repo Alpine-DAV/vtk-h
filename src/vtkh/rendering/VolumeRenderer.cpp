@@ -2,6 +2,7 @@
 
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/rendering/compositing/Compositor.hpp>
+#include <vtkh/Logger.hpp>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 
@@ -73,9 +74,29 @@ VolumeRenderer::~VolumeRenderer()
 void
 VolumeRenderer::Update()
 {
+  VTKH_DATA_OPEN(this->GetName());
+#ifdef VTKH_ENABLE_LOGGING
+  VTKH_DATA_ADD("device", GetCurrentDevice());
+  long long int in_cells = this->m_input->GetNumberOfCells();
+  VTKH_DATA_ADD("input_cells", in_cells);
+  VTKH_DATA_ADD("input_domains", this->m_input->GetNumberOfDomains());
+  int in_topo_dims;
+  bool in_structured = this->m_input->IsStructured(in_topo_dims);
+  if(in_structured)
+  {
+    VTKH_DATA_ADD("in_topology", "structured");
+  }
+  else
+  {
+    VTKH_DATA_ADD("in_topology", "unstructured");
+  }
+#endif
+
   PreExecute();
   Renderer::DoExecute();
   PostExecute();
+
+  VTKH_DATA_CLOSE();
 }
 
 void VolumeRenderer::SetColorTable(const vtkm::cont::ColorTable &color_table)
