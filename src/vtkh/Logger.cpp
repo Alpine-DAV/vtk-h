@@ -1,6 +1,9 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Logger.hpp>
 
+#include <iomanip>
+#include <cstdlib>
+
 namespace vtkh
 {
 std::map<std::string, Logger*> Logger::Loggers;
@@ -54,6 +57,7 @@ DataLogger::DataLogger()
     Rank(0)
 {
   Blocks.push(Block(0));
+  KeyCounters.push(std::map<std::string,int>());
 }
 
 DataLogger::~DataLogger()
@@ -109,11 +113,20 @@ void
 DataLogger::WriteLog()
 {
   std::stringstream log_name;
-  log_name<<"vtkh_data_"<<Rank;
+
+  std::string log_prefix = "vtkh_data";
+  if(const char* log_p = std::getenv("VTKH_LOG_PREFIX"))
+  {
+    log_prefix = std::string(log_p);
+  }
+
+  log_name<<log_prefix<<"_";
+  log_name<<std::setfill('0')<<std::setw(6)<<Rank;
   log_name<<".yaml";
 
   std::ofstream stream;
-  stream.open(log_name.str().c_str(), std::ofstream::out);
+  stream.open(log_name.str().c_str(), std::ofstream::app);
+
   if(!stream.is_open())
   {
     std::cerr<<"Warning: could not open the vtkh data log file\n";
@@ -127,9 +140,21 @@ void
 DataLogger::OpenLogEntry(const std::string &entryName)
 {
     WriteIndent();
-    Stream<<entryName<<":"<<"\n";
+    // ensure that we have unique keys for valid yaml
+    int key_count = KeyCounters.top()[entryName]++;
+
+    if(key_count != 0)
+    {
+      Stream<<entryName<<"_"<<key_count<<":"<<"\n";
+    }
+    else
+    {
+      Stream<<entryName<<":"<<"\n";
+    }
+
     int indent = this->CurrentBlock().Indent;
     Blocks.push(Block(indent+1));
+    KeyCounters.push(std::map<std::string,int>());
 
     Timer timer;
     Timers.push(timer);
@@ -143,6 +168,7 @@ DataLogger::CloseLogEntry()
   this->Stream<<"time : "<<Timers.top().elapsed()<<"\n";
   Timers.pop();
   Blocks.pop();
+  KeyCounters.pop();
   AtBlockStart = false;
 }
 };
