@@ -179,15 +179,27 @@ ParticleMessenger::ParticleSorter(std::vector<vtkh::Particle> &outData,
     {
         //If particle in wrong domain (took no steps), remove this ID, and use what is left below.
         //otherwise, compute a new set of block ids.
-        if (p.status == vtkh::Particle::WRONG_DOMAIN)
+        DBG("ParticleSorter: "<<p<<std::endl);
+        if (p.p.Status.CheckSpatialBounds() && ! p.p.Status.CheckTookAnySteps())
+        {
             p.blockIds.erase(p.blockIds.begin());
+            DBG("OOB and no steps. Toss this block. "<<p<<std::endl);
+        }
         else
+        {
+            DBG("Find new blocks: "<<p<<" --> ");
             p.blockIds = boundsMap.FindBlock(p, true);
+            DBG(p<<std::endl);
+
+        }
+
+        //Reset status.
+        p.p.Status = vtkm::ParticleStatus();
 
         //No blocks, it terminated
         if (p.blockIds.empty())
         {
-            p.status = vtkh::Particle::TERMINATE;
+            p.p.Status.SetTerminate();
             term.push_back(p);
         }
         else
@@ -211,10 +223,17 @@ ParticleMessenger::ParticleSorter(std::vector<vtkh::Particle> &outData,
             }
 
             //Particle goes to me, or put it in the sendData.
-            if (boundsMap.GetRank(p.blockIds[0]) == rank)
+            int dstRank = boundsMap.GetRank(p.blockIds[0]);
+            if (dstRank == rank)
+            {
                 inData.push_back(p);
+                DBG("Particle is MINE"<<std::endl);
+            }
             else
-                sendData[boundsMap.GetRank(p.blockIds[0])].push_back(p);
+            {
+                sendData[dstRank].push_back(p);
+                DBG("Particle goes to: "<<dstRank<<std::endl);
+            }
         }
     }
     outData.clear();
