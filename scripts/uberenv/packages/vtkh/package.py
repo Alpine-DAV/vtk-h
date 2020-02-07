@@ -56,17 +56,17 @@ class Vtkh(Package,CudaPackage):
     depends_on("intel-tbb", when="@0.1.0+tbb")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtkm@master~tbb+openmp", when="@develop+openmp")
-    depends_on("vtkm@master~tbb~openmp", when="@develop~openmp")
+    depends_on("vtkm@1.5.1~tbb+openmp", when="@develop+openmp")
+    depends_on("vtkm@1.5.1~tbb~openmp", when="@develop~openmp")
 
-    depends_on("vtkm@master+cuda~tbb+openmp", when="@develop+cuda+openmp")
-    depends_on("vtkm@master+cuda~tbb~openmp", when="@develop+cuda~openmp")
+    depends_on("vtkm@1.5.1+cuda~tbb+openmp", when="@develop+cuda+openmp")
+    depends_on("vtkm@1.5.1+cuda~tbb~openmp", when="@develop+cuda~openmp")
 
-    depends_on("vtkm@master~tbb+openmp~shared", when="@develop+openmp~shared")
-    depends_on("vtkm@master~tbb~openmp~shared", when="@develop~openmp~shared")
+    depends_on("vtkm@1.5.1~tbb+openmp~shared", when="@develop+openmp~shared")
+    depends_on("vtkm@1.5.1~tbb~openmp~shared", when="@develop~openmp~shared")
 
-    depends_on("vtkm@master+cuda~tbb+openmp~shared", when="@develop+cuda+openmp~shared")
-    depends_on("vtkm@master+cuda~tbb~openmp~shared", when="@develop+cuda~openmp~shared")
+    depends_on("vtkm@1.5.1+cuda~tbb+openmp~shared", when="@develop+cuda+openmp~shared")
+    depends_on("vtkm@1.5.1+cuda~tbb~openmp~shared", when="@develop+cuda~openmp~shared")
 
     depends_on("vtkm@ascent_ver~tbb+openmp", when="@ascent_ver+openmp")
     depends_on("vtkm@ascent_ver~tbb~openmp", when="@ascent_ver~openmp")

@@ -24,6 +24,7 @@ class Vtkm(CMakePackage, CudaPackage):
     # version used for ascent
     version('master', tag='v1.5.0', preferred=True)
     #version('master', branch='master')
+    version('1.5.1', commit="124fb23c50c14b171ae91b27abca77c435968fa5")
     version('1.3.0', "d9f6e274dec2ea01273cccaba356d23ca88c5a25")
     version('1.2.0', "3295fed86012226c107e1f2605ca7cc583586b63")
     version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
