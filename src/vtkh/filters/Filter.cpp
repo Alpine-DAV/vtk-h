@@ -128,7 +128,7 @@ Filter::CheckForRequiredField(const std::string &field_name)
     std::stringstream msg;
     msg<<"Cannot verify required field '"<<field_name;
     msg<<"' for vkth filter '"<<this->GetName()<<"' because input is null.";
-    throw vtkh::Error(msg.str());
+    throw Error(msg.str());
   }
 
   if(!m_input->GlobalFieldExists(field_name))
@@ -136,7 +136,7 @@ Filter::CheckForRequiredField(const std::string &field_name)
     std::stringstream msg;
     msg<<"Required field '"<<field_name;
     msg<<"' for vkth filter '"<<this->GetName()<<"' does not exist";
-    throw vtkh::Error(msg.str());
+    throw Error(msg.str());
   }
 }
 
