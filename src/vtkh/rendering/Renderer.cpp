@@ -1,5 +1,5 @@
 #include "Renderer.hpp"
-#include "compositing/Compositor.hpp"
+#include <vtkh/compositing/Compositor.hpp>
 
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>

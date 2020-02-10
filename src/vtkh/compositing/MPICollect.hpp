@@ -1,7 +1,7 @@
 #ifndef VTKH_MPI_COLLECT_HPP
 #define VTKH_MPI_COLLECT_HPP
 
-#include <vtkh/rendering/Image.hpp>
+#include <vtkh/compositing/Image.hpp>
 #include <diy/mpi.hpp>
 #include <sstream>
 

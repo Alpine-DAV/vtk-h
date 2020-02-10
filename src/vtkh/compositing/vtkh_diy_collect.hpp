@@ -5,8 +5,8 @@
 #include <diy/partners/swap.hpp>
 #include <diy/reduce.hpp>
 #include <diy/reduce-operations.hpp>
-#include <vtkh/rendering/Image.hpp>
-#include <vtkh/rendering/compositing/vtkh_diy_image_block.hpp>
+#include <vtkh/compositing/Image.hpp>
+#include <vtkh/compositing/vtkh_diy_image_block.hpp>
 
 namespace vtkh
 {

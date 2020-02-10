@@ -1,7 +1,7 @@
 #include "VolumeRenderer.hpp"
 
 #include <vtkh/utils/vtkm_array_utils.hpp>
-#include <vtkh/rendering/compositing/Compositor.hpp>
+#include <vtkh/compositing/Compositor.hpp>
 #include <vtkh/Logger.hpp>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
