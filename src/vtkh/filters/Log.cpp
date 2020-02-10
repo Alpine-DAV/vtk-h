@@ -157,7 +157,7 @@ void Log::DoExecute()
 
 
     vtkm::worklet::DispatcherMapField<detail::LogField>(detail::LogField(min_value))
-      .Invoke(in_field.GetData().ResetTypes(vtkm::TypeListTagFieldScalar()), log_field);
+      .Invoke(in_field.GetData().ResetTypes(vtkm::TypeListFieldScalar()), log_field);
 
     vtkm::cont::Field out_field(m_result_name,
                                 in_assoc,

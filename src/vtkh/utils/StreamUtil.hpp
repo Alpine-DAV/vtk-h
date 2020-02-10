@@ -72,11 +72,6 @@ inline std::ostream &operator<<(std::ostream &os, const vtkm::cont::DataSet &ds)
     return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const vtkm::Bounds &b)
-{
-    os<<"{("<<b.X.Min<<":"<<b.X.Max<<")("<<b.Y.Min<<":"<<b.Y.Max<<")("<<b.Z.Min<<":"<<b.Z.Max<<")}";
-    return os;
-}
 }
 
 #endif //__STREAM_UTIL_H

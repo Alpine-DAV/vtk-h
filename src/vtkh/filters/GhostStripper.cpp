@@ -212,7 +212,7 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
                       max_value,
                       -1,
                       i))
-       .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListTagScalarAll()),
+       .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListScalarAll()),
            dim_indices);
 
     vtkm::Vec<vtkm::Id,2> d = {-1, -1};
@@ -235,7 +235,7 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
                                                              max_value,
                                                              valid_min,
                                                              valid_max))
-     .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListTagScalarAll()), valid_flags);
+     .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListScalarAll()), valid_flags);
 
   vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(valid_flags,
                                                   vtkm::UInt8(0),

@@ -70,12 +70,12 @@ public:
       {
           if (ignoreCurrentBlock && !p.blockIds.empty() && p.blockIds[0] == it->first)
               continue;
-          if (p.coords[0] >= it->second.X.Min &&
-              p.coords[0] < it->second.X.Max &&
-              p.coords[1] >= it->second.Y.Min &&
-              p.coords[1] < it->second.Y.Max &&
-              p.coords[2] >= it->second.Z.Min &&
-              p.coords[2] < it->second.Z.Max)
+          if (p.p.Pos[0] >= it->second.X.Min &&
+              p.p.Pos[0] < it->second.X.Max &&
+              p.p.Pos[1] >= it->second.Y.Min &&
+              p.p.Pos[1] < it->second.Y.Max &&
+              p.p.Pos[2] >= it->second.Z.Min &&
+              p.p.Pos[2] < it->second.Z.Max)
           {
               res.push_back(it->first);
           }
@@ -203,11 +203,9 @@ protected:
 
 inline std::ostream &operator<<(std::ostream &os, const vtkh::BoundsMap &bm)
   {
-//    os<<"BoundsMap: "<<bm.globalBounds<<" d->r "<<bm.m_rank_map<<" d->b "<<bm.bm;
+    os<<"BoundsMap: "<<bm.globalBounds<<" d->r "<<bm.m_rank_map<<" d->b "<<bm.bm;
     return os;
   }
-
-
 
 } // namespace vtkh
 #endif
