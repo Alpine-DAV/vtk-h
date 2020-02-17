@@ -28,8 +28,8 @@ PayloadCompositor::ClearImages()
 void
 PayloadCompositor::AddImage(PayloadImage &image)
 {
-  assert(m_composite_mode != VIS_ORDER_BLEND);
-  assert(depth_buffer != NULL);
+  assert(image.GetNumberOfPixels() != 0);
+
   if(m_images.size() == 0)
   {
     m_images.push_back(image);
