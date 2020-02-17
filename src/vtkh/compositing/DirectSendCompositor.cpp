@@ -154,14 +154,14 @@ DirectSendCompositor::CompositeVolume(vtkhdiy::mpi::communicator &diy_comm,
 
     const int dims = 2;
     vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> decomposer(dims, global_bounds, num_blocks);
-    AddImageBlock all_create(master, sub_image);
+    AddImageBlock<Image> all_create(master, sub_image);
     decomposer.decompose(diy_comm.rank(), assigner, all_create);
     MPI_Barrier(diy_comm);
 
     //MPICollect(sub_image,diy_comm);
     vtkhdiy::all_to_all(master,
                     assigner,
-                    CollectImages(decomposer),
+                    CollectImages<Image>(decomposer),
                     magic_k);
   }
 

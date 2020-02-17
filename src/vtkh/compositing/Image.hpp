@@ -27,6 +27,7 @@ struct VTKH_API Image
     Image()
     {}
 
+
     Image(const vtkm::Bounds &bounds)
       : m_orig_bounds(bounds),
         m_bounds(bounds),
@@ -39,6 +40,23 @@ struct VTKH_API Image
         const int dy  = bounds.Y.Max - bounds.Y.Min + 1;
         m_pixels.resize(dx * dy * 4);
         m_depths.resize(dx * dy);
+    }
+
+    // init this image based on the original bounds
+    // of the other image
+    void InitOriginal(const Image &other)
+    {
+      m_orig_bounds = other.m_orig_bounds;
+      m_bounds = other.m_orig_bounds;
+
+      const int dx  = m_bounds.X.Max - m_bounds.X.Min + 1;
+      const int dy  = m_bounds.Y.Max - m_bounds.Y.Min + 1;
+      m_pixels.resize(dx * dy * 4);
+      m_depths.resize(dx * dy);
+
+      m_orig_rank = -1;
+      m_has_transparency = false;
+      m_composite_order = -1;
     }
 
     int GetNumberOfPixels() const
