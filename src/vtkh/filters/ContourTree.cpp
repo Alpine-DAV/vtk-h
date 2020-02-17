@@ -1,5 +1,7 @@
 #include <vtkh/filters/ContourTree.hpp>
 
+#include <vtkh/filters/Recenter.hpp>
+
 // vtkm includes
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/Storage.h>
@@ -81,6 +83,25 @@ void ContourTree::PostExecute()
 
 void ContourTree::DoExecute()
 {
+  vtkh::DataSet *old_input = this->m_input;
+
+
+  // make sure we have a node-centered field
+  bool valid_field = false;
+  bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
+                       vtkm::cont::Field::Association::CELL_SET;
+  bool delete_input = false;
+  if(valid_field && is_cell_assoc)
+  {
+    Recenter recenter;
+    recenter.SetInput(m_input);
+    recenter.SetField(m_field_name);
+    recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS);
+    recenter.Update();
+    m_input = recenter.GetOutput();
+    delete_input = true;
+  }
+
   int mpi_rank = 0;
 
   this->m_output = new DataSet();
@@ -361,6 +382,12 @@ void ContourTree::DoExecute()
 #ifdef VTKM_ENABLE_MPI
   MPI_Bcast(&m_iso_values[0], m_levels, MPI_DOUBLE, 0, mpi_comm);
 #endif // VTKM_ENABLE_MPI
+  if(delete_input)
+  {
+    delete m_input;
+    this->m_input = old_input;
+  }
+
 }
 
 std::string
