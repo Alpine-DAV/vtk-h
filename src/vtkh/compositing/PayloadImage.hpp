@@ -22,6 +22,7 @@ struct VTKH_API PayloadImage
     std::vector<float>           m_depths;
     int                          m_orig_rank;
     int                          m_payload_bytes; // Size of the payload in bytes
+    float                        m_default_value;
 
     PayloadImage()
     {}
@@ -32,10 +33,11 @@ struct VTKH_API PayloadImage
         m_orig_rank(-1),
         m_payload_bytes(payload_bytes)
     {
-        const int dx  = bounds.X.Max - bounds.X.Min + 1;
-        const int dy  = bounds.Y.Max - bounds.Y.Min + 1;
-        m_payloads.resize(dx * dy * m_payload_bytes);
-        m_depths.resize(dx * dy);
+      m_default_value = vtkm::Nan32();
+      const int dx  = bounds.X.Max - bounds.X.Min + 1;
+      const int dy  = bounds.Y.Max - bounds.Y.Min + 1;
+      m_payloads.resize(dx * dy * m_payload_bytes);
+      m_depths.resize(dx * dy);
     }
 
     void InitOriginal(const PayloadImage &other)
@@ -43,6 +45,7 @@ struct VTKH_API PayloadImage
       m_orig_bounds = other.m_orig_bounds;
       m_bounds = other.m_orig_bounds;
       m_payload_bytes = other.m_payload_bytes;
+      m_default_value = other.m_default_value;
 
       const int dx  = m_bounds.X.Max - m_bounds.X.Min + 1;
       const int dy  = m_bounds.Y.Max - m_bounds.Y.Min + 1;

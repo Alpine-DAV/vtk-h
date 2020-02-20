@@ -9,6 +9,7 @@ set(vtkh_rendering_headers
   Render.hpp
   Renderer.hpp
   PointRenderer.hpp
+  ScalarRenderer.hpp
   Scene.hpp
   VolumeRenderer.hpp
   )
@@ -21,6 +22,7 @@ set(vtkh_rendering_sources
   Render.cpp
   Renderer.cpp
   PointRenderer.cpp
+  ScalarRenderer.cpp
   Scene.cpp
   VolumeRenderer.cpp
   )
