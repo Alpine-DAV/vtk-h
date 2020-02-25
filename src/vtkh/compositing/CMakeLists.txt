@@ -7,6 +7,7 @@ set(vtkh_compositing_headers
   Compositor.hpp
   PartialCompositor.hpp
   PayloadCompositor.hpp
+  PayloadImage.hpp
   AbsorptionPartial.hpp
   EmissionPartial.hpp
   VolumePartial.hpp
@@ -68,6 +69,7 @@ set(vtkh_compositing_mpi_headers
   vtkh_diy_utils.hpp
   PartialCompositor.hpp
   PayloadCompositor.hpp
+  PayloadImage.hpp
   )
 
 set(vtkh_compositing_mpi_sources

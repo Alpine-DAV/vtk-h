@@ -7,7 +7,6 @@
 #include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/ScalarRenderer.h>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 #include <assert.h>
 
@@ -30,58 +29,9 @@ ScalarRenderer::GetName() const
 }
 
 void
-ScalarRenderer::AddCamera(vtkmCamera &camera)
+ScalarRenderer::SetCamera(vtkmCamera &camera)
 {
-  m_cameras.push_back(camera);
-}
-
-void
-ScalarRenderer::SetCameras(const std::vector<vtkmCamera> &cameras)
-{
-  m_cameras = cameras;
-}
-
-void
-ScalarRenderer::ClearCameras()
-{
-  m_cameras.clear();
-}
-
-void
-ScalarRenderer::Composite(const int &num_images)
-{
-//  VTKH_DATA_OPEN("Composite");
-//  for(int i = 0; i < num_images; ++i)
-//  {
-//    const int num_canvases = m_renders[i].GetNumberOfCanvases();
-//
-//    for(int dom = 0; dom < num_canvases; ++dom)
-//    {
-//      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0];
-//      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer());
-//
-//      int height = m_renders[i].GetCanvas(dom)->GetHeight();
-//      int width = m_renders[i].GetCanvas(dom)->GetWidth();
-//
-//      m_compositor->AddImage(color_buffer,
-//                             depth_buffer,
-//                             width,
-//                             height);
-//    } //for dom
-//
-//    Image result = m_compositor->Composite();
-//
-//#ifdef VTKH_PARALLEL
-//    if(vtkh::GetMPIRank() == 0)
-//    {
-//      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
-//    }
-//#else
-//    ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
-//#endif
-//    m_compositor->ClearImages();
-//  } // for image
-//  VTKH_DATA_CLOSE();
+  m_camera = camera;
 }
 
 void
@@ -106,16 +56,14 @@ ScalarRenderer::Update()
 void
 ScalarRenderer::PostExecute()
 {
-  int total_cameras = static_cast<int>(m_cameras.size());
-  this->Composite(total_cameras);
 }
 
 void
 ScalarRenderer::DoExecute()
 {
 
-  int total_cameras = static_cast<int>(m_cameras.size());
   int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
+  this->m_output = new DataSet();
 
   //
   // There external faces + bvh construction happens
@@ -131,6 +79,7 @@ ScalarRenderer::DoExecute()
   std::vector<vtkm::Id> cell_counts;
   renderers.resize(num_domains);
   cell_counts.resize(num_domains);
+
   for(int dom = 0; dom < num_domains; ++dom)
   {
     vtkm::cont::DataSet data_set;
@@ -149,52 +98,34 @@ ScalarRenderer::DoExecute()
   int max_p = std::numeric_limits<int>::min();
   bool do_once = true;
 
-  for(int i = 0; i < total_cameras; ++i)
+  std::vector<std::string> field_names;
+  PayloadCompositor compositor;
+
+  for(int dom = 0; dom < num_domains; ++dom)
   {
-    const vtkmCamera &camera = m_cameras[i];
-    std::vector<std::string> field_names;
-    PayloadCompositor compositor;
+    Result res = renderers[dom].Render(m_camera);
 
-    for(int dom = 0; dom < num_domains; ++dom)
-    {
-      Result res = renderers[dom].Render(camera);
-
-      //vtkm::cont::DataSet dset = res.ToDataSet();
-      //std::stringstream ss;
-      //ss<<"part"<<dom<<".vtk";
-      //vtkm::io::writer::VTKDataSetWriter writer(ss.str());
-      //writer.WriteDataSet(dset);
-
-      field_names = res.ScalarNames;
-      PayloadImage *pimage = Convert(res);
-      min_p = std::min(min_p, pimage->m_payload_bytes);
-      max_p = std::max(max_p, pimage->m_payload_bytes);
-      compositor.AddImage(*pimage);
-      delete pimage;
-    }
-
-    if(min_p != max_p)
-    {
-      std::cout<<"VERY BAD\n";
-    }
-
-    PayloadImage final_image = compositor.Composite();
-    if(vtkh::GetMPIRank() == 0)
-    {
-      Result final_result = Convert(final_image, field_names);
-      vtkm::cont::DataSet dset = final_result.ToDataSet();
-      vtkm::io::writer::VTKDataSetWriter writer("test.vtk");
-      writer.WriteDataSet(dset);
-
-    }
-    // WE BETTER BE SURE THAT payload sizes are equal and in the same
-    // order !!!
-    if(do_once)
-    {
-      //if(min_p
-    }
+    field_names = res.ScalarNames;
+    PayloadImage *pimage = Convert(res);
+    min_p = std::min(min_p, pimage->m_payload_bytes);
+    max_p = std::max(max_p, pimage->m_payload_bytes);
+    compositor.AddImage(*pimage);
+    delete pimage;
   }
 
+  if(min_p != max_p)
+  {
+    std::cout<<"VERY BAD\n";
+  }
+
+  PayloadImage final_image = compositor.Composite();
+  if(vtkh::GetMPIRank() == 0)
+  {
+    Result final_result = Convert(final_image, field_names);
+    vtkm::cont::DataSet dset = final_result.ToDataSet();
+    const int domain_id = 0;
+    this->m_output->AddDomain(dset, domain_id);
+  }
 
 }
 
@@ -256,9 +187,6 @@ PayloadImage * ScalarRenderer::Convert(Result &result)
   unsigned char *loads = &image->m_payloads[0];
 
   float* dbuffer = GetVTKMPointer(result.Depths);
-  std::cout<<"Size "<<size<<"\n";
-  std::cout<<"DSize "<<result.Depths.GetNumberOfValues()<<"\n";
-  std::cout<<"mdSize "<<image->m_depths.size()<<"\n";
   memcpy(&image->m_depths[0], dbuffer, sizeof(float) * size);
   // copy scalars into payload
   std::vector<float*> buffers;

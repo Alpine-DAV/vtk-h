@@ -10,6 +10,7 @@
 #include <vtkh/vtkh.hpp>
 #include <vtkh/DataSet.hpp>
 #include <vtkh/rendering/ScalarRenderer.hpp>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
 #include "t_test_utils.hpp"
 
 #include <iostream>
@@ -47,11 +48,17 @@ TEST(vtkh_scalar_renderer, vtkh_parallel_render)
   vtkh::ScalarRenderer tracer;
 
   tracer.SetInput(&data_set);
-  tracer.AddCamera(camera);
-  std::cout<<"UPDATE\n";
+  tracer.SetCamera(camera);
   tracer.Update();
-  std::cout<<"DONE UPDATE\n";
 
+  vtkh::DataSet *output = tracer.GetOutput();
+
+  if(vtkh::GetMPIRank() == 0)
+  {
+    vtkm::cont::DataSet &result = output->GetDomain(0);
+    vtkm::io::writer::VTKDataSetWriter writer("scalar_data.vtk");
+    writer.WriteDataSet(result);
+  }
 
   MPI_Finalize();
 }

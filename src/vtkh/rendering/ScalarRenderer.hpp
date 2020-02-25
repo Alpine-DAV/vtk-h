@@ -24,10 +24,7 @@ public:
   virtual void Update();
   virtual std::string GetName() const override;
 
-  void AddCamera(vtkmCamera &camera);
-  void ClearCameras();
-
-  void SetCameras(const std::vector<vtkmCamera> &cameras);
+  void SetCamera(vtkmCamera &camera);
 
   int GetNumberOfCameras() const;
   vtkh::DataSet *GetInput();
@@ -36,13 +33,12 @@ protected:
   int m_width;
   int m_height;
   // image related data with cinema support
-  std::vector<vtkmCamera>    m_cameras;
+  vtkmCamera  m_camera;
   // methods
   virtual void PreExecute() override;
   virtual void PostExecute() override;
   virtual void DoExecute() override;
 
-  virtual void Composite(const int &num_images);
   PayloadImage * Convert(Result &result);
   ScalarRenderer::Result Convert(PayloadImage &image, std::vector<std::string> &names);
   //void ImageToDataSet(Image &image, vtkm::rendering::Canvas &canvas, bool get_depth);
