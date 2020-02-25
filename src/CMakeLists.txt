@@ -12,7 +12,7 @@
 # avoid warnings for project commands w/o VERSION
 cmake_policy(SET CMP0048 NEW)
 
-project(VTKh VERSION "0.4.0")
+project(VTKh VERSION "0.5.2")
 
 set(VTKh_EXPORT_NAME "VTKhTargets")
 if (NOT DEFINED VTKh_INSTALL_INCLUDE_DIR)

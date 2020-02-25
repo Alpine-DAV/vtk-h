@@ -53,7 +53,7 @@ if (ENABLE_SERIAL)
       )
 
     # Install headers
-    install(FILES ${vtkh_rendering_headers}
+    install(FILES ${vtkh_compositing_headers}
       DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/compositing)
 endif()
 
@@ -121,7 +121,7 @@ if (MPI_FOUND)
             RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR})
 
     # Install headers
-    install(FILES ${ParallelHeaders}
+    install(FILES ${vtkh_compositing_mpi_headers}
             DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/compositing)
 
 endif()
