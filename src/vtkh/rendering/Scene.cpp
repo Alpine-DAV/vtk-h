@@ -145,14 +145,14 @@ Scene::Render()
 
     for(int i = 0; i < plot_size; ++i)
     {
-      if(i == plot_size - 1)
-      {
-        (*renderer)->SetDoComposite(true);
-      }
-      else
-      {
-        (*renderer)->SetDoComposite(false);
-      }
+      // if(i == plot_size - 1)
+      // {
+      //   (*renderer)->SetDoComposite(true);
+      // }
+      // else
+      // {
+      //   (*renderer)->SetDoComposite(false);
+      // }
 
       (*renderer)->SetRenders(current_batch);
       (*renderer)->Update();
@@ -176,15 +176,15 @@ Scene::Render()
     }
 
     // render screen annotations last and save
-    for(int i = 0; i < current_batch.size(); ++i)
-    {
-      current_batch[i].RenderWorldAnnotations();
-      current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
-      current_batch[i].RenderBackground();
-      current_batch[i].Save();
-      // free buffers
-      m_renders[batch_start + i].ClearCanvases();
-    }
+    // for(int i = 0; i < current_batch.size(); ++i)
+    // {
+    //   current_batch[i].RenderWorldAnnotations();
+    //   current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
+    //   current_batch[i].RenderBackground();
+    //   current_batch[i].Save();
+    //   // free buffers
+    //   m_renders[batch_start + i].ClearCanvases();
+    // }
 
     batch_start = batch_end;
   } // while

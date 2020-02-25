@@ -13,7 +13,7 @@
 namespace vtkh {
 
 Renderer::Renderer()
-  : m_do_composite(true),
+  : m_do_composite(false),
     m_color_table("Cool to Warm"),
     m_field_index(0),
     m_has_color_table(true)
@@ -264,8 +264,6 @@ Renderer::DoExecute()
       auto t2 = std::chrono::high_resolution_clock::now();
       auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
       AddRenderTime(duration);
-    // TODO: get those values to ascent for prediction calculations
-    // std::cout << "vtkh  " << vtkh::GetMPIRank() << " : " << duration << std::endl;
     }
   }
 
