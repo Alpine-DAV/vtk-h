@@ -56,6 +56,7 @@ ScalarRenderer::Update()
 void
 ScalarRenderer::PostExecute()
 {
+  Filter::PostExecute();
 }
 
 void
