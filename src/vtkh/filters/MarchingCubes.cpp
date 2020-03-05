@@ -78,7 +78,7 @@ void MarchingCubes::PreExecute()
     }
     else
     {
-      vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
+      vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).ReadPortal().Get(0);
       float length = scalar_range.Length();
       float step = length / (m_levels + 1.f);
 

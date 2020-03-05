@@ -109,7 +109,7 @@ void Log::PostExecute()
 void Log::DoExecute()
 {
 
-  vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
+  vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).ReadPortal().Get(0);
   if(scalar_range.Min <= 0.f && !m_clamp_to_min)
   {
     std::stringstream msg;

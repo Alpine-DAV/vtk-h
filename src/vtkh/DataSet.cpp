@@ -335,7 +335,7 @@ DataSet::GetRange(const std::string &field_name) const
     vtkm::cont::ArrayHandle<vtkm::Range> sub_range;
     sub_range = field.GetRange();
 
-    vtkm::Id components = sub_range.GetPortalConstControl().GetNumberOfValues();
+    vtkm::Id components = sub_range.ReadPortal().GetNumberOfValues();
 
     // first range with data. Set range and keep looking
     if(num_components == 0)
@@ -358,10 +358,10 @@ DataSet::GetRange(const std::string &field_name) const
 
     for(vtkm::Id c = 0; c < components; ++c)
     {
-      vtkm::Range s_range = sub_range.GetPortalControl().Get(c);
-      vtkm::Range c_range = range.GetPortalControl().Get(c);
+      vtkm::Range s_range = sub_range.ReadPortal().Get(c);
+      vtkm::Range c_range = range.ReadPortal().Get(c);
       c_range.Include(s_range);
-      range.GetPortalControl().Set(c, c_range);
+      range.ReadPortal().Set(c, c_range);
     }
   }
   return range;
@@ -424,7 +424,7 @@ DataSet::GetGlobalRange(const std::string &field_name) const
     for(int i = 0; i < components; ++i)
     {
 
-      vtkm::Range c_range = range.GetPortalControl().Get(i);
+      vtkm::Range c_range = range.ReadPortal().Get(i);
 
       vtkm::Float64 local_min;
       vtkm::Float64 local_max;
@@ -458,7 +458,7 @@ DataSet::GetGlobalRange(const std::string &field_name) const
                     mpi_comm);
       c_range.Min = global_min;
       c_range.Max = global_max;
-      range.GetPortalControl().Set(i, c_range);
+      range.ReadPortal().Set(i, c_range);
     }
   }
 

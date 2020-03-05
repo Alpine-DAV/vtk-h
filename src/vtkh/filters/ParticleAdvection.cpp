@@ -264,13 +264,13 @@ void ParticleAdvection::DoExecute()
         vtkm::cont::ArrayHandle<vtkm::Id> ids;
         positions.Allocate(totalNumPts);
         ids.Allocate(totalNumPts);
-        auto posPortal = positions.GetPortalControl();
-        auto idPortal = ids.GetPortalControl();
+        auto posPortal = positions.ReadPortal();
+        auto idPortal = ids.ReadPortal();
 
         vtkm::Id idx = 0;
         for (int i = 0; i < particleTraces.size(); i++)
         {
-          auto inP = particleTraces[i].Particles.GetPortalConstControl();
+          auto inP = particleTraces[i].Particles.ReadPortal();
           vtkm::Id numPts = particleTraces[i].Particles.GetNumberOfValues();
           for (int j = 0; j < numPts; j++, idx++)
           {
@@ -300,14 +300,14 @@ void ParticleAdvection::DoExecute()
         vtkm::cont::ArrayHandle<vtkm::Id> ids;
         positions.Allocate(totalNumPts);
         ids.Allocate(totalNumPts);
-        auto posPortal = positions.GetPortalControl();
-        auto idPortal = ids.GetPortalControl();
+        auto posPortal = positions.ReadPortal();
+        auto idPortal = ids.ReadPortal();
 
         vtkm::Id idx = 0;
         for (int i = 0; i < particleTraces.size(); i++)
         {
-          auto parPortal = particleTraces[i].Particles.GetPortalConstControl();
-          auto inP = particleTraces[i].Positions.GetPortalConstControl();
+          auto parPortal = particleTraces[i].Particles.ReadPortal();
+          auto inP = particleTraces[i].Positions.ReadPortal();
           vtkm::Id numPts = particleTraces[i].Positions.GetNumberOfValues();
           vtkm::Id pid = 0; //parPortal.Get(i).ID;
           for (int j = 0; j < numPts; j++, idx++)
@@ -341,7 +341,7 @@ void ParticleAdvection::DoExecute()
         //Append all the positions into one array.
         vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>> positions;
         positions.Allocate(totalNumPts);
-        auto posPortal = positions.GetPortalControl();
+        auto posPortal = positions.ReadPortal();
         vtkm::Id idx = 0;
         for (int i = 0; i < particleTraces.size(); i++)
         {
@@ -361,8 +361,8 @@ void ParticleAdvection::DoExecute()
         vtkm::cont::ArrayHandle<vtkm::IdComponent> cellCounts;
         connectivity.Allocate(totalNumPts);
         cellCounts.Allocate(totalNumCells);
-        auto connPortal = connectivity.GetPortalControl();
-        auto cntPortal = cellCounts.GetPortalControl();
+        auto connPortal = connectivity.ReadPortal();
+        auto cntPortal = cellCounts.ReadPortal();
 
         vtkm::Id offset = 0, connIdx = 0, cntIdx = 0;
         for (int i = 0; i < particleTraces.size(); i++)
@@ -377,7 +377,7 @@ void ParticleAdvection::DoExecute()
             {
                 particleTraces[i].PolyLines.GetIndices(j, ids);
                 vtkm::Id nids = ids.GetNumberOfValues();
-                auto idsPortal = ids.GetPortalControl();
+                auto idsPortal = ids.ReadPortal();
                 for (vtkm::Id k = 0; k < nids; k++, connIdx++)
                     connPortal.Set(connIdx, idsPortal.Get(k)+offset);
                 cntPortal.Set(cntIdx, nids);
@@ -468,7 +468,7 @@ ParticleAdvection::DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts)
   if (ds)
   {
       int nPts = ds->GetCoordinateSystem(0).GetNumberOfPoints();
-      auto portal = ds->GetCoordinateSystem(0).GetData().GetPortalConstControl();
+      auto portal = ds->GetCoordinateSystem(0).GetData().ReadPortal();
       for (int i = 0; i < nPts; i++)
       {
           vtkm::Vec<float,3> pt;
@@ -698,7 +698,7 @@ ParticleAdvection::DumpTraces(const vtkm::cont::ArrayHandle<vtkm::Vec3f> &pts,
     output.open(nm, std::ofstream::out);
 
     output<<"X,Y,Z,ID"<<std::endl;
-    auto portal = pts.GetPortalConstControl();
+    auto portal = pts.ReadPortal();
     int nPts = pts.GetNumberOfValues();
 
     for (int i = 0; i < nPts; i++)
