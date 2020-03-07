@@ -43,12 +43,12 @@ TEST(vtkh_dataset, vtkh_range)
   vtkm::cont::ArrayHandle<vtkm::Range> vec_range;
   vec_range = data_set.GetGlobalRange("vector_data_Float64");
 
-  EXPECT_EQ(3, vec_range.GetPortalControl().GetNumberOfValues());
+  EXPECT_EQ(3, vec_range.GetNumberOfValues());
 
 
   vtkm::cont::ArrayHandle<vtkm::Range> scalar_range;
   scalar_range = data_set.GetGlobalRange("point_data_Float64");
-  EXPECT_EQ(1, scalar_range.GetPortalControl().GetNumberOfValues());
+  EXPECT_EQ(1, scalar_range.GetNumberOfValues());
 
   vtkm::Float64 min_coord = 0.;
   vtkm::Float64 max_coord = vtkm::Float64(base_size * num_blocks);
