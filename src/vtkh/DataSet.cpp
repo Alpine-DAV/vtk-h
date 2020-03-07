@@ -361,7 +361,7 @@ DataSet::GetRange(const std::string &field_name) const
       vtkm::Range s_range = sub_range.ReadPortal().Get(c);
       vtkm::Range c_range = range.ReadPortal().Get(c);
       c_range.Include(s_range);
-      range.ReadPortal().Set(c, c_range);
+      range.WritePortal().Set(c, c_range);
     }
   }
   return range;
@@ -458,7 +458,7 @@ DataSet::GetGlobalRange(const std::string &field_name) const
                     mpi_comm);
       c_range.Min = global_min;
       c_range.Max = global_max;
-      range.ReadPortal().Set(i, c_range);
+      range.WritePortal().Set(i, c_range);
     }
   }
 
