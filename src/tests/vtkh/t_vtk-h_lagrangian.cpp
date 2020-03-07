@@ -109,7 +109,6 @@ TEST(vtkh_lagrangian, vtkh_serial_lagrangian)
   {
     vtkh::DataSet data_set;
     data_set.AddDomain(MakeTestUniformDataSet(time),0);
-    data_set.PrintSummary(std::cout);
     lagrangian.SetInput(&data_set);
     lagrangian.Update();
     vtkh::DataSet *extracted_basis = lagrangian.GetOutput();
