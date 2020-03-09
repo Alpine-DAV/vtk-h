@@ -65,7 +65,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
-                ${t_vtk-h_contour_tree_}
+                #${t_vtk-h_contour_tree_}
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
                 t_vtk-h_gradient
@@ -73,7 +73,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_iso_volume
                 t_vtk-h_no_op
                 t_vtk-h_marching_cubes
-                t_vtk-h_lagrangian
+                #t_vtk-h_lagrangian
                 t_vtk-h_log
                 t_vtk-h_threshold
                 t_vtk-h_mesh_renderer
