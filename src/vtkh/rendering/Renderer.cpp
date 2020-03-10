@@ -137,7 +137,7 @@ Renderer::PreExecute()
   {
     // we have not been given a range, so ask the data set
     vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
-    int num_components = ranges.GetPortalControl().GetNumberOfValues();
+    int num_components = ranges.GetNumberOfValues();
     //
     // current vtkm renderers only supports single component scalar fields
     //
@@ -150,7 +150,7 @@ Renderer::PreExecute()
       throw Error(msg.str());
     }
 
-    vtkm::Range global_range = ranges.GetPortalControl().Get(0);
+    vtkm::Range global_range = ranges.ReadPortal().Get(0);
     // a min or max may be been set by the user, check to see
     if(m_range.Min == vtkm::Infinity64())
     {

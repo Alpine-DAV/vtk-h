@@ -73,7 +73,7 @@ calculate_pdf(const vtkm::Int32 tot_points,
 
   vtkm::cont::Algorithm::Sort(zipArray);
 
-  auto binPortal = zipArray.GetPortalConstControl();
+  auto binPortal = zipArray.ReadPortal();
 
   vtkm::Float32 remainingSamples = sample_percent*tot_points;
 
@@ -101,7 +101,7 @@ calculate_pdf(const vtkm::Int32 tot_points,
 
   vtkm::cont::ArrayHandle<vtkm::Float32> acceptanceProbsVec;
   acceptanceProbsVec.Allocate(num_bins);
-  auto acceptance_portal = acceptanceProbsVec.GetPortalControl();
+  auto acceptance_portal = acceptanceProbsVec.WritePortal();
   for(int i = 0; i < num_bins; ++i)
   {
     acceptance_portal.Set(i, -1.f);

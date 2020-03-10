@@ -36,7 +36,7 @@ vtkm::cont::DataSet MakeTestUniformDataSet(vtkm::Id time)
   vtkm::Float64 ydiff = (ymax - ymin) / (static_cast<vtkm::Float64>(DIMS[1] - 1));
   vtkm::Float64 zdiff = (zmax - zmin) / (static_cast<vtkm::Float64>(DIMS[2] - 1));
 
-  vtkm::Vec<vtkm::Float64, 3> ORIGIN(0, 0, 0); 
+  vtkm::Vec<vtkm::Float64, 3> ORIGIN(0, 0, 0);
   vtkm::Vec<vtkm::Float64, 3> SPACING(xdiff, ydiff, zdiff);
 
   vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
@@ -51,13 +51,13 @@ vtkm::cont::DataSet MakeTestUniformDataSet(vtkm::Id time)
   for (vtkm::Id i = 0; i < DIMS[0]; i++)
   {
     for (vtkm::Id j = 0; j < DIMS[1]; j++)
-    {   
+    {
       for (vtkm::Id k = 0; k < DIMS[2]; k++)
-      {   
-        velocityField.GetPortalControl().Set(count, vtkm::Vec<vtkm::Float64, 3>(0.01*time, 0.01*time, 0.01*time));
+      {
+        velocityField.WritePortal().Set(count, vtkm::Vec<vtkm::Float64, 3>(0.01*time, 0.01*time, 0.01*time));
         count++;
-      }   
-    }   
+      }
+    }
   }
   dsf.AddPointField(dataset, "velocity", velocityField);
   return dataset;
@@ -72,12 +72,12 @@ void render_output(vtkh::DataSet *data, std::string file_name)
   vtkm::rendering::Camera camera;
   camera.ResetToBounds(bounds);
   float bg_color[4] = { 0.f, 0.f, 0.f, 1.f};
-  vtkh::Render render = vtkh::MakeRender(512, 
-                                         512, 
-                                         camera, 
-                                         *data, 
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         *data,
                                          file_name,
-                                         bg_color);  
+                                         bg_color);
 
   vtkh::Scene scene;
   scene.AddRender(render);
@@ -85,9 +85,9 @@ void render_output(vtkh::DataSet *data, std::string file_name)
   vtkh::LineRenderer tracer;
   tracer.SetRadius(.1f);
   tracer.SetInput(data);
-  tracer.SetField("lines"); 
+  tracer.SetField("lines");
 
-  scene.AddRenderer(&tracer);  
+  scene.AddRenderer(&tracer);
   scene.Render();
 }
 
@@ -102,9 +102,9 @@ TEST(vtkh_lagrangian, vtkh_serial_lagrangian)
   lagrangian.SetSeedResolutionInX(1);
   lagrangian.SetSeedResolutionInY(1);
   lagrangian.SetSeedResolutionInZ(1);
- 
-   std::cout << "Running Lagrangian filter test - vtkh" << std::endl;  
- 
+
+   std::cout << "Running Lagrangian filter test - vtkh" << std::endl;
+
   for(vtkm::Id time = 1; time <= 10; ++time)
   {
     vtkh::DataSet data_set;
