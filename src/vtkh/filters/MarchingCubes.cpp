@@ -1,4 +1,5 @@
 #include <vtkh/filters/MarchingCubes.hpp>
+#include <vtkh/Error.hpp>
 #include <vtkh/filters/ContourTree.hpp>
 
 #include <vtkh/filters/CleanGrid.hpp>
@@ -68,13 +69,14 @@ void MarchingCubes::PreExecute()
   {
     if(m_use_contour_tree)
     {
-      // run contour tree every time
-      vtkh::ContourTree contour_tree;
-      contour_tree.SetInput(this->m_input);
-      contour_tree.SetField(m_field_name);
-      contour_tree.SetNumLevels(m_levels);
-      contour_tree.Update();
-      m_iso_values = contour_tree.GetIsoValues();
+      throw Error("Contour tree disabled");
+      //// run contour tree every time
+      //vtkh::ContourTree contour_tree;
+      //contour_tree.SetInput(this->m_input);
+      //contour_tree.SetField(m_field_name);
+      //contour_tree.SetNumLevels(m_levels);
+      //contour_tree.Update();
+      //m_iso_values = contour_tree.GetIsoValues();
     }
     else
     {

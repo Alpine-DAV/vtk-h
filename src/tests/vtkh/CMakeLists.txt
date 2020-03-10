@@ -65,7 +65,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
-                ${t_vtk-h_contour_tree_}
+                #${t_vtk-h_contour_tree_}
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
                 t_vtk-h_gradient
@@ -89,7 +89,7 @@ set(BASIC_TESTS t_vtk-h_smoke
 set(CUDA_TESTS t_vtk-h_cuda)
 
 set(MPI_TESTS t_vtk-h_smoke_par
-              ${t_vtk-h_contour_tree_par_}
+              #${t_vtk-h_contour_tree_par_}
               t_vtk-h_dataset_par
               t_vtk-h_no_op_par
               t_vtk-h_histogram_par
