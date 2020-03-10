@@ -112,7 +112,7 @@ TEST(vtkh_lagrangian, vtkh_serial_lagrangian)
     lagrangian.SetInput(&data_set);
     lagrangian.Update();
     vtkh::DataSet *extracted_basis = lagrangian.GetOutput();
-    //extracted_basis->PrintSummary(std::cout);
+    extracted_basis->PrintSummary(std::cout);
     if(time == 10) render_output(extracted_basis, "basis");
   }
 
