@@ -1,2 +1,2 @@
 blt  branch='develop' commit='938345715810c6457d3e57a2c20d4ee0fa253632'
-vtkm branch='master' commit='01b370296f1f684ed7217dab2e152a8ca9ee6295'
+vtkm branch='master' commit='2796dc33d292bc5b42d8bf2ff122a639974965a1'
