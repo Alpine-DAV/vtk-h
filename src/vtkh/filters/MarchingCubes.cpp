@@ -45,7 +45,10 @@ MarchingCubes::SetUseContourTree(bool on)
 void
 MarchingCubes::SetIsoValues(const double *iso_values, const int &num_values)
 {
-  assert(num_values > 0);
+  if(num_values < 1)
+  {
+    throw Error("SetIsoValues: num_values must be greater than 0");
+  }
   m_iso_values.clear();
   for(int i = 0; i < num_values; ++i)
   {
@@ -93,7 +96,12 @@ void MarchingCubes::PreExecute()
     }
   }
 
-  assert(m_iso_values.size() > 0);
+  if(m_iso_values.size() < 1)
+  {
+    std::stringstream ss;
+    ss<<"levels: "<<m_levels;
+    throw Error("number of iso values  must be greater than 0: "+ss.str());
+  }
 }
 
 void MarchingCubes::PostExecute()

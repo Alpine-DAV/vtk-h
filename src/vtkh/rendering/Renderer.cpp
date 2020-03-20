@@ -7,8 +7,6 @@
 #include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
 
-#include <assert.h>
-
 namespace vtkh {
 
 Renderer::Renderer()

@@ -53,7 +53,10 @@ Render::GetDomainCanvas(const vtkm::Id &domain_id)
 Render::vtkmCanvasPtr
 Render::GetCanvas(const vtkm::Id index)
 {
-  assert(index >= 0 && index < m_canvases.size());
+  if(index < 0 && index >= m_canvases.size())
+  {
+    throw Error("Render: invalid canvas index");
+  }
 
   if(m_canvases[index] == nullptr)
   {

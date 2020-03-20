@@ -4,7 +4,6 @@
 #include <vtkh/utils/vtkm_array_utils.hpp>
 
 #include <vtkm/worklet/FieldHistogram.h>
-#include <assert.h>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
@@ -42,7 +41,10 @@ Histogram::HistogramResult
 merge_histograms(std::vector<Histogram::HistogramResult> &histograms)
 {
   const int size = histograms.size();
-  assert(size > 0);
+  if(size < 1)
+  {
+    throw Error("histogram size is 0");
+  }
   Histogram::HistogramResult res;
 
   res = histograms[0];
