@@ -141,7 +141,6 @@ Renderer::PreExecute()
     //
     // current vtkm renderers only supports single component scalar fields
     //
-    assert(num_components == 1);
     if(num_components != 1)
     {
       std::stringstream msg;

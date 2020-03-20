@@ -151,7 +151,10 @@ VolumeRenderer::PostExecute()
 void
 VolumeRenderer::SetNumberOfSamples(const int num_samples)
 {
-  assert(num_samples > 0);
+  if(num_samples < 1)
+  {
+    throw Error("Volume rendering samples must be greater than 0");
+  }
   m_num_samples = num_samples;
   CorrectOpacity();
 }
@@ -223,8 +226,14 @@ VolumeRenderer::DepthSort(int num_domains,
                           std::vector<float> &min_depths,
                           std::vector<int> &local_vis_order)
 {
-  assert(min_depths.size() == num_domains);
-  assert(local_vis_order.size() == num_domains);
+  if(min_depths.size() != num_domains)
+  {
+    throw Error("min depths size does not equal the number of domains");
+  }
+  if(local_vis_order.size() != num_domains)
+  {
+    throw Error("local vis order not equal to number of domains");
+  }
 #ifdef VTKH_PARALLEL
   int root = 0;
   MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
