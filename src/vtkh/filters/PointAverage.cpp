@@ -1,4 +1,5 @@
 #include <vtkh/filters/PointAverage.hpp>
+#include <vtkh/Error.hpp>
 #include <vtkm/filter/PointAverage.h>
 
 namespace vtkh
@@ -30,7 +31,10 @@ void PointAverage::PreExecute()
 {
   Filter::PreExecute();
   Filter::CheckForRequiredField(m_field_name);
-  assert(m_output_field_name != "");
+  if(m_output_field_name == "")
+  {
+    throw Error("PointAverage: output field name not set");
+  }
 }
 
 void PointAverage::PostExecute()
