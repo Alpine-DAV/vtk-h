@@ -74,29 +74,6 @@ public:
   }
 };
 
-//class MakeVector2d  : public vtkm::worklet::WorkletMapField
-//{
-//public:
-//  VTKM_CONT
-//  MakeVector2d()
-//  {}
-//
-//  typedef void ControlSignature(FieldIn, FieldIn, FieldIn, FieldOut);
-//  typedef void ExecutionSignature(_1, _2, _3, _4);
-//
-//  template<typename T, typename U, typename V>
-//  VTKM_EXEC
-//  void operator()(const T &value1,
-//                  const U &value2,
-//                  const V &value3,
-//                  vtkm::Vec<vtkm::Float64,3> &output) const
-//  {
-//    output[0] = static_cast<vtkm::Float64>(value1);
-//    output[1] = static_cast<vtkm::Float64>(value2);
-//    output[2] = static_cast<vtkm::Float64>(value3);
-//  }
-//};
-
 }// namespace detail
 
 CompositeVector::CompositeVector()
