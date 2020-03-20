@@ -131,8 +131,6 @@ void Log::DoExecute()
 
   const int num_domains = this->m_input->GetNumberOfDomains();
 
-
-
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::cont::DataSet &dom =  this->m_output->GetDomain(i);
@@ -151,10 +149,8 @@ void Log::DoExecute()
       throw Error("Log: input field must be zonal or nodal");
     }
 
-
     vtkm::cont::ArrayHandle<vtkm::Float32> log_field;
     vtkm::cont::Field in_field = dom.GetField(m_field_name);
-
 
     vtkm::worklet::DispatcherMapField<detail::LogField>(detail::LogField(min_value))
       .Invoke(in_field.GetData().ResetTypes(vtkm::TypeListFieldScalar()), log_field);

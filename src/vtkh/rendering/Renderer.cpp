@@ -132,8 +132,9 @@ void
 Renderer::PreExecute()
 {
   bool range_set = m_range.IsNonEmpty();
-  bool field_exists = m_input->GlobalFieldExists(m_field_name);
-  if(!range_set && field_exists)
+  Filter::CheckForRequiredField(m_field_name);
+
+  if(!range_set)
   {
     // we have not been given a range, so ask the data set
     vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
@@ -141,7 +142,6 @@ Renderer::PreExecute()
     //
     // current vtkm renderers only supports single component scalar fields
     //
-    assert(num_components == 1);
     if(num_components != 1)
     {
       std::stringstream msg;
