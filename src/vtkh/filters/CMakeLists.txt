@@ -27,6 +27,7 @@ set(vtkh_filters_headers
   Threshold.hpp
   Statistics.hpp
   Slice.hpp
+  VectorComponent.hpp
   VectorMagnitude.hpp
   communication/BoundsMap.hpp
   communication/Communicator.hpp
@@ -62,6 +63,7 @@ set(vtkh_filters_sources
   Threshold.cpp
   Slice.cpp
   Statistics.cpp
+  VectorComponent.cpp
   VectorMagnitude.cpp
   communication/MemStream.cpp
   )
