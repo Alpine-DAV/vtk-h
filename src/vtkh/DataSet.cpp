@@ -771,4 +771,34 @@ DataSet::GetFieldAssociation(const std::string field_name, bool &valid_field) co
   return assoc;
 }
 
+vtkm::Id DataSet::NumberOfComponents(const std::string &field_name) const
+{
+  int num_components = 0;
+
+  const size_t num_domains = m_domains.size();
+  for(size_t i = 0; i < num_domains; ++i)
+  {
+    if(m_domains[i].HasField(field_name))
+    {
+      num_components = m_domains[i].GetField(field_name).GetData().GetNumberOfComponents();
+      break;
+    }
+  }
+
+#ifdef VTKH_PARALLEL
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+
+  int global_comps;
+  MPI_Allreduce((void *)(&num_components),
+                (void *)(&global_comps),
+                1,
+                MPI_INT,
+                MPI_MAX,
+                mpi_comm);
+
+  num_components = global_comps;
+#endif
+  return num_components;
+}
+
 } // namspace vtkh

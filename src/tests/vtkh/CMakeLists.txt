@@ -65,6 +65,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
+                t_vtk-h_vector_ops
                 #${t_vtk-h_contour_tree_}
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
@@ -82,7 +83,6 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_raytracer
                 t_vtk-h_render
                 t_vtk-h_slice
-                t_vtk-h_vector_magnitude
                 t_vtk-h_volume_renderer
                 )
 
