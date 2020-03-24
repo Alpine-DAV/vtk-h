@@ -54,7 +54,7 @@ protected:
   int                                      m_field_index;
   Compositor                              *m_compositor;
   std::string                              m_field_name;
-  bool                                     m_do_composite;
+  bool                                     m_do_composite = false;
   vtkmMapperPtr                            m_mapper;
   vtkm::Bounds                             m_bounds;
   vtkm::Range                              m_range;

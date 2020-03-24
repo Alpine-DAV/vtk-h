@@ -151,11 +151,12 @@ void
 Renderer::PreExecute()
 {
   bool range_set = m_range.IsNonEmpty();
-  bool field_exists = m_input->GlobalFieldExists(m_field_name);
+  bool field_exists = true; //m_input->GlobalFieldExists(m_field_name);
   if(!range_set && field_exists)
   {
     // we have not been given a range, so ask the data set
-    vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
+    // TODO: work around the global call -> validate
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetRange(m_field_name);//m_input->GetGlobalRange(m_field_name);
     int num_components = ranges.GetPortalControl().GetNumberOfValues();
     //
     // current vtkm renderers only supports single component scalar fields
@@ -182,7 +183,8 @@ Renderer::PreExecute()
     }
   }
 
-  m_bounds = m_input->GetGlobalBounds();
+  // TODO: work around the global call -> validate
+  m_bounds = m_input->GetBounds(0); // m_input->GetGlobalBounds();
 }
 
 void
@@ -193,7 +195,7 @@ Renderer::Update()
   long long int in_cells = this->m_input->GetNumberOfCells();
   VTKH_DATA_ADD("input_cells", in_cells);
 #endif
-  PreExecute();
+  // PreExecute();
   DoExecute();
   PostExecute();
   VTKH_DATA_CLOSE();

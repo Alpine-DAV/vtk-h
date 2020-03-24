@@ -348,7 +348,7 @@ VolumeRenderer::FindVisibilityOrdering()
 
   //
   // In order for parallel volume rendering to composite correctly,
-  // we nee to establish a visibility ordering to pass to IceT.
+  // we need to establish a visibility ordering to pass to IceT.
   // We will transform the data extents into camera space and
   // take the minimum z value. Then sort them while keeping
   // track of rank, then pass the list in.

@@ -145,13 +145,14 @@ Scene::Render()
 
     for(int i = 0; i < plot_size; ++i)
     {
+
       // if(i == plot_size - 1)
       // {
       //   (*renderer)->SetDoComposite(true);
       // }
       // else
       // {
-      //   (*renderer)->SetDoComposite(false);
+      (*renderer)->SetDoComposite(false);
       // }
 
       (*renderer)->SetRenders(current_batch);

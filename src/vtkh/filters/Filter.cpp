@@ -131,13 +131,13 @@ Filter::CheckForRequiredField(const std::string &field_name)
     throw Error(msg.str());
   }
 
-  if(!m_input->GlobalFieldExists(field_name))
-  {
-    std::stringstream msg;
-    msg<<"Required field '"<<field_name;
-    msg<<"' for vkth filter '"<<this->GetName()<<"' does not exist";
-    throw Error(msg.str());
-  }
+  // if(!m_input->GlobalFieldExists(field_name))
+  // {
+  //   std::stringstream msg;
+  //   msg<<"Required field '"<<field_name;
+  //   msg<<"' for vkth filter '"<<this->GetName()<<"' does not exist";
+  //   throw Error(msg.str());
+  // }
 }
 
 void
