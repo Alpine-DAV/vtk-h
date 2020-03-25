@@ -112,6 +112,7 @@ vtkm::cont::ColorTable Renderer::GetColorTable() const
 void
 Renderer::Composite(const int &num_images)
 {
+  std::cout << "!!! COMPOSITE renderer " << std::endl; 
   VTKH_DATA_OPEN("Composite");
   m_compositor->SetCompositeMode(Compositor::Z_BUFFER_SURFACE);
   for(int i = 0; i < num_images; ++i)

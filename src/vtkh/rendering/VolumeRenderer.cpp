@@ -159,6 +159,7 @@ VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera,
 void
 VolumeRenderer::Composite(const int &num_images)
 {
+  std::cout << "!!! COMPOSITE VolumeRenderer " << std::endl; 
   const int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
 
   m_compositor->SetCompositeMode(Compositor::VIS_ORDER_BLEND);
