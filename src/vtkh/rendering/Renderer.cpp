@@ -152,7 +152,8 @@ void
 Renderer::PreExecute()
 {
   bool range_set = m_range.IsNonEmpty();
-  bool field_exists = true; //m_input->GlobalFieldExists(m_field_name);
+  // TODO: work around the global call
+  bool field_exists = m_input->FieldExists(m_field_name); //m_input->GlobalFieldExists(m_field_name);
   if(!range_set && field_exists)
   {
     // we have not been given a range, so ask the data set
@@ -185,7 +186,16 @@ Renderer::PreExecute()
   }
 
   // TODO: work around the global call -> validate
-  m_bounds = m_input->GetBounds(0); // m_input->GetGlobalBounds();
+  m_bounds = m_input->GetBounds(); // m_input->GetGlobalBounds();
+
+  // std::cout << "*** bounds: " << m_bounds.X.Min << "  " 
+  //           << m_bounds.X.Max << std::endl;
+  // m_bounds.X.Min = 0;
+  // m_bounds.X.Max = 6;
+  // m_bounds.Y.Min = 0;
+  // m_bounds.Y.Max = 6; 
+  // m_bounds.Z.Min = 0;
+  // m_bounds.Z.Max = 6;
 }
 
 void
