@@ -153,12 +153,14 @@ Renderer::PreExecute()
 {
   bool range_set = m_range.IsNonEmpty();
   // TODO: work around the global call
-  bool field_exists = m_input->FieldExists(m_field_name); //m_input->GlobalFieldExists(m_field_name);
+  // bool field_exists = m_input->GlobalFieldExists(m_field_name);
+  bool field_exists = m_input->FieldExists(m_field_name); 
   if(!range_set && field_exists)
   {
     // we have not been given a range, so ask the data set
     // TODO: work around the global call -> validate
-    vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetRange(m_field_name);//m_input->GetGlobalRange(m_field_name);
+    // vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetRange(m_field_name);
     int num_components = ranges.GetPortalControl().GetNumberOfValues();
     //
     // current vtkm renderers only supports single component scalar fields
@@ -189,13 +191,18 @@ Renderer::PreExecute()
   m_bounds = m_input->GetBounds(); // m_input->GetGlobalBounds();
 
   // std::cout << "*** bounds: " << m_bounds.X.Min << "  " 
-  //           << m_bounds.X.Max << std::endl;
-  // m_bounds.X.Min = 0;
-  // m_bounds.X.Max = 6;
-  // m_bounds.Y.Min = 0;
-  // m_bounds.Y.Max = 6; 
-  // m_bounds.Z.Min = 0;
-  // m_bounds.Z.Max = 6;
+  //           << m_bounds.X.Max << " / " 
+  //           << m_bounds.Y.Min << " " 
+  //           << m_bounds.Y.Max << " / "
+  //           << m_bounds.Z.Min << " " 
+  //           << m_bounds.Z.Max << std::endl;
+
+  m_bounds.X.Min = 0;
+  m_bounds.X.Max = 6;
+  m_bounds.Y.Min = 0;
+  m_bounds.Y.Max = 6; 
+  m_bounds.Z.Min = 0;
+  m_bounds.Z.Max = 6;
 }
 
 void
@@ -279,8 +286,6 @@ Renderer::DoExecute()
       AddRenderTime(duration);
     }
   }
-
-
 }
 
 void

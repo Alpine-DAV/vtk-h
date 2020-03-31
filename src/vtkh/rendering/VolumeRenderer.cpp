@@ -5,7 +5,10 @@
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 
+#include <vtkh/utils/PNGEncoder.hpp>
+
 #include <memory>
+#include <chrono>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
@@ -113,7 +116,8 @@ VolumeRenderer::PreExecute()
   extent[0] = static_cast<vtkm::Float32>(this->m_bounds.X.Length());
   extent[1] = static_cast<vtkm::Float32>(this->m_bounds.Y.Length());
   extent[2] = static_cast<vtkm::Float32>(this->m_bounds.Z.Length());
-  vtkm::Float32 dist = vtkm::Magnitude(extent) / m_num_samples;
+
+  vtkm::Float32 dist = vtkm::Magnitude(extent) / m_num_samples;  
   m_tracer->SetSampleDistance(dist);
 }
 
@@ -121,6 +125,22 @@ void
 VolumeRenderer::PostExecute()
 {
   int total_renders = static_cast<int>(m_renders.size());
+
+  // DEBUG: render out image parts
+  PNGEncoder encoder;
+  for (size_t i = 0; i < m_renders.size(); i++)
+  {
+    const int width = m_renders[i].GetCanvas(0)->GetWidth();
+    const int height = m_renders[i].GetCanvas(0)->GetHeight();
+    // const int size = width * height;
+    // const int color_size = size * 4;
+
+    float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
+    encoder.Encode(color_buffer, width, height);
+    encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
+  }
+  // END DEBUG
+
   if(m_do_composite)
   {
     this->Composite(total_renders);
