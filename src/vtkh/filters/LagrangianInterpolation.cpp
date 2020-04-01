@@ -444,8 +444,6 @@ void LagrangianInterpolation::DoExecute()
     res = particleadvection.Run(euler, SeedParticleArray, 1);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    if(rank == 0)
-      std::cout << "Completed particle advection" << std::endl;
 
     auto particles = res.Particles;
     auto particlePortal = particles.GetPortalControl();
@@ -483,8 +481,6 @@ void LagrangianInterpolation::DoExecute()
       {
         auto pt1 = seed_original_portal.Get(i).Pos;
         auto pt2 = particlePortal.Get(i).Pos;
-
-        std::cout << "Invalid " << i << " " << pt1[0] << " " << pt1[1] << " " << pt1[2] << " " << pt2[0] << " " << pt2[1] << " " << pt2[2] << std::endl;
       }
     }
 
