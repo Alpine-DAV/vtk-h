@@ -57,6 +57,7 @@ set(vtkh_filters_sources
   IsoVolume.cpp
   NoOp.cpp
   Lagrangian.cpp
+  LagrangianInterpolation.cpp
   MarchingCubes.cpp
   ParticleAdvection.cpp
   PointAverage.cpp
