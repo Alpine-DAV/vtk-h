@@ -3,8 +3,6 @@
 #==============================================================================
 set(vtkh_rendering_headers
   Annotator.hpp
-  Image.hpp
-  ImageCompositor.hpp
   LineRenderer.hpp
   MeshRenderer.hpp
   RayTracer.hpp
@@ -13,16 +11,10 @@ set(vtkh_rendering_headers
   PointRenderer.hpp
   Scene.hpp
   VolumeRenderer.hpp
-  compositing/Compositor.hpp
-  compositing/PartialCompositor.hpp
-  compositing/AbsorptionPartial.hpp
-  compositing/EmissionPartial.hpp
-  compositing/VolumePartial.hpp
   )
 
 set(vtkh_rendering_sources
   Annotator.cpp
-  Image.cpp
   LineRenderer.cpp
   MeshRenderer.cpp
   RayTracer.cpp
@@ -31,12 +23,10 @@ set(vtkh_rendering_sources
   PointRenderer.cpp
   Scene.cpp
   VolumeRenderer.cpp
-  compositing/Compositor.cpp
-  compositing/PartialCompositor.cpp
   )
 
 if (ENABLE_SERIAL)
-    set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters)
+    set(vtkh_rendering_deps vtkh_core vtkh_utils vtkh_filters vtkh_compositing)
 
     if(VTKm_CUDA_FOUND)
         # triggers cuda compile
@@ -82,25 +72,10 @@ endif()
 #------------------------------------------------------------------------------
 # Handle parallel library
 #------------------------------------------------------------------------------
-set(vtkh_rendering_mpi_headers
-  compositing/DirectSendCompositor.hpp
-  compositing/MPICollect.hpp
-  compositing/RadixKCompositor.hpp
-  compositing/vtkh_diy_collect.hpp
-  compositing/vtkh_diy_image_block.hpp
-  compositing/vtkh_diy_utils.hpp
-  compositing/PartialCompositor.hpp
-  )
-
-set(vtkh_rendering_mpi_sources
-  compositing/DirectSendCompositor.cpp
-  compositing/RadixKCompositor.cpp
-  compositing/PartialCompositor.cpp
-  )
 
 if (MPI_FOUND)
 
-    set(vtkh_rendering_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkh_filters_mpi )
+    set(vtkh_rendering_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkh_filters_mpi vtkh_compositing_mpi)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
@@ -115,14 +90,11 @@ if (MPI_FOUND)
 
     blt_add_library(
         NAME vtkh_rendering_mpi
-        SOURCES ${vtkh_rendering_sources} ${vtkh_rendering_mpi_sources}
-        HEADERS ${vtkh_rendering_headers} ${vtkh_rendering_mpi_headers}
+        SOURCES ${vtkh_rendering_sources}
+        HEADERS ${vtkh_rendering_headers}
         DEPENDS_ON ${vtkh_rendering_mpi_deps}
     )
 
-    #target_link_libraries(vtkh_rendering_mpi PRIVATE vtkhdiy)
-    #this is a workaround for a cmake issue linking an interface header only library statically
-    target_include_directories(vtkh_rendering_mpi PRIVATE $<TARGET_PROPERTY:vtkhdiy,INTERFACE_INCLUDE_DIRECTORIES>)
 
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_COMPILING_FLAG)
     target_compile_definitions(vtkh_rendering_mpi PRIVATE VTKH_PARALLEL)

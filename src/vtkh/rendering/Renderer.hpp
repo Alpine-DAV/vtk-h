@@ -6,7 +6,7 @@
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/rendering/Render.hpp>
-#include <vtkh/rendering/Image.hpp>
+#include <vtkh/compositing/Image.hpp>
 
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>

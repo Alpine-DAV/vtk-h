@@ -1,13 +1,11 @@
 #include "Renderer.hpp"
-#include "compositing/Compositor.hpp"
+#include <vtkh/compositing/Compositor.hpp>
 
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
 #include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
-
-#include <assert.h>
 
 namespace vtkh {
 
@@ -132,16 +130,16 @@ void
 Renderer::PreExecute()
 {
   bool range_set = m_range.IsNonEmpty();
-  bool field_exists = m_input->GlobalFieldExists(m_field_name);
-  if(!range_set && field_exists)
+  Filter::CheckForRequiredField(m_field_name);
+
+  if(!range_set)
   {
     // we have not been given a range, so ask the data set
     vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
-    int num_components = ranges.GetPortalControl().GetNumberOfValues();
+    int num_components = ranges.GetNumberOfValues();
     //
     // current vtkm renderers only supports single component scalar fields
     //
-    assert(num_components == 1);
     if(num_components != 1)
     {
       std::stringstream msg;
@@ -150,7 +148,7 @@ Renderer::PreExecute()
       throw Error(msg.str());
     }
 
-    vtkm::Range global_range = ranges.GetPortalControl().Get(0);
+    vtkm::Range global_range = ranges.ReadPortal().Get(0);
     // a min or max may be been set by the user, check to see
     if(m_range.Min == vtkm::Infinity64())
     {

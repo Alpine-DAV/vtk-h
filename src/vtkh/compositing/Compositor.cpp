@@ -1,5 +1,5 @@
 #include "Compositor.hpp"
-#include <vtkh/rendering/ImageCompositor.hpp>
+#include <vtkh/compositing/ImageCompositor.hpp>
 
 #include <assert.h>
 #include <algorithm>
@@ -7,8 +7,8 @@
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
 #include <vtkh/vtkh.hpp>
-#include <vtkh/rendering/compositing/DirectSendCompositor.hpp>
-#include <vtkh/rendering/compositing/RadixKCompositor.hpp>
+#include <vtkh/compositing/DirectSendCompositor.hpp>
+#include <vtkh/compositing/RadixKCompositor.hpp>
 #include <diy/mpi.hpp>
 #endif
 

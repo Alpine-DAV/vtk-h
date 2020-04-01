@@ -1,7 +1,8 @@
 #include "VolumeRenderer.hpp"
 
 #include <vtkh/utils/vtkm_array_utils.hpp>
-#include <vtkh/rendering/compositing/Compositor.hpp>
+#include <vtkh/compositing/Compositor.hpp>
+#include <vtkh/Logger.hpp>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 
@@ -73,9 +74,29 @@ VolumeRenderer::~VolumeRenderer()
 void
 VolumeRenderer::Update()
 {
+  VTKH_DATA_OPEN(this->GetName());
+#ifdef VTKH_ENABLE_LOGGING
+  VTKH_DATA_ADD("device", GetCurrentDevice());
+  long long int in_cells = this->m_input->GetNumberOfCells();
+  VTKH_DATA_ADD("input_cells", in_cells);
+  VTKH_DATA_ADD("input_domains", this->m_input->GetNumberOfDomains());
+  int in_topo_dims;
+  bool in_structured = this->m_input->IsStructured(in_topo_dims);
+  if(in_structured)
+  {
+    VTKH_DATA_ADD("in_topology", "structured");
+  }
+  else
+  {
+    VTKH_DATA_ADD("in_topology", "unstructured");
+  }
+#endif
+
   PreExecute();
   Renderer::DoExecute();
   PostExecute();
+
+  VTKH_DATA_CLOSE();
 }
 
 void VolumeRenderer::SetColorTable(const vtkm::cont::ColorTable &color_table)
@@ -130,7 +151,10 @@ VolumeRenderer::PostExecute()
 void
 VolumeRenderer::SetNumberOfSamples(const int num_samples)
 {
-  assert(num_samples > 0);
+  if(num_samples < 1)
+  {
+    throw Error("Volume rendering samples must be greater than 0");
+  }
   m_num_samples = num_samples;
   CorrectOpacity();
 }
@@ -202,8 +226,14 @@ VolumeRenderer::DepthSort(int num_domains,
                           std::vector<float> &min_depths,
                           std::vector<int> &local_vis_order)
 {
-  assert(min_depths.size() == num_domains);
-  assert(local_vis_order.size() == num_domains);
+  if(min_depths.size() != num_domains)
+  {
+    throw Error("min depths size does not equal the number of domains");
+  }
+  if(local_vis_order.size() != num_domains)
+  {
+    throw Error("local vis order not equal to number of domains");
+  }
 #ifdef VTKH_PARALLEL
   int root = 0;
   MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());

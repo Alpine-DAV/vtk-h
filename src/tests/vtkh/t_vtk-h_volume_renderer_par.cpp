@@ -58,8 +58,6 @@ TEST(vtkh_volume_renderer, vtkh_parallel_render)
   tracer.SetInput(&data_set);
   tracer.SetField("point_data_Float64");
 
-  tracer.Update();
-
   vtkh::Scene scene;
   scene.AddRender(render);
   scene.AddRenderer(&tracer);

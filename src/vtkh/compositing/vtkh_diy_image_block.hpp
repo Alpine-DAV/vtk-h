@@ -1,7 +1,7 @@
 #ifndef VTKH_DIY_IMAGE_BLOCK_HPP
 #define VTKH_DIY_IMAGE_BLOCK_HPP
 
-#include <vtkh/rendering/Image.hpp>
+#include <vtkh/compositing/Image.hpp>
 #include <diy/master.hpp>
 
 namespace vtkh

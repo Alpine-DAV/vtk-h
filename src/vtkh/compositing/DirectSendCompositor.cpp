@@ -1,8 +1,8 @@
-#include <vtkh/rendering/ImageCompositor.hpp>
-#include <vtkh/rendering/compositing/DirectSendCompositor.hpp>
-#include <vtkh/rendering/compositing/MPICollect.hpp>
-#include <vtkh/rendering/compositing/vtkh_diy_collect.hpp>
-#include <vtkh/rendering/compositing/vtkh_diy_utils.hpp>
+#include <vtkh/compositing/ImageCompositor.hpp>
+#include <vtkh/compositing/DirectSendCompositor.hpp>
+#include <vtkh/compositing/MPICollect.hpp>
+#include <vtkh/compositing/vtkh_diy_collect.hpp>
+#include <vtkh/compositing/vtkh_diy_utils.hpp>
 
 #include <diy/master.hpp>
 #include <diy/mpi.hpp>

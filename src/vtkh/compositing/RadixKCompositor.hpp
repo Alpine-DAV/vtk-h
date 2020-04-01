@@ -1,7 +1,7 @@
 #ifndef VTKH_DIY_RADIX_K_HPP
 #define VTKH_DIY_RADIX_K_HPP
 
-#include <vtkh/rendering/Image.hpp>
+#include <vtkh/compositing/Image.hpp>
 #include <diy/mpi.hpp>
 #include <sstream>
 
