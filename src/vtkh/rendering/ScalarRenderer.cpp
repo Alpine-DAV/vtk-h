@@ -10,7 +10,41 @@
 
 #include <assert.h>
 
-namespace vtkh {
+namespace vtkh
+{
+
+namespace detail
+{
+vtkm::cont::DataSet
+filter_scalar_fields(vtkm::cont::DataSet &dataset)
+{
+  vtkm::cont::DataSet res;
+  const vtkm::Id num_coords = dataset.GetNumberOfCoordinateSystems();
+  for(vtkm::Id i = 0; i < num_coords; ++i)
+  {
+    res.AddCoordinateSystem(dataset.GetCoordinateSystem(i));
+  }
+  res.SetCellSet(dataset.GetCellSet());
+
+  const vtkm::Id num_fields = dataset.GetNumberOfFields();
+  for(vtkm::Id i = 0; i < num_fields; ++i)
+  {
+    vtkm::cont::Field field = dataset.GetField(i);
+    if(field.GetData().GetNumberOfComponents() == 1)
+    {
+      if(field.GetData().IsValueType<vtkm::Float32>() ||
+         field.GetData().IsValueType<vtkm::Float64>())
+      {
+        res.AddField(field);
+      }
+    }
+  }
+
+
+  return res;
+}
+
+} // namespace detail
 
 ScalarRenderer::ScalarRenderer()
   : m_width(1024),
@@ -86,7 +120,8 @@ ScalarRenderer::DoExecute()
     vtkm::cont::DataSet data_set;
     vtkm::Id domain_id;
     m_input->GetDomain(dom, data_set, domain_id);
-    renderers[dom].SetInput(data_set);
+    vtkm::cont::DataSet filtered = detail::filter_scalar_fields(data_set);
+    renderers[dom].SetInput(filtered);
     renderers[dom].SetWidth(m_width);
     renderers[dom].SetHeight(m_height);
 
@@ -116,7 +151,7 @@ ScalarRenderer::DoExecute()
 
   if(min_p != max_p)
   {
-    std::cout<<"VERY BAD\n";
+    throw Error("Scalar Renderer: mismatch in payload bytes");
   }
 
   PayloadImage final_image = compositor.Composite();
@@ -130,7 +165,8 @@ ScalarRenderer::DoExecute()
 
 }
 
-ScalarRenderer::Result ScalarRenderer::Convert(PayloadImage &image, std::vector<std::string> &names)
+ScalarRenderer::Result
+ScalarRenderer::Convert(PayloadImage &image, std::vector<std::string> &names)
 {
   Result result;
   result.ScalarNames = names;
@@ -210,27 +246,6 @@ PayloadImage * ScalarRenderer::Convert(Result &result)
   }
   return image;
 }
-
-//void
-//ScalarRenderer::ImageToCanvas(Image &image, vtkm::rendering::Canvas &canvas, bool get_depth)
-//{
-//  const int width = canvas.GetWidth();
-//  const int height = canvas.GetHeight();
-//  const int size = width * height;
-//  const int color_size = size * 4;
-//  float* color_buffer = &GetVTKMPointer(canvas.GetColorBuffer())[0][0];
-//  float one_over_255 = 1.f / 255.f;
-//#ifdef VTKH_USE_OPENMP
-//  #pragma omp parallel for
-//#endif
-//  for(int i = 0; i < color_size; ++i)
-//  {
-//    color_buffer[i] = static_cast<float>(image.m_pixels[i]) * one_over_255;
-//  }
-//
-//  float* depth_buffer = GetVTKMPointer(canvas.GetDepthBuffer());
-//  if(get_depth) memcpy(depth_buffer, &image.m_depths[0], sizeof(float) * size);
-//}
 
 vtkh::DataSet *
 ScalarRenderer::GetInput()
