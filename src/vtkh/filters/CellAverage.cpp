@@ -1,5 +1,6 @@
 #include <vtkh/filters/CellAverage.hpp>
 #include <vtkh/vtkm_filters/vtkmCellAverage.hpp>
+#include <vtkh/Error.hpp>
 
 namespace vtkh
 {
@@ -31,8 +32,10 @@ void CellAverage::PreExecute()
   Filter::PreExecute();
   Filter::CheckForRequiredField(m_field_name);
 
-  assert(m_field_name != "");
-  assert(m_output_field_name != "");
+  if(m_output_field_name == "")
+  {
+    throw Error("CellAverage: output field name not set");
+  }
 }
 
 void CellAverage::PostExecute()

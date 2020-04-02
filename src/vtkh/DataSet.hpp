@@ -39,6 +39,10 @@ public:
   // check to see if this field exists in at least one domain on any rank
   bool GlobalFieldExists(const std::string &field_name) const;
 
+  // Use to indentify if the field is a scalar, vec2, vec3 ...
+  // returns 0 if the field does not exist
+  vtkm::Id NumberOfComponents(const std::string &field_name) const;
+
   vtkm::cont::Field GetField(const std::string &field_name,
                              const vtkm::Id domain_index);
 

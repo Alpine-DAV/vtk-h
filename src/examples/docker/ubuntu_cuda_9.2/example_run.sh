@@ -1,18 +1,18 @@
-#!/bin/env python
+#!/bin/bash
 ###############################################################################
-# Copyright (c) 2014-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
 #
 # Produced at the Lawrence Livermore National Laboratory
 #
-# LLNL-CODE-666778
+# LLNL-CODE-716457
 #
 # All rights reserved.
 #
-# This file is part of Conduit.
+# This file is part of Ascent.
 #
-# For details, see: http://software.llnl.gov/conduit/.
+# For details, see: http://software.llnl.gov/ascent/.
 #
-# Please also read conduit/LICENSE
+# Please also read ascent/LICENSE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -43,43 +43,7 @@
 #
 ###############################################################################
 
-
-###############################################################################
-#
-# file: package.py
-#
-###############################################################################
-
-import subprocess
-import sys
-import datetime
-import os
-
-from os.path import join as pjoin
-
-def create_package(output_file,version):
-    scripts_dir = pjoin(os.path.abspath(os.path.split(__file__)[0]),"scripts")
-    pkg_script = pjoin(scripts_dir,"git_archive_all.py");
-    repo_name = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
-    if output_file is None:
-         suffix = "tar"
-         t = datetime.datetime.now()
-         output_file = "%s.%04d.%02d.%02d.%s" % (repo_name,t.year,t.month,t.day,suffix)
-    cmd = "python " + pkg_script + " --prefix=vtkh"
-    if not version is None:
-        cmd += "-" + version
-    cmd +=  " " + output_file
-    print "[exe: %s]" % cmd
-    subprocess.call(cmd,shell=True)
-
-
-if __name__ == "__main__":
-    ofile   = None
-    version = None
-    if len(sys.argv) > 1:
-        ofile = sys.argv[1]
-    if len(sys.argv) > 2:
-        version = sys.argv[2]
-    create_package(ofile,version)
-
+# exec docker run to create a container from our image
+echo "docker run -t -i vtkh-ubuntu-cuda:current"
+docker run -t -i vtkh-ubuntu-cuda:current
 

@@ -62,7 +62,7 @@ public:
         vtkm::worklet::ParticleAdvectionResult result;
 
         result = particleAdvection.Run(rk4, seedArray, maxSteps);
-        auto parPortal = result.Particles.GetPortalConstControl();
+        auto parPortal = result.Particles.ReadPortal();
 
         //Update particle data.
         //Need a functor to do this...
@@ -110,7 +110,7 @@ public:
         vtkm::worklet::Streamline streamline;
         vtkm::worklet::StreamlineResult result;
         result = streamline.Run(rk4, seedArray, maxSteps);
-        auto parPortal = result.Particles.GetPortalConstControl();
+        auto parPortal = result.Particles.ReadPortal();
 
         //Update particle data.
         int steps1 = 0;
@@ -174,7 +174,7 @@ private:
         int stepsTaken = 0;
         size_t nSeeds = particles.size();
         seedArray.Allocate(nSeeds);
-        auto seedPortal = seedArray.GetPortalControl();
+        auto seedPortal = seedArray.WritePortal();
         for (int i = 0; i < nSeeds; i++)
         {
             seedPortal.Set(i, particles[i].p);

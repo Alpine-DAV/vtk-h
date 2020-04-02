@@ -4,7 +4,6 @@
 #include <vtkh/utils/vtkm_array_utils.hpp>
 
 #include <vtkm/worklet/FieldHistogram.h>
-#include <assert.h>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
@@ -42,15 +41,18 @@ Histogram::HistogramResult
 merge_histograms(std::vector<Histogram::HistogramResult> &histograms)
 {
   const int size = histograms.size();
-  assert(size > 0);
+  if(size < 1)
+  {
+    throw Error("histogram size is 0");
+  }
   Histogram::HistogramResult res;
 
   res = histograms[0];
-  auto bins1 = res.m_bins.GetPortalControl();
+  auto bins1 = res.m_bins.WritePortal();
   const int num_bins = res.m_bins.GetNumberOfValues();
   for(int i = 1; i < size; ++i)
   {
-    auto bins2 = histograms[i].m_bins.GetPortalControl();
+    auto bins2 = histograms[i].m_bins.WritePortal();
     for(int n = 0; n < num_bins; ++n)
     {
       bins1.Set(n, bins1.Get(n) + bins2.Get(n));
@@ -140,7 +142,7 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
     {
       throw Error("Histogram: field must have a single component");
     }
-    range = ranges.GetPortalControl().Get(0);
+    range = ranges.ReadPortal().Get(0);
   }
 
   const int num_domains = data_set.GetNumberOfDomains();
@@ -177,7 +179,7 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
 void
 Histogram::HistogramResult::Print(std::ostream &out)
 {
-  auto binPortal = m_bins.GetPortalConstControl();
+  auto binPortal = m_bins.ReadPortal();
   const int num_bins = m_bins.GetNumberOfValues();
   vtkm::Id sum = 0;
   for (vtkm::Id i = 0; i < num_bins; i++)

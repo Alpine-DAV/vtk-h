@@ -253,8 +253,8 @@ void ContourTree::DoExecute()
   bool computeRegularStructure = true;
 
   //Convert the mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::ContourTreePPP2 filter(useMarchingCubes,
-                                       computeRegularStructure);
+  vtkm::filter::ContourTreeAugmented filter(useMarchingCubes,
+                                            computeRegularStructure);
 
   std::vector<DataValueType> iso_values;
 
@@ -319,8 +319,8 @@ void ContourTree::DoExecute()
 #endif // VTKM_ENABLE_MPI
 
     BranchType* branchDecompostionRoot = caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
-      filter.GetContourTree().superparents,
-      filter.GetContourTree().supernodes,
+      filter.GetContourTree().Superparents,
+      filter.GetContourTree().Supernodes,
       whichBranch,
       branchMinimum,
       branchMaximum,
@@ -332,7 +332,7 @@ void ContourTree::DoExecute()
     );
 
     // Simplify the contour tree of the branch decompostion
-    branchDecompostionRoot->simplifyToSize(numComp, usePersistenceSorter);
+    branchDecompostionRoot->SimplifyToSize(numComp, usePersistenceSorter);
 
     // Compute the relevant iso-values
     switch(contourSelectMethod)
@@ -340,13 +340,13 @@ void ContourTree::DoExecute()
     default:
     case 0:
       {
-        branchDecompostionRoot->getRelevantValues(contourType, eps, iso_values);
+        branchDecompostionRoot->GetRelevantValues(contourType, eps, iso_values);
       }
       break;
     case 1:
       {
         PLFType plf;
-        branchDecompostionRoot->accumulateIntervals(contourType, eps, plf);
+        branchDecompostionRoot->AccumulateIntervals(contourType, eps, plf);
         iso_values = plf.nLargest(m_levels);
       }
       break;

@@ -21,7 +21,10 @@ Scene::~Scene()
 void
 Scene::SetRenderBatchSize(int batch_size)
 {
-  assert(batch_size > 0);
+  if(batch_size < 1)
+  {
+    throw Error("Render batch size must be greater than 0");
+  }
   m_batch_size = batch_size;
 }
 
