@@ -8,7 +8,7 @@ namespace vtkh
 
 Scene::Scene()
   : m_has_volume(false),
-    m_batch_size(10)
+    m_batch_size(1000)
 {
 
 }
@@ -176,6 +176,7 @@ Scene::Render()
       renderer++;
     }
 
+    // TODO:
     // render screen annotations last and save
     // for(int i = 0; i < current_batch.size(); ++i)
     // {

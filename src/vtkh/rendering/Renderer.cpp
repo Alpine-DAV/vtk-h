@@ -69,6 +69,12 @@ Renderer::GetRenderTimes() const
   return m_render_times;
 }
 
+std::vector< std::vector<float> > 
+Renderer::GetColorBuffers() const
+{
+  return m_color_buffers;
+}
+
 void
 Renderer::SetDoComposite(bool do_composite)
 {

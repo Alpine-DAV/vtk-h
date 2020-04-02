@@ -78,6 +78,7 @@ VolumeRenderer::Update()
 {
   PreExecute();
   Renderer::DoExecute();
+  // DEBUG: write out images
   PostExecute();
 }
 
@@ -132,12 +133,18 @@ VolumeRenderer::PostExecute()
   {
     const int width = m_renders[i].GetCanvas(0)->GetWidth();
     const int height = m_renders[i].GetCanvas(0)->GetHeight();
-    // const int size = width * height;
-    // const int color_size = size * 4;
-
+    const int size = width * height;
+    const int color_size = size * 4;
     float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
-    encoder.Encode(color_buffer, width, height);
-    encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
+
+    std::vector<float> cb(color_size);
+    for (size_t j = 0; j < color_size; j++)
+      cb[j] = color_buffer[j];
+    
+    m_color_buffers.push_back(cb);
+
+    // encoder.Encode(color_buffer, width, height);
+    // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
   }
   // END DEBUG
 

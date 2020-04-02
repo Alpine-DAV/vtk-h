@@ -47,6 +47,8 @@ public:
   double                      GetLastRenderTime() const;
   std::vector<double>         GetRenderTimes() const;
   int                         GetMpiRank() const;
+  std::vector< std::vector <float> > GetColorBuffers() const;
+
 protected:
 
   // image related data with cinema support
@@ -61,6 +63,7 @@ protected:
   vtkm::cont::ColorTable                   m_color_table;
   bool                                     m_has_color_table;
   std::vector<double>                      m_render_times;  // render time in milliseconds
+  std::vector< std::vector<float> >        m_color_buffers;
   // methods
   virtual void PreExecute() override;
   virtual void PostExecute() override;
