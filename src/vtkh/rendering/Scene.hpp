@@ -24,7 +24,7 @@ public:
   void AddRender(vtkh::Render &render);
   void SetRenders(const std::vector<vtkh::Render> &renders);
   void AddRenderer(vtkh::Renderer *render);
-  void Render();
+  void Render(bool do_composite = false);
   void Save();
   void SetRenderBatchSize(int batch_size);
   int  GetRenderBatchSize() const;

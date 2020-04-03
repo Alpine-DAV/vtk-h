@@ -136,12 +136,17 @@ VolumeRenderer::PostExecute()
     const int size = width * height;
     const int color_size = size * 4;
     float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
+    float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
     std::vector<float> cb(color_size);
-    for (size_t j = 0; j < color_size; j++)
+    for (size_t j = 0; j < cb.size(); j++)
       cb[j] = color_buffer[j];
-    
     m_color_buffers.push_back(cb);
+
+    std::vector<float> db(size);
+    for (size_t j = 0; j < db.size(); j++)
+      db[j] = depth_buffer[j];
+    m_depth_buffers.push_back(db);
 
     // encoder.Encode(color_buffer, width, height);
     // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
@@ -186,6 +191,10 @@ VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera,
 void
 VolumeRenderer::Composite(const int &num_images)
 {
+  // this is a vis node otherwise we would not do compositing
+    // TODO: recv color/depth buffers from sim nodes: probing
+    // TODO: recv color/depth buffers from sim nodes: inline
+
   std::cout << "!!! COMPOSITE VolumeRenderer " << std::endl; 
   const int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
 
@@ -390,6 +399,7 @@ VolumeRenderer::FindVisibilityOrdering()
     for(int dom = 0; dom < num_domains; ++dom)
     {
       vtkm::Bounds bounds = this->m_input->GetDomainBounds(dom);
+      // TODO: only pass camera center ?
       min_depths[dom] = FindMinDepth(camera, bounds);
     }
 
