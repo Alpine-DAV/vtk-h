@@ -98,7 +98,10 @@ inline void MemStream::setPos(size_t p)
 template<typename T>
 struct Serialization
 {
-#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
+// sanity check for memstream. Support for is trivially copyable is
+// shaky on various compilers, but our unit testing will catch any
+// violations
+#if (defined(__GNUC__) && __GNUC__ >= 5)
     static_assert(std::is_trivially_copyable<T>::value, "Default serialization works only for trivially copyable types");
 #endif
   static void write(MemStream &memstream, const T &data)
