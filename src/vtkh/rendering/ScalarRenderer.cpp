@@ -247,6 +247,18 @@ PayloadImage * ScalarRenderer::Convert(Result &result)
   return image;
 }
 
+void
+ScalarRenderer::SetHeight(const int height)
+{
+  m_height = height;
+}
+
+void
+ScalarRenderer::SetWidth(const int width)
+{
+  m_width = width;
+}
+
 vtkh::DataSet *
 ScalarRenderer::GetInput()
 {
