@@ -28,6 +28,8 @@ public:
 
   int GetNumberOfCameras() const;
   vtkh::DataSet *GetInput();
+  void SetHeight(const int height);
+  void SetWidth(const int width);
 protected:
 
   int m_width;
