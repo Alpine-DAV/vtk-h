@@ -8,7 +8,7 @@ namespace vtkh
 
 Scene::Scene()
   : m_has_volume(false),
-    m_batch_size(1000)
+    m_batch_size(99999)  // NOTE: set to one batch only
 {
 
 }
@@ -156,13 +156,17 @@ Scene::Render(const bool do_composite)
       }
 
       (*renderer)->SetRenders(current_batch);
-      (*renderer)->Update();
-      // TODO: if (do_composite)
+      (*renderer)->Update(); // actual rendering
+
+      // TODO: 
+      if (do_composite)
+      {
       //    recv renders from sim nodes
       //    add received renders to m_renders
       //    create camera for renders using position coord
       //    int total_renders = int(m_renders.size());
       //    (*renderer)->Composite(total_renders);
+      } 
 
       // we only need to get the ranges and color tables once
       if(do_once)
@@ -176,11 +180,11 @@ Scene::Render(const bool do_composite)
         do_once = false;
       }
 
-      current_batch  = (*renderer)->GetRenders();
+      current_batch = (*renderer)->GetRenders();
       (*renderer)->ClearRenders();
 
       renderer++;
-    }
+    } // for renderers
 
     // TODO:
     // render screen annotations last and save
@@ -195,7 +199,7 @@ Scene::Render(const bool do_composite)
     // }
 
     batch_start = batch_end;
-  } // while
+  } // while batches
 }
 
 void

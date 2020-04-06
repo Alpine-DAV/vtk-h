@@ -49,6 +49,7 @@ public:
   int                         GetMpiRank() const;
   std::vector< std::vector<float>> GetColorBuffers() const;
   std::vector< std::vector<float>> GetDepthBuffers() const;
+  std::vector<float>          GetDepths() const;
 
 protected:
 
@@ -66,6 +67,7 @@ protected:
   std::vector<double>                      m_render_times;  // render time in milliseconds
   std::vector< std::vector<float>>         m_color_buffers;
   std::vector< std::vector<float>>         m_depth_buffers;
+  std::vector<float>                       m_depths;
 
   // methods
   virtual void PreExecute() override;

@@ -81,6 +81,12 @@ Renderer::GetDepthBuffers() const
   return m_depth_buffers;
 }
 
+std::vector<float>
+Renderer::GetDepths() const
+{
+  return m_depths;
+}
+
 void
 Renderer::SetDoComposite(bool do_composite)
 {

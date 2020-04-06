@@ -148,6 +148,11 @@ VolumeRenderer::PostExecute()
       db[j] = depth_buffer[j];
     m_depth_buffers.push_back(db);
 
+    const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
+    vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
+    float depth = FindMinDepth(camera, bounds);
+    m_depths.push_back(depth);
+
     // encoder.Encode(color_buffer, width, height);
     // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
   }
