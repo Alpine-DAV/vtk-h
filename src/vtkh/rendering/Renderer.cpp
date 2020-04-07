@@ -69,13 +69,13 @@ Renderer::GetRenderTimes() const
   return m_render_times;
 }
 
-std::vector< std::vector<float>> 
+std::vector< std::vector<unsigned char>> 
 Renderer::GetColorBuffers() const
 {
   return m_color_buffers;
 }
 
-std::vector< std::vector<float>> 
+std::vector< std::vector<unsigned char>> 
 Renderer::GetDepthBuffers() const
 {
   return m_depth_buffers;

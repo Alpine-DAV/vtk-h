@@ -47,8 +47,8 @@ public:
   double                      GetLastRenderTime() const;
   std::vector<double>         GetRenderTimes() const;
   int                         GetMpiRank() const;
-  std::vector< std::vector<float>> GetColorBuffers() const;
-  std::vector< std::vector<float>> GetDepthBuffers() const;
+  std::vector< std::vector<unsigned char>> GetColorBuffers() const;
+  std::vector< std::vector<unsigned char>> GetDepthBuffers() const;
   std::vector<float>          GetDepths() const;
 
 protected:
@@ -65,8 +65,8 @@ protected:
   vtkm::cont::ColorTable                   m_color_table;
   bool                                     m_has_color_table;
   std::vector<double>                      m_render_times;  // render time in milliseconds
-  std::vector< std::vector<float>>         m_color_buffers;
-  std::vector< std::vector<float>>         m_depth_buffers;
+  std::vector< std::vector<unsigned char>> m_color_buffers;
+  std::vector< std::vector<unsigned char>> m_depth_buffers;
   std::vector<float>                       m_depths;
 
   // methods

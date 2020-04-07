@@ -138,14 +138,14 @@ VolumeRenderer::PostExecute()
     float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
     float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
-    std::vector<float> cb(color_size);
+    std::vector<unsigned char> cb(color_size);
     for (size_t j = 0; j < cb.size(); j++)
-      cb[j] = color_buffer[j];
+      cb[j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
     m_color_buffers.push_back(cb);
 
-    std::vector<float> db(size);
+    std::vector<unsigned char> db(size);
     for (size_t j = 0; j < db.size(); j++)
-      db[j] = depth_buffer[j];
+      db[j] = static_cast<unsigned char>(int(depth_buffer[j] * 255.f));
     m_depth_buffers.push_back(db);
 
     const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
