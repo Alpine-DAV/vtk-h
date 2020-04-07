@@ -338,6 +338,59 @@ MakeRender(int width,
 vtkh::Render
 MakeRender(int width,
            int height,
+           vtkm::Bounds scene_bounds,
+           const std::vector<vtkm::Id> &domain_ids,
+           vtkm::rendering::Camera camera,
+           const std::string &image_name,
+           float bg_color[4],
+           float fg_color[4])
+{
+  vtkh::Render render;
+  render.SetSceneBounds(scene_bounds);
+  render.SetWidth(width);
+  render.SetHeight(height);
+  //
+  // detect a 2d data set
+  //
+  camera.SetModeTo3D();
+
+  bool is_2d = scene_bounds.Z.Min == 0. && scene_bounds.Z.Max == 0.;
+
+  if(is_2d)
+  {
+    camera.SetModeTo2D();
+    render.SetShadingOn(false);
+  }
+
+  render.SetCamera(camera);
+  render.SetImageName(image_name);
+  render.SetBackgroundColor(bg_color);
+  render.SetForegroundColor(fg_color);
+
+  const size_t num_domains = domain_ids.size();
+
+  for(size_t i = 0; i < num_domains; ++i)
+  {
+    //auto canvas = RendererType::GetNewCanvas(1, 1);
+    //canvas->Clear();
+    //canvas->SetBackgroundColor(render.GetBackgroundColor());
+    render.AddDomain(domain_ids[i]);
+  }
+
+  if(num_domains == 0)
+  {
+    //auto canvas = RendererType::GetNewCanvas(width, height);
+    //canvas->SetBackgroundColor(render.GetBackgroundColor());
+    //canvas->Clear();
+    vtkm::Id empty_data_set_id = -1;
+    render.AddDomain(empty_data_set_id);
+  }
+  return render;
+}
+
+vtkh::Render
+MakeRender(int width,
+           int height,
            vtkm::rendering::Camera camera,
            vtkh::DataSet &data_set,
            const std::string &image_name,

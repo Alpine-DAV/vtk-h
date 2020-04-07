@@ -90,6 +90,17 @@ VTKH_API
 vtkh::Render
 MakeRender(int width,
            int height,
+           vtkm::Bounds scene_bounds,
+           const std::vector<vtkm::Id> &domain_ids,
+           vtkm::rendering::Camera camera,
+           const std::string &image_name,
+           float bg_color[4] = vtkh_default_bg_color,
+           float fg_color[4] = vtkh_default_fg_color);
+
+VTKH_API
+vtkh::Render
+MakeRender(int width,
+           int height,
            vtkm::rendering::Camera camera,
            vtkh::DataSet &data_set,
            const std::string &image_name,
