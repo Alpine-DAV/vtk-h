@@ -61,8 +61,10 @@ vtkm::cont::ArrayHandle<vtkm::Float32>
 calculate_pdf(const vtkm::Int32 tot_points,
               const vtkm::Int32 num_bins,
               const vtkm::Float32 sample_percent,
-              vtkm::cont::ArrayHandle<vtkm::Id> &bins)
+              vtkm::cont::ArrayHandle<vtkm::Id> mybins)
 {
+  vtkm::cont:: ArrayHandle <vtkm::Id > bins;
+  vtkm::cont:: Algorithm ::Copy(mybins , bins);
 
   vtkm::cont::ArrayHandleIndex indexArray (num_bins);
   vtkm::cont::ArrayHandle<vtkm::Id> indices;
@@ -267,7 +269,7 @@ void HistSampling::DoExecute()
   Histogram histogrammer;
   histogrammer.SetNumBins(m_num_bins);
   Histogram::HistogramResult histogram = histogrammer.Run(*input,m_field_name);
-  //histogram.Print();
+  //histogram.Print(std::cout);
 
   vtkm::Id numberOfBins = histogram.m_bins.GetNumberOfValues();
 
@@ -287,6 +289,8 @@ void HistSampling::DoExecute()
       // so just skip if this particular domain doesn't have the field
       continue;
     }
+
+    std::cout<<"inside a domain:"<<i<<std::endl;
 
     vtkm::cont::ArrayHandle<vtkm::Float64> data;
     dom.GetField(m_field_name).GetData().CopyTo(data);
