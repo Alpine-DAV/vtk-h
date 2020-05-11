@@ -127,7 +127,6 @@ VolumeRenderer::PostExecute()
 {
   int total_renders = static_cast<int>(m_renders.size());
 
-  // DEBUG: render out image parts
   PNGEncoder encoder;
   for (size_t i = 0; i < m_renders.size(); i++)
   {
@@ -138,14 +137,15 @@ VolumeRenderer::PostExecute()
     float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
     float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
+    // auto start = std::chrono::system_clock::now();
     std::vector<unsigned char> cb(color_size);
     for (size_t j = 0; j < cb.size(); j++)
       cb[j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
     m_color_buffers.push_back(cb);
 
-    std::vector<unsigned char> db(size);
+    std::vector<float> db(size);
     for (size_t j = 0; j < db.size(); j++)
-      db[j] = static_cast<unsigned char>(int(depth_buffer[j] * 255.f));
+      db[j] = depth_buffer[j];
     m_depth_buffers.push_back(db);
 
     const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
@@ -153,6 +153,11 @@ VolumeRenderer::PostExecute()
     float depth = FindMinDepth(camera, bounds);
     m_depths.push_back(depth);
 
+    // auto end = std::chrono::system_clock::now();
+    // std::chrono::duration<double> elapsed = end - start;
+    // std::cout << "== copy buffer " << elapsed.count() << std::endl;
+
+    // DEBUG: render out image parts
     // encoder.Encode(color_buffer, width, height);
     // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
   }

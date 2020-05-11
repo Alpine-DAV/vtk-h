@@ -8,7 +8,7 @@ namespace vtkh
 
 Scene::Scene()
   : m_has_volume(false),
-    m_batch_size(99999)  // NOTE: set to one batch only
+    m_batch_size(std::numeric_limits<int>::max())  // NOTE: set to one batch only
 {
 
 }
@@ -116,8 +116,6 @@ Scene::AddRenderer(vtkh::Renderer *renderer)
 void
 Scene::Render(const bool do_composite)
 {
-  std::cout << "!! Compositing: " << (do_composite ? "true" : "false") << std::endl;
-
   std::vector<vtkm::Range> ranges;
   std::vector<std::string> field_names;
   std::vector<vtkm::cont::ColorTable> color_tables;
@@ -159,6 +157,7 @@ Scene::Render(const bool do_composite)
       (*renderer)->Update(); // actual rendering
 
       // TODO: 
+      // std::cout << "!! Compositing: " << (do_composite ? "true" : "false") << std::endl;
       if (do_composite)
       {
       //    recv renders from sim nodes

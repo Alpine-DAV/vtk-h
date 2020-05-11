@@ -75,7 +75,7 @@ Renderer::GetColorBuffers() const
   return m_color_buffers;
 }
 
-std::vector< std::vector<unsigned char>> 
+std::vector< std::vector<float>> 
 Renderer::GetDepthBuffers() const
 {
   return m_depth_buffers;
