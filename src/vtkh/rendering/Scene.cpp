@@ -144,28 +144,13 @@ Scene::Render(const bool do_composite)
 
     for(int i = 0; i < plot_size; ++i)
     {
-      // if(do_composite && i == plot_size - 1)
-      // {
-      //   (*renderer)->SetDoComposite(true);
-      // }
-      // else
-      {
+      if(do_composite && i == plot_size - 1)
+        (*renderer)->SetDoComposite(true);
+      else
         (*renderer)->SetDoComposite(false);
-      }
 
       (*renderer)->SetRenders(current_batch);
       (*renderer)->Update(); // actual rendering
-
-      // TODO: 
-      // std::cout << "!! Compositing: " << (do_composite ? "true" : "false") << std::endl;
-      if (do_composite)
-      {
-      //    recv renders from sim nodes
-      //    add received renders to m_renders
-      //    create camera for renders using position coord
-      //    int total_renders = int(m_renders.size());
-      //    (*renderer)->Composite(total_renders);
-      } 
 
       // we only need to get the ranges and color tables once
       if(do_once)
@@ -185,17 +170,19 @@ Scene::Render(const bool do_composite)
       renderer++;
     } // for renderers
 
-    // TODO:
-    // render screen annotations last and save
-    // for(int i = 0; i < current_batch.size(); ++i)
-    // {
-    //   current_batch[i].RenderWorldAnnotations();
-    //   current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
-    //   current_batch[i].RenderBackground();
-    //   current_batch[i].Save();
-    //   // free buffers
-    //   m_renders[batch_start + i].ClearCanvases();
-    // }
+    if (do_composite)
+    {
+      // render screen annotations last and save
+      for(int i = 0; i < current_batch.size(); ++i)
+      {
+        current_batch[i].RenderWorldAnnotations();
+        current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
+        current_batch[i].RenderBackground();
+        current_batch[i].Save();
+        // free buffers
+        m_renders[batch_start + i].ClearCanvases();
+      }
+    }
 
     batch_start = batch_end;
   } // while batches

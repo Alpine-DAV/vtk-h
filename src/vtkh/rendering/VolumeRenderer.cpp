@@ -150,8 +150,7 @@ VolumeRenderer::PostExecute()
 
     const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
     vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
-    float depth = FindMinDepth(camera, bounds);
-    m_depths.push_back(depth);
+    m_depths.push_back(FindMinDepth(camera, bounds));
 
     // auto end = std::chrono::system_clock::now();
     // std::chrono::duration<double> elapsed = end - start;
@@ -201,11 +200,6 @@ VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera,
 void
 VolumeRenderer::Composite(const int &num_images)
 {
-  // this is a vis node otherwise we would not do compositing
-    // TODO: recv color/depth buffers from sim nodes: probing
-    // TODO: recv color/depth buffers from sim nodes: inline
-
-  std::cout << "!!! COMPOSITE VolumeRenderer " << std::endl; 
   const int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
 
   m_compositor->SetCompositeMode(Compositor::VIS_ORDER_BLEND);
