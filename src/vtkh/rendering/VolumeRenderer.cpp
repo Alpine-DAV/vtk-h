@@ -93,7 +93,7 @@ VolumeRenderer::Update()
 #endif
 
   PreExecute();
-  Renderer::DoExecute();
+  DoExecute();
   PostExecute();
 
   VTKH_DATA_CLOSE();
@@ -123,6 +123,78 @@ void VolumeRenderer::CorrectOpacity()
   }
 
   this->m_color_table = corrected;
+}
+
+void
+VolumeRenderer::DoExecute()
+{
+  std::cout<<"DO EXECUTE\n";
+  if(m_input->OneDomainPerRank())
+  {
+    RenderOneDomainPerRank();
+  }
+  else
+  {
+    RenderMultipleDomainsPerRank();
+  }
+}
+
+void
+VolumeRenderer::RenderOneDomainPerRank()
+{
+  std::cout<<"Doing it\n";
+  if(m_mapper.get() == 0)
+  {
+    std::string msg = "Renderer Error: no renderer was set by sub-class";
+    throw Error(msg);
+  }
+
+  int total_renders = static_cast<int>(m_renders.size());
+  int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
+  if(num_domains > 1)
+  {
+    std::cout<<"VERY BAD\n";
+  }
+  for(int dom = 0; dom < num_domains; ++dom)
+  {
+    std::cout<<"DOM "<<dom<<"\n";
+    vtkm::cont::DataSet data_set;
+    vtkm::Id domain_id;
+    m_input->GetDomain(0, data_set, domain_id);
+
+    if(!data_set.HasField(m_field_name))
+    {
+      continue;
+    }
+
+    const vtkm::cont::DynamicCellSet &cellset = data_set.GetCellSet();
+    const vtkm::cont::Field &field = data_set.GetField(m_field_name);
+    const vtkm::cont::CoordinateSystem &coords = data_set.GetCoordinateSystem();
+
+    if(cellset.GetNumberOfCells() == 0) continue;
+
+    for(int i = 0; i < total_renders; ++i)
+    {
+      m_mapper->SetActiveColorTable(m_color_table);
+
+      Render::vtkmCanvas &canvas = m_renders[i].GetCanvas();
+      const vtkmCamera &camera = m_renders[i].GetCamera();
+      m_mapper->SetCanvas(&canvas);
+      m_mapper->RenderCells(cellset,
+                            coords,
+                            field,
+                            m_color_table,
+                            camera,
+                            m_range);
+      canvas.SaveAs("bananas.pnm");
+    }
+  }
+}
+
+void
+VolumeRenderer::RenderMultipleDomainsPerRank()
+{
+  std::cout<<"NOT IMPLEMENTED\n";
 }
 
 void
@@ -183,6 +255,7 @@ VolumeRenderer::FindMinDepth(const vtkm::rendering::Camera &camera,
 void
 VolumeRenderer::Composite(const int &num_images)
 {
+  std::cout<<"Compositing\n";
   const int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
 
   m_compositor->SetCompositeMode(Compositor::VIS_ORDER_BLEND);
@@ -191,21 +264,18 @@ VolumeRenderer::Composite(const int &num_images)
 
   for(int i = 0; i < num_images; ++i)
   {
-    const int num_canvases = m_renders[i].GetNumberOfCanvases();
+    float* color_buffer =
+      &GetVTKMPointer(m_renders[i].GetCanvas().GetColorBuffer())[0][0];
+    float* depth_buffer =
+      GetVTKMPointer(m_renders[i].GetCanvas().GetDepthBuffer());
+    int height = m_renders[i].GetCanvas().GetHeight();
+    int width = m_renders[i].GetCanvas().GetWidth();
 
-    for(int dom = 0; dom < num_canvases; ++dom)
-    {
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0];
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer());
-      int height = m_renders[i].GetCanvas(dom)->GetHeight();
-      int width = m_renders[i].GetCanvas(dom)->GetWidth();
-
-      m_compositor->AddImage(color_buffer,
-                             depth_buffer,
-                             width,
-                             height,
-                             m_visibility_orders[i][dom]);
-    } //for dom
+    m_compositor->AddImage(color_buffer,
+                           depth_buffer,
+                           width,
+                           height,
+                           m_visibility_orders[i][0]);
 
     Image result = m_compositor->Composite();
     const std::string image_name = m_renders[i].GetImageName() + ".png";
@@ -213,7 +283,7 @@ VolumeRenderer::Composite(const int &num_images)
     if(vtkh::GetMPIRank() == 0)
     {
 #endif
-      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
+      ImageToCanvas(result, m_renders[i].GetCanvas(), true);
 #ifdef VTKH_PARALLEL
     }
 #endif

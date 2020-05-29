@@ -72,7 +72,6 @@ TEST(vtkh_slice, vtkh_mulit_slice)
 
   vtkm::Bounds bounds;
   vtkh::Scene scene;
-  std::vector<vtkm::Id> domain_ids;
 
   // add the first slice
   vtkh::Slice slicer1;
@@ -86,7 +85,6 @@ TEST(vtkh_slice, vtkh_mulit_slice)
   slicer1.SetInput(&data_set);
   slicer1.Update();
   vtkh::DataSet *slice1  = slicer1.GetOutput();
-  domain_ids = slice1->GetDomainIds();
   bounds.Include(slice1->GetGlobalBounds());
 
   vtkh::RayTracer tracer1;
@@ -100,7 +98,6 @@ TEST(vtkh_slice, vtkh_mulit_slice)
   vtkh::Render render = vtkh::MakeRender(512,
                                          512,
                                          bounds,
-                                         domain_ids,
                                          "2slice",
                                           bg_color);
 

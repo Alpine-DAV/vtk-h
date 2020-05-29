@@ -14,7 +14,8 @@ Render::Render()
     m_height(1024),
     m_render_annotations(true),
     m_render_background(true),
-    m_shading(true)
+    m_shading(true),
+    m_canvas(m_width, m_height)
 {
 }
 
@@ -22,47 +23,10 @@ Render::~Render()
 {
 }
 
-Render::vtkmCanvasPtr
-Render::GetDomainCanvas(const vtkm::Id &domain_id)
+Render::vtkmCanvas&
+Render::GetCanvas()
 {
-  vtkm::Id dom = -1;
-  for(size_t i = 0; i < m_domain_ids.size(); ++i)
-  {
-    if(m_domain_ids[i] == domain_id)
-    {
-      dom = i;
-      break;
-    }
-  }
-
-  if(dom == -1)
-  {
-    std::stringstream ss;
-    ss<<"Render: canvas with domain id "<< domain_id <<" not found ";
-    throw Error(ss.str());
-  }
-
-  if(m_canvases[dom] == nullptr)
-  {
-    m_canvases[dom] = this->CreateCanvas();
-  }
-
-  return m_canvases[dom];
-}
-
-Render::vtkmCanvasPtr
-Render::GetCanvas(const vtkm::Id index)
-{
-  if(index < 0 && index >= m_canvases.size())
-  {
-    throw Error("Render: invalid canvas index");
-  }
-
-  if(m_canvases[index] == nullptr)
-  {
-    m_canvases[index] = this->CreateCanvas();
-  }
-  return m_canvases[index];
+  return m_canvas;
 }
 
 vtkm::Bounds
@@ -98,7 +62,9 @@ Render::GetHeight() const
 void
 Render::SetWidth(const vtkm::Int32 width)
 {
+  if(width == m_width) return;
   m_width = width;
+  m_canvas.ResizeBuffers(m_width, m_height);
 }
 
 void
@@ -116,55 +82,15 @@ Render::GetShadingOn() const
 void
 Render::SetHeight(const vtkm::Int32 height)
 {
+  if(height == m_height) return;
   m_height = height;
+  m_canvas.ResizeBuffers(m_width, m_height);
 }
 
 void
 Render::SetSceneBounds(const vtkm::Bounds &bounds)
 {
   m_scene_bounds = bounds;
-}
-
-void
-Render::AddDomain(vtkm::Id domain_id)
-{
-  m_canvases.push_back(nullptr);
-  m_domain_ids.push_back(domain_id);
-}
-
-int
-Render::GetNumberOfCanvases() const
-{
-  return static_cast<int>(m_canvases.size());
-}
-
-void
-Render::ClearCanvases()
-{
-  int num = static_cast<int>(m_canvases.size());
-  for(int i = 0; i < num; ++i)
-  {
-    if(m_canvases[i] != nullptr)
-    {
-      m_canvases[i] = nullptr;
-    }
-  }
-}
-
-bool
-Render::HasCanvas(const vtkm::Id &domain_id) const
-{
-  vtkm::Id dom = -1;
-  for(size_t i = 0; i < m_domain_ids.size(); ++i)
-  {
-    if(m_domain_ids[i] == domain_id)
-    {
-      dom = i;
-      break;
-    }
-  }
-
-  return dom != -1;
 }
 
 const vtkm::rendering::Camera&
@@ -218,15 +144,11 @@ Render::GetBackgroundColor() const
 void
 Render::RenderWorldAnnotations()
 {
-  if(!m_render_annotations) return;
-  int size = m_canvases.size();
-  if(size < 1) return;
-
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
 
-  Annotator annotator(*m_canvases[0], m_camera, m_scene_bounds);
+  Annotator annotator(m_canvas, m_camera, m_scene_bounds);
   annotator.RenderWorldAnnotations();
 
 }
@@ -237,29 +159,25 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                 const std::vector<vtkm::cont::ColorTable> &colors)
 {
   if(!m_render_annotations) return;
-  int size = m_canvases.size();
-  if(size < 1) return;
 
-  if(m_render_background) m_canvases[0]->BlendBackground();
-  Annotator annotator(*m_canvases[0], m_camera, m_scene_bounds);
+  if(m_render_background) m_canvas.BlendBackground();
+  Annotator annotator(m_canvas, m_camera, m_scene_bounds);
   annotator.RenderScreenAnnotations(field_names, ranges, colors);
 }
 
 void
 Render::RenderBackground()
 {
-  int size = m_canvases.size();
-  if(size < 1) return;
-  if(m_render_background) m_canvases[0]->BlendBackground();
+  if(m_render_background) m_canvas.BlendBackground();
 }
 
-Render::vtkmCanvasPtr
+Render::vtkmCanvas
 Render::CreateCanvas()
 {
-  Render::vtkmCanvasPtr canvas = std::make_shared<vtkm::rendering::CanvasRayTracer>(m_width, m_height);
-  canvas->SetBackgroundColor(m_bg_color);
-  canvas->SetForegroundColor(m_fg_color);
-  canvas->Clear();
+  Render::vtkmCanvas canvas(m_width, m_height);
+  canvas.SetBackgroundColor(m_bg_color);
+  canvas.SetForegroundColor(m_fg_color);
+  canvas.Clear();
   return canvas;
 }
 
@@ -267,15 +185,13 @@ void
 Render::Save()
 {
   // After rendering and compositing
-  // Rank 0 domain 0 contains the complete image.
-  int size = m_canvases.size();
-  if(size < 1) return;
+  // Rank 0 contains the complete image.
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
-  float* color_buffer = &GetVTKMPointer(m_canvases[0]->GetColorBuffer())[0][0];
-  int height = m_canvases[0]->GetHeight();
-  int width = m_canvases[0]->GetWidth();
+  float* color_buffer = &GetVTKMPointer(m_canvas.GetColorBuffer())[0][0];
+  int height = m_canvas.GetHeight();
+  int width = m_canvas.GetWidth();
   PNGEncoder encoder;
   encoder.Encode(color_buffer, width, height);
   encoder.Save(m_image_name + ".png");
@@ -285,7 +201,6 @@ vtkh::Render
 MakeRender(int width,
            int height,
            vtkm::Bounds scene_bounds,
-           const std::vector<vtkm::Id> &domain_ids,
            const std::string &image_name,
            float bg_color[4],
            float fg_color[4])
@@ -314,24 +229,6 @@ MakeRender(int width,
   render.SetBackgroundColor(bg_color);
   render.SetForegroundColor(fg_color);
 
-  const size_t num_domains = domain_ids.size();
-
-  for(size_t i = 0; i < num_domains; ++i)
-  {
-    //auto canvas = RendererType::GetNewCanvas(1, 1);
-    //canvas->Clear();
-    //canvas->SetBackgroundColor(render.GetBackgroundColor());
-    render.AddDomain(domain_ids[i]);
-  }
-
-  if(num_domains == 0)
-  {
-    //auto canvas = RendererType::GetNewCanvas(width, height);
-    //canvas->SetBackgroundColor(render.GetBackgroundColor());
-    //canvas->Clear();
-    vtkm::Id empty_data_set_id = -1;
-    render.AddDomain(empty_data_set_id);
-  }
   return render;
 }
 
@@ -339,7 +236,6 @@ vtkh::Render
 MakeRender(int width,
            int height,
            vtkm::Bounds scene_bounds,
-           const std::vector<vtkm::Id> &domain_ids,
            vtkm::rendering::Camera camera,
            const std::string &image_name,
            float bg_color[4],
@@ -367,24 +263,6 @@ MakeRender(int width,
   render.SetBackgroundColor(bg_color);
   render.SetForegroundColor(fg_color);
 
-  const size_t num_domains = domain_ids.size();
-
-  for(size_t i = 0; i < num_domains; ++i)
-  {
-    //auto canvas = RendererType::GetNewCanvas(1, 1);
-    //canvas->Clear();
-    //canvas->SetBackgroundColor(render.GetBackgroundColor());
-    render.AddDomain(domain_ids[i]);
-  }
-
-  if(num_domains == 0)
-  {
-    //auto canvas = RendererType::GetNewCanvas(width, height);
-    //canvas->SetBackgroundColor(render.GetBackgroundColor());
-    //canvas->Clear();
-    vtkm::Id empty_data_set_id = -1;
-    render.AddDomain(empty_data_set_id);
-  }
   return render;
 }
 
@@ -417,29 +295,6 @@ MakeRender(int width,
 
   render.SetBackgroundColor(bg_color);
   render.SetForegroundColor(fg_color);
-
-  int num_domains = static_cast<int>(data_set.GetNumberOfDomains());
-  for(int i = 0; i < num_domains; ++i)
-  {
-    vtkm::cont::DataSet ds;
-    vtkm::Id domain_id;
-    data_set.GetDomain(i, ds, domain_id);
-    //auto canvas = RendererType::GetNewCanvas(width, height);
-
-    //canvas->SetBackgroundColor(render.GetBackgroundColor());
-    //canvas->Clear();
-
-    render.AddDomain(domain_id);
-  }
-
-  if(num_domains == 0)
-  {
-    //auto canvas = RendererType::GetNewCanvas(1,1);
-    //canvas->SetBackgroundColor(render.GetBackgroundColor());
-    //canvas->Clear();
-    vtkm::Id empty_data_set_id = -1;
-    render.AddDomain(empty_data_set_id);
-  }
 
   return render;
 }

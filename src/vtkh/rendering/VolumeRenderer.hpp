@@ -21,7 +21,11 @@ public:
 protected:
   virtual void Composite(const int &num_images) override;
   virtual void PreExecute() override;
+  virtual void DoExecute() override;
   virtual void PostExecute() override;
+
+  void RenderOneDomainPerRank();
+  void RenderMultipleDomainsPerRank();
 
   void CorrectOpacity();
   void FindVisibilityOrdering();
