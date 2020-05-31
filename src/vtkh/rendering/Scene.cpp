@@ -143,6 +143,9 @@ Scene::Render()
     auto end = m_renders.begin() + batch_end;
 
     std::vector<vtkh::Render> current_batch(begin, end);
+
+    for(auto  render : current_batch) render.GetCanvas().Clear();
+
     const int plot_size = m_renderers.size();
     auto renderer = m_renderers.begin();
 

@@ -14,7 +14,7 @@ class VTKH_API Filter
 public:
   Filter();
   virtual ~Filter();
-  void SetInput(DataSet *input);
+  virtual void SetInput(DataSet *input);
   virtual std::string GetName() const = 0;
 
   DataSet* GetOutput();
