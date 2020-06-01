@@ -148,6 +148,8 @@ Render::RenderWorldAnnotations()
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
+  m_canvas.SetBackgroundColor(m_bg_color);
+  m_canvas.SetForegroundColor(m_fg_color);
 
   Annotator annotator(m_canvas, m_camera, m_scene_bounds);
   annotator.RenderWorldAnnotations();
@@ -159,9 +161,12 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                 const std::vector<vtkm::Range> &ranges,
                                 const std::vector<vtkm::cont::ColorTable> &colors)
 {
+  Print();
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
+  m_canvas.SetBackgroundColor(m_bg_color);
+  m_canvas.SetForegroundColor(m_fg_color);
   if(m_render_background) m_canvas.BlendBackground();
 
   if(!m_render_annotations) return;
