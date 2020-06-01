@@ -144,6 +144,7 @@ Render::GetBackgroundColor() const
 void
 Render::RenderWorldAnnotations()
 {
+  if(!m_render_annotations) return;
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
@@ -158,9 +159,12 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                 const std::vector<vtkm::Range> &ranges,
                                 const std::vector<vtkm::cont::ColorTable> &colors)
 {
-  if(!m_render_annotations) return;
-
+#ifdef VTKH_PARALLEL
+  if(vtkh::GetMPIRank() != 0) return;
+#endif
   if(m_render_background) m_canvas.BlendBackground();
+
+  if(!m_render_annotations) return;
   Annotator annotator(m_canvas, m_camera, m_scene_bounds);
   annotator.RenderScreenAnnotations(field_names, ranges, colors);
 }
@@ -181,6 +185,34 @@ Render::Copy() const
   copy.m_shading = m_shading;
   copy.m_canvas = CreateCanvas();
   return copy;
+}
+
+void
+Render::Print() const
+{
+  std::cout<<"=== image name  : "<<m_image_name<<"\n";;
+  std::cout<<"=== bounds .... : "<<m_scene_bounds<<"\n";
+  std::cout<<"=== width ..... : "<<m_width<<"\n";
+  std::cout<<"=== height .... : "<<m_height<<"\n";
+  std::cout<<"=== bg_color .. : "
+            <<m_bg_color.Components[0]<<" "
+            <<m_bg_color.Components[1]<<" "
+            <<m_bg_color.Components[2]<<" "
+            <<m_bg_color.Components[3]<<"\n";
+  std::cout<<"=== fg_color .. : "
+            <<m_fg_color.Components[0]<<" "
+            <<m_fg_color.Components[1]<<" "
+            <<m_fg_color.Components[2]<<" "
+            <<m_fg_color.Components[3]<<"\n";
+  std::cout<<"=== annotations : "
+           <<(m_render_annotations ? "On" : "Off")
+           <<"\n";
+  std::cout<<"=== background  : "
+           <<(m_render_background ? "On" : "Off")
+           <<"\n";
+  std::cout<<"=== shading ... : "
+           <<(m_shading ? "On" : "Off")
+           <<"\n";
 }
 
 void

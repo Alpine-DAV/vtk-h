@@ -36,6 +36,7 @@ public:
   vtkm::Int32                     GetWidth() const;
   vtkm::rendering::Color          GetBackgroundColor() const;
   bool                            GetShadingOn() const;
+  void                            Print() const;
 
   void                            DoRenderAnnotations(bool on);
   void                            DoRenderBackground(bool on);
