@@ -161,7 +161,6 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                 const std::vector<vtkm::Range> &ranges,
                                 const std::vector<vtkm::cont::ColorTable> &colors)
 {
-  Print();
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
