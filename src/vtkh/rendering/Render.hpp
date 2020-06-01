@@ -27,6 +27,7 @@ public:
 
   Render();
   ~Render();
+  Render                          Copy() const;
   vtkmCanvas&                     GetCanvas();
   const vtkm::rendering::Camera&  GetCamera() const;
   std::string                     GetImageName() const;
@@ -60,7 +61,7 @@ protected:
   vtkm::Int32                  m_height;
   vtkm::rendering::Color       m_bg_color;
   vtkm::rendering::Color       m_fg_color;
-  vtkmCanvas                   CreateCanvas();
+  vtkmCanvas                   CreateCanvas() const;
   bool                         m_render_annotations;
   bool                         m_render_background;
   bool                         m_shading;

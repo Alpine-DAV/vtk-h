@@ -130,13 +130,13 @@ TEST(vtkh_raytracer, vtkh_serial_batch)
                                          512,
                                          camera,
                                          data_set,
-                                         "multi");
+                                         "multi_batch");
 
   const int num_images = 11;
   std::vector<vtkh::Render> renders;
   for(int i = 0; i < num_images; ++i)
   {
-    vtkh::Render tmp = render1;
+    vtkh::Render tmp = render1.Copy();
     camera.Azimuth(float(i));
     tmp.SetCamera(camera);
     std::stringstream name;

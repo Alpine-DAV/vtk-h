@@ -165,6 +165,24 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
   annotator.RenderScreenAnnotations(field_names, ranges, colors);
 }
 
+Render
+Render::Copy() const
+{
+  Render copy;
+  copy.m_camera = m_camera;
+  copy.m_image_name = m_image_name;
+  copy.m_scene_bounds = m_scene_bounds;
+  copy.m_width = m_width;
+  copy.m_height = m_height;
+  copy.m_bg_color = m_bg_color;
+  copy.m_fg_color = m_fg_color;
+  copy.m_render_annotations = m_render_annotations;
+  copy.m_render_background = m_render_background;
+  copy.m_shading = m_shading;
+  copy.m_canvas = CreateCanvas();
+  return copy;
+}
+
 void
 Render::RenderBackground()
 {
@@ -172,7 +190,7 @@ Render::RenderBackground()
 }
 
 Render::vtkmCanvas
-Render::CreateCanvas()
+Render::CreateCanvas() const
 {
   Render::vtkmCanvas canvas(m_width, m_height);
   canvas.SetBackgroundColor(m_bg_color);
