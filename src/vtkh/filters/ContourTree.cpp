@@ -215,9 +215,9 @@ void ContourTree::DoExecute()
   localBlockOrigins.Allocate(blocksPerRank);
   localBlockSizes.Allocate(blocksPerRank);
 
-  auto localBlockIndicesPortal = localBlockIndices.GetPortalControl();
-  auto localBlockOriginsPortal = localBlockOrigins.GetPortalControl();
-  auto localBlockSizesPortal = localBlockSizes.GetPortalControl();
+  auto localBlockIndicesPortal = localBlockIndices.WritePortal();
+  auto localBlockOriginsPortal = localBlockOrigins.WritePortal();
+  auto localBlockSizesPortal = localBlockSizes.WritePortal();
 
   // Compute localBlockIndices
   int start[mpi_size]; // start of the splitDim column

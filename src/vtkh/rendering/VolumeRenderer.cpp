@@ -13,6 +13,7 @@
 #endif
 
 
+#include <vtkm/cont/ColorTable.hxx>
 #include <vtkm/rendering/ConnectivityProxy.h>
 #include <vtkh/compositing/PartialCompositor.hpp>
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
