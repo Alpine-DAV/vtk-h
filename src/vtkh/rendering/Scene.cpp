@@ -124,8 +124,6 @@ Scene::Render()
   std::vector<std::string> field_names;
   std::vector<vtkm::cont::ColorTable> color_tables;
 
-  bool do_once = true;
-
   //
   // We are going to render images in batches. With databases
   // like Cinema, we could be rendering hundres of images. Keeping
@@ -152,6 +150,43 @@ Scene::Render()
     const int plot_size = m_renderers.size();
     auto renderer = m_renderers.begin();
 
+    // render order is enforced inside add
+    // Order is:
+    // 1) surfaces
+    // 2) meshes
+    // 3) volume
+
+    // if we have only a volume we don't need
+    // to composite before we volume render
+    bool needs_surface_composite = false;
+    // if we have both surfaces/mesh and volumes
+    // we need to synchronize depths so that volume
+    // only render to the max depth
+    bool synch_depths = false;
+
+    // gather color tables and other information for
+    // annotations
+    for(int i = 0; i < plot_size; ++i)
+    {
+      if((*renderer)->GetHasColorTable())
+      {
+        ranges.push_back((*renderer)->GetRange());
+        field_names.push_back((*renderer)->GetFieldName());
+        color_tables.push_back((*renderer)->GetColorTable());
+      }
+    }
+    // reset the iterator
+    renderer = m_renderers.begin();
+
+    //
+    // pass 1
+    //
+    int opaque_plots = plot_size;
+    if(m_has_volume)
+    {
+      opaque_plots -= 1;
+    }
+
     for(int i = 0; i < plot_size; ++i)
     {
       if(i == plot_size - 1)
@@ -165,18 +200,6 @@ Scene::Render()
 
       (*renderer)->SetRenders(current_batch);
       (*renderer)->Update();
-
-      // we only need to get the ranges and color tables once
-      if(do_once)
-      {
-        if((*renderer)->GetHasColorTable())
-        {
-          ranges.push_back((*renderer)->GetRange());
-          field_names.push_back((*renderer)->GetFieldName());
-          color_tables.push_back((*renderer)->GetColorTable());
-        }
-        do_once = false;
-      }
 
       current_batch  = (*renderer)->GetRenders();
       (*renderer)->ClearRenders();
