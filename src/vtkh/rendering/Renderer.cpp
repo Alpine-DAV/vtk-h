@@ -95,31 +95,26 @@ Renderer::Composite(const int &num_images)
   m_compositor->SetCompositeMode(Compositor::Z_BUFFER_SURFACE);
   for(int i = 0; i < num_images; ++i)
   {
-    const int num_canvases = m_renders[i].GetNumberOfCanvases();
+    float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas().GetColorBuffer())[0][0];
+    float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas().GetDepthBuffer());
 
-    for(int dom = 0; dom < num_canvases; ++dom)
-    {
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0];
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer());
+    int height = m_renders[i].GetCanvas().GetHeight();
+    int width = m_renders[i].GetCanvas().GetWidth();
 
-      int height = m_renders[i].GetCanvas(dom)->GetHeight();
-      int width = m_renders[i].GetCanvas(dom)->GetWidth();
-
-      m_compositor->AddImage(color_buffer,
-                             depth_buffer,
-                             width,
-                             height);
-    } //for dom
+    m_compositor->AddImage(color_buffer,
+                           depth_buffer,
+                           width,
+                           height);
 
     Image result = m_compositor->Composite();
 
 #ifdef VTKH_PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
-      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
+      ImageToCanvas(result, m_renders[i].GetCanvas(), true);
     }
 #else
-    ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
+    ImageToCanvas(result, m_renders[i].GetCanvas(), true);
 #endif
     m_compositor->ClearImages();
   } // for image
@@ -228,9 +223,9 @@ Renderer::DoExecute()
 
       m_mapper->SetActiveColorTable(m_color_table);
 
-      vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
+      Render::vtkmCanvas &canvas = m_renders[i].GetCanvas();
       const vtkmCamera &camera = m_renders[i].GetCamera();
-      m_mapper->SetCanvas(&(*p_canvas));
+      m_mapper->SetCanvas(&canvas);
       m_mapper->RenderCells(cellset,
                             coords,
                             field,

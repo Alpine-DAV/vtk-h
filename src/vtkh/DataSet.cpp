@@ -76,6 +76,13 @@ void MemSet(vtkm::cont::ArrayHandle<T> &array, const T value, const vtkm::Id num
 
 } // namespace detail
 
+bool
+DataSet::OneDomainPerRank() const
+{
+  bool at_least_one = GetNumberOfDomains() < 2;
+  return detail::GlobalAgreement(at_least_one);
+}
+
 void
 DataSet::AddDomain(vtkm::cont::DataSet data_set, vtkm::Id domain_id)
 {
