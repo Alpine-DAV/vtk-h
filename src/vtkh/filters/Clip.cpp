@@ -310,6 +310,9 @@ Clip::GetName() const
 {
   return "vtkh::Clip";
 }
+
+} //  namespace vtkh
+
 #ifdef VTKM_CUDA
 
 // Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
@@ -320,10 +323,8 @@ Clip::GetName() const
 
 #include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
 
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(detail::MultiPlane);
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkh::detail::MultiPlane);
 
 #endif
 
 
-
-} //  namespace vtkh
