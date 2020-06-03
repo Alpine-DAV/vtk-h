@@ -145,6 +145,7 @@ void MarchingCubes::DoExecute()
     }
 
     vtkh::vtkmMarchingCubes marcher;
+    std::cout<<"Input "<<dom.GetField("ghost_indicator").GetRange().ReadPortal().Get(0)<<"\n";
 
     auto dataset = marcher.Run(dom,
                                m_field_name,
@@ -152,6 +153,7 @@ void MarchingCubes::DoExecute()
                                this->GetFieldSelection());
 
     temp_data.AddDomain(dataset, domain_id);
+    std::cout<<"Temp "<<dataset.GetField("ghost_indicator").GetRange().ReadPortal().Get(0)<<"\n";
 
   }
 
