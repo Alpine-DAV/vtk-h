@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <chrono>
+#include <iomanip>
 
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
@@ -122,12 +123,38 @@ VolumeRenderer::PreExecute()
   m_tracer->SetSampleDistance(dist);
 }
 
+static std::string get_timing_file_name(const int value, const int precision, 
+                                        const std::string &prefix,
+                                        const std::string &path = "timings")
+{
+    std::ostringstream oss;
+    oss << path;
+    oss << "/";
+    oss << prefix;
+    oss << "_";
+    oss << std::setw(precision) << std::setfill('0') << value;
+    oss << ".txt";
+    return oss.str();
+}
+
+static void log_global_time(const std::string &description,
+                            const int rank)
+{
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+
+    std::ofstream out(get_timing_file_name(rank, 5, "global"), std::ios_base::app);
+    out << description << " : " << seconds << std::endl;
+    out.close();
+}
+
 void
 VolumeRenderer::PostExecute()
 {
   int total_renders = static_cast<int>(m_renders.size());
 
-  PNGEncoder encoder;
+  // PNGEncoder encoder;
   for (size_t i = 0; i < m_renders.size(); i++)
   {
     const int width = m_renders[i].GetCanvas(0)->GetWidth();
@@ -137,6 +164,8 @@ VolumeRenderer::PostExecute()
     float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
     float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
+    // NOTE: buffer copy costs about 0.01 seconds per render 
+    // -> TODO: use pointers if possible
     // auto start = std::chrono::system_clock::now();
     std::vector<unsigned char> cb(color_size);
     for (size_t j = 0; j < cb.size(); j++)
@@ -154,17 +183,22 @@ VolumeRenderer::PostExecute()
 
     // auto end = std::chrono::system_clock::now();
     // std::chrono::duration<double> elapsed = end - start;
-    // std::cout << "== copy buffer " << elapsed.count() << std::endl;
+    // std::cout << "-- copy buffers " << elapsed.count() << std::endl;
 
     // DEBUG: render out image parts
     // encoder.Encode(color_buffer, width, height);
     // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
   }
-  // END DEBUG
 
   if(m_do_composite)
   {
+    int rank = 0;
+#ifdef VTKH_PARALLEL
+    rank = vtkh::GetMPIRank();
+#endif
+    log_global_time("begin compositing", rank);
     this->Composite(total_renders);
+    log_global_time("end compositing", rank);
   }
 }
 

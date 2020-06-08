@@ -170,18 +170,18 @@ Scene::Render(const bool do_composite)
       renderer++;
     } // for renderers
 
-    if (do_composite)
+    // render screen annotations last and save
+    for(int i = 0; i < current_batch.size(); ++i)
     {
-      // render screen annotations last and save
-      for(int i = 0; i < current_batch.size(); ++i)
+      if (do_composite) // TODO: annotations for hybrid rendering
       {
         current_batch[i].RenderWorldAnnotations();
         current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
         current_batch[i].RenderBackground();
         current_batch[i].Save();
-        // free buffers
-        m_renders[batch_start + i].ClearCanvases();
       }
+      // free buffers
+      m_renders[batch_start + i].ClearCanvases();
     }
 
     batch_start = batch_end;

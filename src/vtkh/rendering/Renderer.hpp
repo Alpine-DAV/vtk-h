@@ -2,6 +2,8 @@
 #define VTK_H_RENDERER_HPP
 
 #include <vector>
+#include <memory>
+
 #include <vtkh/vtkh_exports.h>
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/Filter.hpp>
@@ -45,11 +47,11 @@ public:
   vtkm::Range                 GetRange() const;
   bool                        GetHasColorTable() const;
   double                      GetLastRenderTime() const;
-  std::vector<double>         GetRenderTimes() const;
+  std::vector<double>         GetRenderTimes();
   int                         GetMpiRank() const;
-  std::vector< std::vector<unsigned char>> GetColorBuffers() const;
-  std::vector< std::vector<float>> GetDepthBuffers() const;
-  std::vector<float>          GetDepths() const;
+  std::vector<std::vector<unsigned char> > GetColorBuffers();
+  std::vector<std::vector<float> >         GetDepthBuffers();
+  std::vector<float>          GetDepths();
 
 protected:
 
@@ -65,8 +67,8 @@ protected:
   vtkm::cont::ColorTable                   m_color_table;
   bool                                     m_has_color_table;
   std::vector<double>                      m_render_times;  // render time in milliseconds
-  std::vector< std::vector<unsigned char>> m_color_buffers;
-  std::vector< std::vector<float>>         m_depth_buffers;
+  std::vector<std::vector<unsigned char>>  m_color_buffers;
+  std::vector<std::vector<float> >         m_depth_buffers;
   std::vector<float>                       m_depths;
 
   // methods

@@ -63,29 +63,31 @@ Renderer::GetMpiRank() const
   return vtkh::GetMPIRank();
 }
 
-std::vector<double> 
-Renderer::GetRenderTimes() const
+
+std::vector<double>
+Renderer::GetRenderTimes() 
 {
   return m_render_times;
 }
 
-std::vector< std::vector<unsigned char>> 
-Renderer::GetColorBuffers() const
+std::vector<std::vector<unsigned char> >
+Renderer::GetColorBuffers() 
 {
   return m_color_buffers;
 }
 
-std::vector< std::vector<float>> 
-Renderer::GetDepthBuffers() const
+std::vector<std::vector<float> >
+Renderer::GetDepthBuffers() 
 {
   return m_depth_buffers;
 }
 
 std::vector<float>
-Renderer::GetDepths() const
+Renderer::GetDepths() 
 {
   return m_depths;
 }
+
 
 void
 Renderer::SetDoComposite(bool do_composite)
@@ -130,7 +132,6 @@ vtkm::cont::ColorTable Renderer::GetColorTable() const
 void
 Renderer::Composite(const int &num_images)
 {
-  std::cout << "!!! COMPOSITE renderer " << std::endl; 
   VTKH_DATA_OPEN("Composite");
   m_compositor->SetCompositeMode(Compositor::Z_BUFFER_SURFACE);
   for(int i = 0; i < num_images; ++i)
