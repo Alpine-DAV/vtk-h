@@ -264,8 +264,8 @@ void ParticleAdvection::DoExecute()
         vtkm::cont::ArrayHandle<vtkm::Id> ids;
         positions.Allocate(totalNumPts);
         ids.Allocate(totalNumPts);
-        auto posPortal = positions.ReadPortal();
-        auto idPortal = ids.ReadPortal();
+        auto posPortal = positions.WritePortal();
+        auto idPortal = ids.WritePortal();
 
         vtkm::Id idx = 0;
         for (int i = 0; i < particleTraces.size(); i++)
@@ -300,8 +300,8 @@ void ParticleAdvection::DoExecute()
         vtkm::cont::ArrayHandle<vtkm::Id> ids;
         positions.Allocate(totalNumPts);
         ids.Allocate(totalNumPts);
-        auto posPortal = positions.ReadPortal();
-        auto idPortal = ids.ReadPortal();
+        auto posPortal = positions.WritePortal();
+        auto idPortal = ids.WritePortal();
 
         vtkm::Id idx = 0;
         for (int i = 0; i < particleTraces.size(); i++)
@@ -445,7 +445,7 @@ ParticleAdvection::DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts)
   if (ds)
   {
       sprintf(nm, "ds.ts%03i.block%03d.vtk", ts, domId);
-      vtkm::io::writer::VTKDataSetWriter writer(nm);
+      vtkm::io::VTKDataSetWriter writer(nm);
       writer.WriteDataSet(*ds);
   }
   if (rank == 0)
@@ -506,7 +506,7 @@ ParticleAdvection::DumpDS(int ts)
     char nm[128];
     sprintf(nm, "dom.ts%03d.block%03d.vtk", ts, (int)domId);
 
-    vtkm::io::writer::VTKDataSetWriter writer(nm);
+    vtkm::io::VTKDataSetWriter writer(nm);
     writer.WriteDataSet(dom);
 
   }

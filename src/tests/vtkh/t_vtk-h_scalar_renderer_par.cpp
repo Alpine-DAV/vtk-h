@@ -56,7 +56,7 @@ TEST(vtkh_scalar_renderer, vtkh_parallel_render)
   if(vtkh::GetMPIRank() == 0)
   {
     vtkm::cont::DataSet &result = output->GetDomain(0);
-    vtkm::io::writer::VTKDataSetWriter writer("scalar_data.vtk");
+    vtkm::io::VTKDataSetWriter writer("scalar_data.vtk");
     writer.WriteDataSet(result);
   }
 

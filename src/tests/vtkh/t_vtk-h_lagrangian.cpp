@@ -40,7 +40,6 @@ vtkm::cont::DataSet MakeTestUniformDataSet(vtkm::Id time)
   vtkm::Vec<vtkm::Float64, 3> SPACING(xdiff, ydiff, zdiff);
 
   vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
-  vtkm::cont::DataSetFieldAdd dsf;
 
   vtkm::Id numPoints = DIMS[0] * DIMS[1] * DIMS[2];
 
@@ -59,7 +58,7 @@ vtkm::cont::DataSet MakeTestUniformDataSet(vtkm::Id time)
       }
     }
   }
-  dsf.AddPointField(dataset, "velocity", velocityField);
+  dataset.AddPointField("velocity", velocityField);
   return dataset;
 }
 
