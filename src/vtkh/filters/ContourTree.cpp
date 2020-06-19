@@ -83,6 +83,8 @@ void ContourTree::PostExecute()
 
 void ContourTree::DoExecute()
 {
+  this->m_output = new DataSet();
+#if 0
   vtkh::DataSet *old_input = this->m_input;
 
 
@@ -104,7 +106,6 @@ void ContourTree::DoExecute()
 
   int mpi_rank = 0;
 
-  this->m_output = new DataSet();
 
   const int num_domains = this->m_input->GetNumberOfDomains();
   assert(num_domains == 1);
@@ -388,6 +389,7 @@ void ContourTree::DoExecute()
     this->m_input = old_input;
   }
 
+#endif
 }
 
 std::string
