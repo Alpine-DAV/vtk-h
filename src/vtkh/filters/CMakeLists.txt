@@ -14,7 +14,6 @@ set(vtkh_filters_headers
   HistSampling.hpp
   Histogram.hpp
   Log.hpp
-  ContourTree.hpp
   IsoVolume.hpp
   NoOp.hpp
   Lagrangian.hpp
@@ -33,6 +32,10 @@ set(vtkh_filters_headers
   communication/Communicator.hpp
   communication/MemStream.h
   )
+  
+if(ENABLE_FILTER_CONTOUR_TREE)
+    list(APPEND vtkh_filters_headers ContourTree.hpp)
+endif()
 
 set(vtkh_comm_filters_headers
   communication/BoundsMap.hpp
@@ -52,7 +55,6 @@ set(vtkh_filters_sources
   HistSampling.cpp
   Histogram.cpp
   Log.cpp
-  ContourTree.cpp
   IsoVolume.cpp
   NoOp.cpp
   Lagrangian.cpp
@@ -67,6 +69,11 @@ set(vtkh_filters_sources
   VectorMagnitude.cpp
   communication/MemStream.cpp
   )
+
+if(ENABLE_FILTER_CONTOUR_TREE)
+  list(APPEND vtkh_filters_headers ContourTree.cpp)
+endif()
+
 
 set(vtkh_comm_filters_sources
   communication/MemStream.cpp
