@@ -53,7 +53,8 @@ option(ENABLE_TESTS       "Build tests"               ON)
 option(ENABLE_CUDA        "Enable CUDA Support"       OFF)
 option(ENABLE_MPI         "Build MPI Support"         ON)
 option(ENABLE_LOGGING     "Generate log files "       OFF)
-option(ENABLE_SERIAL      "Build serial (non-MPI) libraries"    ON)
+option(ENABLE_SERIAL      "Build serial (non-MPI) libraries" ON)
+option(ENABLE_FILTER_CONTOUR_TREE "Build contour tree support" OFF)
 
 if(NOT ENABLE_SERIAL AND NOT ENABLE_MPI)
   message(FATAL_ERROR "No libraries are built. "
