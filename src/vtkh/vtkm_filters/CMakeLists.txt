@@ -9,7 +9,7 @@ set(vtkm_filters_headers
   vtkmClipWithField.hpp
   vtkmExtractStructured.hpp
   vtkmGradient.hpp
-  vtkmLagrangian.hpp
+  # vtkmLagrangian.hpp
   vtkmMarchingCubes.hpp
   vtkmPointAverage.hpp
   vtkmThreshold.hpp
@@ -24,7 +24,7 @@ set(vtkm_filters_sources
   vtkmClipWithField.cpp
   vtkmExtractStructured.cpp
   vtkmGradient.cpp
-  vtkmLagrangian.cpp
+  # vtkmLagrangian.cpp
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
   vtkmThreshold.cpp

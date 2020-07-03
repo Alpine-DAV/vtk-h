@@ -6,6 +6,11 @@
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
 
+// for logging
+#include <chrono>
+#include <iomanip>
+#include <fstream>
+
 namespace vtkh
 {
 
@@ -20,6 +25,31 @@ Render::Render()
 
 Render::~Render()
 {
+}
+
+static std::string get_timing_file_name(const int value, const int precision, 
+                                        const std::string &prefix,
+                                        const std::string &path = "timings")
+{
+    std::ostringstream oss;
+    oss << path;
+    oss << "/";
+    oss << prefix;
+    oss << "_";
+    oss << std::setw(precision) << std::setfill('0') << value;
+    oss << ".txt";
+    return oss.str();
+}
+
+static void log_global_time(const std::string &description, const int rank)
+{
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+    std::ofstream out(get_timing_file_name(rank, 5, "global"), std::ios_base::app);
+    out << description << " : " << millis << std::endl;
+    out.close();
 }
 
 Render::vtkmCanvasPtr
@@ -270,12 +300,17 @@ Render::Save()
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
+
+  log_global_time("begin save", 0);
+
   float* color_buffer = &GetVTKMPointer(m_canvases[0]->GetColorBuffer())[0][0];
   int height = m_canvases[0]->GetHeight();
   int width = m_canvases[0]->GetWidth();
   PNGEncoder encoder;
   encoder.Encode(color_buffer, width, height);
   encoder.Save(m_image_name + ".png");
+
+  log_global_time("end save", 0);
 }
 
 vtkh::Render

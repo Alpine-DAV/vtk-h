@@ -15,10 +15,10 @@ set(vtkh_filters_headers
   Log.hpp
   IsoVolume.hpp
   NoOp.hpp
-  Lagrangian.hpp
+  # Lagrangian.hpp
   MarchingCubes.hpp
   Particle.hpp
-  ParticleAdvection.hpp
+  # ParticleAdvection.hpp
   Integrator.hpp
   PointAverage.hpp
   Recenter.hpp
@@ -50,9 +50,9 @@ set(vtkh_filters_sources
   Log.cpp
   IsoVolume.cpp
   NoOp.cpp
-  Lagrangian.cpp
+  # Lagrangian.cpp
   MarchingCubes.cpp
-  ParticleAdvection.cpp
+  # ParticleAdvection.cpp
   PointAverage.cpp
   Recenter.cpp
   Threshold.cpp
