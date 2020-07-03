@@ -142,10 +142,10 @@ static void log_global_time(const std::string &description,
 {
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
-    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
     std::ofstream out(get_timing_file_name(rank, 5, "global"), std::ios_base::app);
-    out << description << " : " << seconds << std::endl;
+    out << description << " : " << millis << std::endl;
     out.close();
 }
 
