@@ -465,6 +465,61 @@ void VolumeRenderer::CorrectOpacity()
   m_corrected_color_table = corrected;
 }
 
+bool has_contribution(const vtkm::Range &plot_scalar_range,
+                      const vtkm::cont::ColorTable &color_table,
+                      const std::string &field_name,
+                      const vtkm::cont::DataSet &dom,
+                      const vtkm::Float64 threshold)
+{
+  int num_alphas = color_table.GetNumberOfPointsAlpha();
+  // i don't know what the defualt behavior is for only one
+  // alpha point, so if we have 0 or 1 just say that this
+  // domain contributes
+  if(num_alphas < 2)
+  {
+    return true;
+  }
+
+  if(!dom.HasField(field_name))
+  {
+    return false;
+  }
+
+  const vtkm::cont::Field &field = dom.GetField(field_name);
+  vtkm::cont::ArrayHandle<vtkm::Range> sub_range;
+  sub_range = field.GetRange();
+
+  vtkm::Range field_range = sub_range.ReadPortal().Get(0);
+
+  vtkm::Float64 min_value = plot_scalar_range.Min;
+  vtkm::Float64 max_value = plot_scalar_range.Max;
+  vtkm::Float64 length = min_value == max_value ? 1.0 : max_value - min_value;
+
+  vtkm::Float64 domain_min = field_range.Min;
+  vtkm::Float64 domain_max = field_range.Max;
+  // normalize to color table positions
+  domain_min = (domain_min - min_value) / length;
+  domain_max = (domain_max - min_value) / length;
+
+  vtkm::Float64 max_alpha = 0;
+
+  for(int i = 0; i < num_alphas-1; ++i)
+  {
+    vtkm::Vec<vtkm::Float64,4> point0, point1;
+    bool valid = color_table.GetPointAlpha(i,point0);
+    valid = color_table.GetPointAlpha(i+1,point1);
+    // alpha points are location, alpha, mid point, sharpness
+    if(point0[0] <= max_value && min_value <= point1[0])
+    {
+      max_alpha = std::max(max_alpha,point0[1]);
+      max_alpha = std::max(max_alpha,point1[1]);
+    }
+  }
+
+  return max_alpha > threshold;
+
+}
+
 void
 VolumeRenderer::DoExecute()
 {
