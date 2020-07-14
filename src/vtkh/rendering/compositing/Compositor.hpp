@@ -47,6 +47,7 @@ public:
                   const int    vis_order);
 
     Image Composite();
+    Image* CompositeNoCopy();
 
     virtual void         Cleanup();
 

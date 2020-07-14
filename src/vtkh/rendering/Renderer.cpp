@@ -88,7 +88,6 @@ Renderer::GetDepths()
   return m_depths;
 }
 
-
 void
 Renderer::SetDoComposite(bool do_composite)
 {
@@ -128,6 +127,60 @@ vtkm::cont::ColorTable Renderer::GetColorTable() const
 {
   return m_color_table;
 }
+
+bool Renderer::HasContribution(const vtkm::Range &plot_scalar_range,
+                               const vtkm::cont::DataSet &dom,
+                               const vtkm::Float64 threshold)
+{
+  int num_alphas = m_color_table.GetNumberOfPointsAlpha();
+  // i don't know what the defualt behavior is for only one
+  // alpha point, so if we have 0 or 1 just say that this
+  // domain contributes
+  if(num_alphas < 2)
+  {
+    return true;
+  }
+
+  if(!dom.HasField(m_field_name))
+  {
+    return false;
+  }
+
+  const vtkm::cont::Field &field = dom.GetField(m_field_name);
+  vtkm::cont::ArrayHandle<vtkm::Range> sub_range;
+  sub_range = field.GetRange();
+
+  vtkm::Range field_range = sub_range.GetPortalControl().Get(0);
+
+  vtkm::Float64 min_value = plot_scalar_range.Min;
+  vtkm::Float64 max_value = plot_scalar_range.Max;
+  vtkm::Float64 length = min_value == max_value ? 1.0 : max_value - min_value;
+
+  vtkm::Float64 domain_min = field_range.Min;
+  vtkm::Float64 domain_max = field_range.Max;
+  // normalize to color table positions
+  domain_min = (domain_min - min_value) / length;
+  domain_max = (domain_max - min_value) / length;
+
+  vtkm::Float64 max_alpha = 0;
+
+  for(int i = 0; i < num_alphas-1; ++i)
+  {
+    vtkm::Vec<vtkm::Float64,4> point0, point1;
+    bool valid = m_color_table.GetPointAlpha(i, point0);
+    valid = m_color_table.GetPointAlpha(i+1, point1);
+    // alpha points are location, alpha, mid point, sharpness
+    if(point0[0] <= domain_max && domain_min <= point1[0])
+    {
+      max_alpha = std::max(max_alpha, point0[1]);
+      max_alpha = std::max(max_alpha, point1[1]);
+    }
+  }
+
+  return max_alpha > threshold;
+
+}
+
 
 void
 Renderer::Composite(const int &num_images)
@@ -216,12 +269,12 @@ Renderer::PreExecute()
   //           << m_bounds.Z.Min << " " 
   //           << m_bounds.Z.Max << std::endl;
 
-  m_bounds.X.Min = 0;
-  m_bounds.X.Max = 6;
-  m_bounds.Y.Min = 0;
-  m_bounds.Y.Max = 6; 
-  m_bounds.Z.Min = 0;
-  m_bounds.Z.Max = 6;
+  m_bounds.X.Min =  0;
+  m_bounds.X.Max = 10;
+  m_bounds.Y.Min =  0;
+  m_bounds.Y.Max = 10; 
+  m_bounds.Z.Min =  0;
+  m_bounds.Z.Max = 10;
 }
 
 void
@@ -267,6 +320,17 @@ Renderer::DoExecute()
 
     if(!data_set.HasField(m_field_name))
     {
+      continue;
+    }
+
+    // TODO: m_range ->  m_scalar_range ; threshold == 0.01 ?
+    if (!HasContribution(m_range, data_set, vtkm::Float64(0.01)))
+    {
+      int rank = 0;
+#ifdef VTKH_PARALLEL
+      rank = vtkh::GetMPIRank();
+#endif
+      std::cout << "---Skip block on rank " << rank << std::endl;
       continue;
     }
 

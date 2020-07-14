@@ -178,7 +178,7 @@ Scene::Render(const bool do_composite)
         current_batch[i].RenderWorldAnnotations();
         current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
         current_batch[i].RenderBackground();
-        current_batch[i].Save();
+        current_batch[i].Save(true);
       }
       // free buffers
       m_renders[batch_start + i].ClearCanvases();

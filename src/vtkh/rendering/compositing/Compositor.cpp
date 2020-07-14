@@ -182,6 +182,13 @@ Compositor::Composite()
   return m_images[0];
 }
 
+Image*
+Compositor::CompositeNoCopy()
+{
+  this->Composite();
+  return &m_images[0];
+}
+
 void
 Compositor::Cleanup()
 {

@@ -56,7 +56,7 @@ public:
   void                            RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                                           const std::vector<vtkm::Range> &ranges,
                                                           const std::vector<vtkm::cont::ColorTable> &colors);
-  void                            Save();
+  void                            Save(bool asPNG = true);
 protected:
   std::vector<vtkmCanvasPtr>   m_canvases;
   std::vector<vtkm::Id>        m_domain_ids;

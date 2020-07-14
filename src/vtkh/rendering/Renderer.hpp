@@ -39,6 +39,10 @@ public:
   void SetRenders(const std::vector<Render> &renders);
   void SetRange(const vtkm::Range &range);
 
+  bool HasContribution(const vtkm::Range &plot_scalar_range,
+                       const vtkm::cont::DataSet &dom,
+                       const vtkm::Float64 threshold);
+
   vtkm::cont::ColorTable      GetColorTable() const;
   std::string                 GetFieldName() const;
   int                         GetNumberOfRenders() const;

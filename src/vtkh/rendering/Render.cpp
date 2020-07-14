@@ -291,7 +291,7 @@ Render::CreateCanvas()
 }
 
 void
-Render::Save()
+Render::Save(bool asPNG)
 {
   // After rendering and compositing
   // Rank 0 domain 0 contains the complete image.
@@ -306,9 +306,22 @@ Render::Save()
   float* color_buffer = &GetVTKMPointer(m_canvases[0]->GetColorBuffer())[0][0];
   int height = m_canvases[0]->GetHeight();
   int width = m_canvases[0]->GetWidth();
-  PNGEncoder encoder;
-  encoder.Encode(color_buffer, width, height);
-  encoder.Save(m_image_name + ".png");
+  // PNGEncoder encoder;
+  // encoder.Encode(color_buffer, width, height);
+  // encoder.Save(m_image_name + ".png");
+
+  if (asPNG)
+  {
+      PNGEncoder encoder;
+      encoder.Encode(color_buffer, width, height);
+      encoder.Save(m_image_name + ".png");
+  }
+  else
+  {
+      std::ofstream outfile(m_image_name, std::ios::binary | std::ios_base::out | std::ios::trunc);
+      outfile.write((char*)color_buffer, width * height * sizeof(float)*4);
+      outfile.close();
+  }
 
   log_global_time("end save", 0);
 }
