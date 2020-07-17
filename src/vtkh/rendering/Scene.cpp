@@ -171,6 +171,9 @@ Scene::Render(const bool do_composite)
     } // for renderers
 
     // render screen annotations last and save
+#ifdef VTKH_USE_OPENMP
+    #pragma omp parallel for
+#endif
     for(int i = 0; i < current_batch.size(); ++i)
     {
       if (do_composite) // TODO: annotations for hybrid rendering
