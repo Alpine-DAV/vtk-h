@@ -170,10 +170,7 @@ Scene::Render(const bool do_composite)
       renderer++;
     } // for renderers
 
-    // render screen annotations last and save
-#ifdef VTKH_USE_OPENMP
-    #pragma omp parallel for
-#endif
+    // render screen annotations last 
     for(int i = 0; i < current_batch.size(); ++i)
     {
       if (do_composite) // TODO: annotations for hybrid rendering
@@ -181,8 +178,16 @@ Scene::Render(const bool do_composite)
         current_batch[i].RenderWorldAnnotations();
         current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
         current_batch[i].RenderBackground();
-        current_batch[i].Save(true);
       }
+    }
+
+#ifdef VTKH_USE_OPENMP
+    #pragma omp parallel for
+#endif
+    // save images in parallel
+    for(int i = 0; i < current_batch.size(); ++i)
+    {
+      current_batch[i].Save(true);
       // free buffers
       m_renders[batch_start + i].ClearCanvases();
     }
