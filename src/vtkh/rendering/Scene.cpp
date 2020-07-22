@@ -187,7 +187,10 @@ Scene::Render(const bool do_composite)
     // save images in parallel
     for(int i = 0; i < current_batch.size(); ++i)
     {
-      current_batch[i].Save(true);
+      if (do_composite)
+      {
+        current_batch[i].Save(true);
+      }
       // free buffers
       m_renders[batch_start + i].ClearCanvases();
     }
