@@ -7,10 +7,6 @@
 
 #include <vtkh/utils/PNGEncoder.hpp>
 
-#include <memory>
-#include <chrono>
-#include <iomanip>
-
 #ifdef VTKH_PARALLEL
 #include <mpi.h>
 #endif
@@ -79,7 +75,6 @@ VolumeRenderer::Update()
 {
   PreExecute();
   Renderer::DoExecute();
-  // DEBUG: write out images
   PostExecute();
 }
 
@@ -121,32 +116,6 @@ VolumeRenderer::PreExecute()
 
   vtkm::Float32 dist = vtkm::Magnitude(extent) / m_num_samples;  
   m_tracer->SetSampleDistance(dist);
-}
-
-static std::string get_timing_file_name(const int value, const int precision, 
-                                        const std::string &prefix,
-                                        const std::string &path = "timings")
-{
-    std::ostringstream oss;
-    oss << path;
-    oss << "/";
-    oss << prefix;
-    oss << "_";
-    oss << std::setw(precision) << std::setfill('0') << value;
-    oss << ".txt";
-    return oss.str();
-}
-
-static void log_global_time(const std::string &description,
-                            const int rank)
-{
-    auto now = std::chrono::system_clock::now();
-    auto duration = now.time_since_epoch();
-    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-
-    std::ofstream out(get_timing_file_name(rank, 5, "global"), std::ios_base::app);
-    out << description << " : " << millis << std::endl;
-    out.close();
 }
 
 void

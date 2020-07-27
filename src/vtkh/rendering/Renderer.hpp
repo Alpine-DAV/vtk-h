@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <memory>
+#include <chrono>
+#include <iomanip>
 
 #include <vtkh/vtkh_exports.h>
 #include <vtkh/Error.hpp>
@@ -56,6 +58,32 @@ public:
   std::vector<std::vector<unsigned char> > GetColorBuffers();
   std::vector<std::vector<float> >         GetDepthBuffers();
   std::vector<float>          GetDepths();
+
+static std::string get_timing_file_name(const int value, const int precision, 
+                                        const std::string &prefix,
+                                        const std::string &path = "timings")
+{
+    std::ostringstream oss;
+    oss << path;
+    oss << "/";
+    oss << prefix;
+    oss << "_";
+    oss << std::setw(precision) << std::setfill('0') << value;
+    oss << ".txt";
+    return oss.str();
+}
+
+static void log_global_time(const std::string &description,
+                            const int rank)
+{
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+    std::ofstream out(get_timing_file_name(rank, 5, "global"), std::ios_base::app);
+    out << description << " : " << millis << std::endl;
+    out.close();
+}
 
 protected:
 

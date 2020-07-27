@@ -341,6 +341,7 @@ Renderer::DoExecute()
 
     for(int i = 0; i < total_renders; ++i)
     {
+      log_global_time("begin rendering", vtkh::GetMPIRank());
       if(m_renders[i].GetShadingOn())
       {
         this->SetShadingOn(true);
@@ -363,6 +364,7 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
+      log_global_time("end rendering", vtkh::GetMPIRank());
       
       auto t2 = std::chrono::high_resolution_clock::now();
       auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
