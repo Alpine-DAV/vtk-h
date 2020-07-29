@@ -309,7 +309,7 @@ Renderer::DoExecute()
     std::string msg = "Renderer Error: no renderer was set by sub-class";
     throw Error(msg);
   }
-
+  int skipped_dom = 0;
   int total_renders = static_cast<int>(m_renders.size());
   int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
   for(int dom = 0; dom < num_domains; ++dom)
@@ -331,6 +331,7 @@ Renderer::DoExecute()
       rank = vtkh::GetMPIRank();
 #endif
       std::cout << "---Skip block on rank " << rank << std::endl;
+      ++skipped_dom;
       continue;
     }
 
@@ -339,9 +340,9 @@ Renderer::DoExecute()
     const vtkm::cont::CoordinateSystem &coords = data_set.GetCoordinateSystem();
     if(cellset.GetNumberOfCells() == 0) continue;
 
+    log_global_time("begin rendering", vtkh::GetMPIRank());
     for(int i = 0; i < total_renders; ++i)
     {
-      log_global_time("begin rendering", vtkh::GetMPIRank());
       if(m_renders[i].GetShadingOn())
       {
         this->SetShadingOn(true);
@@ -364,13 +365,18 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
-      log_global_time("end rendering", vtkh::GetMPIRank());
       
       auto t2 = std::chrono::high_resolution_clock::now();
       auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
       AddRenderTime(duration);
     }
+    log_global_time("end rendering", vtkh::GetMPIRank());
   }
+  
+  if (skipped_dom == num_domains)
+    m_skipped = true;
+  else
+    m_skipped = false;
 }
 
 void

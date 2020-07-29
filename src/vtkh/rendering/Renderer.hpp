@@ -102,6 +102,7 @@ protected:
   std::vector<std::vector<unsigned char>>  m_color_buffers;
   std::vector<std::vector<float> >         m_depth_buffers;
   std::vector<float>                       m_depths;
+  bool                                     m_skipped = false;
 
   // methods
   virtual void PreExecute() override;

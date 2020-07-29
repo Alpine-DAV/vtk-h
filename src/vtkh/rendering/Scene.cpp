@@ -181,7 +181,7 @@ Scene::Render(const bool do_composite)
       (*renderer)->Update(); // actual rendering
 
       // we only need to get the ranges and color tables once
-      if(do_once)
+      if(do_once && do_composite)
       {
         if((*renderer)->GetHasColorTable())
         {
