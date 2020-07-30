@@ -192,7 +192,10 @@ Scene::Render(const bool do_composite)
         do_once = false;
       }
 
-      current_batch = (*renderer)->GetRenders();
+      if (do_composite)
+      {
+        current_batch = (*renderer)->GetRenders();
+      }
       (*renderer)->ClearRenders();
 
       renderer++;
