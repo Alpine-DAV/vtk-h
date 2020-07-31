@@ -143,8 +143,14 @@ VolumeRenderer::PostExecute()
 
     for (size_t i = 0; i < m_renders.size(); i++)
     {
-      const int width = m_renders[i].GetCanvas(0)->GetWidth();
-      const int height = m_renders[i].GetCanvas(0)->GetHeight();
+      int width = m_renders[i].GetCanvas(0)->GetWidth();
+      int height = m_renders[i].GetCanvas(0)->GetHeight();
+      if (m_skipped)
+      {
+        width = 0;
+        height = 0;
+      }
+
       const int size = width * height;
       const int color_size = size * 4;
 
