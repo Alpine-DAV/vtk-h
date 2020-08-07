@@ -15,8 +15,8 @@ namespace vtkh
 {
 
 Render::Render()
-  : m_width(1024),
-    m_height(1024),
+  : m_width(800),
+    m_height(800),
     m_render_annotations(true),
     m_render_background(true),
     m_shading(true)

@@ -14,7 +14,7 @@ public:
   virtual ~VolumeRenderer();
   std::string GetName() const override;
   void SetNumberOfSamples(const int num_samples);
-  static Renderer::vtkmCanvasPtr GetNewCanvas(int width = 1024, int height = 1024);
+  static Renderer::vtkmCanvasPtr GetNewCanvas(int width = 800, int height = 800);
 
   void Update() override;
   virtual void SetColorTable(const vtkm::cont::ColorTable &color_table) override;
