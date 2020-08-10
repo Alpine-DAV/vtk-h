@@ -139,49 +139,53 @@ VolumeRenderer::PostExecute()
 
     m_depth_buffers.resize(m_renders.size());
     m_color_buffers.resize(m_renders.size());
-    m_depths.resize(m_renders.size());
+    m_depths.resize(m_renders.size(), std::numeric_limits<float>::lowest());
 
-    for (size_t i = 0; i < m_renders.size(); i++)
+    // TODO: test to skip whole loop if m_skipped
+    if (!m_skipped)
     {
-      int width = m_renders[i].GetCanvas(0)->GetWidth();
-      int height = m_renders[i].GetCanvas(0)->GetHeight();
-      if (m_skipped)
+      for (size_t i = 0; i < m_renders.size(); i++)
       {
-        width = 0;
-        height = 0;
+        int width = m_renders[i].GetCanvas(0)->GetWidth();
+        int height = m_renders[i].GetCanvas(0)->GetHeight();
+        // if (m_skipped)
+        // {
+        //   width = 0;
+        //   height = 0;
+        // }
+
+        const int size = width * height;
+        const int color_size = size * 4;
+
+        float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
+        float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
+
+        // NOTE: buffer copy costs about 0.01 seconds per render 
+        // TODO: use pointers if possible
+
+        m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
+        // if (!m_skipped)
+        // {
+        #ifdef VTKH_USE_OPENMP
+          #pragma omp parallel for
+        #endif
+          for (size_t j = 0; j < m_color_buffers[i].size(); j++)
+            m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
+        // }
+      // auto start = std::chrono::system_clock::now();
+        m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
+      // auto end = std::chrono::system_clock::now();
+      // std::chrono::duration<double> elapsed = end - start;
+      // std::cout << "-- loop " << elapsed.count() << std::endl;
+
+        const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
+        vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
+        m_depths[i] = FindMinDepth(camera, bounds);
+
+        // DEBUG: render out image parts
+        // encoder.Encode(color_buffer, width, height);
+        // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
       }
-
-      const int size = width * height;
-      const int color_size = size * 4;
-
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
-
-      // NOTE: buffer copy costs about 0.01 seconds per render 
-      // TODO: use pointers if possible
-
-      m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
-      if (!m_skipped)
-      {
-      #ifdef VTKH_USE_OPENMP
-        #pragma omp parallel for
-      #endif
-        for (size_t j = 0; j < m_color_buffers[i].size(); j++)
-          m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
-      }
-    // auto start = std::chrono::system_clock::now();
-      m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
-    // auto end = std::chrono::system_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // std::cout << "-- loop " << elapsed.count() << std::endl;
-
-      const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
-      vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
-      m_depths[i] = FindMinDepth(camera, bounds);
-
-      // DEBUG: render out image parts
-      // encoder.Encode(color_buffer, width, height);
-      // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
     }
 
     auto end = std::chrono::system_clock::now();

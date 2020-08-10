@@ -185,6 +185,7 @@ Compositor::Composite()
 Image*
 Compositor::CompositeNoCopy()
 {
+  assert(m_images.size() != 0);
   this->Composite();
   return &m_images[0];
 }
