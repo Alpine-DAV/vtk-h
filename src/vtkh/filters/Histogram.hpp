@@ -27,6 +27,10 @@ public:
   };
 
   HistogramResult Run(vtkh::DataSet &data_set, const std::string &field_name);
+
+  HistogramResult
+  merge_histograms(std::vector<Histogram::HistogramResult> &histograms);
+
   void SetRange(const vtkm::Range &range);
   void SetNumBins(const int num_bins);
 protected:
