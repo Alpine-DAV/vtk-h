@@ -37,30 +37,6 @@ struct HistoFunctor
   }
 };
 
-Histogram::HistogramResult
-merge_histograms(std::vector<Histogram::HistogramResult> &histograms)
-{
-  const int size = histograms.size();
-  if(size < 1)
-  {
-    throw Error("histogram size is 0");
-  }
-  Histogram::HistogramResult res;
-
-  res = histograms[0];
-  auto bins1 = res.m_bins.WritePortal();
-  const int num_bins = res.m_bins.GetNumberOfValues();
-  for(int i = 1; i < size; ++i)
-  {
-    auto bins2 = histograms[i].m_bins.WritePortal();
-    for(int n = 0; n < num_bins; ++n)
-    {
-      bins1.Set(n, bins1.Get(n) + bins2.Get(n));
-    }
-  }
-
-  return res;
-}
 template<typename T>
 void reduce(T *array, int size);
 
@@ -115,6 +91,43 @@ Histogram::SetNumBins(const int num_bins)
 }
 
 Histogram::HistogramResult
+Histogram::merge_histograms(std::vector<Histogram::HistogramResult> &histograms)
+{
+  Histogram::HistogramResult res;
+  const int size = histograms.size();
+  if(size < 1)
+  {
+    // we have data globally so we need to create a dummy result
+    // and pass that off to mpi
+    res.m_bins.Allocate(m_num_bins);
+    res.m_range = m_range;
+    res.m_bin_delta = m_range.Length() / double(m_num_bins);
+    const int num_bins = res.m_bins.GetNumberOfValues();
+
+    auto bins = res.m_bins.WritePortal();
+    for(int n = 0; n < num_bins; ++n)
+    {
+      bins.Set(n, 0.);
+    }
+    return res;
+  }
+
+  res = histograms[0];
+  auto bins1 = res.m_bins.WritePortal();
+  const int num_bins = res.m_bins.GetNumberOfValues();
+  for(int i = 1; i < size; ++i)
+  {
+    auto bins2 = histograms[i].m_bins.WritePortal();
+    for(int n = 0; n < num_bins; ++n)
+    {
+      bins1.Set(n, bins1.Get(n) + bins2.Get(n));
+    }
+  }
+
+  return res;
+}
+
+Histogram::HistogramResult
 Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
 {
   VTKH_DATA_OPEN("histogram");
@@ -122,6 +135,11 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
   VTKH_DATA_ADD("bins", m_num_bins);
   VTKH_DATA_ADD("input_cells", data_set.GetNumberOfCells());
   VTKH_DATA_ADD("input_domains", data_set.GetNumberOfDomains());
+
+  if(!data_set.GetGlobalNumberOfDomains())
+  {
+    throw Error("Histogram: can't run since there is no data!");
+  }
 
   if(!data_set.GlobalFieldExists(field_name))
   {
@@ -168,7 +186,7 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
     local_histograms.push_back(dom_hist);
   }
 
-  HistogramResult local = detail::merge_histograms(local_histograms);
+  HistogramResult local = merge_histograms(local_histograms);
   vtkm::Id * bin_ptr = GetVTKMPointer(local.m_bins);
   detail::reduce(bin_ptr, m_num_bins);
 
