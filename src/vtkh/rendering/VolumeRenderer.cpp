@@ -137,22 +137,17 @@ VolumeRenderer::PostExecute()
   {  
     auto start0 = std::chrono::system_clock::now();
 
-    m_depth_buffers.resize(m_renders.size());
-    m_color_buffers.resize(m_renders.size());
     m_depths.resize(m_renders.size(), std::numeric_limits<float>::lowest());
 
-    // TODO: test to skip whole loop if m_skipped
     if (!m_skipped)
     {
+      m_depth_buffers.resize(m_renders.size());
+      m_color_buffers.resize(m_renders.size());
+      
       for (size_t i = 0; i < m_renders.size(); i++)
       {
         int width = m_renders[i].GetCanvas(0)->GetWidth();
         int height = m_renders[i].GetCanvas(0)->GetHeight();
-        // if (m_skipped)
-        // {
-        //   width = 0;
-        //   height = 0;
-        // }
 
         const int size = width * height;
         const int color_size = size * 4;
@@ -161,17 +156,14 @@ VolumeRenderer::PostExecute()
         float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
         // NOTE: buffer copy costs about 0.01 seconds per render 
-        // TODO: use pointers if possible
-
         m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
-        // if (!m_skipped)
-        // {
-        #ifdef VTKH_USE_OPENMP
-          #pragma omp parallel for
-        #endif
-          for (size_t j = 0; j < m_color_buffers[i].size(); j++)
-            m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
-        // }
+
+      #ifdef VTKH_USE_OPENMP
+        #pragma omp parallel for
+      #endif
+        for (size_t j = 0; j < m_color_buffers[i].size(); j++)
+          m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
+
       // auto start = std::chrono::system_clock::now();
         m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
       // auto end = std::chrono::system_clock::now();

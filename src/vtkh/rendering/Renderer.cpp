@@ -332,6 +332,7 @@ Renderer::DoExecute()
 #endif
       std::cout << "---Skip block on rank " << rank << std::endl;
       ++skipped_dom;
+      AddRenderTime(0.0);
       continue;
     }
 
