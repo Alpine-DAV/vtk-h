@@ -134,6 +134,7 @@ Compositor::AddImage(const unsigned char *color_buffer,
   assert(m_composite_mode == VIS_ORDER_BLEND);
   Image image;
   const size_t image_index = m_images.size();
+
   m_images.push_back(image);
   m_images[image_index].Init(color_buffer,
                              depth_buffer,

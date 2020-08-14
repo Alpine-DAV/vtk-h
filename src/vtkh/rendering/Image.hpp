@@ -108,7 +108,7 @@ struct VTKH_API Image
 
       std::copy(color_buffer,
                 color_buffer + size * 4,
-                &m_pixels[0]);
+                m_pixels.data());
 
 #ifdef vtkh_USE_OPENMP
       #pragma omp parallel for

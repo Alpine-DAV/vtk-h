@@ -135,12 +135,11 @@ VolumeRenderer::PostExecute()
   }
   else
   {  
-    auto start0 = std::chrono::system_clock::now();
-
-    m_depths.resize(m_renders.size(), std::numeric_limits<float>::lowest());
+    // auto start0 = std::chrono::system_clock::now();
 
     if (!m_skipped)
     {
+      m_depths.resize(m_renders.size(), std::numeric_limits<float>::lowest());
       m_depth_buffers.resize(m_renders.size());
       m_color_buffers.resize(m_renders.size());
       
@@ -180,9 +179,9 @@ VolumeRenderer::PostExecute()
       }
     }
 
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed = end - start0;
-    std::cout << "-- copy buffers " << elapsed.count() << std::endl;
+    // auto end = std::chrono::system_clock::now();
+    // std::chrono::duration<double> elapsed = end - start0;
+    // std::cout << "-- copy buffers " << elapsed.count() << std::endl;
   }
 }
 
