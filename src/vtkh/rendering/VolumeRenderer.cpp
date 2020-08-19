@@ -118,6 +118,80 @@ VolumeRenderer::PreExecute()
   m_tracer->SetSampleDistance(dist);
 }
 
+bool approx_eq(float x, float y)
+{
+  return std::fabs(x - y) <= std::numeric_limits<float>::epsilon();
+}
+
+bool same_color(std::array<unsigned char, 4> c1, std::array<unsigned char, 4> c2)
+{
+  bool is_same = true;
+  for (size_t i = 0; i < 4; i++)
+    is_same = is_same && c1[i] == c2[i];
+
+  return is_same;
+}
+
+unsigned char convert_uchar(float f)
+{
+  return static_cast<unsigned char>(int(f * 255.f));
+}
+
+/**
+ * ActivePixelEncoding aka run-length encoding
+ */
+void ActivePixelEncoding(const size_t size, float* colors, float* depths, 
+                         std::vector<unsigned char> &colors_enc, 
+                         std::vector<float> &depths_enc)
+{
+  float last_depth = depths[0];
+  std::array<unsigned char, 4> last_color = {convert_uchar(colors[0]), 
+                                             convert_uchar(colors[1]),
+                                             convert_uchar(colors[2]),
+                                             convert_uchar(colors[3])};
+  int counter = 1;
+
+  for (size_t i = 1; i < size; i++)
+  {
+    float depth = depths[i];
+    std::array<unsigned char, 4> color;
+    for (int j = 0; j < 4; j++)
+      color[j] = static_cast<unsigned char>(int(colors[i*4 + j] * 255.f));
+
+    if (approx_eq(depth, last_depth) && same_color(color, last_color))
+    {
+      ++counter;
+    }
+    else
+    {
+      // write out counter and depth + color
+      depths_enc.push_back(last_depth);
+      if (counter > 1)
+      {
+        depths_enc.push_back(last_depth);     // value itself is the escape character
+        depths_enc.push_back(float(counter)); // depth buffer includes counter
+      }
+      for (int j = 0; j < 4; j++)
+        colors_enc.push_back(last_color[j]);
+      
+      // reset last depth + color
+      last_depth = depth;
+      last_color = color;
+      counter = 1;
+    }
+  }
+
+  // last run
+  if (counter > 1)
+  {
+    depths_enc.push_back(last_depth);
+    depths_enc.push_back(last_depth);
+    depths_enc.push_back(float(counter));
+    for (int j = 0; j < 4; j++)
+      colors_enc.push_back(last_color[j]);
+  }
+}
+
 void
 VolumeRenderer::PostExecute()
 {
@@ -133,52 +207,48 @@ VolumeRenderer::PostExecute()
     this->Composite(total_renders);
     log_global_time("end compositing", rank);
   }
-  else
+  else if (!m_skipped)
   {  
     // auto start0 = std::chrono::system_clock::now();
-
-    if (!m_skipped)
+    
+    m_depths.resize(m_renders.size(), std::numeric_limits<float>::lowest());
+    m_depth_buffers.resize(m_renders.size());
+    m_color_buffers.resize(m_renders.size());
+    
+    for (size_t i = 0; i < m_renders.size(); i++)
     {
-      m_depths.resize(m_renders.size(), std::numeric_limits<float>::lowest());
-      m_depth_buffers.resize(m_renders.size());
-      m_color_buffers.resize(m_renders.size());
-      
-      for (size_t i = 0; i < m_renders.size(); i++)
-      {
-        int width = m_renders[i].GetCanvas(0)->GetWidth();
-        int height = m_renders[i].GetCanvas(0)->GetHeight();
+      int width = m_renders[i].GetCanvas(0)->GetWidth();
+      int height = m_renders[i].GetCanvas(0)->GetHeight();
 
-        const int size = width * height;
-        const int color_size = size * 4;
+      const int size = width * height;
+      const int color_size = size * 4;
 
-        float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
-        float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
+      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
+      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
-        // NOTE: buffer copy costs about 0.01 seconds per render 
-        m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
+      // NOTE: buffer copy costs about 0.01 seconds per render 
+      m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
 
-      #ifdef VTKH_USE_OPENMP
-        #pragma omp parallel for
-      #endif
-        for (size_t j = 0; j < m_color_buffers[i].size(); j++)
-          m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
+    #ifdef VTKH_USE_OPENMP
+      #pragma omp parallel for
+    #endif
+      for (size_t j = 0; j < m_color_buffers[i].size(); j++)
+        m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
 
-      // auto start = std::chrono::system_clock::now();
-        m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
-      // auto end = std::chrono::system_clock::now();
-      // std::chrono::duration<double> elapsed = end - start;
-      // std::cout << "-- loop " << elapsed.count() << std::endl;
+    // auto start = std::chrono::system_clock::now();
+      m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
+    // auto end = std::chrono::system_clock::now();
+    // std::chrono::duration<double> elapsed = end - start;
+    // std::cout << "-- loop " << elapsed.count() << std::endl;
 
-        const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
-        vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
-        m_depths[i] = FindMinDepth(camera, bounds);
+      const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
+      vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
+      m_depths[i] = FindMinDepth(camera, bounds);
 
-        // DEBUG: render out image parts
-        // encoder.Encode(color_buffer, width, height);
-        // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
-      }
+      // DEBUG: render out image parts
+      // encoder.Encode(color_buffer, width, height);
+      // encoder.Save(m_renders[i].GetImageName() + std::to_string(vtkh::GetMPIRank()) + ".png");
     }
-
     // auto end = std::chrono::system_clock::now();
     // std::chrono::duration<double> elapsed = end - start0;
     // std::cout << "-- copy buffers " << elapsed.count() << std::endl;
