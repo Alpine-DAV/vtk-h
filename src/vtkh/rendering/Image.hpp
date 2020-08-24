@@ -101,7 +101,6 @@ struct VTKH_API Image
       m_bounds.X.Max = width;
       m_bounds.Y.Max = height;
       m_orig_bounds = m_bounds;
-
       const int size = width * height;
       m_pixels.resize(size * 4);
       m_depths.resize(size);

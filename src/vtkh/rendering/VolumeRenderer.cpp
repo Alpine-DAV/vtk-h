@@ -140,7 +140,7 @@ unsigned char convert_uchar(float f)
 /**
  * ActivePixelEncoding aka run-length encoding
  */
-void ActivePixelEncoding(const size_t size, float* colors, float* depths, 
+void ActivePixelEncoding(const size_t size, const float* colors, const float* depths, 
                          std::vector<unsigned char> &colors_enc, 
                          std::vector<float> &depths_enc)
 {
@@ -226,20 +226,31 @@ VolumeRenderer::PostExecute()
       float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
       float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
+      // auto start = std::chrono::system_clock::now();
+      // cost ~3ms/render
+      
+      // auto end = std::chrono::system_clock::now();
+      // std::chrono::duration<double> elapsed = end - start;
+      // std::cout << "-- encoding " << elapsed.count() << std::endl;
+      // std::cout << "-- encoding size " << m_color_buffers[i].size() << " " 
+      //           << m_depth_buffers[i].size() << std::endl;
+      
       // NOTE: buffer copy costs about 0.01 seconds per render 
-      m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
+      if (true)
+      {
+        m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
+      #ifdef VTKH_USE_OPENMP
+        #pragma omp parallel for
+      #endif
+        for (size_t j = 0; j < m_color_buffers[i].size(); j++)
+          m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
 
-    #ifdef VTKH_USE_OPENMP
-      #pragma omp parallel for
-    #endif
-      for (size_t j = 0; j < m_color_buffers[i].size(); j++)
-        m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
-
-    // auto start = std::chrono::system_clock::now();
-      m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
-    // auto end = std::chrono::system_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // std::cout << "-- loop " << elapsed.count() << std::endl;
+        m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
+      }
+      else
+      {
+        ActivePixelEncoding(size, color_buffer, depth_buffer, m_color_buffers[i], m_depth_buffers[i]);
+      }
 
       const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
       vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
