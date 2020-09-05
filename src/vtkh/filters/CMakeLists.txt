@@ -13,6 +13,7 @@ set(vtkh_filters_headers
   GhostStripper.hpp
   HistSampling.hpp
   Histogram.hpp
+  ValGradHistogram.hpp
   Log.hpp
   IsoVolume.hpp
   NoOp.hpp
@@ -54,6 +55,7 @@ set(vtkh_filters_sources
   GhostStripper.cpp
   HistSampling.cpp
   Histogram.cpp
+  ValGradHistogram.cpp
   Log.cpp
   IsoVolume.cpp
   NoOp.cpp

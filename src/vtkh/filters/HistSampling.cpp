@@ -2,7 +2,12 @@
 #include <vtkh/filters/GhostStripper.hpp>
 #include <vtkh/filters/Threshold.hpp>
 #include <vtkh/filters/Histogram.hpp>
+#include <vtkh/filters/ValGradHistogram.hpp>
 #include <vtkh/Error.hpp>
+
+#include <vtkh/filters/Gradient.hpp>
+#include <vtkh/filters/VectorMagnitude.hpp>
+
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -57,7 +62,7 @@ public:
 
 
 vtkm::cont::ArrayHandle<vtkm::Float32>
-calculate_pdf(const vtkm::Int32 tot_points,
+calculate_1d_pdf(const vtkm::Int32 tot_points,
               const vtkm::Int32 num_bins,
               const vtkm::Float32 sample_percent,
               vtkm::cont::ArrayHandle<vtkm::Id> mybins)
@@ -130,12 +135,112 @@ calculate_pdf(const vtkm::Int32 tot_points,
   return acceptanceProbsVec;
 }
 
+vtkm::cont::ArrayHandle<vtkm::Float32>
+calculate_2d_pdf(const vtkm::Int32 tot_points,
+              const vtkm::Float32 sample_percent,
+              ValGradHistogram::NonSparseHistogramResult bivar_histogram)
+{
+
+  vtkm::Int32 num_bins = bivar_histogram.m_nob;
+
+  Histogram::HistogramResult valMarginal = bivar_histogram.getValDist();
+
+  vtkm::cont::ArrayHandleIndex indexArray(num_bins);
+  vtkm::cont::ArrayHandle<vtkm::Id> indices;
+  vtkm::cont::Algorithm::Copy(indexArray,indices);
+
+  vtkm::cont::ArrayHandle<vtkm::Id> val_counts_copy;
+  vtkm::cont::Algorithm::Copy(valMarginal.m_bins,val_counts_copy);
+
+  vtkm::cont::ArrayHandleZip <vtkm::cont:: ArrayHandle <vtkm::Id >, 
+                              vtkm::cont:: ArrayHandle <vtkm::Id >> 
+                                zipArray(val_counts_copy , indices );
+
+  //sorts the histogram bins based on their counts
+  vtkm::cont:: Algorithm ::Sort(zipArray );
+  vtkm::cont::ArrayHandleZip <vtkm::cont::ArrayHandle <vtkm::Id >, 
+                              vtkm::cont:: ArrayHandle <vtkm::Id >>
+                                ::PortalConstControl binPortal = zipArray.GetPortalConstControl();
+
+  
+
+  vtkm::Float32 remainingSamples = sample_percent*tot_points;
+  vtkm::Float32 remainingBins = num_bins;
+  std::vector<vtkm::Float32> targetSamples(num_bins, 0.0);
+
+  for (int i = 0; i < num_bins; ++i)
+  {
+    vtkm::Float32 targetNeededSamples = remainingSamples/(1.0*remainingBins);
+    vtkm::Float32 curCount = (vtkm::Float32)binPortal.Get(i).first;
+    vtkm::Float32 samplesTaken;
+    
+    if (curCount<targetNeededSamples)
+    {
+      samplesTaken = curCount;
+    }
+    else
+    {
+      samplesTaken = targetNeededSamples;
+    }
+    targetSamples[binPortal.Get(i).second] = samplesTaken;
+    remainingBins = remainingBins-1;
+    remainingSamples = remainingSamples - samplesTaken; 
+  }
+
+
+  // Start calculating the 2d acceptance probability histogram (flattened)
+  vtkm::cont::ArrayHandle<vtkm::Float32> acceptanceProbsVec;
+  acceptanceProbsVec.Allocate(num_bins*num_bins);
+  auto acceptance_portal = acceptanceProbsVec.WritePortal();
+  for(int i = 0; i < num_bins*num_bins; ++i)
+  {
+    acceptance_portal.Set(i, -1.f);
+  }
+  
+
+  // for each bin in the val histogram, identify how many samples to pick from each 
+  // bin of the corresponding marginal gradient histogram bin
+
+  vtkm::cont::ArrayHandle<vtkm::Id> biVarFreq;
+  vtkm::cont::Algorithm::Copy(bivar_histogram.m_freqs,biVarFreq);
+  auto biVarFreqPortal = biVarFreq.ReadPortal();
+
+  for(int i=0; i<num_bins; i++)
+  {
+    vtkm::Float32 current_bin_target_samples = targetSamples[i];
+
+    for(int j=num_bins-1; j>=0 ; j--)
+    {
+      vtkm::Id curGradFreq = biVarFreqPortal.Get(i*num_bins + j);
+      if(current_bin_target_samples <= curGradFreq)
+      {
+        acceptance_portal.Set(i*num_bins + j, current_bin_target_samples);
+        current_bin_target_samples = 0;
+      }
+      else{
+        acceptance_portal.Set(i*num_bins + j, curGradFreq);
+        current_bin_target_samples -= curGradFreq;
+      }
+      if(curGradFreq > 0)
+      {
+        vtkm::Float32 temp_val = (acceptance_portal.Get(i*num_bins + j)*1.0)/curGradFreq;
+        acceptance_portal.Set(i*num_bins + j, temp_val);
+      }
+      else
+        acceptance_portal.Set(i*num_bins + j, 0.0);
+    }
+  }
+
+  return acceptanceProbsVec;
+}
+
 
 }
 
 HistSampling::HistSampling()
   : m_sample_percent(0.1f),
-    m_num_bins(128)
+    m_num_bins(128),
+    m_use_gradient(false)
 {
 
 }
@@ -163,6 +268,12 @@ HistSampling::SetNumBins(const int num_bins)
     throw Error("HistSampling: num_bins must be positive");
   }
   m_num_bins = num_bins;
+}
+
+void
+HistSampling::SetGradientSampling(const bool use_gradient)
+{
+  m_use_gradient = use_gradient;
 }
 
 void
@@ -194,14 +305,14 @@ HistSampling::GetField() const
   return m_field_name;
 }
 
-struct LookupWorklet : public vtkm::worklet::WorkletMapField
+struct Lookup_1d_Worklet : public vtkm::worklet::WorkletMapField
 {
 protected:
   vtkm::Id m_num_bins;
   vtkm::Float64 m_min;
   vtkm::Float64 m_bin_delta;
 public:
-  LookupWorklet(const vtkm::Id num_bins,
+  Lookup_1d_Worklet(const vtkm::Id num_bins,
                 const vtkm::Float64 min_value,
                 const vtkm::Float64 bin_delta)
     : m_num_bins(num_bins),
@@ -231,6 +342,63 @@ public:
   }
 };
 
+struct Lookup_2d_Worklet : public vtkm::worklet::WorkletMapField
+{
+protected:
+  vtkm::Id m_num_bins;
+  vtkm::Float64 m_min_val;
+  vtkm::Float64 m_bin_delta_val;
+  vtkm::Float64 m_min_grad;
+  vtkm::Float64 m_bin_delta_grad;
+public:
+  Lookup_2d_Worklet(const vtkm::Id num_bins,
+                const vtkm::Float64 min_val,
+                const vtkm::Float64 delta_val,
+                const vtkm::Float64 min_grad,
+                const vtkm::Float64 delta_grad)
+    : m_num_bins(num_bins),
+      m_min_val(min_val),
+      m_bin_delta_val(delta_val),
+      m_min_grad(min_grad),
+      m_bin_delta_grad(delta_grad)
+  {}
+
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut, WholeArrayIn, FieldIn);
+  using ExecutionSignature = _3(_1, _2, _4, _5);
+
+  template <typename TablePortal>
+  VTKM_EXEC vtkm::UInt8 operator()(const vtkm::Float64 &field_val,
+                                   const vtkm::Float64 &field_grad,
+                                   TablePortal table,
+                                   const vtkm::Float32 &random) const
+  {
+    vtkm::Id bin_val = static_cast<vtkm::Id>((field_val - m_min_val) / m_bin_delta_val);
+    if(bin_val < 0)
+    {
+      bin_val = 0;
+    }
+    if(bin_val >= m_num_bins)
+    {
+      bin_val = m_num_bins - 1;
+    }
+
+    vtkm::Id bin_grad = static_cast<vtkm::Id>((field_grad - m_min_grad) / m_bin_delta_grad);
+    if(bin_grad < 0)
+    {
+      bin_grad = 0;
+    }
+    if(bin_grad >= m_num_bins)
+    {
+      bin_grad = m_num_bins - 1;
+    }
+
+    //flattened bin index
+    vtkm::Id bin = bin_val*m_num_bins + bin_grad;
+
+    return random < table.Get(bin);
+  }
+};
+
 
 void PrintStatInfo(vtkm::worklet::FieldStatistics<vtkm::Float64>::StatInfo statinfo)
 {
@@ -254,7 +422,6 @@ void PrintStatInfo(vtkm::worklet::FieldStatistics<vtkm::Float64>::StatInfo stati
 
 void HistSampling::DoExecute()
 {
-
   vtkh::DataSet *input = this->m_input;
   bool has_ghosts = m_ghost_field != "";
 
@@ -270,23 +437,88 @@ void HistSampling::DoExecute()
     input = stripper.GetOutput();
   }
 
+   
+  vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
+  vtkm::Range val_range, grad_range;
+  vtkm::Float64 val_delta, grad_delta;
   const int num_domains = input->GetNumberOfDomains();
+  vtkh::DataSet *mag_output;
 
-  Histogram histogrammer;
-  histogrammer.SetNumBins(m_num_bins);
-  Histogram::HistogramResult histogram = histogrammer.Run(*input,m_field_name);
-  //histogram.Print(std::cout);
 
-  vtkm::Id numberOfBins = histogram.m_bins.GetNumberOfValues();
+  
+
+  if(!m_use_gradient)
+  {
+    Histogram histogrammer;
+    histogrammer.SetNumBins(m_num_bins);
+
+    Histogram::HistogramResult histogram = histogrammer.Run(*input, m_field_name);
+    // histogram.Print(std::cout);
+
+    vtkm::Id global_num_values = histogram.totalCount();
+    vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
+
+    val_range = histogram.m_range;
+    val_delta = histogram.m_bin_delta;
+
+    // calculate the acceptance probability histogram 
+    probArray = detail::calculate_1d_pdf(global_num_values, m_num_bins, m_sample_percent, globCounts);
+  }
+  else
+  {
+    //Calculate the gradient magnitude field
+    vtkh::Gradient grad;
+    grad.SetInput(input);
+    grad.SetField(m_field_name);
+
+    vtkh::GradientParameters params;
+    params.output_name = "grad";
+    params.use_point_gradient = false;
+    grad.SetParameters(params);
+
+    grad.Update();
+
+    vtkh::DataSet *grad_output = grad.GetOutput();
+
+    vtkh::VectorMagnitude mag;
+    mag.SetInput(grad_output);
+    mag.SetField("grad");
+
+    mag.SetResultName("mag");
+    mag.Update();
+
+    mag_output = mag.GetOutput();
+
+
+    const int grad_num_domains = mag_output->GetNumberOfDomains();
+    //make sure both the fields have same number of domains
+    if( num_domains != grad_num_domains)
+    {
+      throw Error("Number of domains does not match for the scalar value field and the gradient magnitude field");
+    }
+
+    ValGradHistogram vg_histogrammer;
+    vg_histogrammer.SetNumBins(m_num_bins);
+
+    ValGradHistogram::NonSparseHistogramResult bivar_histogram = vg_histogrammer.Run(*input, m_field_name, *mag_output);
+    // bivar_histogram.Print(std::cout);
+
+    vtkm::Id global_num_values = bivar_histogram.totalCount();
+
+    val_range = bivar_histogram.m_range_val;
+    val_delta = bivar_histogram.m_bin_delta_val;
+    grad_range = bivar_histogram.m_range_grad;
+    grad_delta = bivar_histogram.m_bin_delta_grad;
+
+    // calculate the acceptance probability histogram 
+    probArray = detail::calculate_2d_pdf(global_num_values, m_sample_percent, bivar_histogram);
+  }
 
   bool valid_field;
-  vtkm::cont::Field::Association assoc = input->GetFieldAssociation(m_field_name,
-                                                                    valid_field);
-
+  vtkm::cont::Field::Association assoc = input->GetFieldAssociation(m_field_name, valid_field);
+  
   for(int i = 0; i < num_domains; ++i)
   {
-    vtkm::Range range;
-    vtkm::Float64 delta;
     vtkm::cont::DataSet &dom = input->GetDomain(i);
 
     if(!dom.HasField(m_field_name))
@@ -296,45 +528,72 @@ void HistSampling::DoExecute()
       continue;
     }
 
-    vtkm::cont::ArrayHandle<vtkm::Float64> data;
-    dom.GetField(m_field_name).GetData().CopyTo(data);
+    vtkm::cont::ArrayHandle<vtkm::Float64> val_data;
+    dom.GetField(m_field_name).GetData().CopyTo(val_data);
 
-
-    //vtkm::worklet::FieldStatistics<vtkm::Float64>::StatInfo statinfo;
-    //vtkm::worklet::FieldStatistics<vtkm::Float64>().Run(data, statinfo);
-
-    //std::cout << "Statistics for CELL data:" << std::endl;
-    //PrintStatInfo(statinfo);
-
-    vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
-
-    // start doing sampling
-
-    vtkm::Int32 tot_points = data.GetNumberOfValues();
+    vtkm::Int32 tot_points = val_data.GetNumberOfValues();
 
     // use the acceptance probabilities to create a stencil buffer
     vtkm::cont::ArrayHandle<vtkm::Float32> randArray;
-
     randArray.Allocate(tot_points);
-
     const vtkm::Int32 seed = 0;
-
     vtkm::worklet::DispatcherMapField<detail::RandomGenerate>(seed).Invoke(randArray);
 
-    vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
-    probArray = detail::calculate_pdf(tot_points, numberOfBins, m_sample_percent, globCounts);
-
     vtkm::cont::ArrayHandle <vtkm::UInt8> stencilBool;
-    vtkm::worklet::DispatcherMapField<LookupWorklet>(LookupWorklet{numberOfBins,
-                                                     histogram.m_range.Min,
-                                                     histogram.m_bin_delta}).Invoke(data,
-                                                                                    stencilBool,
-                                                                                    probArray,
-                                                                                    randArray);
 
+    if(!m_use_gradient)
+    {
+      vtkm::worklet::DispatcherMapField<Lookup_1d_Worklet>(Lookup_1d_Worklet{m_num_bins,
+                                                       val_range.Min,
+                                                       val_delta}).Invoke(val_data,
+                                                                          stencilBool,
+                                                                          probArray,
+                                                                          randArray);
+    }
+    else
+    {
+      vtkm::cont::DataSet &grad_dom = mag_output->GetDomain(i);
+
+      if(!grad_dom.HasField("mag"))
+      {
+        // We have already check to see if the field exists globally,
+        // so just skip if this particular domain doesn't have the field
+        continue;
+      }
+
+      vtkm::cont::ArrayHandle<vtkm::Float64> grad_data;
+      grad_dom.GetField("mag").GetData().CopyTo(grad_data);
+
+      if(tot_points != grad_data.GetNumberOfValues())
+      {
+        //Sanity check: the number of points in the scalar value field 
+        // and the gradient magnitude field must match.
+        throw Error("Mismatch in the number of values for scalar values and gradient magnitude");
+      }
+
+      
+      vtkm::worklet::DispatcherMapField<Lookup_2d_Worklet>(Lookup_2d_Worklet{m_num_bins,
+                                                         val_range.Min,
+                                                         val_delta,
+                                                         grad_range.Min,
+                                                         grad_delta}).Invoke(val_data,
+                                                                            grad_data,
+                                                                            stencilBool,
+                                                                            probArray,
+                                                                            randArray);
+    }
 
     vtkm::cont::ArrayHandle <vtkm::Float32> output;
-    vtkm::cont::Algorithm ::Copy(stencilBool , output );
+    vtkm::cont::Algorithm ::Copy(stencilBool , output);
+
+    // // Test code: Verify the number of eventually selected samples by summing the stencilBool
+    // vtkm::Float32 test_sum = 0.0;
+    // for(int j=0; j<tot_points; j++)
+    // {
+    //   test_sum += output.ReadPortal().Get(j);
+    // }
+    // std::cout << "Samples taken = " << test_sum << ". Total points = " 
+    //           << tot_points << ". At domain = "<< i << std::endl;
 
     vtkm::cont:: DataSetFieldAdd dataSetFieldAdd;
 
@@ -359,10 +618,13 @@ void HistSampling::DoExecute()
   thresher.SetLowerThreshold(lower_bound);
   thresher.Update();
   this->m_output = thresher.GetOutput();
-
+  
   if(has_ghosts)
   {
     delete input;
+  }
+  if(m_use_gradient){
+    delete mag_output;
   }
 }
 

@@ -194,4 +194,17 @@ Histogram::HistogramResult::Print(std::ostream &out)
   out<<"total points: "<<sum<<"\n";
 }
 
+vtkm::Id
+Histogram::HistogramResult::totalCount()
+{
+  auto binPortal = m_bins.ReadPortal();
+  const int num_bins = m_bins.GetNumberOfValues();
+  vtkm::Id sum = 0;
+  for (vtkm::Id i = 0; i < num_bins; i++)
+  {
+    sum += binPortal.Get(i);
+  }
+  return sum;
+}
+
 } //  namespace vtkh
