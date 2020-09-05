@@ -20,6 +20,7 @@ public:
   void SetGhostField(const std::string &field_name);
   std::string GetField() const;
   void SetSamplingPercent(const float percent);
+  void SetGradientSampling(const bool use_gradient);
 protected:
   void PreExecute() override;
   void PostExecute() override;
@@ -29,6 +30,7 @@ protected:
   std::string m_ghost_field;
   float m_sample_percent;
   int m_num_bins;
+  bool m_use_gradient;
 };
 
 } //namespace vtkh
