@@ -283,6 +283,13 @@ void HistSampling::DoExecute()
   vtkm::cont::Field::Association assoc = input->GetFieldAssociation(m_field_name,
                                                                     valid_field);
 
+
+  vtkm::Id global_num_values = histogram.totalCount();
+  vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
+
+  vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
+  probArray = detail::calculate_pdf(global_num_values, numberOfBins, m_sample_percent, globCounts);
+
   for(int i = 0; i < num_domains; ++i)
   {
     vtkm::Range range;
@@ -306,7 +313,6 @@ void HistSampling::DoExecute()
     //std::cout << "Statistics for CELL data:" << std::endl;
     //PrintStatInfo(statinfo);
 
-    vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
 
     // start doing sampling
 
@@ -321,8 +327,7 @@ void HistSampling::DoExecute()
 
     vtkm::worklet::DispatcherMapField<detail::RandomGenerate>(seed).Invoke(randArray);
 
-    vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
-    probArray = detail::calculate_pdf(tot_points, numberOfBins, m_sample_percent, globCounts);
+    
 
     vtkm::cont::ArrayHandle <vtkm::UInt8> stencilBool;
     vtkm::worklet::DispatcherMapField<LookupWorklet>(LookupWorklet{numberOfBins,
