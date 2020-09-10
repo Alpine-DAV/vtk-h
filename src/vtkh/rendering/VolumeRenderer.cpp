@@ -245,9 +245,9 @@ VolumeRenderer::PostExecute()
         for (size_t j = 0; j < m_color_buffers[i].size(); j++)
           m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
 
-        m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
+        // m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
       }
-      else
+      else  // TODO: test and fix active pixel encoding
       {
         ActivePixelEncoding(size, color_buffer, depth_buffer, m_color_buffers[i], m_depth_buffers[i]);
       }

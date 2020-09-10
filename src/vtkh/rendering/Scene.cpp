@@ -196,15 +196,15 @@ Scene::Render(const bool do_composite)
       {
         current_batch = (*renderer)->GetRenders();
       }
-      (*renderer)->ClearRenders();
+      // (*renderer)->ClearRenders();  // TODO: test
 
       renderer++;
     } // for renderers
 
     // render screen annotations last 
-    for(int i = 0; i < current_batch.size(); ++i)
+    if (do_composite) // TODO: annotations for hybrid rendering
     {
-      if (do_composite) // TODO: annotations for hybrid rendering
+      for(int i = 0; i < current_batch.size(); ++i)
       {
         current_batch[i].RenderWorldAnnotations();
         current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
