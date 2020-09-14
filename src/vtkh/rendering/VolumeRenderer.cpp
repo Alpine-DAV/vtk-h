@@ -62,7 +62,7 @@ VolumeRenderer::VolumeRenderer()
   //
   m_uncorrected_color_table.AddPointAlpha(0.0f, .02);
   m_uncorrected_color_table.AddPointAlpha(.0f, .5);
-  m_num_samples = 100.f;
+  m_num_samples = 1000.f;
   CorrectOpacity();
 }
 
