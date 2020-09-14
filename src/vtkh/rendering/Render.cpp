@@ -296,6 +296,7 @@ Render::Save(bool asPNG)
   // After rendering and compositing
   // Rank 0 domain 0 contains the complete image.
   int size = m_canvases.size();
+
   if(size < 1) return;
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;

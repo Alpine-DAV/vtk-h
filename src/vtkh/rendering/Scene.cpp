@@ -194,7 +194,7 @@ Scene::Render(const bool do_composite)
 
       if (do_composite)
       {
-        current_batch = (*renderer)->GetRenders();
+        current_batch = (*renderer)->GetRenders();   // copy renders before clear
       }
       // (*renderer)->ClearRenders();  // TODO: test
 
@@ -202,7 +202,7 @@ Scene::Render(const bool do_composite)
     } // for renderers
 
     // render screen annotations last 
-    if (do_composite) // TODO: annotations for hybrid rendering
+    if (false && do_composite) // TODO: annotations for hybrid rendering
     {
       for(int i = 0; i < current_batch.size(); ++i)
       {

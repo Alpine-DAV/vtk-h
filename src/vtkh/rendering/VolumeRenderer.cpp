@@ -224,7 +224,7 @@ VolumeRenderer::PostExecute()
       const int color_size = size * 4;
 
       float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
+      // float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
       // auto start = std::chrono::system_clock::now();
       // cost ~3ms/render
@@ -236,21 +236,18 @@ VolumeRenderer::PostExecute()
       //           << m_depth_buffers[i].size() << std::endl;
       
       // NOTE: buffer copy costs about 0.01 seconds per render 
-      if (true)
-      {
-        m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
-      #ifdef VTKH_USE_OPENMP
-        #pragma omp parallel for
-      #endif
-        for (size_t j = 0; j < m_color_buffers[i].size(); j++)
-          m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
+      m_color_buffers[i] = std::vector<unsigned char>(color_size, 0u);
+    #ifdef VTKH_USE_OPENMP
+      #pragma omp parallel for
+    #endif
+      for (size_t j = 0; j < m_color_buffers[i].size(); j++)
+        m_color_buffers[i][j] = static_cast<unsigned char>(int(color_buffer[j] * 255.f));
 
-        // m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
-      }
-      else  // TODO: test and fix active pixel encoding
-      {
-        ActivePixelEncoding(size, color_buffer, depth_buffer, m_color_buffers[i], m_depth_buffers[i]);
-      }
+      // m_depth_buffers[i] = std::vector<float>(depth_buffer, depth_buffer + size);
+
+      
+      // TODO: test and fix active pixel encoding
+      // ActivePixelEncoding(size, color_buffer, depth_buffer, m_color_buffers[i], m_depth_buffers[i]);
 
       const vtkm::rendering::Camera &camera = m_renders[i].GetCamera();
       vtkm::Bounds bounds = this->m_input->GetDomainBounds(0);
