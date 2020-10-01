@@ -324,7 +324,7 @@ Renderer::DoExecute()
     }
 
     // TODO: m_range ->  m_scalar_range ; threshold == 0.01 ?
-    if (!HasContribution(m_range, data_set, vtkm::Float64(0.01)))
+    if (!HasContribution(m_range, data_set, vtkm::Float64(0.001)))
     {
       int rank = 0;
 #ifdef VTKH_PARALLEL
@@ -366,6 +366,9 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
+
+      // TODO: fake higher render load
+      sleep(1);
       
       auto t2 = std::chrono::high_resolution_clock::now();
       auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
