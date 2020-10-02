@@ -356,7 +356,6 @@ Renderer::DoExecute()
       m_mapper->SetActiveColorTable(m_color_table);
 
       auto t1 = std::chrono::high_resolution_clock::now();
-      
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
       const vtkmCamera &camera = m_renders[i].GetCamera();
       m_mapper->SetCanvas(&(*p_canvas));
@@ -366,12 +365,20 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
-
-      // TODO: fake higher render load
-      sleep(1);
       
       auto t2 = std::chrono::high_resolution_clock::now();
-      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+      // TODO: fake higher render load
+      usleep(4 * std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
+      
+      auto t3 = std::chrono::high_resolution_clock::now();
+      std::cout << "RENDER TIMES: " 
+                << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+                << "  "
+                << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count()
+                << std::endl;
+
+      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count();
       AddRenderTime(duration);
     }
     log_global_time("end rendering", vtkh::GetMPIRank());
