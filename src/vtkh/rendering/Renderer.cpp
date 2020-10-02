@@ -369,14 +369,14 @@ Renderer::DoExecute()
       auto t2 = std::chrono::high_resolution_clock::now();
 
       // TODO: fake higher render load
-      usleep(4 * std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
+      usleep(3 * std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
       
       auto t3 = std::chrono::high_resolution_clock::now();
-      std::cout << "RENDER TIMES: " 
-                << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-                << "  "
-                << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count()
-                << std::endl;
+      // std::cout << "RENDER TIMES: " 
+      //           << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+      //           << "  "
+      //           << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count()
+      //           << std::endl;
 
       auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count();
       AddRenderTime(duration);
