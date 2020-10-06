@@ -21,7 +21,7 @@ struct print_f
   void operator()(const vtkm::cont::ArrayHandle<T,S> &a) const
   {
     vtkm::Id s = a.GetNumberOfValues();
-    auto p = a.GetPortalConstControl();
+    auto p = a.ReadPortal();
     for(int i = 0; i < s; ++i)
     {
       std::cout<<p.Get(i)<<" ";

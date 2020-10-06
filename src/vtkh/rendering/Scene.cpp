@@ -1,10 +1,14 @@
 #include <vtkh/rendering/Scene.hpp>
 #include <vtkh/rendering/MeshRenderer.hpp>
 #include <vtkh/rendering/VolumeRenderer.hpp>
+#include <vtkh/utils/vtkm_array_utils.hpp>
 
 #include <chrono>
 #include <iomanip>
 #include <fstream>
+#ifdef VTKH_PARALLEL
+#include <mpi.h>
+#endif
 
 namespace vtkh
 {
@@ -21,7 +25,7 @@ Scene::~Scene()
 
 }
 
-static std::string get_timing_file_name(const int value, const int precision, 
+static std::string get_timing_file_name(const int value, const int precision,
                                         const std::string &prefix,
                                         const std::string &path = "timings")
 {
@@ -49,7 +53,10 @@ static void log_global_time(const std::string &description, const int rank)
 void
 Scene::SetRenderBatchSize(int batch_size)
 {
-  assert(batch_size > 0);
+  if(batch_size < 1)
+  {
+    throw Error("Render batch size must be greater than 0");
+  }
   m_batch_size = batch_size;
 }
 
@@ -147,7 +154,6 @@ Scene::Render(const bool do_composite)
   std::vector<vtkm::Range> ranges;
   std::vector<std::string> field_names;
   std::vector<vtkm::cont::ColorTable> color_tables;
-
   bool do_once = true;
 
   //
@@ -167,12 +173,39 @@ Scene::Render(const bool do_composite)
     auto end = m_renders.begin() + batch_end;
 
     std::vector<vtkh::Render> current_batch(begin, end);
+
+    for(auto  render : current_batch)
+    {
+      render.GetCanvas().Clear();
+    }
+
     const int plot_size = m_renderers.size();
     auto renderer = m_renderers.begin();
 
-    for(int i = 0; i < plot_size; ++i)
+    // render order is enforced inside add
+    // Order is:
+    // 1) surfaces
+    // 2) meshes
+    // 3) volume
+
+    // if we have both surfaces/mesh and volumes
+    // we need to synchronize depths so that volume
+    // only render to the max depth
+    bool synch_depths = false;
+
+    int opaque_plots = plot_size;
+    if(m_has_volume)
     {
-      if(do_composite && i == plot_size - 1)
+      opaque_plots -= 1;
+    }
+
+    //
+    // pass 1: opaque geometry
+    //
+    for(int i = 0; i < opaque_plots; ++i)
+    {
+      if(i == opaque_plots - 1)
+      {
         (*renderer)->SetDoComposite(true);
       else
         (*renderer)->SetDoComposite(false);
@@ -180,54 +213,71 @@ Scene::Render(const bool do_composite)
       (*renderer)->SetRenders(current_batch);
       (*renderer)->Update(); // actual rendering
 
-      // we only need to get the ranges and color tables once
-      if(do_once && do_composite)
-      {
-        if((*renderer)->GetHasColorTable())
-        {
-          ranges.push_back((*renderer)->GetRange());
-          field_names.push_back((*renderer)->GetFieldName());
-          color_tables.push_back((*renderer)->GetColorTable());
-        }
-        do_once = false;
-      }
-
-      if (do_composite)
-      {
-        current_batch = (*renderer)->GetRenders();   // copy renders before clear
-      }
-      // (*renderer)->ClearRenders();  // TODO: test
-
+      synch_depths = true;
       renderer++;
-    } // for renderers
-
-    // render screen annotations last 
-    if (false && do_composite) // TODO: annotations for hybrid rendering
-    {
-      for(int i = 0; i < current_batch.size(); ++i)
-      {
-        current_batch[i].RenderWorldAnnotations();
-        current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
-        current_batch[i].RenderBackground();
-      }
     }
 
-#ifdef VTKH_USE_OPENMP
-    #pragma omp parallel for
-#endif
+    //
+    // pass 2: volume
+    //
+    if(m_has_volume)
+    {
+      if(synch_depths)
+      {
+        SynchDepths(current_batch);
+      }
+      (*renderer)->SetDoComposite(true);
+      (*renderer)->SetRenders(current_batch);
+      (*renderer)->Update();
+
+      current_batch  = (*renderer)->GetRenders();
+      (*renderer)->ClearRenders();
+    }
+
+    if(do_once)
+    {
+      // gather color tables and other information for
+      // annotations
+      for(auto plot : m_renderers)
+      {
+        if((*plot).GetHasColorTable())
+        {
+          ranges.push_back((*plot).GetRange());
+          field_names.push_back((*plot).GetFieldName());
+          color_tables.push_back((*plot).GetColorTable());
+        }
+      }
+      do_once = false;
+    }
+
     // save images in parallel
     for(int i = 0; i < current_batch.size(); ++i)
     {
-      if (do_composite)
-      {
-        current_batch[i].Save(true);
-      }
-      // free buffers
-      m_renders[batch_start + i].ClearCanvases();
+      current_batch[i].RenderWorldAnnotations();
+      current_batch[i].RenderScreenAnnotations(field_names, ranges, color_tables);
+      current_batch[i].RenderBackground();
+      current_batch[i].Save();
     }
 
     batch_start = batch_end;
   } // while batches
+}
+
+void Scene::SynchDepths(std::vector<vtkh::Render> &renders)
+{
+#ifdef VTKH_PARALLEL
+  int root = 0; // full images in rank 0
+  MPI_Comm comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  int num_ranks = vtkh::GetMPISize();
+  int rank = vtkh::GetMPIRank();
+  for(auto render : renders)
+  {
+    vtkm::rendering::Canvas &canvas = render.GetCanvas();
+    const int image_size = canvas.GetWidth() * canvas.GetHeight();
+    float *depth_ptr = GetVTKMPointer(canvas.GetDepthBuffer());
+    MPI_Bcast( depth_ptr, image_size, MPI_FLOAT, 0, comm);
+  }
+#endif
 }
 
 void

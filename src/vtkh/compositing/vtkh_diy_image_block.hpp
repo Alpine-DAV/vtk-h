@@ -1,16 +1,18 @@
 #ifndef VTKH_DIY_IMAGE_BLOCK_HPP
 #define VTKH_DIY_IMAGE_BLOCK_HPP
 
-#include <vtkh/rendering/Image.hpp>
+#include <vtkh/compositing/Image.hpp>
+#include <vtkh/compositing/PayloadImage.hpp>
 #include <diy/master.hpp>
 
 namespace vtkh
 {
 
+template<typename ImageType>
 struct ImageBlock
 {
-  Image &m_image;
-  ImageBlock(Image &image)
+  ImageType &m_image;
+  ImageBlock(ImageType &image)
     : m_image(image)
   {
   }
@@ -27,12 +29,13 @@ struct MultiImageBlock
   {}
 };
 
+template<typename ImageType>
 struct AddImageBlock
 {
-  Image             &m_image;
+  ImageType             &m_image;
   const vtkhdiy::Master &m_master;
 
-  AddImageBlock(vtkhdiy::Master &master, Image &image)
+  AddImageBlock(vtkhdiy::Master &master, ImageType &image)
     : m_image(image),
       m_master(master)
   {
@@ -44,7 +47,7 @@ struct AddImageBlock
                   const BoundsType &,  // domain_bounds
                   const LinkType &link) const
   {
-    ImageBlock *block = new ImageBlock(m_image);
+    ImageBlock<ImageType> *block = new ImageBlock<ImageType>(m_image);
     LinkType *linked = new LinkType(link);
     vtkhdiy::Master& master = const_cast<vtkhdiy::Master&>(m_master);
     master.add(gid, block, linked);
@@ -81,6 +84,54 @@ struct AddMultiImageBlock
 } //namespace  vtkh
 
 namespace vtkhdiy {
+
+template<>
+struct Serialization<vtkh::PayloadImage>
+{
+  static void save(BinaryBuffer &bb, const vtkh::PayloadImage &image)
+  {
+    vtkhdiy::save(bb, image.m_orig_bounds.X.Min);
+    vtkhdiy::save(bb, image.m_orig_bounds.Y.Min);
+    vtkhdiy::save(bb, image.m_orig_bounds.Z.Min);
+    vtkhdiy::save(bb, image.m_orig_bounds.X.Max);
+    vtkhdiy::save(bb, image.m_orig_bounds.Y.Max);
+    vtkhdiy::save(bb, image.m_orig_bounds.Z.Max);
+
+    vtkhdiy::save(bb, image.m_bounds.X.Min);
+    vtkhdiy::save(bb, image.m_bounds.Y.Min);
+    vtkhdiy::save(bb, image.m_bounds.Z.Min);
+    vtkhdiy::save(bb, image.m_bounds.X.Max);
+    vtkhdiy::save(bb, image.m_bounds.Y.Max);
+    vtkhdiy::save(bb, image.m_bounds.Z.Max);
+
+    vtkhdiy::save(bb, image.m_payloads);
+    vtkhdiy::save(bb, image.m_payload_bytes);
+    vtkhdiy::save(bb, image.m_depths);
+    vtkhdiy::save(bb, image.m_orig_rank);
+  }
+
+  static void load(BinaryBuffer &bb, vtkh::PayloadImage &image)
+  {
+    vtkhdiy::load(bb, image.m_orig_bounds.X.Min);
+    vtkhdiy::load(bb, image.m_orig_bounds.Y.Min);
+    vtkhdiy::load(bb, image.m_orig_bounds.Z.Min);
+    vtkhdiy::load(bb, image.m_orig_bounds.X.Max);
+    vtkhdiy::load(bb, image.m_orig_bounds.Y.Max);
+    vtkhdiy::load(bb, image.m_orig_bounds.Z.Max);
+
+    vtkhdiy::load(bb, image.m_bounds.X.Min);
+    vtkhdiy::load(bb, image.m_bounds.Y.Min);
+    vtkhdiy::load(bb, image.m_bounds.Z.Min);
+    vtkhdiy::load(bb, image.m_bounds.X.Max);
+    vtkhdiy::load(bb, image.m_bounds.Y.Max);
+    vtkhdiy::load(bb, image.m_bounds.Z.Max);
+
+    vtkhdiy::load(bb, image.m_payloads);
+    vtkhdiy::load(bb, image.m_payload_bytes);
+    vtkhdiy::load(bb, image.m_depths);
+    vtkhdiy::load(bb, image.m_orig_rank);
+  }
+};
 
 template<>
 struct Serialization<vtkh::Image>

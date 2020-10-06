@@ -3,7 +3,7 @@
 
 #include <sstream>
 #include <vtkh/vtkh_exports.h>
-#include <vtkh/rendering/Image.hpp>
+#include <vtkh/compositing/Image.hpp>
 
 namespace vtkh
 {

@@ -18,6 +18,11 @@ public:
   void SetIsoValue(const double &iso_value);
   void SetIsoValues(const double *iso_values, const int &num_values);
   void SetLevels(const int &levels);
+  void SetUseContourTree(bool on);
+  const std::vector<double>& GetIsoValues() const
+  {
+    return m_iso_values;
+  }
   void SetField(const std::string &field_name);
 
 protected:
@@ -28,6 +33,7 @@ protected:
   std::vector<double> m_iso_values;
   std::string m_field_name;
   int m_levels;
+  bool m_use_contour_tree;
 };
 
 } //namespace vtkh

@@ -39,6 +39,10 @@ public:
   // check to see if this field exists in at least one domain on any rank
   bool GlobalFieldExists(const std::string &field_name) const;
 
+  // Use to indentify if the field is a scalar, vec2, vec3 ...
+  // returns 0 if the field does not exist
+  vtkm::Id NumberOfComponents(const std::string &field_name) const;
+
   vtkm::cont::Field GetField(const std::string &field_name,
                              const vtkm::Id domain_index);
 
@@ -46,8 +50,11 @@ public:
   bool IsEmpty() const;
   // checks to see if cells exist on all ranks
   bool GlobalIsEmpty() const;
-  // returns the number of domains on this rank
 
+  // return true if there is at most one domain on each rank
+  bool OneDomainPerRank() const;
+
+  // returns the number of domains on this rank
   vtkm::Id GetNumberOfDomains() const;
   // returns the number of domains on all ranks
   vtkm::Id GetGlobalNumberOfDomains() const;

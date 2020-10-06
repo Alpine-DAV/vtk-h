@@ -23,13 +23,12 @@ namespace vtkh {
 class VTKH_API Render
 {
 public:
-  typedef std::shared_ptr<vtkm::rendering::CanvasRayTracer> vtkmCanvasPtr;
+  typedef vtkm::rendering::CanvasRayTracer vtkmCanvas;
 
   Render();
   ~Render();
-  vtkmCanvasPtr                   GetDomainCanvas(const vtkm::Id &domain_id);
-  vtkmCanvasPtr                   GetCanvas(const vtkm::Id index);
-  int                             GetNumberOfCanvases() const;
+  Render                          Copy() const;
+  vtkmCanvas&                     GetCanvas();
   const vtkm::rendering::Camera&  GetCamera() const;
   std::string                     GetImageName() const;
   vtkm::Bounds                    GetSceneBounds() const;
@@ -37,6 +36,7 @@ public:
   vtkm::Int32                     GetWidth() const;
   vtkm::rendering::Color          GetBackgroundColor() const;
   bool                            GetShadingOn() const;
+  void                            Print() const;
 
   void                            DoRenderAnnotations(bool on);
   void                            DoRenderBackground(bool on);
@@ -48,9 +48,6 @@ public:
   void                            SetBackgroundColor(float bg_color[4]);
   void                            SetForegroundColor(float fg_color[4]);
   void                            SetShadingOn(bool on);
-  void                            ClearCanvases();
-  bool                            HasCanvas(const vtkm::Id &domain_id) const;
-  void                            AddDomain(vtkm::Id domain_id);
   void                            RenderWorldAnnotations();
   void                            RenderBackground();
   void                            RenderScreenAnnotations(const std::vector<std::string> &field_names,
@@ -58,8 +55,6 @@ public:
                                                           const std::vector<vtkm::cont::ColorTable> &colors);
   void                            Save(bool asPNG = true);
 protected:
-  std::vector<vtkmCanvasPtr>   m_canvases;
-  std::vector<vtkm::Id>        m_domain_ids;
   vtkm::rendering::Camera      m_camera;
   std::string                  m_image_name;
   vtkm::Bounds                 m_scene_bounds;
@@ -67,10 +62,11 @@ protected:
   vtkm::Int32                  m_height;
   vtkm::rendering::Color       m_bg_color;
   vtkm::rendering::Color       m_fg_color;
-  vtkmCanvasPtr                CreateCanvas();
+  vtkmCanvas                   CreateCanvas() const;
   bool                         m_render_annotations;
   bool                         m_render_background;
   bool                         m_shading;
+  vtkmCanvas                   m_canvas;
 };
 
 static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};
@@ -81,7 +77,16 @@ vtkh::Render
 MakeRender(int width,
            int height,
            vtkm::Bounds scene_bounds,
-           const std::vector<vtkm::Id> &domain_ids,
+           const std::string &image_name,
+           float bg_color[4] = vtkh_default_bg_color,
+           float fg_color[4] = vtkh_default_fg_color);
+
+VTKH_API
+vtkh::Render
+MakeRender(int width,
+           int height,
+           vtkm::Bounds scene_bounds,
+           vtkm::rendering::Camera camera,
            const std::string &image_name,
            float bg_color[4] = vtkh_default_bg_color,
            float fg_color[4] = vtkh_default_fg_color);

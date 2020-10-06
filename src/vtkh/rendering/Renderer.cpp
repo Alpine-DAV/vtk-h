@@ -1,5 +1,5 @@
 #include "Renderer.hpp"
-#include "compositing/Compositor.hpp"
+#include <vtkh/compositing/Compositor.hpp>
 
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
@@ -51,13 +51,13 @@ Renderer::GetHasColorTable() const
   return m_has_color_table;
 }
 
-double 
+double
 Renderer::GetLastRenderTime() const
 {
   return m_render_times.back();
 }
 
-int 
+int
 Renderer::GetMpiRank() const
 {
   return vtkh::GetMPIRank();
@@ -65,25 +65,25 @@ Renderer::GetMpiRank() const
 
 
 std::vector<double>
-Renderer::GetRenderTimes() 
+Renderer::GetRenderTimes()
 {
   return m_render_times;
 }
 
 std::vector<std::vector<unsigned char> >
-Renderer::GetColorBuffers() 
+Renderer::GetColorBuffers()
 {
   return m_color_buffers;
 }
 
 std::vector<std::vector<float> >
-Renderer::GetDepthBuffers() 
+Renderer::GetDepthBuffers()
 {
   return m_depth_buffers;
 }
 
 std::vector<float>
-Renderer::GetDepths() 
+Renderer::GetDepths()
 {
   return m_depths;
 }
@@ -189,31 +189,26 @@ Renderer::Composite(const int &num_images)
   m_compositor->SetCompositeMode(Compositor::Z_BUFFER_SURFACE);
   for(int i = 0; i < num_images; ++i)
   {
-    const int num_canvases = m_renders[i].GetNumberOfCanvases();
+    float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas().GetColorBuffer())[0][0];
+    float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas().GetDepthBuffer());
 
-    for(int dom = 0; dom < num_canvases; ++dom)
-    {
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0];
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer());
+    int height = m_renders[i].GetCanvas().GetHeight();
+    int width = m_renders[i].GetCanvas().GetWidth();
 
-      int height = m_renders[i].GetCanvas(dom)->GetHeight();
-      int width = m_renders[i].GetCanvas(dom)->GetWidth();
-
-      m_compositor->AddImage(color_buffer,
-                             depth_buffer,
-                             width,
-                             height);
-    } //for dom
+    m_compositor->AddImage(color_buffer,
+                           depth_buffer,
+                           width,
+                           height);
 
     Image result = m_compositor->Composite();
 
 #ifdef VTKH_PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
-      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
+      ImageToCanvas(result, m_renders[i].GetCanvas(), true);
     }
 #else
-    ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
+    ImageToCanvas(result, m_renders[i].GetCanvas(), true);
 #endif
     m_compositor->ClearImages();
   } // for image
@@ -224,20 +219,16 @@ void
 Renderer::PreExecute()
 {
   bool range_set = m_range.IsNonEmpty();
-  // TODO: work around the global call
-  // bool field_exists = m_input->GlobalFieldExists(m_field_name);
-  bool field_exists = m_input->FieldExists(m_field_name); 
-  if(!range_set && field_exists)
+  Filter::CheckForRequiredField(m_field_name);
+
+  if(!range_set)
   {
     // we have not been given a range, so ask the data set
-    // TODO: work around the global call -> validate
-    // vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
-    vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetRange(m_field_name);
-    int num_components = ranges.GetPortalControl().GetNumberOfValues();
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
+    int num_components = ranges.GetNumberOfValues();
     //
     // current vtkm renderers only supports single component scalar fields
     //
-    assert(num_components == 1);
     if(num_components != 1)
     {
       std::stringstream msg;
@@ -246,7 +237,7 @@ Renderer::PreExecute()
       throw Error(msg.str());
     }
 
-    vtkm::Range global_range = ranges.GetPortalControl().Get(0);
+    vtkm::Range global_range = ranges.ReadPortal().Get(0);
     // a min or max may be been set by the user, check to see
     if(m_range.Min == vtkm::Infinity64())
     {
@@ -262,17 +253,17 @@ Renderer::PreExecute()
   // TODO: work around the global call -> validate
   m_bounds = m_input->GetBounds(); // m_input->GetGlobalBounds();
 
-  // std::cout << "*** bounds: " << m_bounds.X.Min << "  " 
-  //           << m_bounds.X.Max << " / " 
-  //           << m_bounds.Y.Min << " " 
+  // std::cout << "*** bounds: " << m_bounds.X.Min << "  "
+  //           << m_bounds.X.Max << " / "
+  //           << m_bounds.Y.Min << " "
   //           << m_bounds.Y.Max << " / "
-  //           << m_bounds.Z.Min << " " 
+  //           << m_bounds.Z.Min << " "
   //           << m_bounds.Z.Max << std::endl;
 
   m_bounds.X.Min =  0;
   m_bounds.X.Max = 10;
   m_bounds.Y.Min =  0;
-  m_bounds.Y.Max = 10; 
+  m_bounds.Y.Max = 10;
   m_bounds.Z.Min =  0;
   m_bounds.Z.Max = 10;
 }
@@ -355,24 +346,28 @@ Renderer::DoExecute()
 
       m_mapper->SetActiveColorTable(m_color_table);
 
+//<<<<<<< HEAD
       auto t1 = std::chrono::high_resolution_clock::now();
       vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
+//=======
+      Render::vtkmCanvas &canvas = m_renders[i].GetCanvas();
+//>>>>>>> upstream/develop
       const vtkmCamera &camera = m_renders[i].GetCamera();
-      m_mapper->SetCanvas(&(*p_canvas));
+      m_mapper->SetCanvas(&canvas);
       m_mapper->RenderCells(cellset,
                             coords,
                             field,
                             m_color_table,
                             camera,
                             m_range);
-      
+
       auto t2 = std::chrono::high_resolution_clock::now();
 
       // TODO: fake higher render load
       usleep(3 * std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
-      
+
       auto t3 = std::chrono::high_resolution_clock::now();
-      // std::cout << "RENDER TIMES: " 
+      // std::cout << "RENDER TIMES: "
       //           << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
       //           << "  "
       //           << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t1).count()
@@ -383,7 +378,7 @@ Renderer::DoExecute()
     }
     log_global_time("end rendering", vtkh::GetMPIRank());
   }
-  
+
   if (skipped_dom == num_domains)
     m_skipped = true;
   else

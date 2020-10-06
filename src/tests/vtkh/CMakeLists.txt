@@ -47,6 +47,17 @@
 # Unit Tests
 ################################
 
+# Contour tree depends on the VTK-m build type.
+if(VTKm_ENABLE_MPI)
+    message(STATUS "VTKm_ENABLE_MPI TRUE")
+    set( t_vtk-h_contour_tree_ "" )
+    set( t_vtk-h_contour_tree_par_ "t_vtk-h_contour_tree_par" )
+else()
+    message(STATUS "VTKm_ENABLE_MPI FALSE")
+    set( t_vtk-h_contour_tree_ "" )
+    set( t_vtk-h_contour_tree_par_ "" )
+endif()
+
 ################################
 # Core VTK-h Unit Tests
 ################################
@@ -54,6 +65,7 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_dataset
                 t_vtk-h_clip
                 t_vtk-h_clip_field
+                t_vtk-h_vector_ops
                 t_vtk-h_device_control
                 t_vtk-h_empty_data
                 t_vtk-h_gradient
@@ -70,9 +82,13 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_raytracer
                 t_vtk-h_render
                 t_vtk-h_slice
-                t_vtk-h_vector_magnitude
                 t_vtk-h_volume_renderer
                 )
+
+# this was already disabled, to enable uncomment:
+# if(ENABLE_FILTER_CONTOUR_TREE)
+#     list(APPEND BASIC_TESTS ${t_vtk-h_contour_tree_})
+# endif()
 
 set(CUDA_TESTS t_vtk-h_cuda)
 
@@ -84,11 +100,16 @@ set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_marching_cubes_par
               t_vtk-h_multi_render_par
               t_vtk-h_particle_advection_par
+              t_vtk-h_scalar_renderer_par
               t_vtk-h_raytracer_par
               t_vtk-h_sampling_par
               t_vtk-h_volume_renderer_par
               )
 
+# this was already disabled, to enable uncomment:
+# if(ENABLE_FILTER_CONTOUR_TREE)
+#   list(APPEND BASIC_TESTS ${t_vtk-h_contour_tree_par_})
+# endif()
 
 ################################
 # Add main tests
@@ -102,11 +123,10 @@ if (ENABLE_SERIAL)
           set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CUDA)
         else()
           add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh)
+          set_target_properties(${TEST} PROPERTIES LINKER_LANGUAGE CXX)
         endif()
         set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
     endforeach()
-
-
     if(CUDA_FOUND)
       foreach(TEST ${CUDA_TESTS})
           add_cpp_test(TEST ${TEST} DEPENDS_ON vtkh cuda)
@@ -128,6 +148,7 @@ if(MPI_FOUND AND ENABLE_MPI)
         add_cpp_mpi_test(TEST ${TEST} NUM_PROCS 2 DEPENDS_ON vtkh_mpi)
       endif()
       set_target_properties(${TEST} PROPERTIES CXX_VISIBILITY_PRESET hidden)
+      target_compile_definitions(${TEST} PRIVATE VTKH_PARALLEL)
     endforeach()
 else()
     message(STATUS "MPI disabled: Skipping related tests")

@@ -31,6 +31,7 @@ public:
 protected:
   bool IsMesh(vtkh::Renderer *renderer);
   bool IsVolume(vtkh::Renderer *renderer);
+  void SynchDepths(std::vector<vtkh::Render> &renders);
 }; // class scene
 
 } //namespace  vtkh

@@ -9,6 +9,7 @@
 
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/worklet/FieldStatistics.h>
+#include <vtkm/filter/CreateResult.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <iostream>
@@ -59,9 +60,10 @@ vtkm::cont::ArrayHandle<vtkm::Float32>
 calculate_pdf(const vtkm::Int32 tot_points,
               const vtkm::Int32 num_bins,
               const vtkm::Float32 sample_percent,
-              vtkm::cont::ArrayHandle<vtkm::Id> &bins)
+              vtkm::cont::ArrayHandle<vtkm::Id> mybins)
 {
-
+  vtkm::cont:: ArrayHandle <vtkm::Id > bins;
+  vtkm::cont:: Algorithm ::Copy(mybins , bins);
   vtkm::cont::ArrayHandleIndex indexArray (num_bins);
   vtkm::cont::ArrayHandle<vtkm::Id> indices;
   vtkm::cont::Algorithm::Copy(indexArray, indices);
@@ -72,7 +74,7 @@ calculate_pdf(const vtkm::Int32 tot_points,
 
   vtkm::cont::Algorithm::Sort(zipArray);
 
-  auto binPortal = zipArray.GetPortalConstControl();
+  auto binPortal = zipArray.ReadPortal();
 
   vtkm::Float32 remainingSamples = sample_percent*tot_points;
 
@@ -100,7 +102,7 @@ calculate_pdf(const vtkm::Int32 tot_points,
 
   vtkm::cont::ArrayHandle<vtkm::Float32> acceptanceProbsVec;
   acceptanceProbsVec.Allocate(num_bins);
-  auto acceptance_portal = acceptanceProbsVec.GetPortalControl();
+  auto acceptance_portal = acceptanceProbsVec.WritePortal();
   for(int i = 0; i < num_bins; ++i)
   {
     acceptance_portal.Set(i, -1.f);
@@ -273,13 +275,20 @@ void HistSampling::DoExecute()
   Histogram histogrammer;
   histogrammer.SetNumBins(m_num_bins);
   Histogram::HistogramResult histogram = histogrammer.Run(*input,m_field_name);
-  //histogram.Print();
+  //histogram.Print(std::cout);
 
   vtkm::Id numberOfBins = histogram.m_bins.GetNumberOfValues();
 
   bool valid_field;
   vtkm::cont::Field::Association assoc = input->GetFieldAssociation(m_field_name,
                                                                     valid_field);
+
+
+  vtkm::Id global_num_values = histogram.totalCount();
+  vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
+
+  vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
+  probArray = detail::calculate_pdf(global_num_values, numberOfBins, m_sample_percent, globCounts);
 
   for(int i = 0; i < num_domains; ++i)
   {
@@ -304,7 +313,6 @@ void HistSampling::DoExecute()
     //std::cout << "Statistics for CELL data:" << std::endl;
     //PrintStatInfo(statinfo);
 
-    vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
 
     // start doing sampling
 
@@ -319,8 +327,7 @@ void HistSampling::DoExecute()
 
     vtkm::worklet::DispatcherMapField<detail::RandomGenerate>(seed).Invoke(randArray);
 
-    vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
-    probArray = detail::calculate_pdf(tot_points, numberOfBins, m_sample_percent, globCounts);
+    
 
     vtkm::cont::ArrayHandle <vtkm::UInt8> stencilBool;
     vtkm::worklet::DispatcherMapField<LookupWorklet>(LookupWorklet{numberOfBins,

@@ -5,11 +5,13 @@
 #include <diy/partners/swap.hpp>
 #include <diy/reduce.hpp>
 #include <diy/reduce-operations.hpp>
-#include <vtkh/rendering/Image.hpp>
-#include <vtkh/rendering/compositing/vtkh_diy_image_block.hpp>
+#include <vtkh/compositing/Image.hpp>
+#include <vtkh/compositing/vtkh_diy_image_block.hpp>
 
 namespace vtkh
 {
+
+template<typename ImageType>
 struct CollectImages
 {
   const vtkhdiy::RegularDecomposer<vtkhdiy::DiscreteBounds> &m_decomposer;
@@ -20,7 +22,7 @@ struct CollectImages
 
   void operator()(void *b, const vtkhdiy::ReduceProxy &proxy) const
   {
-    ImageBlock *block = reinterpret_cast<ImageBlock*>(b);
+    ImageBlock<ImageType> *block = reinterpret_cast<ImageBlock<ImageType>*>(b);
     //
     // first round we have no incoming. Take the images we have
     // and sent them to to the right rank
@@ -40,7 +42,8 @@ struct CollectImages
     } // if
     else if(proxy.gid() == collection_rank)
     {
-      Image final_image(block->m_image.m_orig_bounds);
+      ImageType final_image;
+      final_image.InitOriginal(block->m_image);
       block->m_image.SubsetTo(final_image);
 
       for(int i = 0; i < proxy.in_link().size(); ++i)
@@ -51,7 +54,7 @@ struct CollectImages
         {
           continue;
         }
-        Image incoming;
+        ImageType incoming;
         proxy.dequeue(gid, incoming);
         incoming.SubsetTo(final_image);
       } // for

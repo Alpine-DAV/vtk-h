@@ -81,6 +81,10 @@ endif()
 file(GLOB LCL_DIR "${VTKM_DIR}/include/vtkm-*/vtkm/thirdparty/lcl/vtkmlcl/")
 include_directories("${LCL_DIR}")
 
+# VTKM ridiculous
+file(GLOB VTKM_DIY_DIR "${VTKM_DIR}/include/vtkm-*/vtkm/thirdparty/diy/vtkmdiy/include/")
+include_directories("${VTKM_DIY_DIR}")
+
 blt_register_library(NAME vtkm
                      LIBRARIES ${VTKM_TARGETS}
                      )
