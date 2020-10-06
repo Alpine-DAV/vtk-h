@@ -53,8 +53,6 @@ static void log_global_time(const std::string &description, const int rank)
     out.close();
 }
 
-Render::vtkmCanvasPtr
-Render::GetDomainCanvas(const vtkm::Id &domain_id)
 Render::vtkmCanvas&
 Render::GetCanvas()
 {

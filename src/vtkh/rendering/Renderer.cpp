@@ -150,7 +150,7 @@ bool Renderer::HasContribution(const vtkm::Range &plot_scalar_range,
   vtkm::cont::ArrayHandle<vtkm::Range> sub_range;
   sub_range = field.GetRange();
 
-  vtkm::Range field_range = sub_range.GetPortalControl().Get(0);
+  vtkm::Range field_range = sub_range.ReadPortal().Get(0);
 
   vtkm::Float64 min_value = plot_scalar_range.Min;
   vtkm::Float64 max_value = plot_scalar_range.Max;
@@ -346,12 +346,8 @@ Renderer::DoExecute()
 
       m_mapper->SetActiveColorTable(m_color_table);
 
-//<<<<<<< HEAD
       auto t1 = std::chrono::high_resolution_clock::now();
-      vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
-//=======
       Render::vtkmCanvas &canvas = m_renders[i].GetCanvas();
-//>>>>>>> upstream/develop
       const vtkmCamera &camera = m_renders[i].GetCamera();
       m_mapper->SetCanvas(&canvas);
       m_mapper->RenderCells(cellset,

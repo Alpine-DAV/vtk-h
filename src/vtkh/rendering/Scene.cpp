@@ -207,8 +207,11 @@ Scene::Render(const bool do_composite)
       if(i == opaque_plots - 1)
       {
         (*renderer)->SetDoComposite(true);
+      }
       else
+      {
         (*renderer)->SetDoComposite(false);
+      }
 
       (*renderer)->SetRenders(current_batch);
       (*renderer)->Update(); // actual rendering

@@ -710,13 +710,13 @@ VolumeRenderer::PostExecute()
 
     for (size_t i = 0; i < m_renders.size(); i++)
     {
-      int width = m_renders[i].GetCanvas(0)->GetWidth();
-      int height = m_renders[i].GetCanvas(0)->GetHeight();
+      int width = m_renders[i].GetCanvas().GetWidth();
+      int height = m_renders[i].GetCanvas().GetHeight();
 
       const int size = width * height;
       const int color_size = size * 4;
 
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(0)->GetColorBuffer())[0][0];
+      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas().GetColorBuffer())[0][0];
       // float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(0)->GetDepthBuffer());
 
       // auto start = std::chrono::system_clock::now();
