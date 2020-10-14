@@ -9,6 +9,7 @@ set(vtkh_filters_headers
   Clip.hpp
   ClipField.hpp
   CompositeVector.hpp
+  ExtractStructured.hpp
   Gradient.hpp
   GhostStripper.hpp
   HistSampling.hpp
@@ -32,7 +33,7 @@ set(vtkh_filters_headers
   communication/Communicator.hpp
   communication/MemStream.h
   )
-  
+
 if(ENABLE_FILTER_CONTOUR_TREE)
     list(APPEND vtkh_filters_headers ContourTree.hpp)
 endif()
@@ -50,6 +51,7 @@ set(vtkh_filters_sources
   Clip.cpp
   ClipField.cpp
   CompositeVector.cpp
+  ExtractStructured.cpp
   Gradient.cpp
   GhostStripper.cpp
   HistSampling.cpp
