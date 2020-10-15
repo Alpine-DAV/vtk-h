@@ -143,20 +143,27 @@ ScalarRenderer::DoExecute()
   float bounds[6]; 
   for(int dom = 0; dom < num_domains; ++dom)
   {
-    Result res = renderers[dom].Render(m_camera);
+    vtkm::cont::DataSet data_set;
+    vtkm::Id domain_id;
+    m_input->GetDomain(dom, data_set, domain_id);
+    if(data_set.GetCellSet().GetNumberOfCells())
+    {
+	
+      Result res = renderers[dom].Render(m_camera);
 
-    field_names = res.ScalarNames;
-    PayloadImage *pimage = Convert(res);
-    min_p = std::min(min_p, pimage->m_payload_bytes);
-    max_p = std::max(max_p, pimage->m_payload_bytes);
-    compositor.AddImage(*pimage);
-    bounds[0] = pimage->m_bounds.X.Min;
-    bounds[1] = pimage->m_bounds.X.Max;
-    bounds[2] = pimage->m_bounds.Y.Min;
-    bounds[3] = pimage->m_bounds.Y.Max;
-    bounds[4] = pimage->m_bounds.Z.Min;
-    bounds[5] = pimage->m_bounds.Z.Max;
-    delete pimage;
+      field_names = res.ScalarNames;
+      PayloadImage *pimage = Convert(res);
+      min_p = std::min(min_p, pimage->m_payload_bytes);
+      max_p = std::max(max_p, pimage->m_payload_bytes);
+      compositor.AddImage(*pimage);
+      bounds[0] = pimage->m_bounds.X.Min;
+      bounds[1] = pimage->m_bounds.X.Max;
+      bounds[2] = pimage->m_bounds.Y.Min;
+      bounds[3] = pimage->m_bounds.Y.Max;
+      bounds[4] = pimage->m_bounds.Z.Min;
+      bounds[5] = pimage->m_bounds.Z.Max;
+      delete pimage;
+    }
   }
 
   //Assume rank 0 has data, pass details to ranks with empty domains (no data).
