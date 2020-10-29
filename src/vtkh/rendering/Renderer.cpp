@@ -167,7 +167,6 @@ Renderer::Update()
   long long int in_cells = this->m_input->GetNumberOfCells();
   VTKH_DATA_ADD("input_cells", in_cells);
 #endif
-  std::cout<<"Cells "<<this->m_input->GetNumberOfCells()<<"\n";
   PreExecute();
   DoExecute();
   PostExecute();
