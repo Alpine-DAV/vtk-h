@@ -2,9 +2,11 @@
 #define t_test_utils_hpp
 
 #include <assert.h>
+#include <random>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 
 #define BASE_SIZE 32
 typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformCoords;
@@ -302,6 +304,51 @@ vtkm::cont::DataSet CreateTestDataRectilinear(int block, int num_blocks, int bas
   data_set.AddField(CreatePointVecField<vtkm::Float32>(num_points, "vector_data_Float32"));
   data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
 
+  return data_set;
+}
+
+vtkm::cont::DataSet CreateTestDataPoints(int num_points)
+{
+  std::vector<double> x_vals;
+  std::vector<double> y_vals;
+  std::vector<double> z_vals;
+  std::vector<vtkm::UInt8> shapes;
+  std::vector<vtkm::IdComponent> num_indices;
+  std::vector<vtkm::Id> conn;
+  std::vector<double> field;
+
+  x_vals.resize(num_points);
+  y_vals.resize(num_points);
+  z_vals.resize(num_points);
+  shapes.resize(num_points);
+  conn.resize(num_points);
+  num_indices.resize(num_points);
+  field.resize(num_points);
+
+  std::linear_congruential_engine<std::uint_fast32_t, 48271, 0, 2147483647> rgen{ 0 };
+  std::uniform_real_distribution<double> dist{ -10., 10.};
+
+  for(int i = 0; i < num_points; ++i)
+  {
+    x_vals[i] = dist(rgen);
+    y_vals[i] = dist(rgen);
+    z_vals[i] = dist(rgen);
+    field[i] = dist(rgen);
+    shapes[i] = vtkm::CELL_SHAPE_VERTEX;
+    num_indices[i] = 1;
+    conn[i] = i;
+  }
+  vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
+  vtkm::cont::DataSet data_set = dataSetBuilder.Create(x_vals,
+                                                       y_vals,
+                                                       z_vals,
+                                                       shapes,
+                                                       num_indices,
+                                                       conn);
+  vtkm::cont::Field vfield = vtkm::cont::make_Field("point_data_Float64",
+                                              vtkm::cont::Field::Association::POINTS,
+                                              field);
+  data_set.AddField(vfield);
   return data_set;
 }
 
