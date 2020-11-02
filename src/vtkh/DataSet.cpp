@@ -546,7 +546,7 @@ DataSet::IsPointMesh() const
 
     if(dom.GetCellSet().GetNumberOfCells() > 0)
     {
-      is_points = (single_type || shape_type == 1) && is_points;
+      is_points = (single_type && (shape_type == 1)) && is_points;
     }
   }
 
