@@ -36,6 +36,7 @@ public:
   void SetDoComposite(bool do_composite);
   void SetRenders(const std::vector<Render> &renders);
   void SetRange(const vtkm::Range &range);
+  void DisableColorBar();
 
   vtkm::cont::ColorTable      GetColorTable() const;
   std::string                 GetFieldName() const;
