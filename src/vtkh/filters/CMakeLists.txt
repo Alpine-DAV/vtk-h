@@ -22,6 +22,7 @@ set(vtkh_filters_headers
   ParticleAdvection.hpp
   Integrator.hpp
   PointAverage.hpp
+  PointTransform.hpp
   Recenter.hpp
   Threshold.hpp
   Statistics.hpp
@@ -32,7 +33,7 @@ set(vtkh_filters_headers
   communication/Communicator.hpp
   communication/MemStream.h
   )
-  
+
 if(ENABLE_FILTER_CONTOUR_TREE)
     list(APPEND vtkh_filters_headers ContourTree.hpp)
 endif()
@@ -61,6 +62,7 @@ set(vtkh_filters_sources
   MarchingCubes.cpp
   ParticleAdvection.cpp
   PointAverage.cpp
+  PointTransform.cpp
   Recenter.cpp
   Threshold.cpp
   Slice.cpp
