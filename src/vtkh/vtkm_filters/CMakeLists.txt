@@ -12,6 +12,7 @@ set(vtkm_filters_headers
   vtkmLagrangian.hpp
   vtkmMarchingCubes.hpp
   vtkmPointAverage.hpp
+  vtkmPointTransform.hpp
   vtkmThreshold.hpp
   vtkmVectorMagnitude.hpp
   GradientParameters.hpp
@@ -27,6 +28,7 @@ set(vtkm_filters_sources
   vtkmLagrangian.cpp
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
+  vtkmPointTransform.cpp
   vtkmThreshold.cpp
   vtkmVectorMagnitude.cpp
   )
