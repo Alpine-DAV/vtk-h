@@ -336,7 +336,6 @@ stages:
   - job: Docker_Ubuntu
     pool:
       vmImage: 'ubuntu-16.04'
-    container: ${{ variables.main_tag }}
     timeoutInMinutes: 0
     steps:
       - checkout: self
