@@ -122,7 +122,7 @@ stages:
            export SPACK_SPEC="%gcc@5+mpi ^cmake@3.14.5 ${VTKM_SPEC}"
            echo $SPACK_SPEC
            # run uber to build tpls
-           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_16/
+           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_18_devel/
         displayName: 'Spack Build Tpls'
 
       - script: |
@@ -271,7 +271,7 @@ stages:
            export SPACK_SPEC="${SPACK_SPEC} ^cmake~openssl~ncurses"
            echo $SPACK_SPEC
            # run uber to build tpls
-           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_cuda/
+           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_16_cuda_10.1_devel/
         displayName: 'Spack Build Tpls'
 
       - script: |
