@@ -511,6 +511,13 @@ PartialCompositor<PartialType>::composite(std::vector<std::vector<PartialType>> 
 
   merge(partial_images, partials, global_min_pixel, global_max_pixel);
 
+  if(global_min_pixel > global_max_pixel)
+  {
+    // just bail
+    return;
+  }
+
+
 #ifdef VTKH_PARALLEL
   //
   // Exchange partials with other ranks
