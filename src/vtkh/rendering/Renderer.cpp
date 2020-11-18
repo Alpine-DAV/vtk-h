@@ -30,6 +30,13 @@ Renderer::SetShadingOn(bool on)
   // do nothing by default;
 }
 
+void Renderer::DisableColorBar()
+{
+  // not all plots have color bars, so
+  // we only give the option to turn it off
+  m_has_color_table = false;
+}
+
 void
 Renderer::SetField(const std::string field_name)
 {

@@ -44,6 +44,28 @@ bool GlobalAgreement(bool local)
   return agreement;
 }
 
+bool GlobalSomeoneAgrees(bool local)
+{
+  bool agreement = local;
+#ifdef VTKH_PARALLEL
+  int local_boolean = local ? 1 : 0;
+  int global_boolean;
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  MPI_Allreduce((void *)(&local_boolean),
+                (void *)(&global_boolean),
+                1,
+                MPI_INT,
+                MPI_SUM,
+                mpi_comm);
+
+  if(global_boolean == 0)
+  {
+    agreement = false;
+  }
+#endif
+  return agreement;
+}
+
 template<typename T>
 class MemSetWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -521,7 +543,11 @@ DataSet::IsPointMesh() const
     const vtkm::cont::DataSet &dom = m_domains[i];
     vtkm::UInt8 shape_type;
     bool single_type = VTKMDataSetInfo::IsSingleCellShape(dom.GetCellSet(), shape_type);
-    is_points = (single_type && shape_type == 1) && is_points;
+
+    if(dom.GetCellSet().GetNumberOfCells() > 0)
+    {
+      is_points = (single_type && (shape_type == 1)) && is_points;
+    }
   }
 
   is_points = detail::GlobalAgreement(is_points);
