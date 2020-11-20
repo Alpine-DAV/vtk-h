@@ -1,6 +1,8 @@
 #include "ScalarRenderer.hpp"
 #include <vtkh/compositing/PayloadCompositor.hpp>
 
+#include <vtkh/vtkh.hpp>
+
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
@@ -8,6 +10,9 @@
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/ScalarRenderer.h>
 
+#ifdef VTKH_PARALLEL
+  #include <mpi.h>
+#endif
 #include <assert.h>
 
 namespace vtkh
@@ -114,7 +119,6 @@ ScalarRenderer::DoExecute()
   std::vector<vtkm::Id> cell_counts;
   renderers.resize(num_domains);
   cell_counts.resize(num_domains);
-
   for(int dom = 0; dom < num_domains; ++dom)
   {
     vtkm::cont::DataSet data_set;
@@ -137,23 +141,57 @@ ScalarRenderer::DoExecute()
   std::vector<std::string> field_names;
   PayloadCompositor compositor;
 
+  //Bounds needed for parallel execution
+  float bounds[6]; 
   for(int dom = 0; dom < num_domains; ++dom)
   {
-    Result res = renderers[dom].Render(m_camera);
+    vtkm::cont::DataSet data_set;
+    vtkm::Id domain_id;
+    m_input->GetDomain(dom, data_set, domain_id);
+    if(data_set.GetCellSet().GetNumberOfCells())
+    {
+	
+      Result res = renderers[dom].Render(m_camera);
 
-    field_names = res.ScalarNames;
-    PayloadImage *pimage = Convert(res);
-    min_p = std::min(min_p, pimage->m_payload_bytes);
-    max_p = std::max(max_p, pimage->m_payload_bytes);
-    compositor.AddImage(*pimage);
-    delete pimage;
+      field_names = res.ScalarNames;
+      PayloadImage *pimage = Convert(res);
+      min_p = std::min(min_p, pimage->m_payload_bytes);
+      max_p = std::max(max_p, pimage->m_payload_bytes);
+      compositor.AddImage(*pimage);
+      bounds[0] = pimage->m_bounds.X.Min;
+      bounds[1] = pimage->m_bounds.X.Max;
+      bounds[2] = pimage->m_bounds.Y.Min;
+      bounds[3] = pimage->m_bounds.Y.Max;
+      bounds[4] = pimage->m_bounds.Z.Min;
+      bounds[5] = pimage->m_bounds.Z.Max;
+      delete pimage;
+    }
+  }
+
+  //Assume rank 0 has data, pass details to ranks with empty domains (no data).
+#ifdef VTKH_PARALLEL
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  MPI_Bcast(bounds, 6, MPI_FLOAT, 0, mpi_comm);
+  MPI_Bcast(&max_p, 1, MPI_INT, 0, mpi_comm);
+  MPI_Bcast(&min_p, 1, MPI_INT, 0, mpi_comm);
+#endif
+  
+  if(num_domains == 0)
+  {
+    vtkm::Bounds b(bounds);
+    PayloadImage p(b, max_p);
+    int size = p.m_depths.size();
+    float depths[size];
+    for(int i = 0; i < size; i++)
+      depths[i] = std::numeric_limits<int>::max();
+    std::copy(depths, depths + size, &p.m_depths[0]);
+    compositor.AddImage(p);
   }
 
   if(min_p != max_p)
   {
     throw Error("Scalar Renderer: mismatch in payload bytes");
   }
-
   PayloadImage final_image = compositor.Composite();
   if(vtkh::GetMPIRank() == 0)
   {
