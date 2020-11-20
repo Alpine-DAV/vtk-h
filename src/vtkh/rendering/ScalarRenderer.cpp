@@ -1,6 +1,8 @@
 #include "ScalarRenderer.hpp"
 #include <vtkh/compositing/PayloadCompositor.hpp>
 
+#include <vtkh/vtkh.hpp>
+
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
@@ -168,9 +170,10 @@ ScalarRenderer::DoExecute()
 
   //Assume rank 0 has data, pass details to ranks with empty domains (no data).
 #ifdef VTKH_PARALLEL
-  MPI_Bcast(bounds, 6, MPI_FLOAT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&max_p, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&min_p, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  MPI_Bcast(bounds, 6, MPI_FLOAT, 0, mpi_comm);
+  MPI_Bcast(&max_p, 1, MPI_INT, 0, mpi_comm);
+  MPI_Bcast(&min_p, 1, MPI_INT, 0, mpi_comm);
 #endif
   
   if(num_domains == 0)
