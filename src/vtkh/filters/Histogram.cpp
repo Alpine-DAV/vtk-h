@@ -180,14 +180,21 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
 
     field.GetData().ResetTypes(vtkm::TypeListFieldScalar()).CastAndCall(hist);
     HistogramResult dom_hist;
-    dom_hist.m_bins = hist.m_bins;
+    dom_hist.m_bins.Allocate(m_num_bins);
+    auto id_portal= hist.m_bins.ReadPortal();
+    auto int64_portal = dom_hist.m_bins.WritePortal();
+    for (int ii = 0; ii< m_num_bins; ii++)
+    {
+      int64_portal.Set(ii,id_portal.Get(ii));
+    }
+    //dom_hist.m_bins = hist.m_bins;
     dom_hist.m_bin_delta = hist.m_bin_delta;
     dom_hist.m_range = range;
     local_histograms.push_back(dom_hist);
   }
 
   HistogramResult local = merge_histograms(local_histograms);
-  vtkm::Id * bin_ptr = GetVTKMPointer(local.m_bins);
+  vtkm::Int64 * bin_ptr = GetVTKMPointer(local.m_bins);
   detail::reduce(bin_ptr, m_num_bins);
 
   VTKH_DATA_CLOSE();
@@ -212,12 +219,12 @@ Histogram::HistogramResult::Print(std::ostream &out)
   out<<"total points: "<<sum<<"\n";
 }
 
-vtkm::Id
+vtkm::Int64
 Histogram::HistogramResult::totalCount()
 {
   auto binPortal = m_bins.ReadPortal();
   const int num_bins = m_bins.GetNumberOfValues();
-  vtkm::Id sum = 0;
+  vtkm::Int64 sum = 0;
   for (vtkm::Id i = 0; i < num_bins; i++)
   {
     sum += binPortal.Get(i);

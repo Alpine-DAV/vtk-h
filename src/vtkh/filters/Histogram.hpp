@@ -20,11 +20,11 @@ public:
 
   struct HistogramResult
   {
-    vtkm::cont::ArrayHandle<vtkm::Id> m_bins;
+    vtkm::cont::ArrayHandle<vtkm::Int64> m_bins;
     vtkm::Range m_range;
     vtkm::Float64 m_bin_delta;
     void Print(std::ostream &out);
-    vtkm::Id totalCount();
+    vtkm::Int64 totalCount();
   };
 
   HistogramResult Run(vtkh::DataSet &data_set, const std::string &field_name);

@@ -57,19 +57,19 @@ public:
 
 
 vtkm::cont::ArrayHandle<vtkm::Float32>
-calculate_pdf(const vtkm::Int32 tot_points,
+calculate_pdf(const vtkm::Int64 tot_points,
               const vtkm::Int32 num_bins,
               const vtkm::Float32 sample_percent,
-              vtkm::cont::ArrayHandle<vtkm::Id> mybins)
+              vtkm::cont::ArrayHandle<vtkm::Int64> mybins)
 {
-  vtkm::cont:: ArrayHandle <vtkm::Id > bins;
+  vtkm::cont:: ArrayHandle <vtkm::Int64 > bins;
   vtkm::cont:: Algorithm ::Copy(mybins , bins);
   vtkm::cont::ArrayHandleIndex indexArray (num_bins);
-  vtkm::cont::ArrayHandle<vtkm::Id> indices;
+  vtkm::cont::ArrayHandle<vtkm::Int64> indices;
   vtkm::cont::Algorithm::Copy(indexArray, indices);
 
-  vtkm::cont:: ArrayHandleZip <vtkm::cont:: ArrayHandle <vtkm::Id >,
-                               vtkm::cont:: ArrayHandle <vtkm::Id >>
+  vtkm::cont:: ArrayHandleZip <vtkm::cont:: ArrayHandle <vtkm::Int64 >,
+                               vtkm::cont:: ArrayHandle <vtkm::Int64 >>
                                  zipArray(bins, indices );
 
   vtkm::cont::Algorithm::Sort(zipArray);
@@ -284,9 +284,9 @@ void HistSampling::DoExecute()
                                                                     valid_field);
 
 
-  vtkm::Id global_num_values = histogram.totalCount();
-  vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
-
+  vtkm::Int64 global_num_values = histogram.totalCount();
+  vtkm::cont:: ArrayHandle <vtkm::Int64 > globCounts = histogram.m_bins;
+  std::cout<<"Here global_num_values = "<<global_num_values<<std::endl;
   vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
   probArray = detail::calculate_pdf(global_num_values, numberOfBins, m_sample_percent, globCounts);
 
@@ -341,6 +341,16 @@ void HistSampling::DoExecute()
     vtkm::cont::ArrayHandle <vtkm::Float32> output;
     vtkm::cont::Algorithm ::Copy(stencilBool , output );
 
+    // Test code: Verify the number of eventually selected samples by summing the stencilBool
+    vtkm::Float32 test_sum = 0.0;
+    for(int j=0; j<tot_points; j++)
+    {
+      test_sum += output.ReadPortal().Get(j);
+    }
+    std::cout << "Samples taken = " << test_sum << ". Total points = "
+              << tot_points << ". At domain = "<< i << std::endl;
+   //
+
     vtkm::cont:: DataSetFieldAdd dataSetFieldAdd;
 
     if(assoc == vtkm::cont::Field::Association::POINTS)
@@ -369,6 +379,7 @@ void HistSampling::DoExecute()
   {
     delete input;
   }
+  std::cout<< "My comments" <<std::endl;
 }
 
 std::string
