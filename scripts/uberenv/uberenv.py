@@ -1,48 +1,9 @@
 #!/bin/sh
 "exec" "python" "-u" "-B" "$0" "$@"
 ###############################################################################
-# Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
-#
-# Produced at the Lawrence Livermore National Laboratory
-#
-# LLNL-CODE-666778
-#
-# All rights reserved.
-#
-# This file is part of Conduit.
-#
-# For details, see https://lc.llnl.gov/conduit/.
-#
-# Please also read conduit/LICENSE
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# * Redistributions of source code must retain the above copyright notice,
-#   this list of conditions and the disclaimer below.
-#
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the disclaimer (as noted below) in the
-#   documentation and/or other materials provided with the distribution.
-#
-# * Neither the name of the LLNS/LLNL nor the names of its contributors may
-#   be used to endorse or promote products derived from this software without
-#   specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY,
-# LLC, THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-###############################################################################
+# Copyright (c) Lawrence Livermore National Security, LLC and other Conduit
+# Project developers. See top-level LICENSE AND COPYRIGHT files for dates and
+# other details. No copyright assignment is required to contribute to Conduit.
 
 """
  file: uberenv.py
@@ -178,6 +139,13 @@ def parse_args():
         if not os.path.isdir(opts["spack_config_dir"]):
             print("[ERROR: invalid spack config dir: {} ]".format(opts["spack_config_dir"]))
             sys.exit(-1)
+    # if rel path is given for the mirror, we need to evaluate here -- before any
+    # chdirs to avoid confusion related to what it is relative to.
+    # (it should be relative to where uberenv is run from, so it matches what you expect
+    #  from shell completion, etc)
+    if not opts["mirror"] is None:
+        if not opts["mirror"].startswith("http") and not os.path.isabs(opts["mirror"]):
+            opts["mirror"] = os.path.abspath(opts["mirror"])
     return opts, extras
 
 
@@ -262,7 +230,6 @@ def create_spack_mirror(mirror_path,pkg_name,ignore_ssl_errors=False):
     if not mirror_path:
         print("[--create-mirror requires a mirror directory]")
         sys.exit(-1)
-    mirror_path = os.path.abspath(mirror_path)
 
     mirror_cmd = "spack/bin/spack "
     if ignore_ssl_errors:
@@ -292,7 +259,6 @@ def use_spack_mirror(spack_dir,
     """
     Configures spack to use mirror at a given path.
     """
-    mirror_path = os.path.abspath(mirror_path)
     existing_mirror_path = find_spack_mirror(spack_dir, mirror_name)
     if existing_mirror_path and mirror_path != existing_mirror_path:
         # Existing mirror has different URL, error out
@@ -302,12 +268,12 @@ def use_spack_mirror(spack_dir,
         # Note: In this case, spack says it removes the mirror, but we still
         # get errors when we try to add a new one, sounds like a bug
         #
-        sexe("spack/bin/spack mirror remove --scope=site {} ".format(mirror_name),
+        sexe("spack/bin/spack mirror remove {} ".format(mirror_name),
              echo=True)
         existing_mirror_path = None
     if not existing_mirror_path:
         # Add if not already there
-        sexe("spack/bin/spack mirror add --scope=site {} {}".format(
+        sexe("spack/bin/spack mirror add {} {}".format(
                 mirror_name, mirror_path), echo=True)
         print("[using mirror {}]".format(mirror_path))
 
@@ -356,8 +322,13 @@ def setup_osx_sdk_env_vars():
 def find_spack_pkg_path(pkg_name):
     r,rout = sexe("spack/bin/spack find -p " + pkg_name,ret_output = True)
     for l in rout.split("\n"):
-        if l.startswith(" "):
+        lstrip = l.strip()
+        if not lstrip == "" and \
+           not lstrip.startswith("==>") and  \
+           not lstrip.startswith("--"):
             return {"name": pkg_name, "path": l.split()[-1]}
+    print("[ERROR: failed to find package named '{}']".format(pkg_name))
+    sys.exit(-1)
 
 def read_spack_full_spec(pkg_name,spec):
     rv, res = sexe("spack/bin/spack spec " + pkg_name + " " + spec, ret_output=True)
@@ -379,6 +350,8 @@ def main():
         uberenv_pkg_name = project_opts["package_name"]
     else:
         uberenv_pkg_name = project_opts["uberenv_package_name"]
+    if "mirror_url" in project_opts.keys() and not opts["create_mirror"]:
+        opts["mirror"] = project_opts["mirror_url"]
     print("[uberenv project settings: {}]".format(str(project_opts)))
     print("[uberenv options: {}]".format(str(opts)))
     if "darwin" in platform.system().lower():
@@ -431,9 +404,15 @@ def main():
             os.chdir(pjoin(dest_dir,"spack"))
             sexe("git checkout %s" % sha1,echo=True)
 
+        # We should now have spack, but double check
+        # in case clone failed
+        if not os.path.isdir(dest_spack):
+            print("[ERROR: failed to clone spack to {}]".format(dest_spack))
+            return -1
+
     if opts["spack_pull"]:
         # do a pull to make sure we have the latest
-        os.chdir(pjoin(dest_dir,"spack"))
+        os.chdir(dest_spack)
         sexe("git stash", echo=True)
         sexe("git pull", echo=True)
 
@@ -450,8 +429,8 @@ def main():
     cln_cmd = "spack/bin/spack clean "
     res = sexe(cln_cmd, echo=True)
 
-    # clean out any spack cached downloads
-    cln_cmd = "spack/bin/spack clean -d"
+    # clean out any spack cached stuff
+    cln_cmd = "spack/bin/spack clean --all"
     res = sexe(cln_cmd, echo=True)
 
     # check if we need to force uninstall of selected packages
@@ -474,7 +453,7 @@ def main():
     ##########################################################
     if opts["create_mirror"]:
         return create_spack_mirror(opts["mirror"],
-                                   uberenv_pkg_name,
+                                   uberenv_pkg_name + opts["spec"],
                                    opts["ignore_ssl_errors"])
     else:
         if not opts["mirror"] is None:
@@ -525,7 +504,7 @@ def main():
                 if os.path.islink(pkg_lnk_dir):
                     os.unlink(pkg_lnk_dir)
                 print("")
-                print("[symlinking install to {}]").format(pjoin(dest_dir,pkg_lnk_dir))
+                print("[symlinking install to {}]".format(pjoin(dest_dir,pkg_lnk_dir)))
                 os.symlink(pkg_path["path"],os.path.abspath(pkg_lnk_dir))
                 hcfg_glob = glob.glob(pjoin(pkg_lnk_dir,"*.cmake"))
                 if len(hcfg_glob) > 0:
