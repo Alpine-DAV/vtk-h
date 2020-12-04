@@ -72,10 +72,13 @@ public:
     dumpOutputFiles = dumpOutput;
   }
 
+  void SetStatsFile(std::string& s) {statsFile = s;}
+
   void SetField(const std::string &field_name) {m_field_name = field_name;}
   void SetStepSize(const double &v) { stepSize = v;}
   void SetMaxSteps(const int &n) { maxSteps = n;}
   int  GetMaxSteps() const { return maxSteps; }
+  void SetBatchSize(const int &n) {batchSize = n;}
 
   DataBlockIntegrator * GetBlock(int blockId);
 
@@ -86,6 +89,15 @@ public:
                         std::vector<Particle> &T,
                         std::vector<Particle> &A,
                         std::vector<ResultT> &traces);
+
+  template <typename ResultT>
+  int InternalIntegrate(DataBlockIntegrator &blk,
+                        std::vector<Particle> &v,
+                        std::vector<Particle> &I,
+                        std::vector<Particle> &T,
+                        std::vector<Particle> &A,
+                        std::vector<ResultT> &traces,
+                        vtkh::ThreadSafeContainer<Particle, std::vector> &workerInactive);
 
 protected:
   void PreExecute() override;
@@ -120,6 +132,8 @@ protected:
   int maxSteps;
   vtkm::Bounds seedBox;
   vtkm::Vec<double,3> seedPoint;
+  int batchSize;
+  std::string statsFile;
 
   float stepSize;
 
@@ -131,7 +145,8 @@ protected:
   bool GetActiveParticles(std::vector<Particle> &v);
 
   void DumpTraces(int ts, const std::vector<vtkm::Vec<double,4>> &particleTraces);
-  void DumpTraces(const vtkm::cont::ArrayHandle<vtkm::Vec3f> &pts);
+  void DumpTraces(const vtkm::cont::ArrayHandle<vtkm::Vec3f> &pts,
+                  const vtkm::cont::ArrayHandle<vtkm::Id> &ids);
   void DumpDS(int ts);
   void DumpSLOutput(vtkm::cont::DataSet *ds, int domId, int ts);
 };
@@ -140,14 +155,15 @@ protected:
 class DataBlockIntegrator
 {
 public:
-    DataBlockIntegrator(int _id, vtkm::cont::DataSet *_ds, const std::string &fieldName, float advectStep)
-        : id(_id), ds(_ds),
-          integrator(_ds, fieldName, advectStep)
+    DataBlockIntegrator(int _id, vtkm::cont::DataSet *_ds, const std::string &fieldName, float advectStep, int batchSize, int _rank)
+        : id(_id), ds(_ds), rank(_rank),
+          integrator(_ds, fieldName, advectStep, batchSize, _rank)
     {
     }
     ~DataBlockIntegrator() {}
 
     int id;
+    int rank;
     vtkm::cont::DataSet *ds;
     Integrator integrator;
 

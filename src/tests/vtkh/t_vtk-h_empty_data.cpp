@@ -142,6 +142,10 @@ TEST(vtkh_emtpy_data, vtkh_empty_vtkh)
   {
     got_error = true;
   }
+  catch(...)
+  {
+    got_error = true;
+  }
 
   ASSERT_TRUE(got_error);
 }

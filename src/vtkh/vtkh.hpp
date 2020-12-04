@@ -2,6 +2,7 @@
 #define VTK_H_HPP
 
 #include <vtkh/vtkh_exports.h>
+#include <vtkh/vtkh_config.h>
 #include <string>
 
 namespace vtkh

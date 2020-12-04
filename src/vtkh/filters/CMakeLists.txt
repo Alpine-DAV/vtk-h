@@ -8,6 +8,7 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  CompositeVector.hpp
   Gradient.hpp
   GhostStripper.hpp
   HistSampling.hpp
@@ -21,15 +22,23 @@ set(vtkh_filters_headers
   ParticleAdvection.hpp
   Integrator.hpp
   PointAverage.hpp
+  PointTransform.hpp
   Recenter.hpp
+  Tetrahedralize.hpp
   Threshold.hpp
+  Triangulate.hpp
   Statistics.hpp
   Slice.hpp
+  VectorComponent.hpp
   VectorMagnitude.hpp
   communication/BoundsMap.hpp
   communication/Communicator.hpp
   communication/MemStream.h
   )
+
+if(ENABLE_FILTER_CONTOUR_TREE)
+    list(APPEND vtkh_filters_headers ContourTree.hpp)
+endif()
 
 set(vtkh_comm_filters_headers
   communication/BoundsMap.hpp
@@ -43,6 +52,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  CompositeVector.cpp
   Gradient.cpp
   GhostStripper.cpp
   HistSampling.cpp
@@ -54,13 +64,22 @@ set(vtkh_filters_sources
   MarchingCubes.cpp
   ParticleAdvection.cpp
   PointAverage.cpp
+  PointTransform.cpp
   Recenter.cpp
+  Tetrahedralize.cpp
   Threshold.cpp
+  Triangulate.cpp
   Slice.cpp
   Statistics.cpp
+  VectorComponent.cpp
   VectorMagnitude.cpp
   communication/MemStream.cpp
   )
+
+if(ENABLE_FILTER_CONTOUR_TREE)
+  list(APPEND vtkh_filters_headers ContourTree.cpp)
+endif()
+
 
 set(vtkh_comm_filters_sources
   communication/MemStream.cpp
@@ -77,7 +96,6 @@ if (ENABLE_SERIAL)
     if(ENABLE_OPENMP)
         list(APPEND vtkh_filters_deps openmp)
     endif()
-
 
     blt_add_library(
       NAME vtkh_filters
@@ -140,6 +158,7 @@ if (MPI_FOUND)
     if(ENABLE_OPENMP)
          list(APPEND vtkh_filters_mpi_deps openmp)
     endif()
+
     blt_add_library(
       NAME vtkh_filters_mpi
       SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources} ${vtkh_mpi_sources}

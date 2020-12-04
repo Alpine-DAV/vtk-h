@@ -1,4 +1,10 @@
 #include <vtkh/filters/MarchingCubes.hpp>
+#include <vtkh/Error.hpp>
+
+#ifdef VTK_H_ENABLE_FILTER_CONTOUR_TREE
+#include <vtkh/filters/ContourTree.hpp>
+#endif
+
 #include <vtkh/filters/CleanGrid.hpp>
 #include <vtkh/filters/Recenter.hpp>
 #include <vtkh/vtkm_filters/vtkmMarchingCubes.hpp>
@@ -7,7 +13,8 @@ namespace vtkh
 {
 
 MarchingCubes::MarchingCubes()
- : m_levels(10)
+ : m_levels(10),
+   m_use_contour_tree(false)
 {
 
 }
@@ -33,9 +40,18 @@ MarchingCubes::SetLevels(const int &levels)
 }
 
 void
+MarchingCubes::SetUseContourTree(bool on)
+{
+  m_use_contour_tree = on;
+}
+
+void
 MarchingCubes::SetIsoValues(const double *iso_values, const int &num_values)
 {
-  assert(num_values > 0);
+  if(num_values < 1)
+  {
+    throw Error("SetIsoValues: num_values must be greater than 0");
+  }
   m_iso_values.clear();
   for(int i = 0; i < num_values; ++i)
   {
@@ -57,19 +73,41 @@ void MarchingCubes::PreExecute()
 
   if(m_levels != -1)
   {
-    vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).GetPortalControl().Get(0);
-    float length = scalar_range.Length();
-    float step = length / (m_levels + 1.f);
-
-    m_iso_values.clear();
-    for(int i = 1; i <= m_levels; ++i)
+    if(m_use_contour_tree)
     {
-      float iso = scalar_range.Min + float(i) * step;
-      m_iso_values.push_back(iso);
+#ifdef VTK_H_ENABLE_FILTER_CONTOUR_TREE
+      // run contour tree every time
+      vtkh::ContourTree contour_tree;
+      contour_tree.SetInput(this->m_input);
+      contour_tree.SetField(m_field_name);
+      contour_tree.SetNumLevels(m_levels);
+      contour_tree.Update();
+      m_iso_values = contour_tree.GetIsoValues();
+#else
+      throw Error("Contour tree disabled");
+#endif
+    }
+    else
+    {
+      vtkm::Range scalar_range = m_input->GetGlobalRange(m_field_name).ReadPortal().Get(0);
+      float length = scalar_range.Length();
+      float step = length / (m_levels + 1.f);
+
+      m_iso_values.clear();
+      for(int i = 1; i <= m_levels; ++i)
+      {
+        float iso = scalar_range.Min + float(i) * step;
+        m_iso_values.push_back(iso);
+      }
     }
   }
 
-  assert(m_iso_values.size() > 0);
+  if(m_iso_values.size() < 1)
+  {
+    std::stringstream ss;
+    ss<<"levels: "<<m_levels;
+    throw Error("number of iso values  must be greater than 0: "+ss.str());
+  }
 }
 
 void MarchingCubes::PostExecute()

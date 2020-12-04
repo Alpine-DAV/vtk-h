@@ -1,13 +1,11 @@
 #include "Renderer.hpp"
-#include "compositing/Compositor.hpp"
+#include <vtkh/compositing/Compositor.hpp>
 
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
 #include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
-
-#include <assert.h>
 
 namespace vtkh {
 
@@ -30,6 +28,13 @@ Renderer::SetShadingOn(bool on)
 
 {
   // do nothing by default;
+}
+
+void Renderer::DisableColorBar()
+{
+  // not all plots have color bars, so
+  // we only give the option to turn it off
+  m_has_color_table = false;
 }
 
 void
@@ -97,31 +102,26 @@ Renderer::Composite(const int &num_images)
   m_compositor->SetCompositeMode(Compositor::Z_BUFFER_SURFACE);
   for(int i = 0; i < num_images; ++i)
   {
-    const int num_canvases = m_renders[i].GetNumberOfCanvases();
+    float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas().GetColorBuffer())[0][0];
+    float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas().GetDepthBuffer());
 
-    for(int dom = 0; dom < num_canvases; ++dom)
-    {
-      float* color_buffer = &GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetColorBuffer())[0][0];
-      float* depth_buffer = GetVTKMPointer(m_renders[i].GetCanvas(dom)->GetDepthBuffer());
+    int height = m_renders[i].GetCanvas().GetHeight();
+    int width = m_renders[i].GetCanvas().GetWidth();
 
-      int height = m_renders[i].GetCanvas(dom)->GetHeight();
-      int width = m_renders[i].GetCanvas(dom)->GetWidth();
-
-      m_compositor->AddImage(color_buffer,
-                             depth_buffer,
-                             width,
-                             height);
-    } //for dom
+    m_compositor->AddImage(color_buffer,
+                           depth_buffer,
+                           width,
+                           height);
 
     Image result = m_compositor->Composite();
 
 #ifdef VTKH_PARALLEL
     if(vtkh::GetMPIRank() == 0)
     {
-      ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
+      ImageToCanvas(result, m_renders[i].GetCanvas(), true);
     }
 #else
-    ImageToCanvas(result, *m_renders[i].GetCanvas(0), true);
+    ImageToCanvas(result, m_renders[i].GetCanvas(), true);
 #endif
     m_compositor->ClearImages();
   } // for image
@@ -132,16 +132,16 @@ void
 Renderer::PreExecute()
 {
   bool range_set = m_range.IsNonEmpty();
-  bool field_exists = m_input->GlobalFieldExists(m_field_name);
-  if(!range_set && field_exists)
+  Filter::CheckForRequiredField(m_field_name);
+
+  if(!range_set)
   {
     // we have not been given a range, so ask the data set
     vtkm::cont::ArrayHandle<vtkm::Range> ranges = m_input->GetGlobalRange(m_field_name);
-    int num_components = ranges.GetPortalControl().GetNumberOfValues();
+    int num_components = ranges.GetNumberOfValues();
     //
     // current vtkm renderers only supports single component scalar fields
     //
-    assert(num_components == 1);
     if(num_components != 1)
     {
       std::stringstream msg;
@@ -150,7 +150,7 @@ Renderer::PreExecute()
       throw Error(msg.str());
     }
 
-    vtkm::Range global_range = ranges.GetPortalControl().Get(0);
+    vtkm::Range global_range = ranges.ReadPortal().Get(0);
     // a min or max may be been set by the user, check to see
     if(m_range.Min == vtkm::Infinity64())
     {
@@ -230,9 +230,9 @@ Renderer::DoExecute()
 
       m_mapper->SetActiveColorTable(m_color_table);
 
-      vtkmCanvasPtr p_canvas = m_renders[i].GetDomainCanvas(domain_id);
+      Render::vtkmCanvas &canvas = m_renders[i].GetCanvas();
       const vtkmCamera &camera = m_renders[i].GetCamera();
-      m_mapper->SetCanvas(&(*p_canvas));
+      m_mapper->SetCanvas(&canvas);
       m_mapper->RenderCells(cellset,
                             coords,
                             field,

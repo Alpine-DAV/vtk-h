@@ -2,9 +2,11 @@
 #define t_test_utils_hpp
 
 #include <assert.h>
+#include <random>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 
 #define BASE_SIZE 32
 typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformCoords;
@@ -110,8 +112,8 @@ vtkm::cont::Field CreateCellScalarField(int size, const char* fieldName)
 
   for(int i = 0; i < size; ++i)
   {
-    FieldType val = i / FieldType(size);
-    data.GetPortalControl().Set(i, val);
+    FieldType val = i / vtkm::Float32(size);
+    data.WritePortal().Set(i, val);
   }
 
 
@@ -136,7 +138,7 @@ vtkm::cont::Field CreateGhostScalarField(vtkm::Id3 dims)
     if(y < 1 || y > dims[1] - 2) flag = 1;
     if(z < 1 || z > dims[2] - 2) flag = 1;
     vtkm::Id index = z * dims[0] * dims[1] + y * dims[0] + x;
-    data.GetPortalControl().Set(index, flag);
+    data.WritePortal().Set(index, flag);
   }
 
   vtkm::cont::Field field("ghosts",
@@ -149,16 +151,16 @@ template <typename FieldType>
 vtkm::cont::Field CreatePointScalarField(UniformCoords coords, const char* fieldName)
 
 {
-  const int size = coords.GetPortalConstControl().GetNumberOfValues();
+  const int size = coords.GetNumberOfValues();
   vtkm::cont::ArrayHandle<FieldType> data;
   data.Allocate(size);
-  auto portal = coords.GetPortalConstControl();
+  auto portal = coords.ReadPortal();
   for(int i = 0; i < size; ++i)
   {
     vtkm::Vec<FieldType,3> point = portal.Get(i);
 
     FieldType val = vtkm::Magnitude(point) + 1.f;
-    data.GetPortalControl().Set(i, val);
+    data.WritePortal().Set(i, val);
   }
 
   vtkm::cont::Field field(fieldName,
@@ -179,7 +181,7 @@ vtkm::cont::Field CreatePointVecField(int size, const char* fieldName)
 
     vtkm::Vec<FieldType, 3> vec(val, -val, val);
 
-    data.GetPortalControl().Set(i, vec);
+    data.WritePortal().Set(i, vec);
   }
 
   vtkm::cont::Field field(fieldName,
@@ -298,11 +300,55 @@ vtkm::cont::DataSet CreateTestDataRectilinear(int block, int num_blocks, int bas
   vtkm::cont::DataSet data_set = dataSetBuilder.Create(xvals, yvals, zvals);
 
   int num_points = point_dims[0] * point_dims[1] * point_dims[2];
-  int num_cells = cell_dims[0] * cell_dims[1] * cell_dims[2];
 
   data_set.AddField(CreatePointVecField<vtkm::Float32>(num_points, "vector_data_Float32"));
   data_set.AddField(CreatePointVecField<vtkm::Float64>(num_points, "vector_data_Float64"));
 
+  return data_set;
+}
+
+vtkm::cont::DataSet CreateTestDataPoints(int num_points)
+{
+  std::vector<double> x_vals;
+  std::vector<double> y_vals;
+  std::vector<double> z_vals;
+  std::vector<vtkm::UInt8> shapes;
+  std::vector<vtkm::IdComponent> num_indices;
+  std::vector<vtkm::Id> conn;
+  std::vector<double> field;
+
+  x_vals.resize(num_points);
+  y_vals.resize(num_points);
+  z_vals.resize(num_points);
+  shapes.resize(num_points);
+  conn.resize(num_points);
+  num_indices.resize(num_points);
+  field.resize(num_points);
+
+  std::linear_congruential_engine<std::uint_fast32_t, 48271, 0, 2147483647> rgen{ 0 };
+  std::uniform_real_distribution<double> dist{ -10., 10.};
+
+  for(int i = 0; i < num_points; ++i)
+  {
+    x_vals[i] = dist(rgen);
+    y_vals[i] = dist(rgen);
+    z_vals[i] = dist(rgen);
+    field[i] = dist(rgen);
+    shapes[i] = vtkm::CELL_SHAPE_VERTEX;
+    num_indices[i] = 1;
+    conn[i] = i;
+  }
+  vtkm::cont::DataSetBuilderExplicit dataSetBuilder;
+  vtkm::cont::DataSet data_set = dataSetBuilder.Create(x_vals,
+                                                       y_vals,
+                                                       z_vals,
+                                                       shapes,
+                                                       num_indices,
+                                                       conn);
+  vtkm::cont::Field vfield = vtkm::cont::make_Field("point_data_Float64",
+                                              vtkm::cont::Field::Association::POINTS,
+                                              field);
+  data_set.AddField(vfield);
   return data_set;
 }
 

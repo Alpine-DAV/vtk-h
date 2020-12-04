@@ -49,7 +49,9 @@ import os
 import platform
 from os.path import join as pjoin
 
-from vtkh import Vtkh
+#import importlib
+#vtkh = importlib.import_module("vtk-h")
+from .vtkh import Vtkh
 
 class UberenvVtkh(Vtkh):
     """Spack Based Uberenv Build for VTK-h Thirdparty Libs """

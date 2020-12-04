@@ -6,7 +6,7 @@
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/rendering/Render.hpp>
-#include <vtkh/rendering/Image.hpp>
+#include <vtkh/compositing/Image.hpp>
 
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
@@ -36,6 +36,7 @@ public:
   void SetDoComposite(bool do_composite);
   void SetRenders(const std::vector<Render> &renders);
   void SetRange(const vtkm::Range &range);
+  void DisableColorBar();
 
   vtkm::cont::ColorTable      GetColorTable() const;
   std::string                 GetFieldName() const;

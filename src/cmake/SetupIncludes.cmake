@@ -49,6 +49,8 @@
 
 # so we can see use "vtkh/zzz.hxx"
 include_directories(${PROJECT_SOURCE_DIR})
+# support #include <vtkh/vtkh_config.h>
+include_directories(${PROJECT_BINARY_DIR})
 # add lodepng include dir
 include_directories(${PROJECT_SOURCE_DIR}/vtkh/thirdparty_builtin/lodepng)
 # add DIY include dir
