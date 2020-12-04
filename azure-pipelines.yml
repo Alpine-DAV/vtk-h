@@ -6,6 +6,13 @@
 
 # VTK-h ci tests
 
+#####
+# TO USE A NEW CONTAINER, UPDATE TAG NAME HERE AS PART OF YOUR PR!
+#####
+variables:
+  main_tag : alpinedav/ascent-ci:ubuntu-18-devel
+  cuda_tag : alpinedav/ascent-ci:ubuntu-16-cuda-10.1-devel
+
 # only build merge target pr to develop
 trigger: none
 pr:
@@ -39,9 +46,10 @@ stages:
   ###############################################################################
   # Ubuntu build and test, using spack to build tpls
   ###############################################################################
-  - job: Ubuntu_16
+  - job: Main_Ubuntu_18
     pool:
       vmImage: 'ubuntu-16.04'
+    container: ${{ variables.main_tag }}
     timeoutInMinutes: 0
     variables:
       COMPILER_CC: gcc-5
@@ -111,10 +119,10 @@ stages:
            which python
            python --version
            # setup spack spec
-           export SPACK_SPEC="%gcc@5+mpi ^cmake@3.14.5 ${VTKM_SPEC}"
+           export SPACK_SPEC="%gcc+mpi ^cmake@3.14.5 ${VTKM_SPEC}"
            echo $SPACK_SPEC
            # run uber to build tpls
-           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_16/
+           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_18_devel/
         displayName: 'Spack Build Tpls'
 
       - script: |
@@ -214,10 +222,10 @@ stages:
   ###############################################################################
   # NVCC Linux build and install, using spack to build tpls
   ###############################################################################
-  - job: Ubuntu_Cuda
+  - job: Main_Ubuntu_16_Cuda_10_1
     pool:
       vmImage: 'ubuntu-16.04'
-    container: alpinedav/ascent-ci:cuda-9.2-dev
+    container: ${{ variables.cuda_tag }}
     timeoutInMinutes: 0
     strategy:
       matrix:
@@ -263,7 +271,7 @@ stages:
            export SPACK_SPEC="${SPACK_SPEC} ^cmake~openssl~ncurses"
            echo $SPACK_SPEC
            # run uber to build tpls
-           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_cuda/
+           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_16_cuda_10.1_devel/
         displayName: 'Spack Build Tpls'
 
       - script: |
