@@ -114,14 +114,27 @@ public:
     return domain_ids;
   }
 
+  template<typename U>
+  struct CopyFunctor
+  {
+    vtkm::cont::ArrayHandle<vtkm::Vec<U,3>> output;
+    vtkm::Id offset;
+
+    template<typename Type, typename S>
+    void operator()(vtkm::cont::ArrayHandle<Type,S> &input)
+    {
+      vtkm::Id copy_size = input.GetNumberOfValues();
+      vtkm::Id start = 0;
+      vtkm::cont::Algorithm::CopySubRange(input, start, copy_size, output, offset);
+    }
+  };
   template<typename T, typename U>
-  void CopyCoords(vtkm::cont::ArrayHandleVirtual<vtkm::Vec<T,3>> &input,
+  void CopyCoords(vtkm::cont::VariantArrayHandleBase<T> &input,
                   vtkm::cont::ArrayHandle<vtkm::Vec<U,3>> &output,
                   vtkm::Id offset)
   {
-    vtkm::Id copy_size = input.GetNumberOfValues();
-    vtkm::Id start = 0;
-    vtkm::cont::Algorithm::CopySubRange(input, start, copy_size, output, offset);
+    CopyFunctor<U> func{output,offset};
+    input.CastAndCall(func);
   }
 
   struct CopyField

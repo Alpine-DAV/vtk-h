@@ -20,8 +20,25 @@
 
 #ifdef VTKM_ENABLE_MPI
 #include <mpi.h>
-#endif
 
+// This is from VTK-m diy mpi_cast.hpp. Need the make_DIY_MPI_Comm
+namespace vtkmdiy
+{
+namespace mpi
+{
+
+#define DEFINE_MPI_CAST(mpitype)                                                                              \
+inline mpitype& mpi_cast(DIY_##mpitype& obj) { return *reinterpret_cast<mpitype*>(&obj); }                    \
+inline const mpitype& mpi_cast(const DIY_##mpitype& obj) { return *reinterpret_cast<const mpitype*>(&obj); }  \
+inline DIY_##mpitype make_DIY_##mpitype(const mpitype& obj) { DIY_##mpitype ret; mpi_cast(ret) = obj; return ret; }
+
+DEFINE_MPI_CAST(MPI_Comm)
+#undef DEFINE_MPI_CAST
+
+}
+} // diy::mpi
+
+#endif
 
 using ValueType = vtkm::Float64;
 
@@ -48,6 +65,7 @@ bool ReadTestData(const char* filename, VDATASET &inDataSet,
   }
 
   // Read the dimensions of the mesh, i.e,. number of elementes in x, y, and z
+  // y, x, z
   std::vector<std::size_t> dims;
   std::string line;
   getline(inFile, line);
@@ -57,6 +75,9 @@ bool ReadTestData(const char* filename, VDATASET &inDataSet,
   {
     dims.push_back(dimVertices);
   }
+
+  // swap y to x and x to y.
+  std::swap( dims[0], dims[1] );
 
   // Compute the number of vertices, i.e., xdim * ydim * zdim
   unsigned short nDims = static_cast<unsigned short>(dims.size());
@@ -284,7 +305,7 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   // Setup VTK-m GlobalCommuncator. 
   // This is need because the GlobalCommuncator does not setup it self up right if you call MPI_Init.
   auto comm = MPI_COMM_WORLD;
-  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(comm));
+  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(vtkmdiy::mpi::make_DIY_MPI_Comm(comm)));
 
   auto envComm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   if( mpiRank != envComm.rank() || mpiSize != envComm.size() )
@@ -322,6 +343,10 @@ TEST(vtkh_contour_tree, vtkh_contour_tree)
   EXPECT_FLOAT_EQ(isoValues[2], 133);
   EXPECT_FLOAT_EQ(isoValues[3], 168);
   EXPECT_FLOAT_EQ(isoValues[4], 177);
+
+  vtkh::DataSet *output = marcher.GetOutput();
+  if( output )
+    delete output;
 
 #ifdef VTKM_ENABLE_MPI
   MPI_Finalize();

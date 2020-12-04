@@ -84,12 +84,8 @@ set(BASIC_TESTS t_vtk-h_smoke
                 t_vtk-h_render
                 t_vtk-h_slice
                 t_vtk-h_volume_renderer
+                ${t_vtk-h_contour_tree_}
                 )
-
-# this was already disabled, to enable uncomment:
-# if(ENABLE_FILTER_CONTOUR_TREE)
-#     list(APPEND BASIC_TESTS ${t_vtk-h_contour_tree_})
-# endif()
 
 set(CUDA_TESTS t_vtk-h_cuda)
 
@@ -100,17 +96,12 @@ set(MPI_TESTS t_vtk-h_smoke_par
               t_vtk-h_statistics_par
               t_vtk-h_marching_cubes_par
               t_vtk-h_multi_render_par
-              t_vtk-h_particle_advection_par
               t_vtk-h_scalar_renderer_par
               t_vtk-h_raytracer_par
               t_vtk-h_sampling_par
               t_vtk-h_volume_renderer_par
+              ${t_vtk-h_contour_tree_par_}
               )
-
-# this was already disabled, to enable uncomment:
-# if(ENABLE_FILTER_CONTOUR_TREE)
-#   list(APPEND BASIC_TESTS ${t_vtk-h_contour_tree_par_})
-# endif()
 
 ################################
 # Add main tests

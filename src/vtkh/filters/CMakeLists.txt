@@ -8,6 +8,7 @@ set(vtkh_filters_headers
   CleanGrid.hpp
   Clip.hpp
   ClipField.hpp
+  ContourTree.hpp
   CompositeVector.hpp
   Gradient.hpp
   GhostStripper.hpp
@@ -18,9 +19,6 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
-  Particle.hpp
-  ParticleAdvection.hpp
-  Integrator.hpp
   PointAverage.hpp
   PointTransform.hpp
   Recenter.hpp
@@ -36,10 +34,6 @@ set(vtkh_filters_headers
   communication/MemStream.h
   )
 
-if(ENABLE_FILTER_CONTOUR_TREE)
-    list(APPEND vtkh_filters_headers ContourTree.hpp)
-endif()
-
 set(vtkh_comm_filters_headers
   communication/BoundsMap.hpp
   communication/Communicator.hpp
@@ -52,6 +46,7 @@ set(vtkh_filters_sources
   CleanGrid.cpp
   Clip.cpp
   ClipField.cpp
+  ContourTree.cpp
   CompositeVector.cpp
   Gradient.cpp
   GhostStripper.cpp
@@ -62,7 +57,6 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
-  ParticleAdvection.cpp
   PointAverage.cpp
   PointTransform.cpp
   Recenter.cpp
@@ -75,11 +69,6 @@ set(vtkh_filters_sources
   VectorMagnitude.cpp
   communication/MemStream.cpp
   )
-
-if(ENABLE_FILTER_CONTOUR_TREE)
-  list(APPEND vtkh_filters_headers ContourTree.cpp)
-endif()
-
 
 set(vtkh_comm_filters_sources
   communication/MemStream.cpp
@@ -142,11 +131,9 @@ if (MPI_FOUND)
 
   set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkm_compiled_filters)
   set(vtkh_mpi_headers communication/Messenger.hpp
-                       communication/ParticleMessenger.hpp
                        communication/RayMessenger.hpp)
 
     set(vtkh_mpi_sources communication/Messenger.cpp
-                         communication/ParticleMessenger.cpp
                          communication/RayMessenger.cpp)
 
     # necessary b/c of how find_cuda works
