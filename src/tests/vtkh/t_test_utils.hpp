@@ -347,7 +347,8 @@ vtkm::cont::DataSet CreateTestDataPoints(int num_points)
                                                        conn);
   vtkm::cont::Field vfield = vtkm::cont::make_Field("point_data_Float64",
                                               vtkm::cont::Field::Association::POINTS,
-                                              field);
+                                              field,
+                                              vtkm::CopyFlag::On);
   data_set.AddField(vfield);
   return data_set;
 }
