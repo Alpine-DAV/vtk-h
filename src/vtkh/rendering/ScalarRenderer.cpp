@@ -141,6 +141,8 @@ ScalarRenderer::DoExecute()
   std::vector<std::string> field_names;
   PayloadCompositor compositor;
 
+  int num_cells;
+
   //Bounds needed for parallel execution
   float bounds[6]; 
   for(int dom = 0; dom < num_domains; ++dom)
@@ -148,6 +150,7 @@ ScalarRenderer::DoExecute()
     vtkm::cont::DataSet data_set;
     vtkm::Id domain_id;
     m_input->GetDomain(dom, data_set, domain_id);
+    num_cells = data_set.GetCellSet().GetNumberOfCells();
     if(data_set.GetCellSet().GetNumberOfCells())
     {
 	
@@ -176,7 +179,7 @@ ScalarRenderer::DoExecute()
   MPI_Bcast(&min_p, 1, MPI_INT, 0, mpi_comm);
 #endif
   
-  if(num_domains == 0)
+  if(num_domains == 0 || num_cells == 0)
   {
     vtkm::Bounds b(bounds);
     PayloadImage p(b, max_p);

@@ -47,8 +47,9 @@ PayloadCompositor::AddImage(PayloadImage &image)
 PayloadImage
 PayloadCompositor::Composite()
 {
+  std::cerr << "In PAYLOAD COMPOSITE" << std::endl;
   assert(m_images.size() != 0);
-
+  std::cerr << "image size: " << m_images.size() << std::endl;
   // nothing to do here in serial. Images were composited as
   // they were added to the compositor
 #ifdef VTKH_PARALLEL
@@ -56,7 +57,9 @@ PayloadCompositor::Composite()
   diy_comm = vtkhdiy::mpi::communicator(MPI_Comm_f2c(GetMPICommHandle()));
 
   assert(m_images.size() == 1);
+  //std::cerr << "image size: " << m_images.size() << std::endl;
   RadixKCompositor compositor;
+  std::cerr << "here??" << std::endl;
   compositor.CompositeSurface(diy_comm, this->m_images[0]);
 #endif
   // Make this a param to avoid the copy?
