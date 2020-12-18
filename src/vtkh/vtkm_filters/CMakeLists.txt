@@ -13,6 +13,8 @@ set(vtkm_filters_headers
   vtkmMarchingCubes.hpp
   vtkmPointAverage.hpp
   vtkmPointTransform.hpp
+  vtkmTetrahedralize.hpp
+  vtkmTriangulate.hpp
   vtkmThreshold.hpp
   vtkmVectorMagnitude.hpp
   GradientParameters.hpp
@@ -29,6 +31,8 @@ set(vtkm_filters_sources
   vtkmMarchingCubes.cpp
   vtkmPointAverage.cpp
   vtkmPointTransform.cpp
+  vtkmTetrahedralize.cpp
+  vtkmTriangulate.cpp
   vtkmThreshold.cpp
   vtkmVectorMagnitude.cpp
   )
