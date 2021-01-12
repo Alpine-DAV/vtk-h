@@ -54,7 +54,7 @@ if(VTKm_ENABLE_MPI)
     set( t_vtk-h_contour_tree_par_ "t_vtk-h_contour_tree_par" )
 else()
     message(STATUS "VTKm_ENABLE_MPI FALSE")
-    set( t_vtk-h_contour_tree_ "" )
+    set( t_vtk-h_contour_tree_ "t_vtk-h_contour_tree" )
     set( t_vtk-h_contour_tree_par_ "" )
 endif()
 
