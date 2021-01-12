@@ -298,6 +298,11 @@ void ContourTree::DoExecute()
 #ifdef VTKH_PARALLEL
   if(mpi_size != 1)
   {
+    // blocksPerDim - number of blocks in each dim.
+    // globalSize - extents - full size of the data.
+    // localBlockIndices - the order of the data blocks index.
+    // localBlockOrigins - block origins in extent.
+    // localBlockSize - extents of the data.
     filter.SetSpatialDecomposition(
       blocksPerDim, globalSize, localBlockIndices, localBlockOrigins, localBlockSizes);
   }
@@ -306,17 +311,35 @@ void ContourTree::DoExecute()
   filter.SetActiveField(m_field_name);
 
 #ifdef DEBUG
-    std::cerr << "--- inDataSet \n";
-    inDataSet.PrintSummary( std::cerr );
-    std::cerr << "--- end inDataSet \n";
+    std::cout << "--- inDataSet \n";
+    inDataSet.PrintSummary( std::cout );
+    std::cout << "--- end inDataSet \n";
+
+#ifdef VTKH_PARALLEL
+    ValueArray dataField;
+    inDataSet.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
+    PrintArrayHandle( dataField, "dataField" );
+#endif // VTKH_PARALLEL
 #endif // DEBUG
 
     auto result = filter.Execute(inDataSet);
 
 #ifdef DEBUG
-    std::cerr << "--- result \n";
-    result.PrintSummary( std::cerr );
-    std::cerr << "--- end result \n";
+    std::cout << "--- result \n";
+    result.PrintSummary( std::cout );
+    std::cout << "--- end result \n";
+
+    {
+    ValueArray dataField;
+#ifdef VTKH_PARALLEL
+    std::cout << "--- field name: " << m_field_name << std::endl;
+    if( result.GetPartitions()[0].GetNumberOfFields() > 1 )
+      result.GetPartitions()[0].GetField("values").GetData().CopyTo(dataField);
+    else
+      result.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
+#endif // VTKH_PARALLEL
+    PrintArrayHandle( dataField, "result dataField" );
+    }
 #endif // DEBUG
 
   m_iso_values.resize(m_levels);
@@ -380,21 +403,11 @@ void ContourTree::DoExecute()
 
     // Create explicit representation of the branch decompostion from the array representation
 #ifndef VTKH_PARALLEL
-#ifdef DEBUG
-    std::cout << "NOOOO WITH_MPI" << std::endl;
-#endif // DEBUG
-
     ValueArray dataField;
-    //auto aa = result.GetField(0).GetData().Cast<IdArrayType>();
-    //vtkm::cont::Algorithm::Copy(aa, dataField);
     inDataSet.GetField(0).GetData().CopyTo(dataField);
 
     bool dataFieldIsSorted = false;
 #else // VTKH_PARALLEL
-#ifdef DEBUG
-    std::cout << "WITH_MPI" << std::endl;
-#endif // DEBUG
-
     ValueArray dataField;
     bool dataFieldIsSorted;
 
@@ -404,9 +417,10 @@ void ContourTree::DoExecute()
       inDataSet.GetPartition(0).GetField(0).GetData().CopyTo(dataField);
       dataFieldIsSorted = false;
     }else{
-//    auto aa = result.GetPartition(0).GetField(0).GetData().Cast<IdArrayType>();
-//    vtkm::cont::Algorithm::Copy(aa, dataField);
-      result.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
+      if( result.GetPartitions()[0].GetNumberOfFields() > 1 )
+        result.GetPartitions()[0].GetField("values").GetData().CopyTo(dataField);
+      else
+        result.GetPartitions()[0].GetField(0).GetData().CopyTo(dataField);
       dataFieldIsSorted = true;
     }
 #endif // VTKH_PARALLEL
