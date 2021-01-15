@@ -1,6 +1,6 @@
 {
 "package_name" : "vtk-h",
-"uberenv_package_name" : "uberenv-vtkh@develop",
+"uberenv_package_name" : "uberenv-vtk-h@develop",
 "spack_url": "https://github.com/alpine-DAV/spack",
 "spack_branch": "task/2019_11_update_ascent",
 "mirror_url": "https://www.ascent-dav.org/mirror/vtk-h/latest/"
