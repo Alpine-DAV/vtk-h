@@ -22,6 +22,7 @@ class VtkM(CMakePackage, CudaPackage):
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
     version('master', branch='master')
+    version('1.5.4', commit="bbba2a1967b271cc393abd043716d957bca97972")
     version('1.5.3', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
     version('1.5.2', commit="c49390f2537c5ba8cf25bd39aa5c212d6eafcf61")
     version('1.5.1', commit="124fb23c50c14b171ae91b27abca77c435968fa5")
@@ -42,6 +43,8 @@ class VtkM(CMakePackage, CudaPackage):
     variant("doubleprecision", default=True,
             description='enable double precision')
     variant("logging", default=False, description="build logging support")
+    variant("ascent_types", default=True, description="build support for ascent types")
+    variant("virtuals", default=False, description="enable support for deprecated virtual functions")
     variant("mpi", default=False, description="build mpi support")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
@@ -135,6 +138,18 @@ class VtkM(CMakePackage, CudaPackage):
                 options.append("-DVTKm_ENABLE_RENDERING:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_RENDERING:BOOL=OFF")
+
+            # Support for ascent types
+            if "+ascent_types" in spec:
+                options.append("-DVTKm_USE_DEFAULT_TYPES_FOR_ASCENT:BOOL=ON")
+            else:
+                options.append("-DVTKm_USE_DEFAULT_TYPES_FOR_ASCENT:BOOL=OFF")
+
+            # Support for for deprecated virtual functions
+            if "+virtuals" in spec:
+                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
+            else:
+                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=OFF")
 
             # tbb support
             if "+tbb" in spec:

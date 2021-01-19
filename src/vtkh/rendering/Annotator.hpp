@@ -21,7 +21,7 @@ public:
             vtkm::Bounds bounds);
   ~Annotator();
 
-  void RenderWorldAnnotations();
+  void RenderWorldAnnotations(vtkm::Vec<float,3> axis_scale);
   void RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                const std::vector<vtkm::Range> &ranges,
                                const std::vector<vtkm::cont::ColorTable> &color_tables);

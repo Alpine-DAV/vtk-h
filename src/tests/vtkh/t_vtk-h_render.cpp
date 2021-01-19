@@ -17,6 +17,43 @@
 
 
 //----------------------------------------------------------------------------
+TEST(vtkh_render, vtkh_scaled_world_annotations)
+{
+  vtkh::DataSet data_set;
+
+  const int base_size = 32;
+  const int num_blocks = 2;
+
+  for(int i = 0; i < num_blocks; ++i)
+  {
+    data_set.AddDomain(CreateTestData(i, num_blocks, base_size), i);
+  }
+
+  vtkm::Bounds bounds = data_set.GetGlobalBounds();
+
+  vtkm::rendering::Camera camera;
+  camera.SetPosition(vtkm::Vec<vtkm::Float64,3>(-16, -16, -16));
+  camera.ResetToBounds(bounds);
+  vtkh::Render render = vtkh::MakeRender(512,
+                                         512,
+                                         camera,
+                                         data_set,
+                                         "scale_bounding_box_labels");
+
+  render.ScaleWorldAnnotations(200.f, 200.f, 200.f);
+
+  vtkh::RayTracer tracer;
+
+  tracer.SetInput(&data_set);
+  tracer.SetField("point_data_Float64");
+
+  vtkh::Scene scene;
+  scene.AddRender(render);
+  scene.AddRenderer(&tracer);
+  scene.Render();
+}
+
+//----------------------------------------------------------------------------
 TEST(vtkh_render, vtkh_no_annotations)
 {
   vtkh::DataSet data_set;

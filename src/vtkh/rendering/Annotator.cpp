@@ -47,7 +47,7 @@ Annotator::RenderScreenAnnotations(const std::vector<std::string> &field_names,
   }
 }
 
-void Annotator::RenderWorldAnnotations()
+void Annotator::RenderWorldAnnotations(vtkm::Vec<float,3> axis_scale)
 {
   if(!m_is_3d) return;
   m_canvas.SetViewToWorldSpace(m_camera, false);
@@ -84,7 +84,7 @@ void Annotator::RenderWorldAnnotations()
   this->m_x_axis_annotation.SetTickInvert(xtest, ytest, ztest);
   this->m_x_axis_annotation.SetWorldPosition(
     xmin, ytest ? ymin : ymax, ztest ? zmin : zmax, xmax, ytest ? ymin : ymax, ztest ? zmin : zmax);
-  this->m_x_axis_annotation.SetRange(xmin, xmax);
+  this->m_x_axis_annotation.SetRange(xmin * axis_scale[0], xmax * axis_scale[0]);
   this->m_x_axis_annotation.SetMajorTickSize(major_tick_size, 0);
   this->m_x_axis_annotation.SetMinorTickSize(minor_tick_size, 0);
   this->m_x_axis_annotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
@@ -97,7 +97,7 @@ void Annotator::RenderWorldAnnotations()
   this->m_y_axis_annotation.SetTickInvert(xtest, ytest, ztest);
   this->m_y_axis_annotation.SetWorldPosition(
     xtest ? xmin : xmax, ymin, ztest ? zmin : zmax, xtest ? xmin : xmax, ymax, ztest ? zmin : zmax);
-  this->m_y_axis_annotation.SetRange(ymin, ymax);
+  this->m_y_axis_annotation.SetRange(ymin * axis_scale[1], ymax * axis_scale[0]);
   this->m_y_axis_annotation.SetMajorTickSize(major_tick_size, 0);
   this->m_y_axis_annotation.SetMinorTickSize(minor_tick_size, 0);
   this->m_y_axis_annotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
@@ -110,7 +110,7 @@ void Annotator::RenderWorldAnnotations()
   this->m_z_axis_annotation.SetTickInvert(xtest, ytest, ztest);
   this->m_z_axis_annotation.SetWorldPosition(
     xtest ? xmin : xmax, ytest ? ymin : ymax, zmin, xtest ? xmin : xmax, ytest ? ymin : ymax, zmax);
-  this->m_z_axis_annotation.SetRange(zmin, zmax);
+  this->m_z_axis_annotation.SetRange(zmin * axis_scale[2], zmax * axis_scale[2]);
   this->m_z_axis_annotation.SetMajorTickSize(major_tick_size, 0);
   this->m_z_axis_annotation.SetMinorTickSize(minor_tick_size, 0);
   this->m_z_axis_annotation.SetLabelFontOffset(vtkm::Float32(size / 15.f));
