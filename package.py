@@ -69,7 +69,7 @@ def create_package(output_file,version):
     if not version is None:
         cmd += "-" + version
     cmd +=  " " + output_file
-    print "[exe: %s]" % cmd
+    print("[exe: {0}]".format(cmd))
     subprocess.call(cmd,shell=True)
 
 
