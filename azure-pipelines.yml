@@ -119,7 +119,7 @@ stages:
            which python
            python --version
            # setup spack spec
-           export SPACK_SPEC="%gcc+mpi ^cmake@3.14.5 ${VTKM_SPEC}"
+           export SPACK_SPEC="%gcc+mpi+test ^cmake@3.14.5 ${VTKM_SPEC}"
            echo $SPACK_SPEC
            # run uber to build tpls
            python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_18_devel/
