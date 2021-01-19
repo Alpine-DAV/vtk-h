@@ -55,7 +55,7 @@ RUN apt-get update && apt-get install -y \
     gfortran \
     zlib1g-dev \
     python \
-    vim
+    vim \
  && rm -rf /var/lib/apt/lists/*
 
 
