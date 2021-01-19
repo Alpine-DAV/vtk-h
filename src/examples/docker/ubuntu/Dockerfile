@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y \
     gfortran \
     zlib1g-dev \
     python \
+    vim
  && rm -rf /var/lib/apt/lists/*
 
 
@@ -86,8 +87,8 @@ RUN cd vtkh/build-debug && \
     -C ../uberenv_libs/*.cmake \
     ../src
 
-# build, test, and install conduit
-RUN cd vtkh/build-debug && make
+# build, test, and install vtk-h
+RUN cd vtkh/build-debug && make -j
 RUN cd vtkh/build-debug && env CTEST_OUTPUT_ON_FAILURE=1 make test
 RUN cd vtkh/build-debug && make install
 
