@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y \
     gfortran \
     zlib1g-dev \
     python \
+    vim \
  && rm -rf /var/lib/apt/lists/*
 
 
@@ -75,8 +76,7 @@ RUN tar -xzf vtkh.docker.src.tar.gz
 
 # bootstrap third party libs using spack and uberenv
 #  for this example we use mpich for MPI
-#RUN cd vtkh && python scripts/uberenv/uberenv.py -k --spec "%gcc+mpi ^mpich ^vtkm+mpi"
-RUN cd vtkh && python scripts/uberenv/uberenv.py -k --spec "%gcc+mpi ^mpich"
+RUN cd vtkh && python scripts/uberenv/uberenv.py -k --spec "%gcc+mpi+test ^mpich"
 
 # configure a debug build with cmake
 RUN cd vtkh && mkdir build-debug
@@ -87,8 +87,8 @@ RUN cd vtkh/build-debug && \
     -C ../uberenv_libs/*.cmake \
     ../src
 
-# build, test, and install conduit
-RUN cd vtkh/build-debug && make
+# build, test, and install vtk-h
+RUN cd vtkh/build-debug && make -j
 RUN cd vtkh/build-debug && env CTEST_OUTPUT_ON_FAILURE=1 make test
 RUN cd vtkh/build-debug && make install
 
