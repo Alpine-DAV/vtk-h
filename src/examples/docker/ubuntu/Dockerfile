@@ -88,7 +88,7 @@ RUN cd vtkh/build-debug && \
     ../src
 
 # build, test, and install vtk-h
-RUN cd vtkh/build-debug && make -j
+RUN cd vtkh/build-debug && make -j 2
 RUN cd vtkh/build-debug && env CTEST_OUTPUT_ON_FAILURE=1 make test
 RUN cd vtkh/build-debug && make install
 
