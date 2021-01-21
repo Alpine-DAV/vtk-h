@@ -1,0 +1,21 @@
+
+old vtk-m
+
+Total: 10m 36.26s.
+
+old vtk-h
+
+ 6m 5.684s
+
+
+
+new vtk-m
+
+==> Successfully installed vtk-m
+  Fetch: 4.06s.  Build: 32m 22.79s.  Total: 32m 26.86s.
+  
+new vtk-h
+
+real    6m4.960s
+user    65m59.530s
+sys     5m33.517s
