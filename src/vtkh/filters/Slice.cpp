@@ -327,7 +327,8 @@ public:
                        num_cells,
                        f);
 
-      field.GetData().CastAndCall(copier);
+      auto full = field.GetData().ResetTypes(vtkm::TypeListCommon());
+      full.CastAndCall(copier);
     }
     return res;
   }
