@@ -1,7 +1,6 @@
 #ifndef VTKH_VTKM_ARRAY_UTILS_HPP
 #define VTKH_VTKM_ARRAY_UTILS_HPP
 
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 

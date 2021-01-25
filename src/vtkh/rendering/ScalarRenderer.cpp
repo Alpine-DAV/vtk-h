@@ -35,7 +35,7 @@ filter_scalar_fields(vtkm::cont::DataSet &dataset)
   for(vtkm::Id i = 0; i < num_fields; ++i)
   {
     vtkm::cont::Field field = dataset.GetField(i);
-    if(field.GetData().GetNumberOfComponents() == 1)
+    if(field.GetData().GetNumberOfComponentsFlat() == 1)
     {
       if(field.GetData().IsValueType<vtkm::Float32>() ||
          field.GetData().IsValueType<vtkm::Float64>())
@@ -145,7 +145,7 @@ ScalarRenderer::DoExecute()
   int num_cells;
 
   //Bounds needed for parallel execution
-  float bounds[6]; 
+  float bounds[6];
   for(int dom = 0; dom < num_domains; ++dom)
   {
     vtkm::cont::DataSet data_set;
@@ -155,7 +155,7 @@ ScalarRenderer::DoExecute()
 
     if(data_set.GetCellSet().GetNumberOfCells())
     {
-	
+
       Result res = renderers[dom].Render(m_camera);
 
       field_names = res.ScalarNames;
@@ -180,7 +180,7 @@ ScalarRenderer::DoExecute()
   MPI_Bcast(&max_p, 1, MPI_INT, 0, mpi_comm);
   MPI_Bcast(&min_p, 1, MPI_INT, 0, mpi_comm);
 #endif
-  
+
 
   if(num_domains == 0 || num_cells == 0)
   {
