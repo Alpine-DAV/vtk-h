@@ -1,7 +1,7 @@
 #include <vtkh/filters/MarchingCubes.hpp>
 #include <vtkh/Error.hpp>
 
-#ifdef VTK_H_ENABLE_FILTER_CONTOUR_TREE	
+#ifdef VTK_H_ENABLE_FILTER_CONTOUR_TREE
 #include <vtkh/filters/ContourTree.hpp>
 #endif
 
@@ -73,9 +73,9 @@ void MarchingCubes::PreExecute()
 
   if(m_levels != -1)
   {
-#ifdef VTK_H_ENABLE_FILTER_CONTOUR_TREE
     if(m_use_contour_tree)
     {
+#ifdef VTK_H_ENABLE_FILTER_CONTOUR_TREE
       // Run contour tree every time.
       vtkh::ContourTree contour_tree;
       contour_tree.SetInput(this->m_input);
@@ -84,13 +84,13 @@ void MarchingCubes::PreExecute()
       contour_tree.Update();
 
       m_iso_values = contour_tree.GetIsoValues();
-#else	
-      throw Error("Contour tree disabled");
-#endif
       // Clean up the memory used for the data output.
       vtkh::DataSet *output = contour_tree.GetOutput();
       if( output )
         delete output;
+#else
+      throw Error("Contour tree disabled");
+#endif
     }
     else
     {
