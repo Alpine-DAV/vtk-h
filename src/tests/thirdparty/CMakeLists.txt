@@ -46,7 +46,7 @@
 # Basic TPL Tests
 ################################
 
-list(APPEND VTKM_TESTS t_vtkm_smoke)
+#list(APPEND VTKM_TESTS t_vtkm_smoke)
 set(MPI_TESTS )
 
 ################################
