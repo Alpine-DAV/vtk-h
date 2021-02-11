@@ -105,24 +105,20 @@ PointRenderer::PreExecute()
     mesh_mapper->SetRadius(radius);
   }
 
-  if(!m_use_nodes)
+  if(!m_use_nodes && this->m_input->IsPointMesh())
   {
     vtkm::Float32 max_radius = radius;
     if(m_use_variable_radius)
     {
       max_radius = radius + radius * m_delta_radius;
     }
-    std::cout<<"Using max radius of "<<max_radius<<"\n";
 
-    this->m_input->PrintSummary(std::cout);
-    ParticleMerging  cleaner;
-    cleaner.SetInput(this->m_input);
-    cleaner.SetField(this->m_field_name);
-    cleaner.SetRadius(max_radius);
-    cleaner.Update();
-    this->m_input = cleaner.GetOutput();
-    std::cout<<"\n\n\n\n";
-    this->m_input->PrintSummary(std::cout);
+    ParticleMerging  merger;
+    merger.SetInput(this->m_input);
+    merger.SetField(this->m_field_name);
+    merger.SetRadius(max_radius);
+    merger.Update();
+    this->m_input = merger.GetOutput();
     m_delete_input = true;
   }
 
