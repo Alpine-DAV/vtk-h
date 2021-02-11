@@ -9,6 +9,7 @@ namespace vtkh
 
 
 CleanGrid::CleanGrid()
+  : m_tolerance(-1.)
 {
 
 }
@@ -38,6 +39,10 @@ CleanGrid::DoExecute()
     this->m_input->GetDomain(i, dom, domain_id);
 
     vtkh::vtkmCleanGrid cleaner;
+    if(m_tolerance != -1.)
+    {
+      cleaner.tolerance(m_tolerance);
+    }
     auto dataset = cleaner.Run(dom, this->GetFieldSelection());
     this->m_output->AddDomain(dataset, domain_id);
   }
@@ -54,6 +59,12 @@ std::string
 CleanGrid::GetName() const
 {
   return "vtkh::CleanGrid";
+}
+
+void
+CleanGrid::Tolerance(const vtkm::Float64 tolerance)
+{
+  m_tolerance = tolerance;
 }
 
 } // namespace vtkh

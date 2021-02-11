@@ -200,6 +200,7 @@ Renderer::DoExecute()
   }
 
   int total_renders = static_cast<int>(m_renders.size());
+
   int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
   for(int dom = 0; dom < num_domains; ++dom)
   {
