@@ -69,7 +69,7 @@ void ParticleMerging::DoExecute()
 
     bool fast_merge = true;
     vtkm::worklet::PointMerge merger;
-    merger.Run(m_radius, fast_merge, bounds, coords);
+    merger.Run(m_radius * 2. , fast_merge, bounds, coords);
     vtkm::cont::CoordinateSystem mcoords = vtkm::cont::CoordinateSystem(coords_name, coords);
 
     // this field could be associated with cells or points,
