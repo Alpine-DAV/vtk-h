@@ -29,11 +29,8 @@ void ParticleAdvection::PostExecute()
 
 void ParticleAdvection::DoExecute()
 {
-#ifdef VTKH_BYPASS_VTKM_BIH
-  return vtkm::cont::PartitionedDataSet();
-#else
-
   this->m_output = new DataSet();
+#ifndef VTKH_BYPASS_VTKM_BIH
   const int num_domains = this->m_input->GetNumberOfDomains();
 
   vtkm::cont::PartitionedDataSet inputs;

@@ -30,6 +30,7 @@ void Streamline::PostExecute()
 void Streamline::DoExecute()
 {
   this->m_output = new DataSet();
+#ifndef VTKH_BYPASS_VTKM_BIH
   const int num_domains = this->m_input->GetNumberOfDomains();
 
   vtkm::cont::PartitionedDataSet inputs;
@@ -69,6 +70,7 @@ void Streamline::DoExecute()
   {
     this->m_output->AddDomain(out.GetPartition(i), i);
   }
+#endif
 }
 
 } //  namespace vtkh
