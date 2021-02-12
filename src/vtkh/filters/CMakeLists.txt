@@ -18,6 +18,7 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
+  ParticleAdvection.hpp
   PointAverage.hpp
   PointTransform.hpp
   Recenter.hpp
@@ -25,6 +26,7 @@ set(vtkh_filters_headers
   Threshold.hpp
   Triangulate.hpp
   Statistics.hpp
+  Streamline.hpp
   Slice.hpp
   VectorComponent.hpp
   VectorMagnitude.hpp
@@ -59,6 +61,7 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
+  ParticleAdvection.cpp
   PointAverage.cpp
   PointTransform.cpp
   Recenter.cpp
@@ -67,6 +70,7 @@ set(vtkh_filters_sources
   Triangulate.cpp
   Slice.cpp
   Statistics.cpp
+  Streamline.cpp
   VectorComponent.cpp
   VectorMagnitude.cpp
   communication/MemStream.cpp
@@ -75,7 +79,6 @@ set(vtkh_filters_sources
 if(ENABLE_FILTER_CONTOUR_TREE)
   list(APPEND vtkh_filters_sources ContourTree.cpp)
 endif()
-
 
 set(vtkh_comm_filters_sources
   communication/MemStream.cpp
