@@ -1,6 +1,6 @@
 #include <iostream>
-#include <vtkh/vtkm_filters/vtkmStreamline.hpp>
 #include <vtkh/filters/Streamline.hpp>
+#include <vtkm/filter/Streamline.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Error.hpp>
 
@@ -29,8 +29,6 @@ void Streamline::PostExecute()
 
 void Streamline::DoExecute()
 {
-  vtkmStreamline streamlineFilter;
-
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
 
@@ -58,7 +56,14 @@ void Streamline::DoExecute()
     inputs.AppendPartition(dom);
   }
 
-  auto out = streamlineFilter.Run(inputs, m_field_name, m_step_size, m_num_steps, m_seeds);
+  vtkm::filter::Streamline streamlineFilter;
+  auto seedsAH = vtkm::cont::make_ArrayHandle(m_seeds, vtkm::CopyFlag::Off);
+
+  streamlineFilter.SetStepSize(m_step_size);
+  streamlineFilter.SetActiveField(m_field_name);
+  streamlineFilter.SetSeeds(seedsAH);
+  streamlineFilter.SetNumberOfSteps(m_num_steps);
+  auto out = streamlineFilter.Execute(inputs);
 
   for (vtkm::Id i = 0; i < out.GetNumberOfPartitions(); i++)
   {

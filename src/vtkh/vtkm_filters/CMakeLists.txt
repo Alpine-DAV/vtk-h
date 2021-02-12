@@ -11,10 +11,8 @@ set(vtkm_filters_headers
   vtkmGradient.hpp
   vtkmLagrangian.hpp
   vtkmMarchingCubes.hpp
-  vtkmParticleAdvection.hpp
   vtkmPointAverage.hpp
   vtkmPointTransform.hpp
-  vtkmStreamline.hpp
   vtkmTetrahedralize.hpp
   vtkmTriangulate.hpp
   vtkmThreshold.hpp
@@ -31,10 +29,8 @@ set(vtkm_filters_sources
   vtkmGradient.cpp
   vtkmLagrangian.cpp
   vtkmMarchingCubes.cpp
-  vtkmParticleAdvection.cpp
   vtkmPointAverage.cpp
   vtkmPointTransform.cpp
-  vtkmStreamline.cpp
   vtkmTetrahedralize.cpp
   vtkmTriangulate.cpp
   vtkmThreshold.cpp

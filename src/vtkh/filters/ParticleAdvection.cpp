@@ -1,6 +1,6 @@
 #include <iostream>
-#include <vtkh/vtkm_filters/vtkmParticleAdvection.hpp>
 #include <vtkh/filters/ParticleAdvection.hpp>
+#include <vtkm/filter/ParticleAdvection.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/Error.hpp>
 
@@ -29,7 +29,9 @@ void ParticleAdvection::PostExecute()
 
 void ParticleAdvection::DoExecute()
 {
-  vtkmParticleAdvection particleAdvectionFilter;
+#ifdef VTKH_BYPASS_VTKM_BIH
+  return vtkm::cont::PartitionedDataSet();
+#else
 
   this->m_output = new DataSet();
   const int num_domains = this->m_input->GetNumberOfDomains();
@@ -58,12 +60,20 @@ void ParticleAdvection::DoExecute()
     inputs.AppendPartition(dom);
   }
 
-  auto out = particleAdvectionFilter.Run(inputs, m_field_name, m_step_size, m_num_steps, m_seeds);
+  vtkm::filter::ParticleAdvection particleAdvectionFilter;
+  auto seedsAH = vtkm::cont::make_ArrayHandle(m_seeds, vtkm::CopyFlag::Off);
+
+  particleAdvectionFilter.SetStepSize(m_step_size);
+  particleAdvectionFilter.SetActiveField(m_field_name);
+  particleAdvectionFilter.SetSeeds(seedsAH);
+  particleAdvectionFilter.SetNumberOfSteps(m_num_steps);
+  auto out = particleAdvectionFilter.Execute(inputs);
 
   for (vtkm::Id i = 0; i < out.GetNumberOfPartitions(); i++)
   {
     this->m_output->AddDomain(out.GetPartition(i), i);
   }
+#endif
 }
 
 } //  namespace vtkh
