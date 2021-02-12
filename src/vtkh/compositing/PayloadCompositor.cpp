@@ -48,7 +48,6 @@ PayloadImage
 PayloadCompositor::Composite()
 {
   assert(m_images.size() != 0);
-
   // nothing to do here in serial. Images were composited as
   // they were added to the compositor
 #ifdef VTKH_PARALLEL

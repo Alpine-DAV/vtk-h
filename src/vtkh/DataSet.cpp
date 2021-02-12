@@ -813,7 +813,7 @@ vtkm::Id DataSet::NumberOfComponents(const std::string &field_name) const
   {
     if(m_domains[i].HasField(field_name))
     {
-      num_components = m_domains[i].GetField(field_name).GetData().GetNumberOfComponents();
+      num_components = m_domains[i].GetField(field_name).GetData().GetNumberOfComponentsFlat();
       break;
     }
   }

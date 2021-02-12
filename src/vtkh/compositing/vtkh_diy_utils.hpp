@@ -29,11 +29,20 @@ vtkhdiy::DiscreteBounds VTKMBoundsToDIY(const vtkm::Bounds &bounds)
 
   diy_bounds.min[0] = bounds.X.Min;
   diy_bounds.min[1] = bounds.Y.Min;
-  diy_bounds.min[2] = bounds.Z.Min;
 
   diy_bounds.max[0] = bounds.X.Max;
   diy_bounds.max[1] = bounds.Y.Max;
-  diy_bounds.max[2] = bounds.Z.Max;
+
+  if(bounds.Z.IsNonEmpty())
+  {
+    diy_bounds.min[2] = bounds.Z.Min;
+    diy_bounds.max[2] = bounds.Z.Max;
+  }
+  else
+  {
+    diy_bounds.min[2] = 0;
+    diy_bounds.max[2] = 0;
+  }
   return diy_bounds;
 }
 

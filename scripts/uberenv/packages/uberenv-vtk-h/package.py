@@ -49,11 +49,10 @@ import os
 import platform
 from os.path import join as pjoin
 
-#import importlib
-#vtkh = importlib.import_module("vtk-h")
-from .vtkh import Vtkh
 
-class UberenvVtkh(Vtkh):
+from spack.pkg.builtin.vtk_h import VtkH
+
+class UberenvVtkH(VtkH):
     """Spack Based Uberenv Build for VTK-h Thirdparty Libs """
 
     homepage = "http://github.com/alpine-DAV/vtk-h"
@@ -68,7 +67,7 @@ class UberenvVtkh(Vtkh):
 
     def url_for_version(self, version):
         dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
-        dummy_tar_path = pjoin(dummy_tar_path,"uberenv-vtkh.tar.gz")
+        dummy_tar_path = pjoin(dummy_tar_path,"uberenv-vtk-h.tar.gz")
         url      = "file://" + dummy_tar_path
         return url
 

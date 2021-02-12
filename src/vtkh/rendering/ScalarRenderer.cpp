@@ -35,7 +35,7 @@ filter_scalar_fields(vtkm::cont::DataSet &dataset)
   for(vtkm::Id i = 0; i < num_fields; ++i)
   {
     vtkm::cont::Field field = dataset.GetField(i);
-    if(field.GetData().GetNumberOfComponents() == 1)
+    if(field.GetData().GetNumberOfComponentsFlat() == 1)
     {
       if(field.GetData().IsValueType<vtkm::Float32>() ||
          field.GetData().IsValueType<vtkm::Float64>())
@@ -141,16 +141,20 @@ ScalarRenderer::DoExecute()
   std::vector<std::string> field_names;
   PayloadCompositor compositor;
 
+  int num_cells = 0;
+
   //Bounds needed for parallel execution
-  float bounds[6]; 
+  float bounds[6] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};;
   for(int dom = 0; dom < num_domains; ++dom)
   {
     vtkm::cont::DataSet data_set;
     vtkm::Id domain_id;
     m_input->GetDomain(dom, data_set, domain_id);
+    num_cells = data_set.GetCellSet().GetNumberOfCells();
+
     if(data_set.GetCellSet().GetNumberOfCells())
     {
-	
+
       Result res = renderers[dom].Render(m_camera);
 
       field_names = res.ScalarNames;
@@ -168,37 +172,67 @@ ScalarRenderer::DoExecute()
     }
   }
 
-  //Assume rank 0 has data, pass details to ranks with empty domains (no data).
+  // make no assumptions
+  bool no_data = num_cells == 0;
 #ifdef VTKH_PARALLEL
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  MPI_Bcast(bounds, 6, MPI_FLOAT, 0, mpi_comm);
-  MPI_Bcast(&max_p, 1, MPI_INT, 0, mpi_comm);
-  MPI_Bcast(&min_p, 1, MPI_INT, 0, mpi_comm);
-#endif
-  
-  if(num_domains == 0)
+
+  int comm_size = GetMPISize();
+  std::vector<int> votes;
+
+  int vote = num_cells > 0 ? 1 : 0;
+  votes.resize(comm_size);
+
+  MPI_Allgather(&vote, 1, MPI_INT, &votes[0], 1, MPI_INT, mpi_comm);
+  int winner = -1;
+  for(int i = 0; i < comm_size; ++i)
   {
-    vtkm::Bounds b(bounds);
-    PayloadImage p(b, max_p);
-    int size = p.m_depths.size();
-    float depths[size];
-    for(int i = 0; i < size; i++)
-      depths[i] = std::numeric_limits<int>::max();
-    std::copy(depths, depths + size, &p.m_depths[0]);
-    compositor.AddImage(p);
+    if(votes[i] == 1)
+    {
+      winner = i;
+      break;
+    }
   }
 
-  if(min_p != max_p)
+  if(winner != -1)
   {
-    throw Error("Scalar Renderer: mismatch in payload bytes");
+    MPI_Bcast(bounds, 6, MPI_FLOAT, winner, mpi_comm);
+    MPI_Bcast(&max_p, 1, MPI_INT, winner, mpi_comm);
+    MPI_Bcast(&min_p, 1, MPI_INT, winner, mpi_comm);
+    no_data = false;
   }
-  PayloadImage final_image = compositor.Composite();
-  if(vtkh::GetMPIRank() == 0)
+#endif
+
+  if(!no_data)
   {
-    Result final_result = Convert(final_image, field_names);
-    vtkm::cont::DataSet dset = final_result.ToDataSet();
-    const int domain_id = 0;
-    this->m_output->AddDomain(dset, domain_id);
+    if(num_cells == 0)
+    {
+      vtkm::Bounds b(bounds);
+      PayloadImage p(b, max_p);
+      int size = p.m_depths.size();
+      float depths[size];
+      for(int i = 0; i < size; i++)
+        depths[i] = std::numeric_limits<int>::max();
+      std::copy(depths, depths + size, &p.m_depths[0]);
+      compositor.AddImage(p);
+    }
+
+    if(min_p != max_p)
+    {
+      throw Error("Scalar Renderer: mismatch in payload bytes");
+    }
+
+    PayloadImage final_image = compositor.Composite();
+    if(vtkh::GetMPIRank() == 0)
+    {
+      Result final_result = Convert(final_image, field_names);
+      if(final_result.Scalars.size() != 0)
+      {
+        vtkm::cont::DataSet dset = final_result.ToDataSet();
+        const int domain_id = 0;
+        this->m_output->AddDomain(dset, domain_id);
+      }
+    }
   }
 
 }
@@ -256,6 +290,7 @@ PayloadImage * ScalarRenderer::Convert(Result &result)
   bounds.Y.Min = 1;
   bounds.X.Max = result.Width;
   bounds.Y.Max = result.Height;
+
   const size_t size = result.Width * result.Height;
 
   PayloadImage *image = new PayloadImage(bounds, payload_size);

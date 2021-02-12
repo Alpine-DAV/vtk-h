@@ -82,7 +82,8 @@ TEST(vtkm_smoke, basic_use_serial)
     scalars.push_back(1);
     vtkm::cont::Field scalarField = vtkm::cont::make_Field("some_field",
                                                            vtkm::cont::Field::Association::CELL_SET,
-                                                           scalars);
+                                                           scalars,
+                                                           vtkm::CopyFlag::On);
 
     const vtkm::cont::CoordinateSystem coords = data.GetCoordinateSystem();
     vtkm::rendering::Actor actor(data.GetCellSet(),

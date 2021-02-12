@@ -40,6 +40,7 @@ public:
 
   void                            DoRenderAnnotations(bool on);
   void                            DoRenderBackground(bool on);
+  void                            ScaleWorldAnnotations(float x, float y, float z);
   void                            SetWidth(const vtkm::Int32 width);
   void                            SetHeight(const vtkm::Int32 height);
   void                            SetSceneBounds(const vtkm::Bounds &bounds);
@@ -67,6 +68,7 @@ protected:
   bool                         m_render_background;
   bool                         m_shading;
   vtkmCanvas                   m_canvas;
+  vtkm::Vec<float,3>           m_world_annotation_scale;
 };
 
 static float vtkh_default_bg_color[4] = {0.f, 0.f, 0.f, 1.f};

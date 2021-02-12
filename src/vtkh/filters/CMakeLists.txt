@@ -18,9 +18,6 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
-  Particle.hpp
-  ParticleAdvection.hpp
-  Integrator.hpp
   PointAverage.hpp
   PointTransform.hpp
   Recenter.hpp
@@ -62,7 +59,6 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
-  ParticleAdvection.cpp
   PointAverage.cpp
   PointTransform.cpp
   Recenter.cpp
@@ -77,7 +73,7 @@ set(vtkh_filters_sources
   )
 
 if(ENABLE_FILTER_CONTOUR_TREE)
-  list(APPEND vtkh_filters_headers ContourTree.cpp)
+  list(APPEND vtkh_filters_sources ContourTree.cpp)
 endif()
 
 
@@ -105,6 +101,10 @@ if (ENABLE_SERIAL)
       )
 
     target_compile_definitions(vtkh_filters PRIVATE VTKH_COMPILING_FLAG)
+
+    if(ENABLE_FILTER_CONTOUR_TREE)
+      target_compile_definitions(vtkh_filters VTK_H_ENABLE_FILTER_CONTOUR_TREE)
+    endif()
 
     if(ENABLE_OPENMP)
         target_compile_definitions(vtkh_filters PRIVATE VTKH_USE_OPENMP)
@@ -142,11 +142,9 @@ if (MPI_FOUND)
 
   set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkm_compiled_filters)
   set(vtkh_mpi_headers communication/Messenger.hpp
-                       communication/ParticleMessenger.hpp
                        communication/RayMessenger.hpp)
 
     set(vtkh_mpi_sources communication/Messenger.cpp
-                         communication/ParticleMessenger.cpp
                          communication/RayMessenger.cpp)
 
     # necessary b/c of how find_cuda works
@@ -168,6 +166,10 @@ if (MPI_FOUND)
 
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_PARALLEL)
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_COMPILING_FLAG)
+
+    if(ENABLE_FILTER_CONTOUR_TREE)
+      target_compile_definitions(vtkh_filters_mpi VTK_H_ENABLE_FILTER_CONTOUR_TREE)
+    endif()
 
     if(ENABLE_OPENMP)
           target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_USE_OPENMP)

@@ -76,13 +76,18 @@ void MarchingCubes::PreExecute()
     if(m_use_contour_tree)
     {
 #ifdef VTK_H_ENABLE_FILTER_CONTOUR_TREE
-      // run contour tree every time
+      // Run contour tree every time.
       vtkh::ContourTree contour_tree;
       contour_tree.SetInput(this->m_input);
       contour_tree.SetField(m_field_name);
       contour_tree.SetNumLevels(m_levels);
       contour_tree.Update();
+
       m_iso_values = contour_tree.GetIsoValues();
+      // Clean up the memory used for the data output.
+      vtkh::DataSet *output = contour_tree.GetOutput();
+      if( output )
+        delete output;
 #else
       throw Error("Contour tree disabled");
 #endif
