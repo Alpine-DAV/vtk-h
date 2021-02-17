@@ -30,7 +30,15 @@ void ParticleAdvection::PostExecute()
 void ParticleAdvection::DoExecute()
 {
   this->m_output = new DataSet();
+
 #ifndef VTKH_BYPASS_VTKM_BIH
+
+#ifdef VTKH_PARALLEL
+  // Setup VTK-h and VTK-m comm.
+  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
+  vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(vtkmdiy::mpi::make_DIY_MPI_Comm(mpi_comm)));
+#endif
+
   const int num_domains = this->m_input->GetNumberOfDomains();
 
   vtkm::cont::PartitionedDataSet inputs;
