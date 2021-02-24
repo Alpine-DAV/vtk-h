@@ -1,5 +1,6 @@
 //#include <vtkm/filter/your_vtkm_filter.h>
 #include <vtkh/filters/CompositeVector.hpp>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkh/Error.hpp>
 
 namespace vtkh
@@ -215,9 +216,12 @@ void CompositeVector::DoExecute()
       vtkm::cont::Field in_field_3 = dom.GetField(m_field_3);
 
       vtkm::worklet::DispatcherMapField<detail::MakeCompositeVector>(detail::MakeCompositeVector())
-        .Invoke(in_field_1.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
-                in_field_2.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
-                in_field_3.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+        .Invoke(in_field_1.GetData().ResetTypes(vtkm::TypeListFieldScalar(),
+                                                VTKM_DEFAULT_STORAGE_LIST{}),
+                in_field_2.GetData().ResetTypes(vtkm::TypeListFieldScalar(),
+                                                VTKM_DEFAULT_STORAGE_LIST{}),
+                in_field_3.GetData().ResetTypes(vtkm::TypeListFieldScalar(),
+                                                VTKM_DEFAULT_STORAGE_LIST{}),
                 vec_field);
 
       vtkm::cont::Field out_field(m_result_name,
@@ -230,8 +234,10 @@ void CompositeVector::DoExecute()
       vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,2>> vec_field;
 
       vtkm::worklet::DispatcherMapField<detail::MakeVector2d>(detail::MakeVector2d())
-        .Invoke(in_field_1.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
-                in_field_2.GetData().ResetTypes(vtkm::TypeListFieldScalar()),
+        .Invoke(in_field_1.GetData().ResetTypes(vtkm::TypeListFieldScalar(),
+                                                VTKM_DEFAULT_STORAGE_LIST{}),
+                in_field_2.GetData().ResetTypes(vtkm::TypeListFieldScalar(),
+                                                VTKM_DEFAULT_STORAGE_LIST{}),
                 vec_field);
 
       vtkm::cont::Field out_field(m_result_name,

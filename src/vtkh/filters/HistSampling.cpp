@@ -304,7 +304,7 @@ void HistSampling::DoExecute()
     }
 
     vtkm::cont::ArrayHandle<vtkm::Float64> data;
-    dom.GetField(m_field_name).GetData().CopyTo(data);
+    dom.GetField(m_field_name).GetData().AsArrayHandle(data);
 
 
     //vtkm::worklet::FieldStatistics<vtkm::Float64>::StatInfo statinfo;
@@ -327,7 +327,7 @@ void HistSampling::DoExecute()
 
     vtkm::worklet::DispatcherMapField<detail::RandomGenerate>(seed).Invoke(randArray);
 
-    
+
 
     vtkm::cont::ArrayHandle <vtkm::UInt8> stencilBool;
     vtkm::worklet::DispatcherMapField<LookupWorklet>(LookupWorklet{numberOfBins,

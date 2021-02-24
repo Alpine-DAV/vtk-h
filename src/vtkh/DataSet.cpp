@@ -12,6 +12,7 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #ifdef VTKH_PARALLEL
   #include <mpi.h>

@@ -128,8 +128,8 @@ public:
       vtkm::cont::Algorithm::CopySubRange(input, start, copy_size, output, offset);
     }
   };
-  template<typename T, typename U>
-  void CopyCoords(vtkm::cont::VariantArrayHandleBase<T> &input,
+  template<typename T, typename S, typename U>
+  void CopyCoords(vtkm::cont::UncertainArrayHandle<T,S> &input,
                   vtkm::cont::ArrayHandle<vtkm::Vec<U,3>> &output,
                   vtkm::Id offset)
   {
@@ -187,7 +187,7 @@ public:
       for(size_t i = 0; i < m_in_data_sets.size(); ++i)
       {
         const vtkm::cont::Field &f = m_in_data_sets[i].GetField(m_field_index);
-        vtkm::cont::ArrayHandle<T,S> in = f.GetData().Cast<vtkm::cont::ArrayHandle<T,S>>();
+        vtkm::cont::ArrayHandle<T,S> in = f.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<T,S>>();
         vtkm::Id start = 0;
         vtkm::Id copy_size = in.GetNumberOfValues();
         vtkm::Id offset = assoc_points ? m_point_offsets[i] : m_cell_offsets[i];
@@ -327,7 +327,7 @@ public:
                        num_cells,
                        f);
 
-      auto full = field.GetData().ResetTypes(vtkm::TypeListCommon());
+      auto full = field.GetData().ResetTypes(vtkm::TypeListCommon(),VTKM_DEFAULT_STORAGE_LIST{});
       full.CastAndCall(copier);
     }
     return res;
