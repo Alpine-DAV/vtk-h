@@ -9,7 +9,11 @@ namespace vtkh
 
 class vtkmCleanGrid
 {
+protected:
+  vtkm::Float64 m_tolerance = -1.;
 public:
+  void tolerance(const vtkm::Float64 tol);
+
   vtkm::cont::DataSet Run(vtkm::cont::DataSet &input,
                           vtkm::filter::FieldSelection map_fields);
 };

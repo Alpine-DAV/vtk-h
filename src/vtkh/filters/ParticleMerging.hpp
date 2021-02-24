@@ -1,27 +1,30 @@
-#ifndef VTK_H_CLEAN_GRID_HPP
-#define VTK_H_CLEAN_GRID_HPP
+#ifndef VTK_H_PARTICLE_MERGING_HPP
+#define VTK_H_PARTICLE_MERGING_HPP
 
 #include <vtkh/vtkh_exports.h>
 #include <vtkh/vtkh.hpp>
 #include <vtkh/filters/Filter.hpp>
 #include <vtkh/DataSet.hpp>
 
-
 namespace vtkh
 {
 
-class VTKH_API CleanGrid : public Filter
+class VTKH_API ParticleMerging : public Filter
 {
 public:
-  CleanGrid();
-  virtual ~CleanGrid();
+  ParticleMerging();
+  virtual ~ParticleMerging();
   std::string GetName() const override;
-  void Tolerance(const vtkm::Float64 tolerance);
+  void SetField(const std::string &field_name);
+  void SetRadius(const vtkm::Float64 radius);
+
 protected:
   void PreExecute() override;
   void PostExecute() override;
   void DoExecute() override;
-  vtkm::Float64 m_tolerance;
+
+  std::string m_field_name;
+  vtkm::Float64 m_radius;
 };
 
 } //namespace vtkh

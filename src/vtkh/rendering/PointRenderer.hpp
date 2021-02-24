@@ -14,6 +14,7 @@ public:
   std::string GetName() const override;
   static Renderer::vtkmCanvasPtr GetNewCanvas(int width = 1024, int height = 1024);
   void PreExecute() override;
+  void PostExecute() override;
   void UseCells();
   void UseNodes();
   void UseVariableRadius(bool useVariableRadius);
@@ -30,7 +31,8 @@ private:
   vtkm::Float32 m_base_radius;
   vtkm::Float32 m_delta_radius;
   bool m_use_point_merging;
-  vtkm::Float32 m_radius_mulit;
+  vtkm::Float32 m_radius_mult;
+  bool m_delete_input;
 
 };
 
