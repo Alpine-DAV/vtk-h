@@ -5,13 +5,15 @@
 #include <memory>
 
 namespace vtkh {
-  
+
 PointRenderer::PointRenderer()
   : m_use_nodes(true),
     m_radius_set(false),
     m_use_variable_radius(false),
     m_base_radius(0.5f),
-    m_delta_radius(0.5f)
+    m_delta_radius(0.5f),
+    m_use_point_merging(false),
+    m_radius_mulit(2.f)
 {
   typedef vtkm::rendering::MapperPoint TracerType;
   auto mapper = std::make_shared<TracerType>();
@@ -23,7 +25,7 @@ PointRenderer::~PointRenderer()
 {
 }
 
-Renderer::vtkmCanvasPtr 
+Renderer::vtkmCanvasPtr
 PointRenderer::GetNewCanvas(int width, int height)
 {
   return std::make_shared<vtkm::rendering::CanvasRayTracer>(width, height);
@@ -35,32 +37,44 @@ PointRenderer::GetName() const
   return "vtkh::PointRenderer";
 }
 
-void 
+void
 PointRenderer::UseCells()
 {
   m_use_nodes = false;
 }
 
-void 
+void
+PointRenderer::UsePointMerging(bool merge);
+{
+  m_use_point_merging = merge;
+}
+
+void
+PointRenderer::PointMergeRadiusMultiplyer(vtkm::Float32 radius_mult);
+{
+  m_radius_mult = raduis_mult;
+}
+
+void
 PointRenderer::UseNodes()
 {
   m_use_nodes = true;
 }
 
-void 
+void
 PointRenderer::UseVariableRadius(bool useVariableRadius)
 {
   m_use_variable_radius = useVariableRadius;
 }
 
-void 
+void
 PointRenderer::SetBaseRadius(vtkm::Float32 radius)
 {
   m_base_radius = radius;
   m_radius_set = true;
 }
 
-void 
+void
 PointRenderer::SetRadiusDelta(vtkm::Float32 delta)
 {
   m_delta_radius = delta;
@@ -72,9 +86,9 @@ PointRenderer::PreExecute()
   Renderer::PreExecute();
 
   typedef vtkm::rendering::MapperPoint MapperType;
-  std::shared_ptr<MapperType> mesh_mapper = 
+  std::shared_ptr<MapperType> mesh_mapper =
     std::dynamic_pointer_cast<MapperType>(this->m_mapper);
-  
+
   if(m_use_nodes)
   {
     mesh_mapper->UseNodes();

@@ -19,12 +19,18 @@ public:
   void UseVariableRadius(bool useVariableRadius);
   void SetBaseRadius(vtkm::Float32 radius);
   void SetRadiusDelta(vtkm::Float32 delta);
+  void UsePointMerging(bool merge);
+  // sets the number or radii to merge points
+  // defualts to 2 * radius
+  void PointMergeRadiusMultiplyer(vtkm::Float32 radius_mult);
 private:
   bool m_use_nodes;
   bool m_radius_set;
   bool m_use_variable_radius;
   vtkm::Float32 m_base_radius;
   vtkm::Float32 m_delta_radius;
+  bool m_use_point_merging;
+  vtkm::Float32 m_radius_mulit;
 
 };
 
