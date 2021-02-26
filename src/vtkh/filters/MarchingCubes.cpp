@@ -9,6 +9,8 @@
 #include <vtkh/filters/Recenter.hpp>
 #include <vtkh/vtkm_filters/vtkmMarchingCubes.hpp>
 
+#include <sstream>
+
 namespace vtkh
 {
 

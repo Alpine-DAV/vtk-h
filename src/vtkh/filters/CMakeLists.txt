@@ -18,6 +18,7 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
+  ParticleMerging.hpp
   PointAverage.hpp
   PointTransform.hpp
   Recenter.hpp
@@ -59,6 +60,7 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
+  ParticleMerging.cpp
   PointAverage.cpp
   PointTransform.cpp
   Recenter.cpp
