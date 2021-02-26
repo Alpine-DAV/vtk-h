@@ -82,7 +82,7 @@ void VectorMagnitude::DoExecute()
     detail::VectorMagFunctor mag_func;
     mag_func.m_result_name = m_out_name;
     mag_func.m_assoc = field.GetAssociation();
-    field.GetData().ResetTypes(vtkm::TypeListFloatVec()).CastAndCall(mag_func);
+    field.GetData().ResetTypes(vtkm::TypeListVecCommon(), VTKM_DEFAULT_STORAGE_LIST{}).CastAndCall(mag_func);
     vtkm::cont::DataSet dataset = dom;
     dataset.AddField(mag_func.result);
     // The current vtkm vector mag does not support

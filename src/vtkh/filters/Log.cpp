@@ -153,7 +153,7 @@ void Log::DoExecute()
     vtkm::cont::Field in_field = dom.GetField(m_field_name);
 
     vtkm::worklet::DispatcherMapField<detail::LogField>(detail::LogField(min_value))
-      .Invoke(in_field.GetData().ResetTypes(vtkm::TypeListFieldScalar()), log_field);
+      .Invoke(in_field.GetData().ResetTypes(vtkm::TypeListFieldScalar(), VTKM_DEFAULT_STORAGE_LIST{}), log_field);
 
     vtkm::cont::Field out_field(m_result_name,
                                 in_assoc,

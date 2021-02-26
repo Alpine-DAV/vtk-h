@@ -83,7 +83,7 @@ set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
 # Init BLT
 ################################
 if (NOT BLT_CXX_STD)
-  set(BLT_CXX_STD "c++11" CACHE STRING "")
+  set(BLT_CXX_STD "c++14" CACHE STRING "")
 endif()
 
 # if BLT_SOURCE_DIR is not set - use "blt" as default
