@@ -59,7 +59,7 @@ class UberenvVtkH(VtkH):
 
     version('0.1', '8d378ef62dedc2df5db447b029b71200')
 
-    #would like to use these in the future, but we need global variant support
+    # would like to use these in the future, but we need global variant support
     #variant('cuda',   default=False, description="Enable CUDA support.")
     #variant('openmp', default=False, description="Enable OpenMP support.")
 
