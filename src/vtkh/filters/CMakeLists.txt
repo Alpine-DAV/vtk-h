@@ -105,7 +105,7 @@ if (ENABLE_SERIAL)
     target_compile_definitions(vtkh_filters PRIVATE VTKH_COMPILING_FLAG)
 
     if(ENABLE_FILTER_CONTOUR_TREE)
-      target_compile_definitions(vtkh_filters VTK_H_ENABLE_FILTER_CONTOUR_TREE)
+      target_compile_definitions(vtkh_filters PRIVATE VTK_H_ENABLE_FILTER_CONTOUR_TREE)
     endif()
 
     if(ENABLE_OPENMP)
@@ -170,7 +170,7 @@ if (MPI_FOUND)
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_COMPILING_FLAG)
 
     if(ENABLE_FILTER_CONTOUR_TREE)
-      target_compile_definitions(vtkh_filters_mpi VTK_H_ENABLE_FILTER_CONTOUR_TREE)
+      target_compile_definitions(vtkh_filters_mpi PRIVATE VTK_H_ENABLE_FILTER_CONTOUR_TREE)
     endif()
 
     if(ENABLE_OPENMP)
