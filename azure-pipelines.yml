@@ -222,7 +222,7 @@ stages:
   ###############################################################################
   # NVCC Linux build and install, using spack to build tpls
   ###############################################################################
-  - job: Main_Ubuntu_16_Cuda_10_1
+  - job: Main_Ubuntu_18_Cuda_10_2
     pool:
       vmImage: 'ubuntu-16.04'
     container: ${{ variables.cuda_tag }}
