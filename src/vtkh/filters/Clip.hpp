@@ -40,6 +40,7 @@ protected:
   struct InternalsType;
   std::shared_ptr<InternalsType> m_internals;
   bool m_invert;
+  bool m_do_multi_plane;
 };
 
 } //namespace vtkh

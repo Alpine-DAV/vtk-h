@@ -5,9 +5,9 @@ namespace vtkh
 {
 vtkm::cont::DataSet
 vtkmClip::Run(vtkm::cont::DataSet &input,
-                       vtkm::cont::ImplicitFunctionHandle func,
-                       bool invert,
-                       vtkm::filter::FieldSelection map_fields)
+              const vtkm::ImplicitFunctionGeneral &func,
+              bool invert,
+              vtkm::filter::FieldSelection map_fields)
 {
   vtkm::filter::ClipWithImplicitFunction clipper;
 

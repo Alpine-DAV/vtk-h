@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2015-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2015-2021, Lawrence Livermore National Security, LLC.
 # 
 # Produced at the Lawrence Livermore National Laboratory
 # 
@@ -43,11 +43,11 @@
 ###############################################################################
 
 FROM ubuntu:latest
-MAINTAINER Cyrus Harrison <cyrush@llnl.gov>
 
 # fetch build env
 RUN apt-get update && apt-get install -y \
     git \
+    git-lfs \
     curl \
     build-essential \
     gcc \
