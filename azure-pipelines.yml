@@ -11,7 +11,7 @@
 #####
 variables:
   main_tag : alpinedav/ascent-ci:ubuntu-18-devel
-  cuda_tag : alpinedav/ascent-ci:ubuntu-18-cuda-10.2-devel
+  cuda_tag : alpinedav/ascent-ci:ubuntu-18-cuda-10.1-devel
 
 # only build merge target pr to develop
 trigger: none
