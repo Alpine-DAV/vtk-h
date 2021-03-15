@@ -102,8 +102,8 @@ void MemSet(vtkm::cont::ArrayHandle<T> &array, const T value, const vtkm::Id num
 bool
 DataSet::OneDomainPerRank() const
 {
-  bool at_least_one = GetNumberOfDomains() < 2;
-  return detail::GlobalAgreement(at_least_one);
+  bool one = GetNumberOfDomains() == 1;
+  return detail::GlobalAgreement(one);
 }
 
 void
