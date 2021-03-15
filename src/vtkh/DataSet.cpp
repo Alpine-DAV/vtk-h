@@ -537,6 +537,11 @@ DataSet::GlobalIsEmpty() const
 bool
 DataSet::IsPointMesh() const
 {
+  const bool is_empty = GlobalIsEmpty();
+  if(is_empty) return false;
+
+  // since we are not empty, start with the affirmative is_points.
+  // if someone is not points, the we will figure it out here
   bool is_points = true;
   const size_t num_domains = m_domains.size();
   for(size_t i = 0; i < num_domains; ++i)
