@@ -305,6 +305,17 @@ void Clip::DoExecute()
 {
 
   DataSet data_set;
+  const int global_domains = this->m_input->GetGlobalNumberOfDomains();
+  if(global_domains == 0)
+  {
+    // if the number of domains zero there is no work to do,
+    // additionally, a multiplane clip will fail since it will
+    // check if 'mclip_field' will exist, which it wont.
+    DataSet *output = new DataSet();
+    *output = *(this->m_input);
+    this->m_output = output;
+    return;
+  }
   const int num_domains = this->m_input->GetNumberOfDomains();
   // we now have to work around this since
   // vtkm dropped support for new implicit functions
