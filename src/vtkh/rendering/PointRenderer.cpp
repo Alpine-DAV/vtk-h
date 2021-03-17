@@ -116,6 +116,11 @@ PointRenderer::PreExecute()
     // same as used in vtk ospray
     constexpr vtkm::Float64 heuristic = 1000.;
     radius = static_cast<vtkm::Float32>(mag / heuristic);
+    // we likely have a data set with no cells so just set some radius
+    if(radius == 0.f)
+    {
+      radius = 0.00001f;
+    }
     mesh_mapper->SetRadius(radius);
   }
 
