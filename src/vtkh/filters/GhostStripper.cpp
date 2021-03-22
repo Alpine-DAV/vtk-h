@@ -7,6 +7,7 @@
 #include <vtkh/vtkm_filters/vtkmExtractStructured.hpp>
 
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/BinaryOperators.h>
 
@@ -174,7 +175,7 @@ public:
     valid = 0; // this is a valid zone
     // we are validating if non-valid cells fall completely outside
     // the min max range of valid cells
-    if( value >= m_min_value || value <= m_max_value) return;
+    if(value >= m_min_value && value <= m_max_value) return;
 
     vtkm::Vec<vtkm::Id,3> logical = get_logical<DIMS>(index, m_cell_dims);
     for(vtkm::Int32 i = 0; i < DIMS; ++i)
@@ -213,7 +214,8 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
                       max_value,
                       -1,
                       i))
-       .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListScalarAll()),
+       .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListScalarAll(),
+                                                VTKM_DEFAULT_STORAGE_LIST{}),
            dim_indices);
 
     vtkm::Vec<vtkm::Id,2> d = {-1, -1};
@@ -236,7 +238,9 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
                                                              max_value,
                                                              valid_min,
                                                              valid_max))
-     .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListScalarAll()), valid_flags);
+     .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListScalarAll(),
+                                              VTKM_DEFAULT_STORAGE_LIST{}),
+         valid_flags);
 
   vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(valid_flags,
                                                   vtkm::UInt8(0),
@@ -407,7 +411,6 @@ void GhostStripper::DoExecute()
       continue;
     }
 
-
     int topo_dims = 0;
     bool do_threshold = true;
 
@@ -428,6 +431,7 @@ void GhostStripper::DoExecute()
         if(should_strip)
         {
           VTKH_DATA_OPEN("extract_structured");
+          //vtkm::RangeId3 range(min[0],max[0]+1, min[1], max[1]+1, min[2], max[2]+1);
           vtkm::RangeId3 range(min[0],max[0]+2, min[1], max[1]+2, min[2], max[2]+2);
           vtkm::Id3 sample(1, 1, 1);
 
@@ -452,6 +456,7 @@ void GhostStripper::DoExecute()
     if(do_threshold)
     {
       vtkmThreshold thresholder;
+
       auto tout = thresholder.Run(dom,
                                   m_field_name,
                                   m_min_value,

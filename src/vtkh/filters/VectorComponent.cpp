@@ -5,6 +5,7 @@
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/Algorithm.h>
 
+
 namespace vtkh
 {
 
@@ -120,7 +121,7 @@ void VectorComponent::DoExecute()
     func.m_in_field = in_field;
     func.m_name = m_result_name;
 
-    in_field.GetData().ResetTypes(vtkm::TypeListVecCommon()).CastAndCall(func);
+    in_field.GetData().ResetTypes(vtkm::TypeListVecCommon(),VTKM_DEFAULT_STORAGE_LIST{}).CastAndCall(func);
 
     dom.AddField(func.m_out_field);
   }

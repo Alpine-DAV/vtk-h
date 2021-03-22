@@ -12,6 +12,7 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #ifdef VTKH_PARALLEL
   #include <mpi.h>
@@ -101,8 +102,8 @@ void MemSet(vtkm::cont::ArrayHandle<T> &array, const T value, const vtkm::Id num
 bool
 DataSet::OneDomainPerRank() const
 {
-  bool at_least_one = GetNumberOfDomains() < 2;
-  return detail::GlobalAgreement(at_least_one);
+  bool one = GetNumberOfDomains() == 1;
+  return detail::GlobalAgreement(one);
 }
 
 void
@@ -536,6 +537,11 @@ DataSet::GlobalIsEmpty() const
 bool
 DataSet::IsPointMesh() const
 {
+  const bool is_empty = GlobalIsEmpty();
+  if(is_empty) return false;
+
+  // since we are not empty, start with the affirmative is_points.
+  // if someone is not points, the we will figure it out here
   bool is_points = true;
   const size_t num_domains = m_domains.size();
   for(size_t i = 0; i < num_domains; ++i)

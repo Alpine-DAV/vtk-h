@@ -1,8 +1,12 @@
 #include "Clip.hpp"
 
 #include <vtkh/filters/CleanGrid.hpp>
+#include <vtkh/filters/IsoVolume.hpp>
 #include <vtkh/vtkm_filters/vtkmClip.hpp>
 #include <vtkm/ImplicitFunction.h>
+
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkh
 {
@@ -10,7 +14,7 @@ namespace vtkh
 namespace detail
 {
 
-class MultiPlane final : public vtkm::ImplicitFunction
+class MultiPlane : public vtkm::internal::ImplicitFunctionBase<MultiPlane>
 {
 public:
   MultiPlane() = default;
@@ -33,7 +37,6 @@ public:
     {
       this->Normals[index] = normals[index];
     }
-    this->Modified();
   }
 
   VTKM_EXEC void SetPlane(int idx, const Vector& point, const Vector& normal)
@@ -41,13 +44,11 @@ public:
     VTKM_ASSERT((idx >= 0) && (idx < 3));
     this->Points[idx] = point;
     this->Normals[idx] = normal;
-    this->Modified();
   }
 
   VTKM_EXEC_CONT void SetNumPlanes(const int &num)
   {
     this->m_num_planes = num;
-    this->Modified();
   }
 
   VTKM_EXEC_CONT void GetPlanes(Vector points[3], Vector normals[3]) const
@@ -66,7 +67,7 @@ public:
 
   VTKM_EXEC_CONT const Vector* GetNormals() const { return this->Normals; }
 
-  VTKM_EXEC_CONT Scalar Value(const Vector& point) const final
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
     for (vtkm::Id index = 0; index < this->m_num_planes; ++index)
@@ -79,7 +80,7 @@ public:
     return maxVal;
   }
 
-  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const final
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
     vtkm::Id maxValIdx = 0;
@@ -107,19 +108,42 @@ private:
   int m_num_planes = 3;
 };
 
+class MultiPlaneField : public vtkm::worklet::WorkletMapField
+{
+protected:
+  MultiPlane m_multi_plane;
+public:
+  VTKM_CONT
+  MultiPlaneField(MultiPlane &multi_plane)
+    : m_multi_plane(multi_plane)
+  {
+  }
+
+  typedef void ControlSignature(FieldIn, FieldOut);
+  typedef void ExecutionSignature(_1, _2);
+
+  template<typename T>
+  VTKM_EXEC
+  void operator()(const vtkm::Vec<T,3> &point, vtkm::Float32& distance) const
+  {
+    distance = m_multi_plane.Value(point);
+  }
+}; //class SliceField
 
 }// namespace detail
 
 struct Clip::InternalsType
 {
-  vtkm::cont::ImplicitFunctionHandle m_func;
+  vtkm::ImplicitFunctionGeneral m_func;
+  detail::MultiPlane m_multi_plane;
   InternalsType()
   {}
 };
 
 Clip::Clip()
   : m_internals(new InternalsType),
-    m_invert(false)
+    m_invert(false),
+    m_do_multi_plane(false)
 {
 
 }
@@ -138,13 +162,13 @@ Clip::SetInvertClip(bool invert)
 void
 Clip::SetBoxClip(const vtkm::Bounds &clipping_bounds)
 {
-   auto box =  vtkm::cont::make_ImplicitFunctionHandle(
-                 vtkm::Box({ clipping_bounds.X.Min,
-                             clipping_bounds.Y.Min,
-                             clipping_bounds.Z.Min},
-                           { clipping_bounds.X.Max,
-                             clipping_bounds.Y.Max,
-                             clipping_bounds.Z.Max}));
+  m_do_multi_plane = false;
+  auto box = vtkm::Box({ clipping_bounds.X.Min,
+                         clipping_bounds.Y.Min,
+                         clipping_bounds.Z.Min},
+                       { clipping_bounds.X.Max,
+                         clipping_bounds.Y.Max,
+                         clipping_bounds.Z.Max});
 
 
   m_internals->m_func = box;
@@ -153,19 +177,21 @@ Clip::SetBoxClip(const vtkm::Bounds &clipping_bounds)
 void
 Clip::SetSphereClip(const double center[3], const double radius)
 {
+  m_do_multi_plane = false;
   vtkm::Vec<vtkm::FloatDefault,3> vec_center;
   vec_center[0] = center[0];
   vec_center[1] = center[1];
   vec_center[2] = center[2];
   vtkm::FloatDefault r = radius;
 
-  auto sphere = vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(vec_center, r));
+  auto sphere = vtkm::Sphere(vec_center, r);
   m_internals->m_func = sphere;
 }
 
 void
 Clip::SetPlaneClip(const double origin[3], const double normal[3])
 {
+  m_do_multi_plane = false;
   vtkm::Vec<vtkm::FloatDefault,3> vec_origin;
   vec_origin[0] = origin[0];
   vec_origin[1] = origin[1];
@@ -176,7 +202,7 @@ Clip::SetPlaneClip(const double origin[3], const double normal[3])
   vec_normal[1] = normal[1];
   vec_normal[2] = normal[2];
 
-  auto plane = vtkm::cont::make_ImplicitFunctionHandle(vtkm::Plane(vec_origin, vec_normal));
+  auto plane = vtkm::Plane(vec_origin, vec_normal);
   m_internals->m_func = plane;
 }
 
@@ -186,6 +212,7 @@ Clip::Set2PlaneClip(const double origin1[3],
                     const double origin2[3],
                     const double normal2[3])
 {
+  m_do_multi_plane = true;
   vtkm::Vec3f plane_points[3];
   plane_points[0][0] = float(origin1[0]);
   plane_points[0][1] = float(origin1[1]);
@@ -216,10 +243,8 @@ Clip::Set2PlaneClip(const double origin1[3],
   vtkm::Normalize(plane_normals[1]);
 
   auto planes
-    = vtkm::cont::make_ImplicitFunctionHandle(detail::MultiPlane(plane_points,
-                                                                 plane_normals,
-                                                                 2));
-  m_internals->m_func = planes;
+    = detail::MultiPlane(plane_points, plane_normals, 2);
+  m_internals->m_multi_plane = planes;
 }
 
 void
@@ -230,6 +255,7 @@ Clip::Set3PlaneClip(const double origin1[3],
                     const double origin3[3],
                     const double normal3[3])
 {
+  m_do_multi_plane = true;
   vtkm::Vec3f plane_points[3];
   plane_points[0][0] = float(origin1[0]);
   plane_points[0][1] = float(origin1[1]);
@@ -261,10 +287,8 @@ Clip::Set3PlaneClip(const double origin1[3],
   vtkm::Normalize(plane_normals[2]);
 
   auto planes
-    = vtkm::cont::make_ImplicitFunctionHandle(detail::MultiPlane(plane_points,
-                                                                 plane_normals,
-                                                                 3));
-  m_internals->m_func = planes;
+    = detail::MultiPlane(plane_points, plane_normals, 3);
+  m_internals->m_multi_plane = planes;
 }
 
 void Clip::PreExecute()
@@ -281,22 +305,77 @@ void Clip::DoExecute()
 {
 
   DataSet data_set;
-
-  const int num_domains = this->m_input->GetNumberOfDomains();
-  for(int i = 0; i < num_domains; ++i)
+  const int global_domains = this->m_input->GetGlobalNumberOfDomains();
+  if(global_domains == 0)
   {
-    vtkm::Id domain_id;
-    vtkm::cont::DataSet dom;
-    this->m_input->GetDomain(i, dom, domain_id);
+    // if the number of domains zero there is no work to do,
+    // additionally, a multiplane clip will fail since it will
+    // check if 'mclip_field' will exist, which it wont.
+    DataSet *output = new DataSet();
+    *output = *(this->m_input);
+    this->m_output = output;
+    return;
+  }
+  const int num_domains = this->m_input->GetNumberOfDomains();
+  // we now have to work around this since
+  // vtkm dropped support for new implicit functions
+  if(m_do_multi_plane)
+  {
 
-    vtkh::vtkmClip clipper;
+    const std::string fname = "mclip_field";
+    // shallow copy the input so we don't propagate the field
+    // to the input data set, since it might be used in other places
+    vtkh::DataSet temp_ds = *(this->m_input);
+    for(int i = 0; i < num_domains; ++i)
+    {
+      vtkm::cont::DataSet &dom = temp_ds.GetDomain(i);
 
-    auto dataset = clipper.Run(dom,
-                               m_internals->m_func,
-                               m_invert,
-                               this->GetFieldSelection());
+      vtkm::cont::ArrayHandle<vtkm::Float32> clip_field;
+      vtkm::worklet::DispatcherMapField<detail::MultiPlaneField>(detail::MultiPlaneField(m_internals->m_multi_plane))
+        .Invoke(dom.GetCoordinateSystem().GetData(), clip_field);
 
-    data_set.AddDomain(dataset, domain_id);
+      dom.AddField(vtkm::cont::Field(fname,
+                                     vtkm::cont::Field::Association::POINTS,
+                                     clip_field));
+    } // each domain
+
+    vtkm::Range range;
+    range.Include(0.);
+    if(m_invert)
+    {
+      range.Include(vtkm::NegativeInfinity64());
+    }
+    else
+    {
+      range.Include(vtkm::Infinity64());
+    }
+    vtkh::IsoVolume isovolume;
+    isovolume.SetInput(&temp_ds);
+    isovolume.SetRange(range);
+    isovolume.SetField(fname);
+    isovolume.Update();
+    vtkh::DataSet *temp_out = isovolume.GetOutput();
+    data_set = *temp_out;
+    delete temp_out;
+
+  }
+  else
+  {
+    for(int i = 0; i < num_domains; ++i)
+    {
+      vtkm::Id domain_id;
+      vtkm::cont::DataSet dom;
+      this->m_input->GetDomain(i, dom, domain_id);
+
+      vtkh::vtkmClip clipper;
+
+      auto dataset = clipper.Run(dom,
+                                 m_internals->m_func,
+                                 m_invert,
+                                 this->GetFieldSelection());
+
+      data_set.AddDomain(dataset, domain_id);
+    }
   }
 
   CleanGrid cleaner;
@@ -312,19 +391,3 @@ Clip::GetName() const
 }
 
 } //  namespace vtkh
-
-#ifdef VTKM_CUDA
-
-// Cuda seems to have a bug where it expects the template class VirtualObjectTransfer
-// to be instantiated in a consistent order among all the translation units of an
-// executable. Failing to do so results in random crashes and incorrect results.
-// We workaroud this issue by explicitly instantiating VirtualObjectTransfer for
-// all the implicit functions here.
-
-#include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
-
-VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkh::detail::MultiPlane);
-
-#endif
-
-

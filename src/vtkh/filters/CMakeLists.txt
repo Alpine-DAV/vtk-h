@@ -18,6 +18,7 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
+  ParticleMerging.hpp
   PointAverage.hpp
   PointTransform.hpp
   Recenter.hpp
@@ -59,6 +60,7 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
+  ParticleMerging.cpp
   PointAverage.cpp
   PointTransform.cpp
   Recenter.cpp
@@ -103,7 +105,7 @@ if (ENABLE_SERIAL)
     target_compile_definitions(vtkh_filters PRIVATE VTKH_COMPILING_FLAG)
 
     if(ENABLE_FILTER_CONTOUR_TREE)
-      target_compile_definitions(vtkh_filters VTK_H_ENABLE_FILTER_CONTOUR_TREE)
+      target_compile_definitions(vtkh_filters PRIVATE VTK_H_ENABLE_FILTER_CONTOUR_TREE)
     endif()
 
     if(ENABLE_OPENMP)
@@ -168,7 +170,7 @@ if (MPI_FOUND)
     target_compile_definitions(vtkh_filters_mpi PRIVATE VTKH_COMPILING_FLAG)
 
     if(ENABLE_FILTER_CONTOUR_TREE)
-      target_compile_definitions(vtkh_filters_mpi VTK_H_ENABLE_FILTER_CONTOUR_TREE)
+      target_compile_definitions(vtkh_filters_mpi PRIVATE VTK_H_ENABLE_FILTER_CONTOUR_TREE)
     endif()
 
     if(ENABLE_OPENMP)

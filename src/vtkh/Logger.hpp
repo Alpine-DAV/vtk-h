@@ -4,8 +4,9 @@
 #include <vtkh/vtkh_exports.h>
 #include <vtkh/Timer.hpp>
 #include <vtkh/utils/StreamUtil.hpp>
-#include <stack>
 
+#include <stack>
+#include <sstream>
 //from rover logging
 namespace vtkh
 {
