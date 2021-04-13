@@ -12,7 +12,7 @@
 # avoid warnings for project commands w/o VERSION
 cmake_policy(SET CMP0048 NEW)
 
-project(VTKh VERSION "0.5.2")
+project(VTKh VERSION "0.7.0")
 
 set(VTKh_EXPORT_NAME "VTKhTargets")
 if (NOT DEFINED VTKh_INSTALL_INCLUDE_DIR)
@@ -116,11 +116,11 @@ include(cmake/SetupIncludes.cmake)
 
 #------------------------------------------------------------------------------
 # Determine source version.
-include(VTKhDetermineVersion)
-find_package(Git QUIET)
-file(STRINGS version.txt version_txt)
-extract_version_components("${version_txt}" "VTKh")
-determine_version(${VTKh_SOURCE_DIR} "${GIT_EXECUTABLE}" "VTKh")
+# include(VTKhDetermineVersion)
+# find_package(Git QUIET)
+# file(STRINGS version.txt version_txt)
+# extract_version_components("${version_txt}" "VTKh")
+# determine_version(${VTKh_SOURCE_DIR} "${GIT_EXECUTABLE}" "VTKh")
 #------------------------------------------------------------------------------
 
 add_subdirectory(vtkh)
