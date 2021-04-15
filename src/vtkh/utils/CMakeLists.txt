@@ -37,6 +37,7 @@ if (ENABLE_SERIAL)
       DEPENDS_ON ${vtkh_utils_thirdparty_libs}
       )
 
+    vtkm_add_target_information(vtkh_utils DEVICE_SOURCES vtkm_dataset_info.cpp)
     target_compile_definitions(vtkh_utils PRIVATE VTKH_COMPILING_FLAG)
 
     if(ENABLE_OPENMP)
@@ -67,6 +68,8 @@ if (MPI_FOUND)
 
     target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_PARALLEL)
     target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_COMPILING_FLAG)
+
+    vtkm_add_target_information(vtkh_utils_mpi DEVICE_SOURCES vtkm_dataset_info.cpp)
 
     if(ENABLE_OPENMP)
         target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_USE_OPENMP)
