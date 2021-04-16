@@ -65,13 +65,29 @@ endif()
 if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
   message(FATAL_ERROR "Static libraries are required when building with CUDA")
 endif()
-set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+
+if(ENABLE_CUDA)
+    # ask politely a few times for SEPARABLE COMPILATION
+    set (CMAKE_CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+    set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+endif()
+
 # enforce the version after the ENABLE Cuda option
 if(ENABLE_CUDA)
   cmake_minimum_required(VERSION 3.14)
 else()
   cmake_minimum_required(VERSION 3.9)
 endif()
+
+################################
+# cmake policy selection
+################################
+# cmake 3.18+ use CMP0104 OLD to manually specify cuda flags
+#https://cmake.org/cmake/help/latest/policy/CMP0104.html
+if(POLICY CMP0104)
+    cmake_policy(SET CMP0104 OLD)
+endif()
+
 ################################
 # Set BLT Options
 ################################
