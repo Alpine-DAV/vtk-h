@@ -1,17 +1,16 @@
 #==============================================================================
 # See License.txt
 #==============================================================================
+####################################
+# Hide symbols for all vtkh targets
+####################################
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
 add_subdirectory(thirdparty_builtin)
 
 configure_file ("${CMAKE_CURRENT_SOURCE_DIR}/vtkh_config.h.in"
                 "${CMAKE_CURRENT_BINARY_DIR}/vtkh_config.h")
 
-
-
-####################################
-# Hide symbols for all vtkh targets
-####################################
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 add_subdirectory(utils)
 

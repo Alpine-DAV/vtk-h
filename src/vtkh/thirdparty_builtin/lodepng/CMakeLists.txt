@@ -17,6 +17,8 @@ blt_add_library(
   SOURCES ${Sources}
   )
 
+target_compile_definitions(vtkh_lodepng PRIVATE VTKH_COMPILING_FLAG)
+
   # add_library(vtkh_lodepng ${Sources})
 # target_include_directories(vtkh_lodepng INTERFACE
 #   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
