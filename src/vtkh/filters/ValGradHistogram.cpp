@@ -154,7 +154,7 @@ ValGradHistogram::Run(vtkh::DataSet &data_set, const std::string &field_name, vt
     vtkm::cont::Field grad_field = grad_dom.GetField("mag");
     
     
-
+    std::cout << "VGhist test:::" << "val_field nov = " << val_field.GetNumberOfValues() << "  grad_field nov = " << grad_field.GetNumberOfValues() << "\n";
     if(val_field.GetNumberOfValues() != grad_field.GetNumberOfValues() )
     {
       throw Error("value and gradient magintude should have same number of datapoints");

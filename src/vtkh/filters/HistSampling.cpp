@@ -20,7 +20,15 @@
 #include <iostream>
 #include <algorithm>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <iostream>
+
+#include <vtkh/filters/CleanGrid.hpp>
+
+#include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/ExtractPoints.h>
+#include <vtkm/filter/CleanGrid.h>
+#include <vtkh/filters/Recenter.hpp>
+
+#include <vtkh/vtkm_filters/vtkmGradient.hpp>
 
 namespace vtkh
 {
@@ -342,6 +350,67 @@ public:
   }
 };
 
+struct LookupID_worklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn, FieldOut);
+  using ExecutionSignature = _2(_1, InputIndex);
+
+  
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id &field_value,
+                                   vtkm::Id inIndex) const
+  {
+    vtkm::Id boolVal = static_cast<vtkm::Id>(field_value);
+    
+
+    if(boolVal)
+      return inIndex;
+    else
+      return 0;
+  }
+};
+
+struct SamplingWorklet_1d : public vtkm::worklet::WorkletMapField
+{
+protected:
+  vtkm::Id m_num_bins;
+  vtkm::Float64 m_min;
+  vtkm::Float64 m_bin_delta;
+public:
+  SamplingWorklet_1d(const vtkm::Id num_bins,
+                const vtkm::Float64 min_value,
+                const vtkm::Float64 bin_delta)
+    : m_num_bins(num_bins),
+      m_min(min_value),
+      m_bin_delta(bin_delta)
+  {}
+
+  using ControlSignature = void(FieldIn, FieldOut, WholeArrayIn, FieldIn);
+  using ExecutionSignature = _2(_1, _3, _4, InputIndex);
+
+  template <typename TablePortal>
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Float64 &field_value,
+                                   TablePortal table,
+                                   const vtkm::Float32 &random,
+                                   vtkm::Id inIndex) const
+  {
+    vtkm::Id bin = static_cast<vtkm::Id>((field_value - m_min) / m_bin_delta);
+    if(bin < 0)
+    {
+      bin = 0;
+    }
+    if(bin >= m_num_bins)
+    {
+      bin = m_num_bins - 1;
+    }
+
+    if(random < table.Get(bin))
+      return inIndex;
+    else
+      return 0;
+  }
+};
+
 struct Lookup_2d_Worklet : public vtkm::worklet::WorkletMapField
 {
 protected:
@@ -399,6 +468,68 @@ public:
   }
 };
 
+struct SamplingWorklet_2d : public vtkm::worklet::WorkletMapField
+{
+protected:
+  vtkm::Id m_num_bins;
+  vtkm::Float64 m_min_val;
+  vtkm::Float64 m_bin_delta_val;
+  vtkm::Float64 m_min_grad;
+  vtkm::Float64 m_bin_delta_grad;
+public:
+  SamplingWorklet_2d(const vtkm::Id num_bins,
+                const vtkm::Float64 min_val,
+                const vtkm::Float64 delta_val,
+                const vtkm::Float64 min_grad,
+                const vtkm::Float64 delta_grad)
+    : m_num_bins(num_bins),
+      m_min_val(min_val),
+      m_bin_delta_val(delta_val),
+      m_min_grad(min_grad),
+      m_bin_delta_grad(delta_grad)
+  {}
+
+  using ControlSignature = void(FieldIn, FieldIn, FieldOut, WholeArrayIn, FieldIn);
+  using ExecutionSignature = _3(_1, _2, _4, _5, InputIndex);
+
+  template <typename TablePortal>
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Float64 &field_val,
+                                   const vtkm::Float64 &field_grad,
+                                   TablePortal table,
+                                   const vtkm::Float32 &random,
+                                   vtkm::Id inIndex) const
+  {
+    vtkm::Id bin_val = static_cast<vtkm::Id>((field_val - m_min_val) / m_bin_delta_val);
+    if(bin_val < 0)
+    {
+      bin_val = 0;
+    }
+    if(bin_val >= m_num_bins)
+    {
+      bin_val = m_num_bins - 1;
+    }
+
+    vtkm::Id bin_grad = static_cast<vtkm::Id>((field_grad - m_min_grad) / m_bin_delta_grad);
+    if(bin_grad < 0)
+    {
+      bin_grad = 0;
+    }
+    if(bin_grad >= m_num_bins)
+    {
+      bin_grad = m_num_bins - 1;
+    }
+
+    //flattened bin index
+    vtkm::Id bin = bin_val*m_num_bins + bin_grad;
+
+    if(random < table.Get(bin))
+      return inIndex;
+    else
+      return 0;
+
+  }
+};
+
 
 void PrintStatInfo(vtkm::worklet::FieldStatistics<vtkm::Float64>::StatInfo statinfo)
 {
@@ -437,12 +568,32 @@ void HistSampling::DoExecute()
     input = stripper.GetOutput();
   }
 
+  // make sure we have a node-centered field
+  bool valid_field = false;
+  bool is_cell_assoc = m_input->GetFieldAssociation(m_field_name, valid_field) ==
+                       vtkm::cont::Field::Association::CELL_SET;
+  //before recenter
+  if(valid_field && is_cell_assoc)
+  {
+    std::cout << "****THERE!****\n";
+    Recenter recenter;
+    recenter.SetInput(m_input);
+    recenter.SetField(m_field_name);
+    recenter.SetResultAssoc(vtkm::cont::Field::Association::POINTS);
+    recenter.Update();
+    m_input = recenter.GetOutput();
+  }
+  //new dataset
+  DataSet data_set;
+
    
   vtkm::cont::ArrayHandle <vtkm::Float32 > probArray;
   vtkm::Range val_range, grad_range;
   vtkm::Float64 val_delta, grad_delta;
   const int num_domains = input->GetNumberOfDomains();
   vtkh::DataSet *mag_output;
+
+  vtkh::DataSet *ps_mag_output;
 
 
   
@@ -457,6 +608,8 @@ void HistSampling::DoExecute()
 
     vtkm::Id global_num_values = histogram.totalCount();
     vtkm::cont:: ArrayHandle <vtkm::Id > globCounts = histogram.m_bins;
+
+    std::cout << "global_num_values = " << global_num_values << "\n";
 
     val_range = histogram.m_range;
     val_delta = histogram.m_bin_delta;
@@ -489,6 +642,32 @@ void HistSampling::DoExecute()
 
     mag_output = mag.GetOutput();
 
+    //-----------------------------------------------------
+    //Calculate the gradient magnitude field for point dataset
+    vtkh::Gradient ps_grad;
+    ps_grad.SetInput(input);
+    ps_grad.SetField(m_field_name);
+
+    vtkh::GradientParameters ps_params;
+    ps_params.output_name = "grad";
+    ps_params.use_point_gradient = true;
+    ps_grad.SetParameters(ps_params);
+
+    ps_grad.Update();
+
+    vtkh::DataSet *ps_grad_output = ps_grad.GetOutput();
+
+    vtkh::VectorMagnitude ps_mag;
+    ps_mag.SetInput(ps_grad_output);
+    ps_mag.SetField("grad");
+
+    ps_mag.SetResultName("mag");
+    ps_mag.Update();
+
+    ps_mag_output = ps_mag.GetOutput();
+    std::cout << "ps_mag_output dom = " << ps_mag_output->GetNumberOfDomains() << " \n";
+    //-----------------------------------------------------------
+
 
     const int grad_num_domains = mag_output->GetNumberOfDomains();
     //make sure both the fields have same number of domains
@@ -500,10 +679,14 @@ void HistSampling::DoExecute()
     ValGradHistogram vg_histogrammer;
     vg_histogrammer.SetNumBins(m_num_bins);
 
+
+
     ValGradHistogram::NonSparseHistogramResult bivar_histogram = vg_histogrammer.Run(*input, m_field_name, *mag_output);
     // bivar_histogram.Print(std::cout);
 
     vtkm::Id global_num_values = bivar_histogram.totalCount();
+
+    std::cout << "global_num_values = " << global_num_values << "\n";
 
     val_range = bivar_histogram.m_range_val;
     val_delta = bivar_histogram.m_bin_delta_val;
@@ -514,12 +697,15 @@ void HistSampling::DoExecute()
     probArray = detail::calculate_2d_pdf(global_num_values, m_sample_percent, bivar_histogram);
   }
 
-  bool valid_field;
+  //bool valid_field;
   vtkm::cont::Field::Association assoc = input->GetFieldAssociation(m_field_name, valid_field);
   
   for(int i = 0; i < num_domains; ++i)
   {
-    vtkm::cont::DataSet &dom = input->GetDomain(i);
+    vtkm::Id domain_id;
+    //vtkm::cont::DataSet &dom = input->GetDomain(i);
+    vtkm::cont::DataSet dom;
+    this->m_input->GetDomain(i, dom, domain_id);
 
     if(!dom.HasField(m_field_name))
     {
@@ -539,7 +725,11 @@ void HistSampling::DoExecute()
     const vtkm::Int32 seed = 0;
     vtkm::worklet::DispatcherMapField<detail::RandomGenerate>(seed).Invoke(randArray);
 
-    vtkm::cont::ArrayHandle <vtkm::UInt8> stencilBool;
+    vtkm::cont::ArrayHandle <vtkm::Id> stencilBool;
+
+    vtkm::cont::ArrayHandle <vtkm::Float32> output;
+
+    vtkm::cont::ArrayHandle <vtkm::Id> stencilIds; 
 
     if(!m_use_gradient)
     {
@@ -549,10 +739,24 @@ void HistSampling::DoExecute()
                                                                           stencilBool,
                                                                           probArray,
                                                                           randArray);
+      vtkm::cont::Algorithm ::Copy(stencilBool, output);
+
+      std::cout << "test:::" << "tot_points = " << tot_points << "\n";
+
+      vtkm::worklet::DispatcherMapField<SamplingWorklet_1d>(SamplingWorklet_1d{m_num_bins,
+                                                     val_range.Min,
+                                                     val_delta}).Invoke(val_data,
+                                                                          stencilIds,
+                                                                          probArray,
+                                                                          randArray);
+
+
     }
     else
     {
-      vtkm::cont::DataSet &grad_dom = mag_output->GetDomain(i);
+
+      vtkm::cont::DataSet &grad_dom = ps_mag_output->GetDomain(i);
+      
 
       if(!grad_dom.HasField("mag"))
       {
@@ -568,8 +772,12 @@ void HistSampling::DoExecute()
       {
         //Sanity check: the number of points in the scalar value field 
         // and the gradient magnitude field must match.
+        std::cout << "test:::" << "tot_points = " << tot_points << "  grad_numval = " << grad_data.GetNumberOfValues() << "\n";
         throw Error("Mismatch in the number of values for scalar values and gradient magnitude");
       }
+
+
+      
 
       
       vtkm::worklet::DispatcherMapField<Lookup_2d_Worklet>(Lookup_2d_Worklet{m_num_bins,
@@ -581,43 +789,119 @@ void HistSampling::DoExecute()
                                                                             stencilBool,
                                                                             probArray,
                                                                             randArray);
+
+      vtkm::cont::Algorithm ::Copy(stencilBool, output);
+
+      vtkm::worklet::DispatcherMapField<SamplingWorklet_2d>(SamplingWorklet_2d{m_num_bins,
+                                                         val_range.Min,
+                                                         val_delta,
+                                                         grad_range.Min,
+                                                         grad_delta}).Invoke(val_data,
+                                                                            grad_data,
+                                                                            stencilIds,
+                                                                            probArray,
+                                                                            randArray);
     }
 
-    vtkm::cont::ArrayHandle <vtkm::Float32> output;
-    vtkm::cont::Algorithm ::Copy(stencilBool , output);
+    
+    // vtkm::worklet::DispatcherMapField<LookupID_worklet>(LookupID_worklet.Invoke(stencilBool,
+    //                                                                       stencilIds);
+    
 
     // // Test code: Verify the number of eventually selected samples by summing the stencilBool
-    // vtkm::Float32 test_sum = 0.0;
-    // for(int j=0; j<tot_points; j++)
+    vtkm::Float32 test_sum = 0.0;
+    for(int j=0; j<tot_points; j++)
+    {
+      test_sum += output.ReadPortal().Get(j);
+    }
+    std::cout << "Domain::"<< i
+              << ": Samples taken=" << test_sum 
+              << ". Total points=" << tot_points
+              << std::endl;
+
+    // vtkm::cont:: DataSetFieldAdd dataSetFieldAdd;
+
+    // if(assoc == vtkm::cont::Field::Association::POINTS)
     // {
-    //   test_sum += output.ReadPortal().Get(j);
+    //   dataSetFieldAdd.AddPointField(dom , "valSampled", output );
     // }
-    // std::cout << "Samples taken = " << test_sum << ". Total points = " 
-    //           << tot_points << ". At domain = "<< i << std::endl;
+    // else
+    // {
+    //   dataSetFieldAdd.AddCellField(dom , "valSampled", output );
+    // }
 
-    vtkm::cont:: DataSetFieldAdd dataSetFieldAdd;
+    //////////////Extracting Particle data [Subhashis: new code begin]//////////////////
+    vtkm::cont::ArrayHandle<vtkm::Id> sortedIds;
+    vtkm::cont::ArrayCopy(stencilIds, sortedIds);
+    vtkm::worklet::Keys<vtkm::Id> keys(sortedIds);
+    vtkm::cont::ArrayHandle<vtkm::Id> sampleIds;
+    vtkm::cont::ArrayCopy(keys.GetUniqueKeys(), sampleIds);  //get the uniques keys to have a list of only the sampled indices
 
-    if(assoc == vtkm::cont::Field::Association::POINTS)
-    {
-      dataSetFieldAdd.AddPointField(dom , "valSampled", output );
-    }
-    else
-    {
-      dataSetFieldAdd.AddCellField(dom , "valSampled", output );
-    }
+    vtkm::Id numUniqueIds = sampleIds.GetNumberOfValues();
+
+    std::cout << "numUniqueIds = " << stencilIds.GetNumberOfValues() << " \n";
+
+    // vtkm::Float32 test_sum1 = 0.0;
+    // for(int j=0; j<stencilIds.GetNumberOfValues(); j++)
+    // {
+    //   test_sum1 = stencilIds.ReadPortal().Get(j);
+    //   std::cout << test_sum1 << "\t ";
+    // }
+    // std::cout << std::endl;
+
+    vtkm::worklet::ExtractPoints extractPoints;
+    vtkm::cont::CellSetSingleType<> outCellSet = extractPoints.Run(dom.GetCellSet(), sampleIds);
+
+    vtkm::cont::DataSet outDataSet;
+    outDataSet.SetCellSet(outCellSet);
+    outDataSet.AddCoordinateSystem(dom.GetCoordinateSystem(0));
+
+    // Associate the relevant field to the extracted cellset
+    vtkm::cont::Field in_field = dom.GetField(m_field_name);
+    outDataSet.AddField(in_field);
+
+    data_set.AddDomain(outDataSet, domain_id);
+
+
   }
 
-  vtkh::Threshold thresher;
-  thresher.SetInput(input);
-  thresher.SetField("valSampled");
+  CleanGrid cleaner;
+  cleaner.SetInput(&data_set);
+  cleaner.Update();
+  this->m_output = cleaner.GetOutput();
 
-  double upper_bound = 1.;
-  double lower_bound = 1.;
+  //verification of output dataset
+  vtkm::Id num_output_domain = this->m_output->GetNumberOfDomains();
+  vtkm::Id num_output_cells = this->m_output->GetNumberOfCells();
 
-  thresher.SetUpperThreshold(upper_bound);
-  thresher.SetLowerThreshold(lower_bound);
-  thresher.Update();
-  this->m_output = thresher.GetOutput();
+
+  std::cout << "outDataSet: num_domains=" << num_output_domain
+              << " num_cells=" << num_output_cells
+              << std::endl;
+
+
+  for(int i=0; i<num_output_domain; i++)
+  {
+    vtkm::cont::DataSet &out_dom = this->m_output->GetDomain(i);
+    std::cout << "Domain " << i << " of the output :";
+    std::cout << " num_coord=" << out_dom.GetNumberOfCoordinateSystems() 
+              << " num_fields=" << out_dom.GetNumberOfFields()
+              << " num_values=" << out_dom.GetField(m_field_name).GetData().GetNumberOfValues()
+              << std::endl << std::endl;
+
+  }
+
+  // vtkh::Threshold thresher;
+  // thresher.SetInput(input);
+  // thresher.SetField("valSampled");
+
+  // double upper_bound = 1.;
+  // double lower_bound = 1.;
+
+  // thresher.SetUpperThreshold(upper_bound);
+  // thresher.SetLowerThreshold(lower_bound);
+  // thresher.Update();
+  // this->m_output = thresher.GetOutput();
   
   if(has_ghosts)
   {
@@ -625,6 +909,7 @@ void HistSampling::DoExecute()
   }
   if(m_use_gradient){
     delete mag_output;
+    delete ps_mag_output;
   }
 }
 
