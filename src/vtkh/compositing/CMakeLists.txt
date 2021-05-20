@@ -120,8 +120,12 @@ if (MPI_FOUND)
             LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
             RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR})
 
+    set(vtkh_compositing_mpi_install_headers ${vtkh_compositing_mpi_headers})
+    if(NOT ENABLE_SERIAL)
+      list(APPEND vtkh_compositing_mpi_install_headers ${vtkh_compositing_headers})
+    endif()
     # Install headers
-    install(FILES ${vtkh_compositing_mpi_headers}
+    install(FILES ${vtkh_compositing_mpi_install_headers}
             DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/compositing)
 
 endif()

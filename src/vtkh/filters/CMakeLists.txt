@@ -195,4 +195,13 @@ if (MPI_FOUND)
             LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
             RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR})
 
+    if(NOT ENABLE_SERIAL)
+      # Install headers
+      install(FILES ${vtkh_filters_headers}
+        DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
+
+      # Install headers
+      install(FILES ${vtkh_comm_filters_headers}
+        DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters/communication)
+    endif()
 endif()
