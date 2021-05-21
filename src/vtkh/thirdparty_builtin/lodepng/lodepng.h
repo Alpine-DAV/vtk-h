@@ -486,14 +486,14 @@ typedef struct LodePNGInfo
 } LodePNGInfo;
 
 /*init, cleanup and copy functions to use with this struct*/
-void lodepng_info_init(LodePNGInfo* info);
-void lodepng_info_cleanup(LodePNGInfo* info);
+void VTKH_API lodepng_info_init(LodePNGInfo* info);
+void VTKH_API lodepng_info_cleanup(LodePNGInfo* info);
 /*return value is error code (0 means no error)*/
-unsigned lodepng_info_copy(LodePNGInfo* dest, const LodePNGInfo* source);
+unsigned VTKH_API lodepng_info_copy(LodePNGInfo* dest, const LodePNGInfo* source);
 
 #ifdef LODEPNG_COMPILE_ANCILLARY_CHUNKS
-void lodepng_clear_text(LodePNGInfo* info); /*use this to clear the texts again after you filled them in*/
-unsigned lodepng_add_text(LodePNGInfo* info, const char* key, const char* str); /*push back both texts at once*/
+void VTKH_API lodepng_clear_text(LodePNGInfo* info); /*use this to clear the texts again after you filled them in*/
+unsigned VTKH_API lodepng_add_text(LodePNGInfo* info, const char* key, const char* str); /*push back both texts at once*/
 
 void lodepng_clear_itext(LodePNGInfo* info); /*use this to clear the itexts again after you filled them in*/
 unsigned lodepng_add_itext(LodePNGInfo* info, const char* key, const char* langtag,

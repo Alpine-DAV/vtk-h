@@ -311,7 +311,8 @@ struct VTKH_API Image
       return ss.str();
     }
 
-    void Save(std::string name);
+    void Save(const std::string &name,
+              const std::vector<std::string> &comments);
 };
 
 struct CompositeOrderSort

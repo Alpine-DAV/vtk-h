@@ -3,6 +3,7 @@
 
 #include <vtkh/vtkh_exports.h>
 #include <string>
+#include <vector>
 
 namespace vtkh
 {
@@ -19,6 +20,14 @@ public:
     void           Encode(const float *rgba_in,
                           const int width,
                           const int height);
+    void           Encode(const unsigned char *rgba_in,
+                          const int width,
+                          const int height,
+                          const std::vector<std::string> &comments);
+    void           Encode(const float *rgba_in,
+                          const int width,
+                          const int height,
+                          const std::vector<std::string> &comments);
     void           Save(const std::string &filename);
 
     void          *PngBuffer();
