@@ -6,6 +6,7 @@
 
 #if VTKH_PARALLEL
 #include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/thirdparty/diy/mpi-cast.h>
 #include <mpi.h>
 #endif
 
@@ -39,19 +40,9 @@ void Streamline::DoExecute()
 #ifndef VTKH_BYPASS_VTKM_BIH
 
 #ifdef VTKH_PARALLEL
-/*
-#ifndef VTKM_ENABLE_MPI
-  static_assert(false, "Parallel support for streamline requires that MPI be enabled in VTK-m.");
-#endif
-
   // Setup VTK-h and VTK-m comm.
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
   vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(vtkmdiy::mpi::make_DIY_MPI_Comm(mpi_comm)));
-*/
-
-  MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
-  vtkmdiy::mpi::communicator world;
-  vtkm::cont::EnvironmentTracker::SetCommunicator(world);
 #endif
 
   const int num_domains = this->m_input->GetNumberOfDomains();
