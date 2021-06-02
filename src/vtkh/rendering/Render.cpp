@@ -123,6 +123,12 @@ Render::SetImageName(const std::string &name)
 }
 
 void
+Render::SetComments(const std::vector<std::string> &comments)
+{
+  m_comments = comments;
+}
+
+void
 Render::SetBackgroundColor(float bg_color[4])
 {
   m_bg_color.Components[0] = bg_color[0];
@@ -144,6 +150,12 @@ std::string
 Render::GetImageName() const
 {
   return m_image_name;
+}
+
+std::vector<std::string>
+Render::GetComments() const
+{
+  return m_comments;
 }
 
 vtkm::rendering::Color
@@ -259,7 +271,7 @@ Render::Save()
   int height = m_canvas.GetHeight();
   int width = m_canvas.GetWidth();
   PNGEncoder encoder;
-  encoder.Encode(color_buffer, width, height);
+  encoder.Encode(color_buffer, width, height, m_comments);
   encoder.Save(m_image_name + ".png");
 }
 
