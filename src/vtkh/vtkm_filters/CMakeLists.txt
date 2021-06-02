@@ -74,4 +74,3 @@ endif()
 
 install(FILES ${vtkm_filters_install_headers}
   DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/vtkm_filters)
-
