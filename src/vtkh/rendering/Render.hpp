@@ -31,6 +31,7 @@ public:
   vtkmCanvas&                     GetCanvas();
   const vtkm::rendering::Camera&  GetCamera() const;
   std::string                     GetImageName() const;
+  std::vector<std::string>        GetComments() const;
   vtkm::Bounds                    GetSceneBounds() const;
   vtkm::Int32                     GetHeight() const;
   vtkm::Int32                     GetWidth() const;
@@ -46,6 +47,7 @@ public:
   void                            SetSceneBounds(const vtkm::Bounds &bounds);
   void                            SetCamera(const vtkm::rendering::Camera &camera);
   void                            SetImageName(const std::string &name);
+  void                            SetComments(const std::vector<std::string> &comments);
   void                            SetBackgroundColor(float bg_color[4]);
   void                            SetForegroundColor(float fg_color[4]);
   void                            SetShadingOn(bool on);
@@ -58,6 +60,7 @@ public:
 protected:
   vtkm::rendering::Camera      m_camera;
   std::string                  m_image_name;
+  std::vector<std::string>     m_comments;
   vtkm::Bounds                 m_scene_bounds;
   vtkm::Int32                  m_width;
   vtkm::Int32                  m_height;

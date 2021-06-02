@@ -178,7 +178,7 @@ Histogram::Run(vtkh::DataSet &data_set, const std::string &field_name)
     hist.m_num_bins = m_num_bins;
     hist.m_range = range;
 
-    field.GetData().ResetTypes(vtkm::TypeListFieldScalar()).CastAndCall(hist);
+    field.GetData().ResetTypes(vtkm::TypeListFieldScalar(), VTKM_DEFAULT_STORAGE_LIST{}).CastAndCall(hist);
     HistogramResult dom_hist;
     dom_hist.m_bins = hist.m_bins;
     dom_hist.m_bin_delta = hist.m_bin_delta;

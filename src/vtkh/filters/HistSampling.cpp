@@ -7,7 +7,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/worklet/FieldStatistics.h>
 #include <vtkm/filter/CreateResult.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
@@ -304,7 +303,7 @@ void HistSampling::DoExecute()
     }
 
     vtkm::cont::ArrayHandle<vtkm::Float64> data;
-    dom.GetField(m_field_name).GetData().CopyTo(data);
+    dom.GetField(m_field_name).GetData().AsArrayHandle(data);
 
 
     //vtkm::worklet::FieldStatistics<vtkm::Float64>::StatInfo statinfo;
@@ -327,7 +326,7 @@ void HistSampling::DoExecute()
 
     vtkm::worklet::DispatcherMapField<detail::RandomGenerate>(seed).Invoke(randArray);
 
-    
+
 
     vtkm::cont::ArrayHandle <vtkm::UInt8> stencilBool;
     vtkm::worklet::DispatcherMapField<LookupWorklet>(LookupWorklet{numberOfBins,
@@ -341,15 +340,13 @@ void HistSampling::DoExecute()
     vtkm::cont::ArrayHandle <vtkm::Float32> output;
     vtkm::cont::Algorithm ::Copy(stencilBool , output );
 
-    vtkm::cont:: DataSetFieldAdd dataSetFieldAdd;
-
     if(assoc == vtkm::cont::Field::Association::POINTS)
     {
-      dataSetFieldAdd.AddPointField(dom , "valSampled", output );
+      dom.AddPointField("valSampled", output);
     }
     else
     {
-      dataSetFieldAdd.AddCellField(dom , "valSampled", output );
+      dom.AddCellField("valSampled", output);
     }
   }
 

@@ -470,6 +470,7 @@ VolumeRenderer::DoExecute()
 {
   if(m_input->OneDomainPerRank() && !m_has_unstructured)
   {
+    // Danger: this logic only works if there is exactly one per rank
     RenderOneDomainPerRank();
   }
   else

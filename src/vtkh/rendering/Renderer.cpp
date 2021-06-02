@@ -4,7 +4,6 @@
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
-#include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
 
 namespace vtkh {
@@ -200,13 +199,13 @@ Renderer::DoExecute()
   }
 
   int total_renders = static_cast<int>(m_renders.size());
+
   int num_domains = static_cast<int>(m_input->GetNumberOfDomains());
   for(int dom = 0; dom < num_domains; ++dom)
   {
     vtkm::cont::DataSet data_set;
     vtkm::Id domain_id;
     m_input->GetDomain(dom, data_set, domain_id);
-
     if(!data_set.HasField(m_field_name))
     {
       continue;
@@ -215,7 +214,11 @@ Renderer::DoExecute()
     const vtkm::cont::DynamicCellSet &cellset = data_set.GetCellSet();
     const vtkm::cont::Field &field = data_set.GetField(m_field_name);
     const vtkm::cont::CoordinateSystem &coords = data_set.GetCoordinateSystem();
-    if(cellset.GetNumberOfCells() == 0) continue;
+
+    if(cellset.GetNumberOfCells() == 0)
+    {
+      continue;
+    }
 
     for(int i = 0; i < total_renders; ++i)
     {
@@ -239,7 +242,6 @@ Renderer::DoExecute()
                             m_color_table,
                             camera,
                             m_range);
-
     }
   }
 

@@ -3,6 +3,7 @@
 
 #include <vtkh/vtkh_exports.h>
 #include <exception>
+#include <sstream>
 #include <string>
 
 namespace vtkh {

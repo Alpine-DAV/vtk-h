@@ -26,6 +26,8 @@ freely, subject to the following restrictions:
 #ifndef LODEPNG_H
 #define LODEPNG_H
 
+#include <vtkh/vtkh_exports.h>
+
 #include <string.h> /*for size_t*/
 
 extern const char* LODEPNG_VERSION_STRING;
@@ -484,14 +486,14 @@ typedef struct LodePNGInfo
 } LodePNGInfo;
 
 /*init, cleanup and copy functions to use with this struct*/
-void lodepng_info_init(LodePNGInfo* info);
-void lodepng_info_cleanup(LodePNGInfo* info);
+void VTKH_API lodepng_info_init(LodePNGInfo* info);
+void VTKH_API lodepng_info_cleanup(LodePNGInfo* info);
 /*return value is error code (0 means no error)*/
-unsigned lodepng_info_copy(LodePNGInfo* dest, const LodePNGInfo* source);
+unsigned VTKH_API lodepng_info_copy(LodePNGInfo* dest, const LodePNGInfo* source);
 
 #ifdef LODEPNG_COMPILE_ANCILLARY_CHUNKS
-void lodepng_clear_text(LodePNGInfo* info); /*use this to clear the texts again after you filled them in*/
-unsigned lodepng_add_text(LodePNGInfo* info, const char* key, const char* str); /*push back both texts at once*/
+void VTKH_API lodepng_clear_text(LodePNGInfo* info); /*use this to clear the texts again after you filled them in*/
+unsigned VTKH_API lodepng_add_text(LodePNGInfo* info, const char* key, const char* str); /*push back both texts at once*/
 
 void lodepng_clear_itext(LodePNGInfo* info); /*use this to clear the itexts again after you filled them in*/
 unsigned lodepng_add_itext(LodePNGInfo* info, const char* key, const char* langtag,
@@ -639,9 +641,9 @@ typedef struct LodePNGState
 } LodePNGState;
 
 /*init, cleanup and copy functions to use with this struct*/
-void lodepng_state_init(LodePNGState* state);
-void lodepng_state_cleanup(LodePNGState* state);
-void lodepng_state_copy(LodePNGState* dest, const LodePNGState* source);
+void VTKH_API lodepng_state_init(LodePNGState* state);
+void VTKH_API lodepng_state_cleanup(LodePNGState* state);
+void VTKH_API lodepng_state_copy(LodePNGState* dest, const LodePNGState* source);
 #endif /* defined(LODEPNG_COMPILE_DECODER) || defined(LODEPNG_COMPILE_ENCODER) */
 
 #ifdef LODEPNG_COMPILE_DECODER
@@ -649,26 +651,26 @@ void lodepng_state_copy(LodePNGState* dest, const LodePNGState* source);
 Same as lodepng_decode_memory, but uses a LodePNGState to allow custom settings and
 getting much more information about the PNG image and color mode.
 */
-unsigned lodepng_decode(unsigned char** out, unsigned* w, unsigned* h,
-                        LodePNGState* state,
-                        const unsigned char* in, size_t insize);
+unsigned VTKH_API lodepng_decode(unsigned char** out, unsigned* w, unsigned* h,
+                                 LodePNGState* state,
+                                 const unsigned char* in, size_t insize);
 
 /*
 Read the PNG header, but not the actual data. This returns only the information
 that is in the header chunk of the PNG, such as width, height and color type. The
 information is placed in the info_png field of the LodePNGState.
 */
-unsigned lodepng_inspect(unsigned* w, unsigned* h,
-                         LodePNGState* state,
-                         const unsigned char* in, size_t insize);
+unsigned VTKH_API lodepng_inspect(unsigned* w, unsigned* h,
+                                  LodePNGState* state,
+                                  const unsigned char* in, size_t insize);
 #endif /*LODEPNG_COMPILE_DECODER*/
 
 
 #ifdef LODEPNG_COMPILE_ENCODER
 /*This function allocates the out buffer with standard malloc and stores the size in *outsize.*/
-unsigned lodepng_encode(unsigned char** out, size_t* outsize,
-                        const unsigned char* image, unsigned w, unsigned h,
-                        LodePNGState* state);
+unsigned VTKH_API lodepng_encode(unsigned char** out, size_t* outsize,
+                                 const unsigned char* image, unsigned w, unsigned h,
+                                 LodePNGState* state);
 #endif /*LODEPNG_COMPILE_ENCODER*/
 
 /*
@@ -801,7 +803,7 @@ outsize: output parameter, size of the allocated out buffer
 filename: the path to the file to load
 return value: error code (0 means ok)
 */
-unsigned lodepng_load_file(unsigned char** out, size_t* outsize, const char* filename);
+unsigned VTKH_API lodepng_load_file(unsigned char** out, size_t* outsize, const char* filename);
 
 /*
 Save a file from buffer to disk. Warning, if it exists, this function overwrites
@@ -811,7 +813,7 @@ buffersize: size of the buffer to write
 filename: the path to the file to save to
 return value: error code (0 means ok)
 */
-unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
+unsigned VTKH_API lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
 #endif /*LODEPNG_COMPILE_DISK*/
 
 #ifdef LODEPNG_COMPILE_CPP

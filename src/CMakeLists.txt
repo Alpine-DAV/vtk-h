@@ -12,7 +12,7 @@
 # avoid warnings for project commands w/o VERSION
 cmake_policy(SET CMP0048 NEW)
 
-project(VTKh VERSION "0.5.2")
+project(VTKh VERSION "0.7.0")
 
 set(VTKh_EXPORT_NAME "VTKhTargets")
 if (NOT DEFINED VTKh_INSTALL_INCLUDE_DIR)
@@ -65,13 +65,29 @@ endif()
 if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
   message(FATAL_ERROR "Static libraries are required when building with CUDA")
 endif()
-set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+
+if(ENABLE_CUDA)
+    # ask politely a few times for SEPARABLE COMPILATION
+    set (CMAKE_CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+    set (CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
+endif()
+
 # enforce the version after the ENABLE Cuda option
 if(ENABLE_CUDA)
   cmake_minimum_required(VERSION 3.14)
 else()
   cmake_minimum_required(VERSION 3.9)
 endif()
+
+################################
+# cmake policy selection
+################################
+# cmake 3.18+ use CMP0104 OLD to manually specify cuda flags
+#https://cmake.org/cmake/help/latest/policy/CMP0104.html
+if(POLICY CMP0104)
+    cmake_policy(SET CMP0104 OLD)
+endif()
+
 ################################
 # Set BLT Options
 ################################
@@ -83,7 +99,7 @@ set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
 # Init BLT
 ################################
 if (NOT BLT_CXX_STD)
-  set(BLT_CXX_STD "c++11" CACHE STRING "")
+  set(BLT_CXX_STD "c++14" CACHE STRING "")
 endif()
 
 # if BLT_SOURCE_DIR is not set - use "blt" as default
@@ -116,11 +132,11 @@ include(cmake/SetupIncludes.cmake)
 
 #------------------------------------------------------------------------------
 # Determine source version.
-include(VTKhDetermineVersion)
-find_package(Git QUIET)
-file(STRINGS version.txt version_txt)
-extract_version_components("${version_txt}" "VTKh")
-determine_version(${VTKh_SOURCE_DIR} "${GIT_EXECUTABLE}" "VTKh")
+# include(VTKhDetermineVersion)
+# find_package(Git QUIET)
+# file(STRINGS version.txt version_txt)
+# extract_version_components("${version_txt}" "VTKh")
+# determine_version(${VTKh_SOURCE_DIR} "${GIT_EXECUTABLE}" "VTKh")
 #------------------------------------------------------------------------------
 
 add_subdirectory(vtkh)

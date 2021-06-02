@@ -134,7 +134,7 @@ Statistics::Result Statistics::Run(vtkh::DataSet &data_set, const std::string fi
       vtkm::cont::Field field = dom.GetField(field_name);
       vtkm::cont::ArrayHandle<vtkm::Float32> float_field;
       vtkm::worklet::DispatcherMapField<detail::CopyToFloat>(detail::CopyToFloat())
-        .Invoke(field.GetData().ResetTypes(vtkm::TypeListFieldScalar()), float_field);
+        .Invoke(field.GetData().ResetTypes(vtkm::TypeListFieldScalar(),VTKM_DEFAULT_STORAGE_LIST{}), float_field);
       fields.push_back(float_field);
       total_values += float_field.GetNumberOfValues();
     }
