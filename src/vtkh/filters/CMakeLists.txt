@@ -86,8 +86,8 @@ if (ENABLE_SERIAL)
 
     blt_add_library(
       NAME vtkh_filters
-      SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources}
-      HEADERS ${vtkh_filters_headers} ${vtkh_comm_filters_headers}
+      SOURCES ${vtkh_filters_sources}
+      HEADERS ${vtkh_filters_headers}
       DEPENDS_ON ${vtkh_filters_deps}
       )
 
@@ -123,10 +123,6 @@ if (ENABLE_SERIAL)
     # Install headers
     install(FILES ${vtkh_filters_headers}
       DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
-
-    # Install headers
-    install(FILES ${vtkh_comm_filters_headers}
-      DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters/communication)
 endif()
 
 if (MPI_FOUND)
@@ -145,8 +141,8 @@ if (MPI_FOUND)
 
     blt_add_library(
       NAME vtkh_filters_mpi
-      SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources} ${vtkh_mpi_sources}
-      HEADERS ${vtkh_filters_headers} ${vtkh_comm_filters_headers} ${vtkh_mpi_headers}
+      SOURCES ${vtkh_filters_sources} ${vtkh_mpi_sources}
+      HEADERS ${vtkh_filters_headers} ${vtkh_mpi_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
 
@@ -183,9 +179,5 @@ if (MPI_FOUND)
       # Install headers
       install(FILES ${vtkh_filters_headers}
         DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
-
-      # Install headers
-      install(FILES ${vtkh_comm_filters_headers}
-        DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters/communication)
     endif()
 endif()
