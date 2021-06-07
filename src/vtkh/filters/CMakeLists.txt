@@ -31,20 +31,11 @@ set(vtkh_filters_headers
   Slice.hpp
   VectorComponent.hpp
   VectorMagnitude.hpp
-  communication/BoundsMap.hpp
-  communication/Communicator.hpp
-  communication/MemStream.h
   )
 
 if(ENABLE_FILTER_CONTOUR_TREE)
     list(APPEND vtkh_filters_headers ContourTree.hpp)
 endif()
-
-set(vtkh_comm_filters_headers
-  communication/BoundsMap.hpp
-  communication/Communicator.hpp
-  communication/MemStream.h
-  )
 
 set(vtkh_filters_sources
   Filter.cpp
@@ -75,17 +66,11 @@ set(vtkh_filters_sources
   Streamline.cpp
   VectorComponent.cpp
   VectorMagnitude.cpp
-  communication/MemStream.cpp
   )
 
 if(ENABLE_FILTER_CONTOUR_TREE)
   list(APPEND vtkh_filters_sources ContourTree.cpp)
 endif()
-
-
-set(vtkh_comm_filters_sources
-  communication/MemStream.cpp
-  )
 
 if (ENABLE_SERIAL)
     set(vtkh_filters_deps vtkh_core vtkh_utils vtkm_compiled_filters)
@@ -147,11 +132,6 @@ endif()
 if (MPI_FOUND)
 
   set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkm_compiled_filters)
-  set(vtkh_mpi_headers communication/Messenger.hpp
-                       communication/RayMessenger.hpp)
-
-    set(vtkh_mpi_sources communication/Messenger.cpp
-                         communication/RayMessenger.cpp)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
