@@ -18,6 +18,7 @@ set(vtkh_filters_headers
   NoOp.hpp
   Lagrangian.hpp
   MarchingCubes.hpp
+  ParticleAdvection.hpp
   ParticleMerging.hpp
   PointAverage.hpp
   PointTransform.hpp
@@ -26,23 +27,15 @@ set(vtkh_filters_headers
   Threshold.hpp
   Triangulate.hpp
   Statistics.hpp
+  Streamline.hpp
   Slice.hpp
   VectorComponent.hpp
   VectorMagnitude.hpp
-  communication/BoundsMap.hpp
-  communication/Communicator.hpp
-  communication/MemStream.h
   )
 
 if(ENABLE_FILTER_CONTOUR_TREE)
     list(APPEND vtkh_filters_headers ContourTree.hpp)
 endif()
-
-set(vtkh_comm_filters_headers
-  communication/BoundsMap.hpp
-  communication/Communicator.hpp
-  communication/MemStream.h
-  )
 
 set(vtkh_filters_sources
   Filter.cpp
@@ -60,6 +53,7 @@ set(vtkh_filters_sources
   NoOp.cpp
   Lagrangian.cpp
   MarchingCubes.cpp
+  ParticleAdvection.cpp
   ParticleMerging.cpp
   PointAverage.cpp
   PointTransform.cpp
@@ -69,19 +63,14 @@ set(vtkh_filters_sources
   Triangulate.cpp
   Slice.cpp
   Statistics.cpp
+  Streamline.cpp
   VectorComponent.cpp
   VectorMagnitude.cpp
-  communication/MemStream.cpp
   )
 
 if(ENABLE_FILTER_CONTOUR_TREE)
   list(APPEND vtkh_filters_sources ContourTree.cpp)
 endif()
-
-
-set(vtkh_comm_filters_sources
-  communication/MemStream.cpp
-  )
 
 if (ENABLE_SERIAL)
     set(vtkh_filters_deps vtkh_core vtkh_utils vtkm_compiled_filters)
@@ -97,8 +86,8 @@ if (ENABLE_SERIAL)
 
     blt_add_library(
       NAME vtkh_filters
-      SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources}
-      HEADERS ${vtkh_filters_headers} ${vtkh_comm_filters_headers}
+      SOURCES ${vtkh_filters_sources}
+      HEADERS ${vtkh_filters_headers}
       DEPENDS_ON ${vtkh_filters_deps}
       )
 
@@ -134,20 +123,11 @@ if (ENABLE_SERIAL)
     # Install headers
     install(FILES ${vtkh_filters_headers}
       DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
-
-    # Install headers
-    install(FILES ${vtkh_comm_filters_headers}
-      DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters/communication)
 endif()
 
 if (MPI_FOUND)
 
   set(vtkh_filters_mpi_deps vtkh_core_mpi vtkh_utils_mpi vtkm_compiled_filters)
-  set(vtkh_mpi_headers communication/Messenger.hpp
-                       communication/RayMessenger.hpp)
-
-    set(vtkh_mpi_sources communication/Messenger.cpp
-                         communication/RayMessenger.cpp)
 
     # necessary b/c of how find_cuda works
     if(CUDA_FOUND)
@@ -161,8 +141,8 @@ if (MPI_FOUND)
 
     blt_add_library(
       NAME vtkh_filters_mpi
-      SOURCES ${vtkh_filters_sources} ${vtkh_comm_filters_sources} ${vtkh_mpi_sources}
-      HEADERS ${vtkh_filters_headers} ${vtkh_comm_filters_headers} ${vtkh_mpi_headers}
+      SOURCES ${vtkh_filters_sources} ${vtkh_mpi_sources}
+      HEADERS ${vtkh_filters_headers} ${vtkh_mpi_headers}
       DEPENDS_ON ${vtkh_filters_mpi_deps}
       )
 
@@ -199,9 +179,5 @@ if (MPI_FOUND)
       # Install headers
       install(FILES ${vtkh_filters_headers}
         DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters)
-
-      # Install headers
-      install(FILES ${vtkh_comm_filters_headers}
-        DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/filters/communication)
     endif()
 endif()
