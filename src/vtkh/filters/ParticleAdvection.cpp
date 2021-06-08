@@ -45,31 +45,56 @@ void ParticleAdvection::DoExecute()
   vtkm::cont::EnvironmentTracker::SetCommunicator(vtkmdiy::mpi::communicator(vtkmdiy::mpi::make_DIY_MPI_Comm(mpi_comm)));
 #endif
 
-  const int num_domains = this->m_input->GetNumberOfDomains();
+  //Make sure that the field exists on any domain.
+  if (!this->m_input->GlobalFieldExists(m_field_name))
+  {
+    throw Error("Domain does not contain specified vector field for ParticleAdvection analysis.");
+  }
 
   vtkm::cont::PartitionedDataSet inputs;
-  for(int i = 0; i < num_domains; ++i)
+
+  //Create a partitioned dataset for all domains with the field.
+  if (this->m_input->FieldExists(m_field_name))
   {
-    vtkm::Id domain_id;
-    vtkm::cont::DataSet dom;
-    this->m_input->GetDomain(i, dom, domain_id);
-    if(dom.HasField(m_field_name))
+    const int num_domains = this->m_input->GetNumberOfDomains();
+    for (int i = 0; i < num_domains; i++)
     {
-      using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
-      using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
-      auto field = dom.GetField(m_field_name).GetData();
-      if(!field.IsType<vectorField_d>() && !field.IsType<vectorField_f>())
+      vtkm::Id domain_id;
+      vtkm::cont::DataSet dom;
+      this->m_input->GetDomain(i, dom, domain_id);
+      if(dom.HasField(m_field_name))
       {
-        throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");
+        using vectorField_d = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>>;
+        using vectorField_f = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
+        auto field = dom.GetField(m_field_name).GetData();
+        if(field.IsType<vectorField_d>() && !field.IsType<vectorField_f>())
+        {
+          inputs.AppendPartition(dom);
+        }
       }
     }
-    else
-    {
-      throw Error("Domain does not contain specified vector field for ParticleAdvection analysis.");
-    }
-
-    inputs.AppendPartition(dom);
   }
+
+  bool validField = (inputs.GetNumberOfPartitions() > 0);
+
+#ifdef VTKH_PARALLEL
+  int localNum = static_cast<int>(inputs.GetNumberOfPartitions());
+  int globalNum = 0;
+  MPI_Allreduce((void *)(&localNum),
+                (void *)(&globalNum),
+                1,
+                MPI_INT,
+                MPI_SUM,
+                mpi_comm);
+  validField = (globalNum > 0);
+#endif
+
+  if (!validField)
+  {
+    throw Error("Vector field type does not match <vtkm::Vec<vtkm::Float32,3>> or <vtkm::Vec<vtkm::Float64,3>>");
+  }
+
+  //Everything is valid. Call the VTKm filter.
 
   vtkm::filter::ParticleAdvection particleAdvectionFilter;
   auto seedsAH = vtkm::cont::make_ArrayHandle(m_seeds, vtkm::CopyFlag::Off);
