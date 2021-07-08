@@ -25,6 +25,9 @@ struct VTKH_API Image
     int                          m_composite_order;
 
     Image()
+      : m_orig_rank(-1),
+        m_has_transparency(false),
+        m_composite_order(-1)
     {}
 
 
