@@ -12,7 +12,15 @@ vtkmPointTransform::Run(vtkm::cont::DataSet &input,
 
   trans.SetChangeCoordinateSystem(true);
   trans.SetFieldsToPass(map_fields);
-  trans.SetTransform(transform);
+  vtkm::Matrix<vtkm::FloatDefault,4,4> default_mat;
+  for(int i = 0; i < 4; i++)
+  {
+    for(int j = 0; i < 4; j++)
+    {
+      default_mat[i][j] = static_cast<vtkm::FloatDefault>(transform[i][j]);
+    }
+  }
+  trans.SetTransform(default_mat);
 
   auto output = trans.Execute(input);
   return output;
