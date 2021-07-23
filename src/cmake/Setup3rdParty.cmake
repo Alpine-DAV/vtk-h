@@ -71,5 +71,6 @@ if(VTKM_DIR)
     ################################
     include(cmake/thirdparty/SetupVTKm.cmake)
 else()
-    message(FATAL_ERROR "VTK-h requries VTK-m")
+    set(VTKM_DIR "" CACHE PATH "Path to VTK-m")
+    message(FATAL_ERROR "VTK-h requries VTK-m (Please set VTKM_DIR)")
 endif()
