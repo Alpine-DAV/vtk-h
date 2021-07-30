@@ -15,6 +15,8 @@
 #endif
 #include <assert.h>
 
+using namespace std;
+
 namespace vtkh
 {
 
@@ -143,6 +145,9 @@ ScalarRenderer::DoExecute()
 
   int num_cells = 0;
 
+  // make no assumptions
+  bool no_data = num_cells == 0;
+
   //Bounds needed for parallel execution
   float bounds[6] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};;
   for(int dom = 0; dom < num_domains; ++dom)
@@ -154,6 +159,7 @@ ScalarRenderer::DoExecute()
 
     if(data_set.GetCellSet().GetNumberOfCells())
     {
+      no_data = num_cells == 0;
 
       Result res = renderers[dom].Render(m_camera);
 
@@ -172,8 +178,6 @@ ScalarRenderer::DoExecute()
     }
   }
 
-  // make no assumptions
-  bool no_data = num_cells == 0;
 #ifdef VTKH_PARALLEL
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
