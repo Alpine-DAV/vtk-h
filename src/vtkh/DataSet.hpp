@@ -100,6 +100,9 @@ public:
    */
   bool IsStructured(int &topological_dims) const;
 
+  // returns true if every single domain is unstructrued
+  bool IsUnstructured() const;
+
   bool IsPointMesh() const;
 
   void PrintSummary(std::ostream &stream) const;
