@@ -37,6 +37,7 @@ if (ENABLE_SERIAL)
       DEPENDS_ON ${vtkh_utils_thirdparty_libs}
       )
 
+    vtkm_add_target_information(vtkh_utils DEVICE_SOURCES vtkm_dataset_info.cpp)
     target_compile_definitions(vtkh_utils PRIVATE VTKH_COMPILING_FLAG)
 
     if(ENABLE_OPENMP)
@@ -68,6 +69,8 @@ if (MPI_FOUND)
     target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_PARALLEL)
     target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_COMPILING_FLAG)
 
+    vtkm_add_target_information(vtkh_utils_mpi DEVICE_SOURCES vtkm_dataset_info.cpp)
+
     if(ENABLE_OPENMP)
         target_compile_definitions(vtkh_utils_mpi PRIVATE VTKH_USE_OPENMP)
     endif()
@@ -79,4 +82,10 @@ if (MPI_FOUND)
       LIBRARY DESTINATION ${VTKh_INSTALL_LIB_DIR}
       RUNTIME DESTINATION ${VTKh_INSTALL_BIN_DIR}
       )
+
+    if(NOT ENABLE_SERIAL)
+      # Install headers
+      install(FILES ${vtkh_utils_headers}
+              DESTINATION ${VTKh_INSTALL_INCLUDE_DIR}/vtkh/utils)
+    endif()
 endif()

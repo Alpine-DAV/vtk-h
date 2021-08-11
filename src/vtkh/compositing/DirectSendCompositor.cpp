@@ -132,7 +132,14 @@ DirectSendCompositor::CompositeVolume(vtkhdiy::mpi::communicator &diy_comm,
   // so we isolate them within separate blocks
   //
   {
-    vtkhdiy::Master master(diy_comm, num_threads);
+    vtkhdiy::Master master(diy_comm, num_threads,
+                           -1, 0,
+                           [](void * b){
+                              ImageBlock<Image> *block
+                                = reinterpret_cast<ImageBlock<Image>*>(b);
+                              delete block;
+                           });
+
     // create an assigner with one block per rank
     vtkhdiy::ContiguousAssigner assigner(num_blocks, num_blocks);
 
@@ -149,7 +156,12 @@ DirectSendCompositor::CompositeVolume(vtkhdiy::mpi::communicator &diy_comm,
   }
 
   {
-    vtkhdiy::Master master(diy_comm, num_threads);
+    vtkhdiy::Master master(diy_comm, num_threads,
+                           -1, 0,
+                           [](void * b){
+                              ImageBlock<Image> *block = reinterpret_cast<ImageBlock<Image>*>(b);
+                              delete block;
+                           });
     vtkhdiy::ContiguousAssigner assigner(num_blocks, num_blocks);
 
     const int dims = 2;

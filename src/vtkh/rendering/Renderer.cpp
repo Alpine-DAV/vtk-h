@@ -4,7 +4,6 @@
 #include <vtkh/Logger.hpp>
 #include <vtkh/utils/vtkm_array_utils.hpp>
 #include <vtkh/utils/vtkm_dataset_info.hpp>
-#include <vtkh/utils/PNGEncoder.hpp>
 #include <vtkm/rendering/raytracing/Logger.h>
 
 namespace vtkh {

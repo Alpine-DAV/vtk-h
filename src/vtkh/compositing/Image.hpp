@@ -25,6 +25,9 @@ struct VTKH_API Image
     int                          m_composite_order;
 
     Image()
+      : m_orig_rank(-1),
+        m_has_transparency(false),
+        m_composite_order(-1)
     {}
 
 
@@ -311,7 +314,8 @@ struct VTKH_API Image
       return ss.str();
     }
 
-    void Save(std::string name);
+    void Save(const std::string &name,
+              const std::vector<std::string> &comments);
 };
 
 struct CompositeOrderSort

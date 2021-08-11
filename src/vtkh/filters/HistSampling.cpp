@@ -7,7 +7,6 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/worklet/FieldStatistics.h>
 #include <vtkm/filter/CreateResult.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
@@ -341,15 +340,13 @@ void HistSampling::DoExecute()
     vtkm::cont::ArrayHandle <vtkm::Float32> output;
     vtkm::cont::Algorithm ::Copy(stencilBool , output );
 
-    vtkm::cont:: DataSetFieldAdd dataSetFieldAdd;
-
     if(assoc == vtkm::cont::Field::Association::POINTS)
     {
-      dataSetFieldAdd.AddPointField(dom , "valSampled", output );
+      dom.AddPointField("valSampled", output);
     }
     else
     {
-      dataSetFieldAdd.AddCellField(dom , "valSampled", output );
+      dom.AddCellField("valSampled", output);
     }
   }
 
