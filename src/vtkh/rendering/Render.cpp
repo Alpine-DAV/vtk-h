@@ -13,6 +13,8 @@ Render::Render()
   : m_width(1024),
     m_height(1024),
     m_render_annotations(true),
+    m_render_world_annotations(true),
+    m_render_screen_annotations(true),
     m_render_background(true),
     m_shading(true),
     m_canvas(m_width, m_height)
@@ -43,6 +45,20 @@ Render::DoRenderAnnotations(bool on)
 {
   m_render_annotations = on;
 }
+
+void
+Render::DoRenderWorldAnnotations(bool on)
+{
+  m_render_world_annotations = on;
+}
+
+
+void
+Render::DoRenderScreenAnnotations(bool on)
+{
+  m_render_screen_annotations = on;
+}
+
 
 void
 Render::DoRenderBackground(bool on)
@@ -168,6 +184,7 @@ void
 Render::RenderWorldAnnotations()
 {
   if(!m_render_annotations) return;
+  if(!m_render_world_annotations) return;
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
@@ -184,6 +201,8 @@ Render::RenderScreenAnnotations(const std::vector<std::string> &field_names,
                                 const std::vector<vtkm::Range> &ranges,
                                 const std::vector<vtkm::cont::ColorTable> &colors)
 {
+  if(!m_render_annotations) return;
+  if(!m_render_screen_annotations) return;
 #ifdef VTKH_PARALLEL
   if(vtkh::GetMPIRank() != 0) return;
 #endif
