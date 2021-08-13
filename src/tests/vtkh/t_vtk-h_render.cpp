@@ -157,7 +157,7 @@ TEST(vtkh_render, vtkh_no_world_annotations)
   scene.Render();
 }
 
-TEST(vtkh_render, vtkh_no_scene_annotations)
+TEST(vtkh_render, vtkh_no_screen_annotations)
 {
   vtkh::DataSet data_set;
 
@@ -178,7 +178,7 @@ TEST(vtkh_render, vtkh_no_scene_annotations)
                                          512,
                                          camera,
                                          data_set,
-                                         "no_scene");
+                                         "no_screen");
   render.DoRenderScreenAnnotations(false);
   vtkh::RayTracer tracer;
 
