@@ -142,7 +142,7 @@ public:
 }; //class GhostIndex
 
 template<int DIMS>
-class Validate : public vtkm::worklet::WorkletMapField
+class CanStructuredStrip : public vtkm::worklet::WorkletMapField
 {
 protected:
   vtkm::Vec<vtkm::Id,3> m_cell_dims;
@@ -152,7 +152,7 @@ protected:
   vtkm::Vec<vtkm::Id,3> m_valid_max;
 public:
   VTKM_CONT
-  Validate(vtkm::Vec<vtkm::Id,3> cell_dims,
+  CanStructuredStrip(vtkm::Vec<vtkm::Id,3> cell_dims,
            vtkm::Int32 min_value,
            vtkm::Int32 max_value,
            vtkm::Vec<vtkm::Id,3> valid_min,
@@ -170,24 +170,31 @@ public:
 
   template<typename T>
   VTKM_EXEC
-  void operator()(const T &value, const vtkm::Id &index, vtkm::UInt8 &valid) const
+  void operator()(const T &value, const vtkm::Id &index, vtkm::UInt8 &can_do) const
   {
-    valid = 0; // this is a valid zone
+    can_do = 0; // this is a valid zone
     // we are validating if non-valid cells fall completely outside
     // the min max range of valid cells
     if(value >= m_min_value && value <= m_max_value) return;
 
     vtkm::Vec<vtkm::Id,3> logical = get_logical<DIMS>(index, m_cell_dims);
+    bool inside = true;
     for(vtkm::Int32 i = 0; i < DIMS; ++i)
     {
-      if(logical[i] >= m_valid_min[i] || logical[i] <= m_valid_max[i])
+      if(logical[i] < m_valid_min[i] || logical[i] > m_valid_max[i])
       {
-        valid = 1;
+        inside = false;
       }
+    }
+    // this is a 'ghost' zone that is inside the valid range
+    // so we cannot structured strip
+    if(inside)
+    {
+      can_do = 1;
     }
 
   }
-}; //class Validate
+}; //class CanStructuredStrip
 
 template<int DIMS>
 bool CanStrip(vtkm::cont::Field  &ghost_field,
@@ -233,11 +240,12 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
   min = valid_min;
   max = valid_max;
 
-  vtkm::worklet::DispatcherMapField<Validate<DIMS>>(Validate<DIMS>(cell_dims,
-                                                             min_value,
-                                                             max_value,
-                                                             valid_min,
-                                                             valid_max))
+  vtkm::worklet::DispatcherMapField<CanStructuredStrip<DIMS>>
+    (CanStructuredStrip<DIMS>(cell_dims,
+                              min_value,
+                              max_value,
+                              valid_min,
+                              valid_max))
      .Invoke(ghost_field.GetData().ResetTypes(vtkm::TypeListScalarAll(),
                                               VTKM_DEFAULT_STORAGE_LIST{}),
          valid_flags);
