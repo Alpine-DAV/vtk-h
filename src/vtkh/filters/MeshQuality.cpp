@@ -1,5 +1,6 @@
 #include <vtkh/filters/MeshQuality.hpp>
 #include <vtkh/vtkm_filters/vtkmMeshQuality.hpp>
+#include <vtkh/vtkm_filters/vtkmCleanGrid.hpp>
 #include <vtkh/Error.hpp>
 
 namespace vtkh
@@ -45,8 +46,14 @@ void MeshQuality::DoExecute()
     vtkm::Id domain_id;
     vtkm::cont::DataSet dom;
     this->m_input->GetDomain(i, dom, domain_id);
+
+    // force this to an fully explicit data set because
+    // old vtkm was not handling this
+    vtkh::vtkmCleanGrid cleaner;
+    auto dataset = cleaner.Run(dom, this->GetFieldSelection());
+
     vtkmMeshQuality quali;
-    vtkm::cont::DataSet res = quali.Run(dom, m_metric, this->GetFieldSelection());
+    vtkm::cont::DataSet res = quali.Run(dataset, m_metric, this->GetFieldSelection());
     m_output->AddDomain(res, domain_id);
   }
 }
