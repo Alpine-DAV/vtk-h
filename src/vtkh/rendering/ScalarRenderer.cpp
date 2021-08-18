@@ -13,6 +13,7 @@
   #include <mpi.h>
 #endif
 #include <assert.h>
+#include <string.h>
 
 using namespace std;
 
@@ -181,8 +182,11 @@ ScalarRenderer::DoExecute()
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
   int comm_size = GetMPISize();
+  int rank = GetMPIRank();
   std::vector<int> votes;
 
+  if(!no_data && num_cells == 0)
+    num_cells = 1;
   int vote = num_cells > 0 ? 1 : 0;
   votes.resize(comm_size);
 
@@ -203,6 +207,37 @@ ScalarRenderer::DoExecute()
     MPI_Bcast(&max_p, 1, MPI_INT, winner, mpi_comm);
     MPI_Bcast(&min_p, 1, MPI_INT, winner, mpi_comm);
     no_data = false;
+  }
+
+  if(vtkh::GetMPIRank() == 0 && num_cells == 0 && winner != -1)
+  {
+    MPI_Status status;
+    int num_fields = 0;
+    MPI_Recv(&num_fields, 1, MPI_INT, winner, 0, mpi_comm, &status);
+    for(int i = 0; i < num_fields; i++)
+    {
+      int len;
+      MPI_Recv(&len, 1, MPI_INT, winner, 0, mpi_comm, &status);
+      char * array = (char *) malloc(len);
+      MPI_Recv(array, len, MPI_CHAR, winner, 0, mpi_comm, &status);
+      std::string name;
+      name.assign(array,len);
+      field_names.push_back(name);
+      memset(array, 0, sizeof(*array));
+      free(array);
+    }
+    
+  }
+  if(vtkh::GetMPIRank() == winner)
+  {
+    int num_fields = field_names.size();
+    MPI_Send(&num_fields, 1, MPI_INT, 0, 0, mpi_comm); 
+    for(int i = 0; i < num_fields; i++)
+    {
+      int len = strlen(field_names[i].c_str());
+      MPI_Send(&len, 1, MPI_INT, 0, 0, mpi_comm);
+      MPI_Send(field_names[i].c_str(),strlen(field_names[i].c_str()),MPI_CHAR, 0, 0,mpi_comm);
+    }
   }
 #endif
 
