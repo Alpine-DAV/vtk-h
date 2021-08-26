@@ -74,6 +74,8 @@ if(ENABLE_CUDA)
     vtkm_get_cuda_flags(_fetch_vtkm_cuda_flags)
     set(CMAKE_CUDA_FLAGS  "${CMAKE_CUDA_FLAGS} ${_fetch_vtkm_cuda_flags}")
     unset(_fetch_vtkm_cuda_flags)
+    # we also need
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xptxas --disable-optimizer-constants")
 endif()
 
 # VTKM does not seem to propogate includes it exposes to us, so we have to work
