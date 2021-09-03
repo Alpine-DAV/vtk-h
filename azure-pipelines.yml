@@ -72,11 +72,11 @@ stages:
           CMAKE_BUILD_TYPE: Debug
           ENABLE_FILTER_CONTOUR_TREE: OFF
           VTKM_SPEC: ^vtk-m+mpi
-        sharedVTK-mMPI-ctree:
-          BUILD_SHARED_LIBS: ON
-          CMAKE_BUILD_TYPE: Debug
-          ENABLE_FILTER_CONTOUR_TREE: ON
-          VTKM_SPEC: ^vtk-m+mpi
+        # sharedVTK-mMPI-ctree:
+        #   BUILD_SHARED_LIBS: ON
+        #   CMAKE_BUILD_TYPE: Debug
+        #   ENABLE_FILTER_CONTOUR_TREE: ON
+        #   VTKM_SPEC: ^vtk-m+mpi
     steps:
       - checkout: self
         clean: boolean
