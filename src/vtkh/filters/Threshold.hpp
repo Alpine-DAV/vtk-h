@@ -21,9 +21,11 @@ public:
   void SetUpperThreshold(const double &value);
   void SetLowerThreshold(const double &value);
   void SetField(const std::string &field_name);
+  void SetAllInRange(const bool &value);
 
   double GetUpperThreshold() const;
   double GetLowerThreshold() const;
+  bool GetAllInRange() const;
   std::string GetField() const;
 protected:
   void PreExecute() override;
@@ -31,6 +33,7 @@ protected:
   void DoExecute() override;
   vtkm::Range m_range;
   std::string m_field_name;
+  bool m_return_all_in_range = false;
 };
 
 } //namespace vtkh
