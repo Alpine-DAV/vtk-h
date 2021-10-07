@@ -72,11 +72,11 @@ stages:
           CMAKE_BUILD_TYPE: Debug
           ENABLE_FILTER_CONTOUR_TREE: OFF
           VTKM_SPEC: ^vtk-m+mpi
-        sharedVTK-mMPI-ctree:
-          BUILD_SHARED_LIBS: ON
-          CMAKE_BUILD_TYPE: Debug
-          ENABLE_FILTER_CONTOUR_TREE: ON
-          VTKM_SPEC: ^vtk-m+mpi
+        # sharedVTK-mMPI-ctree:
+        #   BUILD_SHARED_LIBS: ON
+        #   CMAKE_BUILD_TYPE: Debug
+        #   ENABLE_FILTER_CONTOUR_TREE: ON
+        #   VTKM_SPEC: ^vtk-m+mpi
     steps:
       - checkout: self
         clean: boolean
@@ -122,7 +122,7 @@ stages:
            export SPACK_SPEC="%gcc+mpi ^cmake@3.14.5 ${VTKM_SPEC}"
            echo $SPACK_SPEC
            # run uber to build tpls
-           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_18_devel/
+           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv_configs/spack_configs/configs/alpinedav/ubuntu_18_devel/
         displayName: 'Spack Build Tpls'
 
       - script: |
@@ -271,7 +271,7 @@ stages:
            export SPACK_SPEC="${SPACK_SPEC} ^cmake~openssl~ncurses"
            echo $SPACK_SPEC
            # run uber to build tpls
-           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv/spack_configs/ci/ubuntu_18_cuda_10.1_devel/
+           python scripts/uberenv/uberenv.py --pull --spec "${SPACK_SPEC}" --spack-config-dir=scripts/uberenv_configs/spack_configs/configs/alpinedav/ubuntu_18_cuda_10.1_devel/
         displayName: 'Spack Build Tpls'
 
       - script: |
