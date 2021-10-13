@@ -218,13 +218,13 @@ ScalarRenderer::DoExecute()
     {
       int len;
       MPI_Recv(&len, 1, MPI_INT, winner, 0, mpi_comm, &status);
-      char * array = (char *) malloc(len);
+      char * array = new char[len];
       MPI_Recv(array, len, MPI_CHAR, winner, 0, mpi_comm, &status);
       std::string name;
       name.assign(array,len);
       field_names.push_back(name);
       memset(array, 0, sizeof(*array));
-      free(array);
+      delete array;
     }
     
   }
