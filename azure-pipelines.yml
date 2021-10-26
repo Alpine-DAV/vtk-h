@@ -26,7 +26,7 @@ stages:
   jobs:
   - job: BLT_Time_Travel_Check
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-latest'
     steps:
       - checkout: self
         clean: boolean
@@ -48,7 +48,7 @@ stages:
   ###############################################################################
   - job: Main_Ubuntu_18
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-latest'
     container: ${{ variables.main_tag }}
     timeoutInMinutes: 0
     variables:
@@ -224,7 +224,7 @@ stages:
   ###############################################################################
   - job: Main_Ubuntu_18_Cuda_10_2
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-latest'
     container: ${{ variables.cuda_tag }}
     timeoutInMinutes: 0
     strategy:
@@ -335,7 +335,7 @@ stages:
   ###############################################################################
   - job: Docker_Ubuntu
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-latest'
     timeoutInMinutes: 0
     steps:
       - checkout: self
