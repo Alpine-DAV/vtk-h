@@ -88,6 +88,8 @@ class VtkM(CMakePackage, CudaPackage):
 
     conflicts("+hip", when="+cuda")
 
+    patch('options-adjust-include-loc.patch', when='@1.7.0:')
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -97,7 +99,14 @@ class VtkM(CMakePackage, CudaPackage):
                           '70': 'volta',   '72': 'turing',  '75': 'turing',
                           '80': 'ampere',  '86': 'ampere'}
         with working_dir('spack-build', create=True):
-            options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
+            options = ["-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON"]
+            # note: Even if we aren't testing downstream deps may depend on
+            # the testing lib, which provides headers for example datasets
+            if spec.satisfies('@1.7.0:'):
+                options.append("-DVTKm_ENABLE_TESTING:BOOL=OFF")
+                options.append("-DVTKm_ENABLE_TESTING_LIBRARY:BOOL=ON")
+            else:
+                options.append("-DVTKm_ENABLE_TESTING:BOOL=OFF")
             # shared vs static libs logic
             # force building statically with cuda
             if "+cuda" in spec:

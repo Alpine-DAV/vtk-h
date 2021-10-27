@@ -1,0 +1,25 @@
+From ae82ed54d6269e7fb5d3a6c7abc2f6563afb4207 Mon Sep 17 00:00:00 2001
+From: Cyrus Harrison <cyrush@llnl.gov>
+Date: Wed, 27 Oct 2021 21:50:42 +0000
+Subject: [PATCH] adjust include loc
+
+---
+ vtkm/cont/internal/OptionParser.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vtkm/cont/internal/OptionParser.h b/vtkm/cont/internal/OptionParser.h
+index 2e0d6127d..fd5b7e72d 100644
+--- a/vtkm/cont/internal/OptionParser.h
++++ b/vtkm/cont/internal/OptionParser.h
+@@ -42,7 +42,7 @@ namespace internal
+ 
+ // Include from third party.
+ // @cond NONE
+-#include <vtkmoptionparser/optionparser.h>
++#include <vtkm/thirdparty/optionparser/vtkmoptionparser/optionparser.h>
+ // @endcond
+ 
+ // Now restore the header guards as before so that other includes of (possibly different versions
+-- 
+2.17.1
+

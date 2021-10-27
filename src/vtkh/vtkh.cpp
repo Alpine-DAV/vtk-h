@@ -4,7 +4,6 @@
 
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
 
 #ifdef VTKM_CUDA
 #include <cuda.h>
