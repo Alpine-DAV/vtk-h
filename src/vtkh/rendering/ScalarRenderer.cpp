@@ -209,14 +209,14 @@ ScalarRenderer::DoExecute()
     no_data = false;
   }
 
-  if(vtkh::GetMPIRank() == 0 && num_cells == 0 && winner != -1)
+  if(vtkh::GetMPIRank() == 0 && num_cells == 0 && winner != -1 && winner != 0)
   {
     MPI_Status status;
     int num_fields = 0;
     MPI_Recv(&num_fields, 1, MPI_INT, winner, 0, mpi_comm, &status);
     for(int i = 0; i < num_fields; i++)
     {
-      int len;
+      int len = 0;
       MPI_Recv(&len, 1, MPI_INT, winner, 0, mpi_comm, &status);
       char * array = new char[len];
       MPI_Recv(array, len, MPI_CHAR, winner, 0, mpi_comm, &status);
@@ -228,7 +228,7 @@ ScalarRenderer::DoExecute()
     }
     
   }
-  if(vtkh::GetMPIRank() == winner)
+  if(vtkh::GetMPIRank() == winner && winner != 0)
   {
     int num_fields = field_names.size();
     MPI_Send(&num_fields, 1, MPI_INT, 0, 0, mpi_comm); 
