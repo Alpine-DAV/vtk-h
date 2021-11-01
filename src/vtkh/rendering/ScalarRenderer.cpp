@@ -209,34 +209,36 @@ ScalarRenderer::DoExecute()
     no_data = false;
   }
 
-  if(vtkh::GetMPIRank() == 0 && num_cells == 0 && winner != -1 && winner != 0)
+  if(winner > 0)
   {
-    MPI_Status status;
-    int num_fields = 0;
-    MPI_Recv(&num_fields, 1, MPI_INT, winner, 0, mpi_comm, &status);
-    for(int i = 0; i < num_fields; i++)
+    if(vtkh::GetMPIRank() == 0 && num_cells == 0)
     {
-      int len = 0;
-      MPI_Recv(&len, 1, MPI_INT, winner, 0, mpi_comm, &status);
-      char * array = new char[len];
-      MPI_Recv(array, len, MPI_CHAR, winner, 0, mpi_comm, &status);
-      std::string name;
-      name.assign(array,len);
-      field_names.push_back(name);
-      memset(array, 0, sizeof(*array));
-      delete array;
+      MPI_Status status;
+      int num_fields = 0;
+      MPI_Recv(&num_fields, 1, MPI_INT, winner, 0, mpi_comm, &status);
+      for(int i = 0; i < num_fields; i++)
+      {
+        int len = 0;
+        MPI_Recv(&len, 1, MPI_INT, winner, 0, mpi_comm, &status);
+        char * array = new char[len];
+        MPI_Recv(array, len, MPI_CHAR, winner, 0, mpi_comm, &status);
+        std::string name;
+        name.assign(array,len);
+        field_names.push_back(name);
+        memset(array, 0, sizeof(*array));
+        delete array;
+      }
     }
-    
-  }
-  if(vtkh::GetMPIRank() == winner && winner != 0)
-  {
-    int num_fields = field_names.size();
-    MPI_Send(&num_fields, 1, MPI_INT, 0, 0, mpi_comm); 
-    for(int i = 0; i < num_fields; i++)
+    if(vtkh::GetMPIRank() == winner)
     {
-      int len = strlen(field_names[i].c_str());
-      MPI_Send(&len, 1, MPI_INT, 0, 0, mpi_comm);
-      MPI_Send(field_names[i].c_str(),strlen(field_names[i].c_str()),MPI_CHAR, 0, 0,mpi_comm);
+      int num_fields = field_names.size();
+      MPI_Send(&num_fields, 1, MPI_INT, 0, 0, mpi_comm); 
+      for(int i = 0; i < num_fields; i++)
+      {
+        int len = strlen(field_names[i].c_str());
+        MPI_Send(&len, 1, MPI_INT, 0, 0, mpi_comm);
+        MPI_Send(field_names[i].c_str(),strlen(field_names[i].c_str()),MPI_CHAR, 0, 0,mpi_comm);
+      }
     }
   }
 #endif
