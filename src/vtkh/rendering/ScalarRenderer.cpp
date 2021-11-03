@@ -200,7 +200,6 @@ ScalarRenderer::DoExecute()
       break;
     }
   }
-
   if(winner != -1)
   {
     MPI_Bcast(bounds, 6, MPI_FLOAT, winner, mpi_comm);
