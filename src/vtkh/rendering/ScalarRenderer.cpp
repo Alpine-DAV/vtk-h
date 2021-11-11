@@ -13,6 +13,9 @@
   #include <mpi.h>
 #endif
 #include <assert.h>
+#include <string.h>
+
+using namespace std;
 
 namespace vtkh
 {
@@ -142,6 +145,9 @@ ScalarRenderer::DoExecute()
 
   int num_cells = 0;
 
+  // make no assumptions
+  bool no_data = num_cells == 0;
+
   //Bounds needed for parallel execution
   float bounds[6] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};;
   for(int dom = 0; dom < num_domains; ++dom)
@@ -153,6 +159,7 @@ ScalarRenderer::DoExecute()
 
     if(data_set.GetCellSet().GetNumberOfCells())
     {
+      no_data = num_cells == 0;
 
       Result res = renderers[dom].Render(m_camera);
 
@@ -171,14 +178,15 @@ ScalarRenderer::DoExecute()
     }
   }
 
-  // make no assumptions
-  bool no_data = num_cells == 0;
 #ifdef VTKH_PARALLEL
   MPI_Comm mpi_comm = MPI_Comm_f2c(vtkh::GetMPICommHandle());
 
   int comm_size = GetMPISize();
+  int rank = GetMPIRank();
   std::vector<int> votes;
 
+  if(!no_data && num_cells == 0)
+    num_cells = 1;
   int vote = num_cells > 0 ? 1 : 0;
   votes.resize(comm_size);
 
@@ -192,13 +200,45 @@ ScalarRenderer::DoExecute()
       break;
     }
   }
-
   if(winner != -1)
   {
     MPI_Bcast(bounds, 6, MPI_FLOAT, winner, mpi_comm);
     MPI_Bcast(&max_p, 1, MPI_INT, winner, mpi_comm);
     MPI_Bcast(&min_p, 1, MPI_INT, winner, mpi_comm);
     no_data = false;
+  }
+
+  if(winner > 0)
+  {
+    if(vtkh::GetMPIRank() == 0 && num_cells == 0)
+    {
+      MPI_Status status;
+      int num_fields = 0;
+      MPI_Recv(&num_fields, 1, MPI_INT, winner, 0, mpi_comm, &status);
+      for(int i = 0; i < num_fields; i++)
+      {
+        int len = 0;
+        MPI_Recv(&len, 1, MPI_INT, winner, 0, mpi_comm, &status);
+        char * array = new char[len];
+        MPI_Recv(array, len, MPI_CHAR, winner, 0, mpi_comm, &status);
+        std::string name;
+        name.assign(array,len);
+        field_names.push_back(name);
+        memset(array, 0, sizeof(*array));
+        delete array;
+      }
+    }
+    if(vtkh::GetMPIRank() == winner)
+    {
+      int num_fields = field_names.size();
+      MPI_Send(&num_fields, 1, MPI_INT, 0, 0, mpi_comm); 
+      for(int i = 0; i < num_fields; i++)
+      {
+        int len = strlen(field_names[i].c_str());
+        MPI_Send(&len, 1, MPI_INT, 0, 0, mpi_comm);
+        MPI_Send(field_names[i].c_str(),strlen(field_names[i].c_str()),MPI_CHAR, 0, 0,mpi_comm);
+      }
+    }
   }
 #endif
 
