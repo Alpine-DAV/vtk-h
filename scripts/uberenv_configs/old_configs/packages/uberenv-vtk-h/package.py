@@ -7,11 +7,11 @@
 #
 # All rights reserved.
 #
-# This file is part of Ascent.
+# This file is part of Alpine.
 #
-# For details, see: http://software.llnl.gov/ascent/.
+# For details, see: http://software.llnl.gov/alpine/.
 #
-# Please also read ascent/LICENSE
+# Please also read alpine/LICENSE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -42,51 +42,41 @@
 #
 ###############################################################################
 
-###############################################################################
-# Setup VTKm
-###############################################################################
+from spack import *
 
-if(NOT VTKM_DIR)
-    MESSAGE(FATAL_ERROR "VTKm support needs explicit VTKM_DIR")
-endif()
-
-MESSAGE(STATUS "Looking for VTKm using VTKM_DIR = ${VTKM_DIR}")
-
-# use VTKM_DIR to setup the options that cmake's find VTKm needs
-file(GLOB VTKm_DIR "${VTKM_DIR}/lib/cmake/vtkm-*")
-if(NOT VTKm_DIR)
-    MESSAGE(FATAL_ERROR "Failed to find VTKm at VTKM_DIR=${VTKM_DIR}/lib/cmake/vtk-*")
-endif()
-
-find_package(VTKm REQUIRED QUIET)
-
-if(ENABLE_CUDA AND NOT VTKm_ENABLE_CUDA)
-   message(FATAL_ERROR "VTK-h CUDA support requires VTK-m with CUDA support (ENABLE_CUDA == TRUE, however VTKm_ENABLE_CUDA == FALSE")
-endif()
+import socket
+import os
+import platform
+from os.path import join as pjoin
 
 
-set(VTKM_FOUND TRUE)
+from spack.pkg.builtin.vtk_h import VtkH
 
-set(VTKM_TARGETS vtkm_cont vtkm_filter vtkm_rendering)
+class UberenvVtkH(VtkH):
+    """Spack Based Uberenv Build for VTK-h Thirdparty Libs """
 
-if(ENABLE_CUDA)
-    # we need to inject the vtkm cuda flags into CMAKE_CUDA_FLAGS
-    vtkm_get_cuda_flags(_fetch_vtkm_cuda_flags)
-    set(CMAKE_CUDA_FLAGS  "${CMAKE_CUDA_FLAGS} ${_fetch_vtkm_cuda_flags}")
-    unset(_fetch_vtkm_cuda_flags)
-    # we also need
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xptxas --disable-optimizer-constants")
-endif()
+    homepage = "http://github.com/alpine-DAV/vtk-h"
 
-# VTKM does not seem to propogate includes it exposes to us, so we have to work
-# around this.
-file(GLOB LCL_DIR "${VTKM_DIR}/include/vtkm-*/vtkm/thirdparty/lcl/vtkmlcl/")
-include_directories("${LCL_DIR}")
+    version('0.1', '8d378ef62dedc2df5db447b029b71200')
 
-# VTKM ridiculous
-file(GLOB VTKM_DIY_DIR "${VTKM_DIR}/include/vtkm-*/vtkm/thirdparty/diy/vtkmdiy/include/")
-include_directories("${VTKM_DIY_DIR}")
+    # would like to use these in the future, but we need global variant support
+    #variant('cuda',   default=False, description="Enable CUDA support.")
+    #variant('openmp', default=False, description="Enable OpenMP support.")
 
-blt_register_library(NAME vtkm
-                     LIBRARIES ${VTKM_TARGETS}
-                     )
+    depends_on("cmake@3.14.5", when="+cmake")
+
+    def url_for_version(self, version):
+        dummy_tar_path =  os.path.abspath(pjoin(os.path.split(__file__)[0]))
+        dummy_tar_path = pjoin(dummy_tar_path,"uberenv-vtk-h.tar.gz")
+        url      = "file://" + dummy_tar_path
+        return url
+
+    def install(self, spec, prefix):
+        """
+        Build and install vtk-h
+        """
+        with working_dir('spack-build', create=True):
+          host_cfg_fname = self.create_host_config(spec, prefix)
+          mkdirp(prefix)
+          install(host_cfg_fname,prefix)
+          install(host_cfg_fname,env["SPACK_DEBUG_LOG_DIR"])

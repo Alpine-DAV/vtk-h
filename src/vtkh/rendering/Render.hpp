@@ -40,6 +40,8 @@ public:
   void                            Print() const;
 
   void                            DoRenderAnnotations(bool on);
+  void                            DoRenderWorldAnnotations(bool on);
+  void                            DoRenderScreenAnnotations(bool on);
   void                            DoRenderBackground(bool on);
   void                            ScaleWorldAnnotations(float x, float y, float z);
   void                            SetWidth(const vtkm::Int32 width);
@@ -68,6 +70,8 @@ protected:
   vtkm::rendering::Color       m_fg_color;
   vtkmCanvas                   CreateCanvas() const;
   bool                         m_render_annotations;
+  bool                         m_render_world_annotations;
+  bool                         m_render_screen_annotations;
   bool                         m_render_background;
   bool                         m_shading;
   vtkmCanvas                   m_canvas;

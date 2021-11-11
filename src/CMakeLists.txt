@@ -89,26 +89,11 @@ if(POLICY CMP0104)
 endif()
 
 ################################
-# Set BLT Options
-################################
-
-# don't use BLT's all warnings feature
-set(ENABLE_ALL_WARNINGS OFF CACHE INTERNAL "")
-
-################################
 # Init BLT
 ################################
-if (NOT BLT_CXX_STD)
-  set(BLT_CXX_STD "c++14" CACHE STRING "")
-endif()
-
-# if BLT_SOURCE_DIR is not set - use "blt" as default
-if(NOT BLT_SOURCE_DIR)
-    set(BLT_SOURCE_DIR "blt")
-endif()
-
-# init blt using BLT_SOURCE_DIR
-include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
+# This also includes 
+# our BLT defaults
+include(cmake/SetupBLT.cmake)
 
 ################################
 # Basic CMake Setup
