@@ -37,6 +37,8 @@ Annotator::RenderScreenAnnotations(const std::vector<std::string> &field_names,
   m_canvas.SetViewToScreenSpace(m_camera, true);
   // currently we only support 4 color bars, so grab the first 4
   int num_bars = std::min(int(field_names.size()),4);
+  m_canvas.BeginTextRenderingBatch();
+  m_world_annotator->BeginLineRenderingBatch();
   for(int i = 0; i < num_bars; ++i)
   {
     this->m_color_bar_annotation.SetRange(ranges[i], 5);
@@ -45,12 +47,16 @@ Annotator::RenderScreenAnnotations(const std::vector<std::string> &field_names,
     this->m_color_bar_annotation.SetColorTable(color_tables[i]);
     this->m_color_bar_annotation.Render(m_camera, *m_world_annotator, m_canvas);
   }
+  m_world_annotator->EndLineRenderingBatch();
+  m_canvas.EndTextRenderingBatch();
 }
 
 void Annotator::RenderWorldAnnotations(vtkm::Vec<float,3> axis_scale)
 {
   if(!m_is_3d) return;
   m_canvas.SetViewToWorldSpace(m_camera, false);
+
+  m_canvas.BeginTextRenderingBatch();
   vtkm::Float64 xmin = m_bounds.X.Min, xmax = m_bounds.X.Max;
   vtkm::Float64 ymin = m_bounds.Y.Min, ymax = m_bounds.Y.Max;
   vtkm::Float64 zmin = m_bounds.Z.Min, zmax = m_bounds.Z.Max;
@@ -58,6 +64,7 @@ void Annotator::RenderWorldAnnotations(vtkm::Vec<float,3> axis_scale)
   vtkm::Float64 size = vtkm::Sqrt(dx * dx + dy * dy + dz * dz);
 
   //TODO: get forground color
+  m_world_annotator->BeginLineRenderingBatch();
   this->m_box_annotation.SetColor(m_canvas.GetForegroundColor());
   this->m_box_annotation.SetExtents(m_bounds);
   this->m_box_annotation.Render(m_camera, *m_world_annotator);
@@ -66,6 +73,7 @@ void Annotator::RenderWorldAnnotations(vtkm::Vec<float,3> axis_scale)
   bool xtest = lookAt[0] > position[0];
   bool ytest = lookAt[1] > position[1];
   bool ztest = lookAt[2] > position[2];
+  m_world_annotator->EndLineRenderingBatch();
 
   const bool outsideedges = true; // if false, do closesttriad
   if (outsideedges)
@@ -79,6 +87,8 @@ void Annotator::RenderWorldAnnotations(vtkm::Vec<float,3> axis_scale)
   vtkm::Float64 zrel = vtkm::Abs(dz) / size;
   float major_tick_size = size / 40.f;
   float minor_tick_size = size / 80.f;
+
+  m_world_annotator->BeginLineRenderingBatch();
   this->m_x_axis_annotation.SetAxis(0);
   this->m_x_axis_annotation.SetColor(m_canvas.GetForegroundColor());
   this->m_x_axis_annotation.SetTickInvert(xtest, ytest, ztest);
@@ -117,7 +127,9 @@ void Annotator::RenderWorldAnnotations(vtkm::Vec<float,3> axis_scale)
   //this->m_z_axis_annotation.SetMoreOrLessTickAdjustment(zrel < .3 ? -1 : 0);
   this->m_z_axis_annotation.SetMoreOrLessTickAdjustment(-1);
   this->m_z_axis_annotation.Render(m_camera, *m_world_annotator, m_canvas);
+  m_world_annotator->EndLineRenderingBatch();
 
+  m_canvas.EndTextRenderingBatch();
 }
 
 } //namespace vtkh
