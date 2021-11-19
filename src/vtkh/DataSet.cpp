@@ -561,6 +561,30 @@ DataSet::IsPointMesh() const
 }
 
 bool
+DataSet::IsUnstructured() const
+{
+  bool is_unstructured = true;
+  const size_t num_domains = m_domains.size();
+  for(size_t i = 0; i < num_domains; ++i)
+  {
+    const vtkm::cont::DataSet &dom = m_domains[i];
+    int dims;
+    is_unstructured = !VTKMDataSetInfo::IsStructured(dom, dims) && is_unstructured;
+
+    (void) dims;
+
+    if(!is_unstructured)
+    {
+      break;
+    }
+  }
+
+  is_unstructured = detail::GlobalAgreement(is_unstructured);
+
+  return is_unstructured;
+}
+
+bool
 DataSet::IsStructured(int &topological_dims) const
 {
   topological_dims = -1;

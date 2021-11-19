@@ -11,6 +11,7 @@ set(vtkm_filters_headers
   vtkmGradient.hpp
   vtkmLagrangian.hpp
   vtkmMarchingCubes.hpp
+  vtkmMeshQuality.hpp
   vtkmPointAverage.hpp
   vtkmPointTransform.hpp
   vtkmTetrahedralize.hpp
@@ -29,6 +30,7 @@ set(vtkm_filters_sources
   vtkmGradient.cpp
   vtkmLagrangian.cpp
   vtkmMarchingCubes.cpp
+  vtkmMeshQuality.cpp
   vtkmPointAverage.cpp
   vtkmPointTransform.cpp
   vtkmTetrahedralize.cpp
