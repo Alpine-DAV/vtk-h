@@ -2,8 +2,10 @@
 #include "Error.hpp"
 #include <vtkh/Logger.hpp>
 
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
+
 
 #ifdef VTKM_CUDA
 #include <cuda.h>
