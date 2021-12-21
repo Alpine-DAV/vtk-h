@@ -9,6 +9,8 @@ namespace vtkh
 {
 
   VTKH_API std::string AboutVTKH();
+  VTKH_API void        Initialize();
+
   // is backend support compiled in
   VTKH_API bool        IsSerialAvailable();
   VTKH_API bool        IsOpenMPAvailable();
