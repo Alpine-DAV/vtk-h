@@ -2,9 +2,10 @@
 #include "Error.hpp"
 #include <vtkh/Logger.hpp>
 
+#include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
+
 
 #ifdef VTKM_CUDA
 #include <cuda.h>
@@ -19,7 +20,8 @@
 namespace vtkh
 {
 
-static int g_mpi_comm_id = -1;
+static int  g_mpi_comm_id = -1;
+static bool g_vtkm_inited = false;
 
 
 //---------------------------------------------------------------------------//
@@ -132,6 +134,18 @@ GetMPISize()
 //---------------------------------------------------------------------------//
 #endif
 //---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+void
+Initialize()
+{
+    // call vtk-m init, if we haven't already
+    if(!g_vtkm_inited)
+    {
+        vtkm::cont::Initialize();
+        g_vtkm_inited = true;
+    }
+}
 
 //---------------------------------------------------------------------------//
 bool

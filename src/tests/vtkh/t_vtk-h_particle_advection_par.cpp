@@ -10,7 +10,7 @@
 #include <vtkh/DataSet.hpp>
 #include <vtkh/filters/ParticleAdvection.hpp>
 #include <vtkh/filters/Streamline.hpp>
-#include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/CellSetSingleType.h>
@@ -52,7 +52,7 @@ void writeDataSet(vtkh::DataSet *data, std::string fName, int rank)
   {
     char fileNm[128];
     sprintf(fileNm, "%s.rank%d.domain%d.vtk", fName.c_str(), rank, i);
-    vtkm::io::writer::VTKDataSetWriter write(fileNm);
+    vtkm::io::VTKDataSetWriter write(fileNm);
     write.WriteDataSet(data->GetDomain(i));
   }
 }

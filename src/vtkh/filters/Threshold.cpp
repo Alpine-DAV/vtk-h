@@ -38,6 +38,12 @@ Threshold::SetField(const std::string &field_name)
   m_field_name = field_name;
 }
 
+void
+Threshold::SetAllInRange(const bool &value)
+{
+  m_return_all_in_range = value;
+}
+
 double
 Threshold::GetUpperThreshold() const
 {
@@ -48,6 +54,12 @@ double
 Threshold::GetLowerThreshold() const
 {
   return m_range.Min;
+}
+
+bool
+Threshold::GetAllInRange() const
+{
+  return m_return_all_in_range;
 }
 
 std::string
@@ -89,7 +101,8 @@ void Threshold::DoExecute()
                                     m_field_name,
                                     m_range.Min,
                                     m_range.Max,
-                                    this->GetFieldSelection());
+                                    this->GetFieldSelection(),
+                                    m_return_all_in_range);
 
     temp_data.AddDomain(data_set, domain_id);
   }
