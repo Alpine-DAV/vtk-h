@@ -209,8 +209,8 @@ public:
 
     vtkm::Id num_cells = 0;
     vtkm::Id num_points = 0;
-    vtkm::Id cell_offsets[doms.size()];
-    vtkm::Id point_offsets[doms.size()];
+    std::vector<vtkm::Id> cell_offsets(doms.size());
+    std::vector<vtkm::Id> point_offsets(doms.size());
 
     for(size_t dom = 0; dom < doms.size(); ++dom)
     {
@@ -321,8 +321,8 @@ public:
 
       CopyField copier(res,
                        doms,
-                       point_offsets,
-                       cell_offsets,
+                       &point_offsets[0],
+                       &cell_offsets[0],
                        num_points,
                        num_cells,
                        f);
