@@ -12,7 +12,13 @@ For the current version see:
 https://github.com/Alpine-DAV/vtk-h/blob/develop/hashes.txt
 
 Additionally, VTK-m has several build settings and we test with a specific combination.
-When building VTK-m, be sure to set `VTKm_USE_64BIT_IDS=OFF` and `VTKm_USE_DOUBLE_PRECISION=ON`.
+When building VTK-m, be sure to set:
+
+- `VTKm_USE_64BIT_IDS:BOOL=OFF`
+- `VTKm_USE_DOUBLE_PRECISION:BOOL=ON`
+- `VTKm_USE_DEFAULT_TYPES_FOR_ASCENT:BOOL=ON`
+- `VTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON`
+
 
 Source Repo
 =================
