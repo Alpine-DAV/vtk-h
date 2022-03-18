@@ -17,6 +17,10 @@
 #include <mpi.h>
 #endif
 
+#ifdef VTKM_KOKKOS_HIP
+#include<Kokkos_Core.hpp>
+#endif
+
 namespace vtkh
 {
 
@@ -170,6 +174,10 @@ std::string GetCurrentDevice()
   {
     device = "openmp";
   }
+  else if(IsKokkosEnabled())
+  {
+    device = "kokkos";
+  }
 
   return device;
 }
@@ -201,6 +209,14 @@ IsCUDAAvailable()
 
 //---------------------------------------------------------------------------//
 bool
+IsKokkosAvailable()
+{
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagKokkos());
+}
+
+//---------------------------------------------------------------------------//
+bool
 IsSerialEnabled()
 {
   vtkm::cont::RuntimeDeviceTracker &device_tracker
@@ -228,6 +244,15 @@ IsCUDAEnabled()
 }
 
 //---------------------------------------------------------------------------//
+bool
+IsKokkosEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos());
+}
+
+//---------------------------------------------------------------------------//
 int
 CUDADeviceCount()
 {
@@ -237,7 +262,7 @@ CUDADeviceCount()
     if(res != cudaSuccess)
     {
         std::stringstream msg;
-        msg << "Failed to get CUDA device count" << std::endl
+        msg << "Failed to get CUDA device count" << std::std::endl;
             << "CUDA Error Message: "
             << cudaGetErrorString(res);
         throw Error(msg.str());
@@ -264,7 +289,7 @@ SelectCUDADevice(int device_index)
         {
             std::stringstream msg;
             msg << "Failed to set CUDA device (device index = "
-                << device_index << ")" << std::endl
+                << device_index << ")" << std::std::endl;
                 << "CUDA Error Message: "
                 << cudaGetErrorString(res);
             throw Error(msg.str());
@@ -285,10 +310,35 @@ SelectCUDADevice(int device_index)
 
 }
 
+void
+ForceKokkos()
+{
+  std::cerr << "In ForceKokkos" << std::endl;;
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagKokkos());
+#ifdef VTKM_KOKKOS_HIP 
+  std::cerr << "Initialize Kokkos" << std::endl;;
+  Kokkos::InitArguments pars;
+  // 8 (CPU) threads per NUMA region
+  pars.num_threads = 8;
+  // 2 (CPU) NUMA regions per process
+  pars.num_numa = 2;
+  // If Kokkos was built with CUDA enabled, use the GPU with device ID 1.
+  //pars.device_id = 1;
+      
+  Kokkos::initialize(pars);
+#endif VTKM_KOKKOS_HIP 
+  std::cerr << "Done Initializing Kokkos" << std::endl;;
+  
+}
+
 //---------------------------------------------------------------------------//
 void
 ForceSerial()
 {
+	ForceKokkos();
+	return;
   vtkm::cont::RuntimeDeviceTracker &device_tracker
     = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
@@ -354,6 +404,19 @@ AboutVTKH()
   {
     msg<<"OpenMP (";
     if(IsOpenMPEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
+  }
+
+  if(IsKokkosAvailable())
+  {
+    msg<<"Kokkos (";
+    if(IsKokkosEnabled())
     {
       msg<<"enabled) ";
     }

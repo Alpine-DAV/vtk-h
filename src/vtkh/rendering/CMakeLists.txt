@@ -39,6 +39,10 @@ if (ENABLE_SERIAL)
         list(APPEND vtkh_rendering_deps openmp)
     endif()
 
+    if(ENABLE_KOKKOS)
+        list(APPEND vtkh_rendering_deps Kokkos::kokkos)
+    endif()
+
     blt_add_library(
       NAME vtkh_rendering
       SOURCES ${vtkh_rendering_sources}
@@ -89,6 +93,9 @@ if (MPI_FOUND)
          list(APPEND vtkh_rendering_mpi_deps openmp)
     endif()
 
+    if(ENABLE_KOKKOS)
+        list(APPEND vtkh_rendering_mpi_deps Kokkos::kokkos)
+    endif()
 
     blt_add_library(
         NAME vtkh_rendering_mpi

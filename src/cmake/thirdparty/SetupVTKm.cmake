@@ -64,6 +64,10 @@ if(ENABLE_CUDA AND NOT VTKm_ENABLE_CUDA)
    message(FATAL_ERROR "VTK-h CUDA support requires VTK-m with CUDA support (ENABLE_CUDA == TRUE, however VTKm_ENABLE_CUDA == FALSE")
 endif()
 
+if(ENABLE_KOKKOS AND NOT VTKm_ENABLE_KOKKOS)
+   message(FATAL_ERROR "VTK-h KOKKOS support requires VTK-m with KOKKOS support (ENABLE_KOKKOS == TRUE, however VTKm_ENABLE_KOKKOS == FALSE")
+endif()
+
 
 set(VTKM_FOUND TRUE)
 
@@ -76,6 +80,35 @@ if(ENABLE_CUDA)
     unset(_fetch_vtkm_cuda_flags)
     # we also need
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xptxas --disable-optimizer-constants")
+endif()
+
+if(ENABLE_KOKKOS)
+    if(KOKKOS_DIR)
+        MESSAGE("Provided KOKKOS_DIR:${KOKKOS_DIR}")
+
+        # check for both lib64 and lib
+        if(EXISTS ${KOKKOS_DIR}/lib64/cmake/Kokkos/)
+            set(KOKKOS_CMAKE_CONFIG_DIR ${KOKKOS_DIR}/lib64/cmake/Kokkos/)
+        endif()
+
+        if(EXISTS ${KOKKOS_DIR}/lib/cmake/Kokkos/)
+            set(KOKKOS_CMAKE_CONFIG_DIR ${KOKKOS_DIR}/lib/cmake/Kokkos/)
+        endif()
+
+        if(NOT EXISTS ${KOKKOS_CMAKE_CONFIG_DIR}/KokkosConfig.cmake)
+            MESSAGE(FATAL_ERROR "Could not find Kokkos CMake include file (${KOKKOS_CMAKE_CONFIG_DIR}/KokkosConfig.cmake)")
+        endif()
+
+    ###############################################################################
+    # Import Kokkos CMake targets
+    ###############################################################################
+    find_package(Kokkos REQUIRED
+                 NO_DEFAULT_PATH
+                 COMPONENTS separable_compilation
+                 PATHS ${KOKKOS_CMAKE_CONFIG_DIR})
+    else()
+	 MESSAGE(FATAL_ERROR "Kokkos support needs explicit KOKKOS_DIR")
+    endif()	 
 endif()
 
 # VTKM does not seem to propogate includes it exposes to us, so we have to work

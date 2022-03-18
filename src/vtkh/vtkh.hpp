@@ -15,11 +15,13 @@ namespace vtkh
   VTKH_API bool        IsSerialAvailable();
   VTKH_API bool        IsOpenMPAvailable();
   VTKH_API bool        IsCUDAAvailable();
+  VTKH_API bool        IsKokkosAvailable();
 
   // is backend enabled (e.g., ForceX)
   VTKH_API bool        IsSerialEnabled();
   VTKH_API bool        IsOpenMPEnabled();
   VTKH_API bool        IsCUDAEnabled();
+  VTKH_API bool        IsKokkosEnabled();
 
   VTKH_API bool        IsMPIEnabled();
 
@@ -29,6 +31,7 @@ namespace vtkh
   VTKH_API void        ForceSerial();
   VTKH_API void        ForceOpenMP();
   VTKH_API void        ForceCUDA();
+  VTKH_API void        ForceKokkos();
   VTKH_API void        ResetDevices();
   VTKH_API std::string GetCurrentDevice();
 

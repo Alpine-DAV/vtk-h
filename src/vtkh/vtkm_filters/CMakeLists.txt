@@ -50,6 +50,10 @@ if(ENABLE_OPENMP)
   list(APPEND vtkm_filters_deps openmp)
 endif()
 
+if(ENABLE_KOKKOS)
+   list(APPEND vtkh_filters_deps Kokkos::kokkos)
+endif()
+
 if(CUDA_FOUND)
     # triggers cuda compile
     list(APPEND vtkm_filters_deps cuda)
@@ -60,10 +64,15 @@ blt_add_library(
   SOURCES ${vtkm_filters_sources}
   HEADERS ${vtkm_filters_headers}
   DEPENDS_ON ${vtkm_filters_deps}
-  OBJECT TRUE
+  OBJECT FALSE
   )
 
 vtkm_add_target_information(vtkm_compiled_filters DEVICE_SOURCES ${vtkm_filter_sources})
+
+if(ENABLE_KOKKOS)
+  # vtkm + object libs are fun. Flags are not being propogated, so manually add them
+  set_target_properties(vtkm_compiled_filters PROPERTIES COMPILE_FLAGS "-I${KOKKOS_DIR}/include" )
+endif()
 
 if(CUDA_FOUND)
   # vtkm + object libs are fun. Flags are not being propogated, so manually add them

@@ -86,6 +86,10 @@ if (ENABLE_SERIAL)
         list(APPEND vtkh_filters_deps openmp)
     endif()
 
+    if(ENABLE_KOKKOS)
+        list(APPEND vtkh_filters_deps Kokkos::kokkos)
+    endif()
+
     blt_add_library(
       NAME vtkh_filters
       SOURCES ${vtkh_filters_sources}
@@ -139,6 +143,10 @@ if (MPI_FOUND)
 
     if(ENABLE_OPENMP)
          list(APPEND vtkh_filters_mpi_deps openmp)
+    endif()
+
+    if(ENABLE_KOKKOS)
+        list(APPEND vtkh_filters_mpi_deps Kokkos::kokkos)
     endif()
 
     blt_add_library(
