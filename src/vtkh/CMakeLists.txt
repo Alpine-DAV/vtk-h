@@ -81,6 +81,10 @@ if(MPI_FOUND)
     list(APPEND vtkh_core_mpi_deps cuda)
   endif()
 
+  if(KOKKOS_ENABLED)
+    list(APPEND vtkh_core_mpi_deps Kokkos::kokkos)
+  endif()
+
 
   blt_add_library(
       NAME vtkh_core_mpi

@@ -21,6 +21,10 @@
 #include<Kokkos_Core.hpp>
 #endif
 
+#ifdef VTKM_KOKKOS_CUDA
+#include<Kokkos_Core.hpp>
+#endif
+
 namespace vtkh
 {
 
@@ -309,27 +313,20 @@ SelectCUDADevice(int device_index)
 #endif
 
 }
+//---------------------------------------------------------------------------//
 
 void
-ForceKokkos()
-{
-  std::cerr << "In ForceKokkos" << std::endl;;
-  vtkm::cont::RuntimeDeviceTracker &device_tracker
-    = vtkm::cont::GetRuntimeDeviceTracker();
-  device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagKokkos());
+SelectKokkosDevice(int device_index)
+{ 
 #ifdef VTKM_KOKKOS_HIP 
-  std::cerr << "Initialize Kokkos" << std::endl;;
+  Kokkos::initialize();
+#endif  
+#ifdef VTKM_KOKKOS_CUDA
   Kokkos::InitArguments pars;
-  // 8 (CPU) threads per NUMA region
-  pars.num_threads = 8;
-  // 2 (CPU) NUMA regions per process
-  pars.num_numa = 2;
-  // If Kokkos was built with CUDA enabled, use the GPU with device ID 1.
-  //pars.device_id = 1;
-      
+  pars.device_id = device_index;
+
   Kokkos::initialize(pars);
-#endif VTKM_KOKKOS_HIP 
-  std::cerr << "Done Initializing Kokkos" << std::endl;;
+#endif
   
 }
 
@@ -337,8 +334,6 @@ ForceKokkos()
 void
 ForceSerial()
 {
-	ForceKokkos();
-	return;
   vtkm::cont::RuntimeDeviceTracker &device_tracker
     = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial());
@@ -360,6 +355,15 @@ ForceCUDA()
   vtkm::cont::RuntimeDeviceTracker &device_tracker
     = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
+}
+
+//---------------------------------------------------------------------------//
+void
+ForceKokkos()
+{
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagKokkos());
 }
 
 //---------------------------------------------------------------------------//
