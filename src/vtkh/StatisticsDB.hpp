@@ -7,14 +7,10 @@
 
 #include <math.h>
 #include <time.h>
-#ifndef _WIN32
-#include <sys/time.h>
-#endif
 #include <sys/timeb.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-#define TIMEINFO timeval
 
 #include <map>
 #include <string>
@@ -77,13 +73,8 @@ public:
 #ifdef VTKH_PARALLEL
         return MPI_Wtime();
 #else
-#ifndef _WIN32 // gettimeofday not defined on Windows with MSVC
-        struct TIMEINFO ti;
-        gettimeofday(&ti, 0);
-        return (double)(ti.tv_sec + ti.tv_usec/1e6f);
-#else
-        return 0.;
-#endif
+    return std::chrono::system_clock::now().time_since_epoch() / 
+                std::chrono::seconds(1);
 #endif
     }
 
