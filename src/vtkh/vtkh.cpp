@@ -321,11 +321,15 @@ SelectKokkosDevice(int device_index)
 #ifdef VTKM_KOKKOS_HIP 
   Kokkos::initialize();
 #endif  
+
 #ifdef VTKM_KOKKOS_CUDA
   Kokkos::InitArguments pars;
   pars.device_id = device_index;
-
-  Kokkos::initialize(pars);
+  //TODO:Will this break with CUDA? CUDA is initialized with a specified device
+  //and calling SelectCudaDevice(device_index) 
+  //Is Kokkos smart enough to find this device for us? 
+  //Kokkos::initialize(pars);
+  Kokkos::initialize();
 #endif
   
 }
