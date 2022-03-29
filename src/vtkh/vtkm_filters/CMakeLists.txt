@@ -64,7 +64,7 @@ blt_add_library(
   SOURCES ${vtkm_filters_sources}
   HEADERS ${vtkm_filters_headers}
   DEPENDS_ON ${vtkm_filters_deps}
-  OBJECT FALSE
+  OBJECT TRUE
   )
 
 vtkm_add_target_information(vtkm_compiled_filters DEVICE_SOURCES ${vtkm_filter_sources})
