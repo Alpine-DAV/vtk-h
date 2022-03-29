@@ -266,7 +266,7 @@ CUDADeviceCount()
     if(res != cudaSuccess)
     {
         std::stringstream msg;
-        msg << "Failed to get CUDA device count" << std::endl;
+        msg << "Failed to get CUDA device count" << std::endl
             << "CUDA Error Message: "
             << cudaGetErrorString(res);
         throw Error(msg.str());
@@ -293,7 +293,7 @@ SelectCUDADevice(int device_index)
         {
             std::stringstream msg;
             msg << "Failed to set CUDA device (device index = "
-                << device_index << ")" << std::endl;
+                << device_index << ")" << std::endl
                 << "CUDA Error Message: "
                 << cudaGetErrorString(res);
             throw Error(msg.str());
