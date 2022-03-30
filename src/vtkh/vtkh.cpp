@@ -332,6 +332,7 @@ SelectKokkosDevice(int device_index)
   Kokkos::initialize();
 #endif
   
+  Kokkos::initialize(); //no backend
 }
 
 //---------------------------------------------------------------------------//
