@@ -249,10 +249,10 @@ ScalarRenderer::DoExecute()
       vtkm::Bounds b(bounds);
       PayloadImage p(b, max_p);
       int size = p.m_depths.size();
-      float depths[size];
+      std::vector<float> depths(size);
       for(int i = 0; i < size; i++)
         depths[i] = std::numeric_limits<int>::max();
-      std::copy(depths, depths + size, &p.m_depths[0]);
+      std::copy(&depths[0], &depths[0] + size, &p.m_depths[0]);
       compositor.AddImage(p);
     }
 
