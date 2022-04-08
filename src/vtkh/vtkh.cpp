@@ -17,11 +17,7 @@
 #include <mpi.h>
 #endif
 
-#ifdef VTKM_KOKKOS_HIP
-#include<Kokkos_Core.hpp>
-#endif
-
-#ifdef VTKM_KOKKOS_CUDA
+#ifdef VTKM_ENABLE_KOKKOS
 #include<Kokkos_Core.hpp>
 #endif
 
@@ -318,6 +314,7 @@ SelectCUDADevice(int device_index)
 void
 SelectKokkosDevice(int device_index)
 { 
+#ifdef VTKM_ENABLE_KOKKOS
 #ifdef VTKM_KOKKOS_HIP 
   Kokkos::initialize();
 #endif  
@@ -333,6 +330,7 @@ SelectKokkosDevice(int device_index)
 #endif
   
   Kokkos::initialize(); //no backend
+#endif
 }
 
 //---------------------------------------------------------------------------//
