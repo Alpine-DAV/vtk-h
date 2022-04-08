@@ -61,11 +61,6 @@ if(NOT ENABLE_SERIAL AND NOT ENABLE_MPI)
     "Please set ENABLE_SERIAL, ENABLE_MPI or both to ON")
 endif()
 
-
-if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "Static libraries are required when building with CUDA")
-endif()
-
 if(ENABLE_CUDA)
     # ask politely a few times for SEPARABLE COMPILATION
     set (CMAKE_CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )
