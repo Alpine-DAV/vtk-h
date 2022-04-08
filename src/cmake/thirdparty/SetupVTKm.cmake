@@ -68,6 +68,11 @@ if(ENABLE_KOKKOS AND NOT VTKm_ENABLE_KOKKOS)
    message(FATAL_ERROR "VTK-h KOKKOS support requires VTK-m with KOKKOS support (ENABLE_KOKKOS == TRUE, however VTKm_ENABLE_KOKKOS == FALSE")
 endif()
 
+if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
+  if(VTKm_VERSION VERSION_LESS "1.7.0")
+    message(FATAL_ERROR "Cannot build shared libs with CUDA when VTKm is < v1.7.0")
+  endif()
+endif()
 
 set(VTKM_FOUND TRUE)
 

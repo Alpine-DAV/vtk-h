@@ -229,9 +229,14 @@ stages:
     timeoutInMinutes: 0
     strategy:
       matrix:
+        shared_vtkh:
+          BUILD_SHARED_LIBS: ON
+          CMAKE_BUILD_TYPE: Release
+          SPACK_SHARED_VARIANT: +shared
         static_vtkh:
           BUILD_SHARED_LIBS: OFF
           CMAKE_BUILD_TYPE: Release
+          SPACK_SHARED_VARIANT: ~shared
     steps:
       - checkout: self
         clean: boolean
@@ -266,7 +271,7 @@ stages:
            which python
            python --version
            # setup spack spec (must be static)
-           export SPACK_SPEC="%gcc+mpi+cuda~openmp~shared"
+           export SPACK_SPEC="%gcc+mpi+cuda~openmp"
            export SPACK_SPEC="${SPACK_SPEC}${SPACK_SHARED_VARIANT} ^vtk-m+cuda${SPACK_SHARED_VARIANT}"
            export SPACK_SPEC="${SPACK_SPEC} ^cmake~openssl~ncurses"
            echo $SPACK_SPEC
