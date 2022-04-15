@@ -42,44 +42,35 @@
 #
 ###############################################################################
 
-################################
-# Ascent 3rd Party Dependencies
-################################
-
 ###############################################################################
-# gtest, fruit, mpi,cuda, openmp, sphinx and doxygen are handled by blt
+# Setup Kokkos
 ###############################################################################
-################################################################
-################################################################
-#
-# 3rd Party Libs that underpin VTKh
-#
-################################################################
-################################################################
 
-
-################################
-# VTKm and supporting libs
-################################
-if(VTKM_DIR)
-    # explicitly setting this avoids a bug with VTKm's cuda
-    # arch detection logic
-    set(VTKm_CUDA_Architecture "native" CACHE PATH "")
-
-    ################################
-    # VTKm
-    ################################
-    include(cmake/thirdparty/SetupVTKm.cmake)
-    
-    ################################
-    # VTKm + Kokkos
-    ################################
+if(ENABLE_KOKKOS)
     if(KOKKOS_DIR)
-        include(cmake/thirdparty/SetupKokkos.cmake)
-    endif()
-else()
-    set(VTKM_DIR "" CACHE PATH "Path to VTK-m")
-    message(FATAL_ERROR "VTK-h requries VTK-m (Please set VTKM_DIR)")
+        MESSAGE("Provided KOKKOS_DIR:${KOKKOS_DIR}")
+
+        # check for both lib64 and lib
+        if(EXISTS ${KOKKOS_DIR}/lib64/cmake/Kokkos/)
+            set(KOKKOS_CMAKE_CONFIG_DIR ${KOKKOS_DIR}/lib64/cmake/Kokkos/)
+        endif()
+
+        if(EXISTS ${KOKKOS_DIR}/lib/cmake/Kokkos/)
+            set(KOKKOS_CMAKE_CONFIG_DIR ${KOKKOS_DIR}/lib/cmake/Kokkos/)
+        endif()
+
+        if(NOT EXISTS ${KOKKOS_CMAKE_CONFIG_DIR}/KokkosConfig.cmake)
+            MESSAGE(FATAL_ERROR "Could not find Kokkos CMake include file (${KOKKOS_CMAKE_CONFIG_DIR}/KokkosConfig.cmake)")
+        endif()
+
+    ###############################################################################
+    # Import Kokkos CMake targets
+    ###############################################################################
+    find_package(Kokkos REQUIRED
+                 NO_DEFAULT_PATH
+                 COMPONENTS separable_compilation
+                 PATHS ${KOKKOS_CMAKE_CONFIG_DIR})
+    else()
+	 MESSAGE(FATAL_ERROR "Kokkos support needs explicit KOKKOS_DIR")
+    endif()	 
 endif()
-
-

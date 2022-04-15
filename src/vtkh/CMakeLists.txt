@@ -45,6 +45,10 @@ if(ENABLE_OPENMP)
     list(APPEND vtkm_core_deps openmp)
 endif()
 
+if(ENABLE_KOKKOS)
+  list(APPEND vtkh_core_deps Kokkos::kokkos)
+endif()
+
 if (ENABLE_SERIAL)
     # blt vtk dep, includes all of vtkm
     blt_add_library(
@@ -59,7 +63,7 @@ if (ENABLE_SERIAL)
     if(ENABLE_LOGGING)
       target_compile_definitions(vtkh_core PRIVATE VTKH_ENABLE_LOGGING)
     endif()
-
+  
     # Install libraries
     install(TARGETS vtkh_core
       EXPORT ${VTKh_EXPORT_NAME}
@@ -79,6 +83,10 @@ if(MPI_FOUND)
 
   if(CUDA_FOUND)
     list(APPEND vtkh_core_mpi_deps cuda)
+  endif()
+
+  if(ENABLE_KOKKOS)
+    list(APPEND vtkh_core_mpi_deps Kokkos::kokkos)
   endif()
 
 

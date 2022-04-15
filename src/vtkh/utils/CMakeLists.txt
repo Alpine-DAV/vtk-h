@@ -23,11 +23,11 @@ if (ENABLE_SERIAL)
     endif()
 
     if(ENABLE_OPENMP)
-      list(APPEND vtkh_utils_thirdparty_libs openmp)
+        list(APPEND vtkh_utils_thirdparty_libs openmp)
     endif()
 
-    if(ENABLE_OPENMP)
-        list(APPEND vtkh_utils_thirdparty_libs openmp)
+    if(ENABLE_KOKKOS)
+        list(APPEND vtkh_utils_thirdparty_libs Kokkos::kokkos)
     endif()
 
     blt_add_library(

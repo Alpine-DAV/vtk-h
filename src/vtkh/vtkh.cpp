@@ -17,6 +17,10 @@
 #include <mpi.h>
 #endif
 
+#ifdef VTKM_ENABLE_KOKKOS
+#include<Kokkos_Core.hpp>
+#endif
+
 namespace vtkh
 {
 
@@ -170,6 +174,10 @@ std::string GetCurrentDevice()
   {
     device = "openmp";
   }
+  else if(IsKokkosEnabled())
+  {
+    device = "kokkos";
+  }
 
   return device;
 }
@@ -201,6 +209,14 @@ IsCUDAAvailable()
 
 //---------------------------------------------------------------------------//
 bool
+IsKokkosAvailable()
+{
+  vtkm::cont::RuntimeDeviceInformation info;
+  return info.Exists(vtkm::cont::DeviceAdapterTagKokkos());
+}
+
+//---------------------------------------------------------------------------//
+bool
 IsSerialEnabled()
 {
   vtkm::cont::RuntimeDeviceTracker &device_tracker
@@ -225,6 +241,15 @@ IsCUDAEnabled()
   vtkm::cont::RuntimeDeviceTracker &device_tracker
     = vtkm::cont::GetRuntimeDeviceTracker();
   return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda());
+}
+
+//---------------------------------------------------------------------------//
+bool
+IsKokkosEnabled()
+{
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  return device_tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos());
 }
 
 //---------------------------------------------------------------------------//
@@ -284,6 +309,29 @@ SelectCUDADevice(int device_index)
 #endif
 
 }
+//---------------------------------------------------------------------------//
+
+void
+SelectKokkosDevice(int device_index)
+{ 
+#ifdef VTKM_ENABLE_KOKKOS
+#ifdef VTKM_KOKKOS_HIP 
+  Kokkos::initialize();
+#endif  
+
+#ifdef VTKM_KOKKOS_CUDA
+  Kokkos::InitArguments pars;
+  pars.device_id = device_index;
+  //TODO:Will this break with CUDA? CUDA is initialized with a specified device
+  //and calling SelectCudaDevice(device_index) 
+  //Is Kokkos smart enough to find this device for us? 
+  //Kokkos::initialize(pars);
+  Kokkos::initialize();
+#endif
+  
+  Kokkos::initialize(); //no backend
+#endif
+}
 
 //---------------------------------------------------------------------------//
 void
@@ -310,6 +358,15 @@ ForceCUDA()
   vtkm::cont::RuntimeDeviceTracker &device_tracker
     = vtkm::cont::GetRuntimeDeviceTracker();
   device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda());
+}
+
+//---------------------------------------------------------------------------//
+void
+ForceKokkos()
+{
+  vtkm::cont::RuntimeDeviceTracker &device_tracker
+    = vtkm::cont::GetRuntimeDeviceTracker();
+  device_tracker.ForceDevice(vtkm::cont::DeviceAdapterTagKokkos());
 }
 
 //---------------------------------------------------------------------------//
@@ -354,6 +411,19 @@ AboutVTKH()
   {
     msg<<"OpenMP (";
     if(IsOpenMPEnabled())
+    {
+      msg<<"enabled) ";
+    }
+    else
+    {
+      msg<<"disabled) ";
+    }
+  }
+
+  if(IsKokkosAvailable())
+  {
+    msg<<"Kokkos (";
+    if(IsKokkosEnabled())
     {
       msg<<"enabled) ";
     }

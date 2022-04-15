@@ -64,6 +64,10 @@ if(ENABLE_CUDA AND NOT VTKm_ENABLE_CUDA)
    message(FATAL_ERROR "VTK-h CUDA support requires VTK-m with CUDA support (ENABLE_CUDA == TRUE, however VTKm_ENABLE_CUDA == FALSE")
 endif()
 
+if(ENABLE_KOKKOS AND NOT VTKm_ENABLE_KOKKOS)
+   message(FATAL_ERROR "VTK-h KOKKOS support requires VTK-m with KOKKOS support (ENABLE_KOKKOS == TRUE, however VTKm_ENABLE_KOKKOS == FALSE")
+endif()
+
 if(ENABLE_CUDA AND BUILD_SHARED_LIBS)
   if(VTKm_VERSION VERSION_LESS "1.7.0")
     message(FATAL_ERROR "Cannot build shared libs with CUDA when VTKm is < v1.7.0")
@@ -82,6 +86,7 @@ if(ENABLE_CUDA)
     # we also need
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xptxas --disable-optimizer-constants")
 endif()
+
 
 # VTKM does not seem to propogate includes it exposes to us, so we have to work
 # around this.
