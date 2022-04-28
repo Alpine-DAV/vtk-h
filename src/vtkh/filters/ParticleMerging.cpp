@@ -1,4 +1,6 @@
-#include <vtkm/worklet/PointMerge.h>
+#include <vtkm/filter/clean_grid/worklet/PointMerge.h>
+//TODO: Header for wrapped filter
+//#include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkh/Error.hpp>
 #include <vtkh/filters/ParticleMerging.hpp>
 
@@ -68,6 +70,7 @@ void ParticleMerging::DoExecute()
     vtkm::Bounds bounds = dom.GetCoordinateSystem().GetBounds();
 
     bool fast_merge = true;
+    //TODO:Rewrite using vtkm::filter::clean_grid::CleanGrid
     vtkm::worklet::PointMerge merger;
     merger.Run(m_radius * 2. , fast_merge, bounds, coords);
     vtkm::cont::CoordinateSystem mcoords = vtkm::cont::CoordinateSystem(coords_name, coords);
