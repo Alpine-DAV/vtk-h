@@ -21,26 +21,26 @@ typedef  vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>>
 
 void StripPermutation(vtkm::cont::DataSet &data_set)
 {
-  vtkm::cont::DynamicCellSet cell_set = data_set.GetCellSet();
+  vtkm::cont::UnknownCellSet cell_set = data_set.GetCellSet();
   vtkm::cont::DataSet result;
   vtkm::cont::CellSetExplicit<> explicit_cells;
 
-  if(cell_set.IsSameType(PermStructured2d()))
+  if(cell_set.CanConvert<PermStructured2d>())
   {
     PermStructured2d perm = cell_set.AsCellSet<PermStructured2d>();
     explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
   }
-  else if(cell_set.IsSameType(PermStructured3d()))
+  else if(cell_set.CanConvert<PermStructured3d>())
   {
     PermStructured3d perm = cell_set.AsCellSet<PermStructured3d>();
     explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
   }
-  else if(cell_set.IsSameType(PermExplicit()))
+  else if(cell_set.CanConvert<PermExplicit>())
   {
     PermExplicit perm = cell_set.AsCellSet<PermExplicit>();
     explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
   }
-  else if(cell_set.IsSameType(PermExplicitSingle()))
+  else if(cell_set.CanConvert<PermExplicitSingle>())
   {
     PermExplicitSingle perm = cell_set.AsCellSet<PermExplicitSingle>();
     explicit_cells = vtkm::worklet::CellDeepCopy::Run(perm);
