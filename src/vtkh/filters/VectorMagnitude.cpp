@@ -1,5 +1,7 @@
 #include <vtkh/Error.hpp>
-#include <vtkh/filters/VectorMagnitude.hpp>
+//TODO: new wrapped vtkm filter header
+//#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
+#include <vtkm/filter/vector_analysis/worklet/Magnitude.h>
 
 #include <vtkh/vtkm_filters/vtkmVectorMagnitude.hpp>
 #include <vtkm/worklet/Magnitude.h>
@@ -10,7 +12,7 @@ namespace vtkh
 
 namespace detail
 {
-
+//TODO: Rewrite using vtkm::filter::vector_analysis::VectorMagnitude
 struct VectorMagFunctor
 {
   vtkm::cont::Field result;
