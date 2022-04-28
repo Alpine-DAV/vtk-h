@@ -1,10 +1,10 @@
 #include <vtkh/Error.hpp>
+#include <vtkh/filters/VectorMagnitude.hpp>
+
+#include <vtkh/vtkm_filters/vtkmVectorMagnitude.hpp>
 //TODO: new wrapped vtkm filter header
 //#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 #include <vtkm/filter/vector_analysis/worklet/Magnitude.h>
-
-#include <vtkh/vtkm_filters/vtkmVectorMagnitude.hpp>
-#include <vtkm/worklet/Magnitude.h>
 #include <vtkm/TypeList.h>
 
 namespace vtkh
