@@ -58,7 +58,7 @@ void PointAverage::DoExecute()
       continue;
     }
 
-    vtkm::filter::PointAverage avg;
+    vtkm::filter::field_conversion::PointAverage avg;
     avg.SetOutputFieldName(m_output_field_name);
     avg.SetActiveField(m_field_name);
     avg.SetFieldsToPass(this->GetFieldSelection());
