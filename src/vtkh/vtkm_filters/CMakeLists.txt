@@ -44,7 +44,7 @@ set(vtkm_filters_install_headers
 
 # we use these specific vtk-m targets b/c our favorite version
 # of cmake does not yet support transitive deps for object libs
-set(vtkm_filters_deps vtkm_compiler_flags vtkm_diy )
+set(vtkm_filters_deps vtkm_compiler_flags vtkm_diy vtkm_filter)
 
 if(ENABLE_OPENMP)
   list(APPEND vtkm_filters_deps openmp)

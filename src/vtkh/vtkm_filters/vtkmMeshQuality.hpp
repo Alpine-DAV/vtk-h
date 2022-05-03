@@ -3,7 +3,7 @@
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/MeshQuality.h>
+#include <vtkm/filter/mesh_info/MeshQuality.h>
 
 namespace vtkh
 {
