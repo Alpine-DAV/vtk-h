@@ -250,9 +250,9 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
 
   vtkm::cont::Algorithm::Synchronize();
 
-  vtkm::Vec<vtkm::Id,2> zero = {-1, -1};
+  vtkm::Vec<vtkm::Id,2> baseline = {-1, -1};
   auto resMinMax = vtkm::cont::Algorithm::Reduce(valid_flags,
-                                             zero,
+                                             baseline,
                                              detail::MinMaxIgnore());
   VTKH_DATA_CLOSE();
 
