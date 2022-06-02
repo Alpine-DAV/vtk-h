@@ -192,7 +192,6 @@ public:
     {
       can_do = 1;
     }
-
   }
 }; //class CanStructuredStrip
 
@@ -212,7 +211,6 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
 
   vtkm::Vec<vtkm::Id, 3> valid_min = {0,0,0};
   vtkm::Vec<vtkm::Id, 3> valid_max = {0,0,0};
-
   for(vtkm::Int32 i = 0; i < DIMS; ++i)
   {
     vtkm::worklet::DispatcherMapField<GhostIndex<DIMS>>(
@@ -250,15 +248,20 @@ bool CanStrip(vtkm::cont::Field  &ghost_field,
                                               VTKM_DEFAULT_STORAGE_LIST{}),
          valid_flags);
 
-  vtkm::UInt8 res = vtkm::cont::Algorithm::Reduce(valid_flags,
-                                                  vtkm::UInt8(0),
-                                                  vtkm::Maximum());
+  vtkm::cont::Algorithm::Synchronize();
+
+  vtkm::Vec<vtkm::Id,2> zero = {-1, -1};
+  auto resMinMax = vtkm::cont::Algorithm::Reduce(valid_flags,
+                                             zero,
+                                             detail::MinMaxIgnore());
   VTKH_DATA_CLOSE();
 
+  vtkm::UInt8 res = resMinMax[1];
   bool can_strip = res == 0;
   if(can_strip)
   {
     should_strip = false;
+
     for(int i = 0; i < DIMS; ++i)
     {
       if(cell_dims[i] != (valid_max[i] - valid_min[i] + 1))
@@ -410,7 +413,7 @@ void GhostStripper::DoExecute()
 
     vtkm::cont::Field field = dom.GetField(m_field_name);
     vtkm::Range ghost_range = field.GetRange().ReadPortal().Get(0);
-
+    
     if(ghost_range.Min >= m_min_value &&
        ghost_range.Max <= m_max_value)
     {
