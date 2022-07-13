@@ -1,3 +1,10 @@
+# VTK-h is now developed as part of Ascent
+
+VTK-h is now developed as part of Ascent (https://github.com/Alpine-DAV/ascent).
+
+It was moved as part of a great amalgamation to simplify ongoing development and support of Ascent.
+
+
 VTK-h
 =====
 
