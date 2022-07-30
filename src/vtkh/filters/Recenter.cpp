@@ -8,7 +8,7 @@ namespace vtkh
 {
 
 Recenter::Recenter()
- : m_assoc(vtkm::cont::Field::Association::POINTS)
+ : m_assoc(vtkm::cont::Field::Association::Points)
 {
 
 }
@@ -38,8 +38,8 @@ void Recenter::PostExecute()
 void Recenter::SetResultAssoc(vtkm::cont::Field::Association assoc)
 {
 
-  if(assoc != vtkm::cont::Field::Association::CELL_SET &&
-     assoc != vtkm::cont::Field::Association::POINTS)
+  if(assoc != vtkm::cont::Field::Association::Cells &&
+     assoc != vtkm::cont::Field::Association::Points)
   {
     throw Error("Recenter can only recenter zonal and nodal fields");
   }
@@ -86,15 +86,15 @@ void Recenter::DoExecute()
       temp.AddCoordinateSystem(coords);
     }
 
-    vtkm::cont::DynamicCellSet cellset = dom.GetCellSet();
+    vtkm::cont::UnknownCellSet cellset = dom.GetCellSet();
     out_data.SetCellSet(cellset);
     temp.SetCellSet(cellset);
 
     if(temp.HasField(m_field_name))
     {
       vtkm::cont::Field::Association in_assoc = temp.GetField(m_field_name).GetAssociation();
-      bool is_cell_assoc = in_assoc == vtkm::cont::Field::Association::CELL_SET;
-      bool is_point_assoc = in_assoc == vtkm::cont::Field::Association::POINTS;
+      bool is_cell_assoc = in_assoc == vtkm::cont::Field::Association::Cells;
+      bool is_point_assoc = in_assoc == vtkm::cont::Field::Association::Points;
 
       if(!is_cell_assoc && !is_point_assoc)
       {
@@ -114,7 +114,7 @@ void Recenter::DoExecute()
         }
         else
         {
-          vtkm::filter::CellAverage avg;
+          vtkm::filter::field_conversion::CellAverage avg;
           avg.SetOutputFieldName(out_name);
           avg.SetActiveField(m_field_name);
           dataset = avg.Execute(dom);

@@ -1,5 +1,6 @@
 #include "vtkmPointTransform.hpp"
-#include <vtkm/filter/PointTransform.h>
+//#include <vtkm/filter/PointTransform.h>
+#include <vtkm/filter/field_transform/PointTransform.h>
 
 namespace vtkh
 {
@@ -8,7 +9,8 @@ vtkmPointTransform::Run(vtkm::cont::DataSet &input,
                         vtkm::Matrix<double,4,4> &transform,
                         vtkm::filter::FieldSelection map_fields)
 {
-  vtkm::filter::PointTransform trans;
+  //vtkm::filter::PointTransform trans;
+  vtkm::filter::field_transform::PointTransform trans;
 
   trans.SetChangeCoordinateSystem(true);
   trans.SetFieldsToPass(map_fields);
